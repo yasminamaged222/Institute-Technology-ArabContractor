@@ -7,5 +7,6 @@ namespace Institute.API.Controllers
     [ApiController]
     public class PaymentController : ControllerBase
     {
+        ...
     }
 }
