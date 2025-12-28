@@ -1,12 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Institute.Domain.Entities
+namespace Institute.Domain.Entities;
+
+public partial class User
 {
-    internal class User
-    {
-    }
+    public int UserId { get; set; }
+
+    public string? UserLogName { get; set; }
+
+    public string? UserFullName { get; set; }
+
+    public string? UserPassword { get; set; }
+
+    public string? UserEmail { get; set; }
+
+    public DateTime? StartAccountDate { get; set; }
+
+    public DateTime? EndAccountDate { get; set; }
+
+    public Guid PasswordSalt { get; set; }
+
+    public byte[]? PasswordHash { get; set; }
 }
