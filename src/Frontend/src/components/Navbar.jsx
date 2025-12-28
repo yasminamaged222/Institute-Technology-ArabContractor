@@ -1,54 +1,163 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Box, TextField, Menu, MenuItem, Button } from '@mui/material';
-import SchoolIcon from '@mui/icons-material/School';
+import React, { useState } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  IconButton,
+  InputBase,
+  Menu,
+  MenuItem,
+  Avatar,
+  Badge,
+  Tooltip,
+  Button,
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
 
+import logo from '../assets/logo-removebg-preview.png'; // تأكدي إن الصورة موجودة
+
 const Navbar = () => {
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const open = Boolean(anchorEl);
-  const handleClick = (event) => setAnchorEl(event.currentTarget);
-  const handleClose = () => setAnchorEl(null);
+  const [coursesAnchor, setCoursesAnchor] = useState(null);
+  const [subMenuAnchor, setSubMenuAnchor] = useState(null);
+  const [accountAnchor, setAccountAnchor] = useState(null);
+
+  const mainCourses = [
+    { title: 'برامج موجهة للمهندسين', sub: ['هندسة التشييد', 'إدارة المشاريع', 'سلامة المواقع'] },
+    { title: 'برامج موجهة للماليين', sub: ['مالية لغير الماليين', 'تكاليف'] },
+    { title: 'برامج مركز جسر السويس', sub: [] },
+    { title: 'دورات مستحدثة', sub: [] },
+    { title: 'التدريب الصيفي', sub: [] },
+  ];
 
   return (
-    <AppBar position="static" color="primary" sx={{ py: 1 }}>
+    <AppBar position="sticky" sx={{ bgcolor: '#636363  ', py: 1 }}> {/* اللون الجديد #0865A8   RGB*/}
       <Toolbar sx={{ justifyContent: 'space-between' }}>
+        {/* Right Side (أقصى اليمين): Account + Cart + Links */}
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <SchoolIcon sx={{ mr: 1, fontSize: 30 }} />
-          <Typography variant="h6" component={Link} to="/" sx={{ color: 'inherit', textDecoration: 'none', fontWeight: 'bold' }}>
-            ICEMT LMS
-          </Typography>
+          {/* Account Avatar */}
+          <Tooltip title="الحساب">
+            <IconButton onClick={(e) => setAccountAnchor(e.currentTarget)} sx={{ ml: 2 }}>
+              <Avatar sx={{ bgcolor: 'white', color: '#0865A8' }}>YM</Avatar>
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={accountAnchor}
+            open={Boolean(accountAnchor)}
+            onClose={() => setAccountAnchor(null)}
+          >
+            <MenuItem>My Learning</MenuItem>
+            <MenuItem>My Cart</MenuItem>
+            <MenuItem>Wishlist</MenuItem>
+            <MenuItem>Account Settings</MenuItem>
+            <MenuItem>Payment Methods</MenuItem>
+            <MenuItem>Logout</MenuItem>
+          </Menu>
+
+          {/* Cart */}
+          <IconButton color="inherit" sx={{ ml: 2 }}>
+            <Badge badgeContent={0} color="secondary">
+              <ShoppingCartIcon />
+            </Badge>
+          </IconButton>
+
+          {/* Links */}
+          <Button color="inherit" component={Link} to="/about" sx={{ ml: 2 }}>
+            عن المعهد
+          </Button>
+          <Button color="inherit" component={Link} to="/services" sx={{ ml: 2 }}>
+            الخدمات
+          </Button>
+          <Button color="inherit" component={Link} to="/library" sx={{ ml: 2 }}>
+            المكتبة
+          </Button>
+          <Button color="inherit" component={Link} to="/news" sx={{ ml: 2 }}>
+            الأخبار
+          </Button>
         </Box>
-        <Box sx={{ flexGrow: 1, maxWidth: 600, mx: 4 }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            placeholder="Search for courses..."
-            size="small"
-            InputProps={{
-              startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 1 }} />,
-              sx: { bgcolor: 'white', borderRadius: 10 },
+
+        {/* Center: Search Bar + دورات تدريبية */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {/* Search Bar */}
+          <Box sx={{ bgcolor: 'white', borderRadius: 20, display: 'flex', alignItems: 'center', px: 2, py: 0.5, mx: 3, minWidth: 300 }}>
+            <InputBase placeholder="بحث عن دورة..." sx={{ color: 'black', flexGrow: 1 }} />
+            <SearchIcon sx={{ color: 'gray' }} />
+          </Box>
+
+          {/* دورات تدريبية Dropdown */}
+          <Button
+            color="inherit"
+            onMouseEnter={(e) => setCoursesAnchor(e.currentTarget)}
+            sx={{ mx: 2, fontSize: '1rem' }}
+          >
+            دورات تدريبية
+          </Button>
+
+          <Menu
+            anchorEl={coursesAnchor}
+            open={Boolean(coursesAnchor)}
+            onClose={() => setCoursesAnchor(null)}
+            MenuListProps={{ onMouseLeave: () => setCoursesAnchor(null) }}
+          >
+            {mainCourses.map((cat) => (
+              <MenuItem
+                key={cat.title}
+                onMouseEnter={(e) => cat.sub.length > 0 && setSubMenuAnchor(e.currentTarget)}
+              >
+                {cat.title}
+                {cat.sub.length > 0 && (
+                  <Menu
+                    anchorEl={subMenuAnchor}
+                    open={Boolean(subMenuAnchor)}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                    onClose={() => setSubMenuAnchor(null)}
+                  >
+                    {cat.sub.map((subItem) => (
+                      <MenuItem
+                        key={subItem}
+                        onClick={() => {
+                          setCoursesAnchor(null);
+                          setSubMenuAnchor(null);
+                        }}
+                      >
+                        {subItem}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                )}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Box>
+
+        {/* Left Side (أقصى اليسار): Email Icon + Logo */}
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {/* Email Icon */}
+          <Tooltip title="icemt@arabcont.com">
+            <IconButton
+              component="a"
+              href="mailto:icemt@arabcont.com"
+              sx={{ color: 'white', mx: 2 }}
+            >
+              <AlternateEmailIcon sx={{ fontSize: 22 }} />
+            </IconButton>
+          </Tooltip>
+
+          {/* Logo */}
+          <Box
+            component="img"
+            src={logo}
+            alt="ICEMT Logo"
+            sx={{
+              height: { xs: 45, md: 100 },
+              width: 'auto',
             }}
           />
         </Box>
-        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
-          <Button color="inherit" onClick={handleClick}>
-            Categories
-          </Button>
-          <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-            <MenuItem onClick={handleClose}>Engineering
-</MenuItem>
-            <MenuItem onClick={handleClose}>Management</MenuItem>
-            <MenuItem onClick={handleClose}>Safety</MenuItem>
-            <MenuItem onClick={handleClose}>Online Training</MenuItem>
-          </Menu>
-          <Button color="inherit" component={Link} to="/courses">Courses</Button>
-          <Button color="inherit" component={Link} to="/login">Login</Button>
-        </Box>
-        <IconButton color="inherit" sx={{ display: { md: 'none' } }}>
-          <MenuIcon />
-        </IconButton>
       </Toolbar>
     </AppBar>
   );
