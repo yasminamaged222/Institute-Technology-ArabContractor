@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Institute.Application.Interfaces
+namespace Institute.Application.Interfaces.IService
 {
-    internal interface IUserService
+    internal interface IPaymentService
     {
     }
 }
