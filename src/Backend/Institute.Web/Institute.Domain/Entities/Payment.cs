@@ -1,16 +1,17 @@
-﻿namespace Institute.Domain.Entities
+﻿using Institute.Domain.Enums;
+
+namespace Institute.Domain.Entities
 {
     public class Payment
     {
         public int Id { get; set; }
-        public int UserId { get; set; }                 // Foreign key to AppUser
+        public int OrderId { get; set; }
+        public Order Order { get; set; }        // Navigation
         public decimal Amount { get; set; }
-        public DateTime PaymentDate { get; set; } = DateTime.Now;
-        public string PaymentMethod { get; set; } = null!;
-        public int TransactionId { get; set; }
-        public string Status { get; set; } = "Pending";
+        public PaymentMethod Method { get; set; }
+        public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+        public string? TransactionRef { get; set; }
+        public DateTime? PaymentDate { get; set; }
 
-        // Navigation Property
-        public virtual AppUser User { get; set; } = null!;
     }
 }
