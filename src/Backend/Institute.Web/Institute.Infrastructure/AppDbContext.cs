@@ -58,7 +58,10 @@ public partial class AppDbContext : DbContext
 
     //// Custom DbSets for the new entities
     public virtual DbSet<AppUser> AppUsers { get; set; }
-    public virtual DbSet<CoursePurchase> CoursePurchases { get; set; }
+    public virtual DbSet<Cart> Carts { get; set; }
+    public virtual DbSet<CartItem> CartItems { get; set; }
+    public virtual DbSet<Order> Orders { get; set; }
+    public virtual DbSet<OrderItem> OrderItems { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
 
 
@@ -76,36 +79,95 @@ public partial class AppDbContext : DbContext
             .HasForeignKey(b => b.TypeId)    // المفتاح الخارجي في Book
             .OnDelete(DeleteBehavior.Cascade); // اختيار سلوك الحذف (اختياري)
 
+
+
+        base.OnModelCreating(modelBuilder);
+
         // AppUser
         modelBuilder.Entity<AppUser>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+            entity.HasKey(u => u.Id);
+
+            entity.Property(u => u.CreatedAt).HasDefaultValueSql("(sysdatetime())");
+
+            entity.Property(e => e.Username)
+                  .IsRequired()
+                  .HasMaxLength(50);
+            entity.Property(x => x.ClerkUserId)
+          .IsRequired();
+
+            entity.HasIndex(x => x.ClerkUserId)
+                  .IsUnique();
+            entity.Property(e => e.Email)
+                .HasMaxLength(255)
+                .IsRequired(false);  // optional
+
+            entity.Property(e => e.FirstName)
+                .HasMaxLength(100)
+                .IsRequired(false);  // optional
+
+            entity.Property(e => e.LastName)
+                .HasMaxLength(100)
+                .IsRequired(false);  // optional
+
+            entity.Property(e => e.PasswordHash)
+                .IsRequired()
+                .HasMaxLength(256);
+            entity.HasMany(u => u.Carts)
+                  .WithOne(c => c.User)
+                  .HasForeignKey(c => c.UserId);
+            // Indexes
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+
+            entity.HasMany(u => u.Orders)
+                  .WithOne(o => o.User)
+                  .HasForeignKey(o => o.UserId);
         });
 
-        // CoursePurchase
-        modelBuilder.Entity<CoursePurchase>(entity =>
+        // Cart
+        modelBuilder.Entity<Cart>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.PurchaseDate).HasDefaultValueSql("(sysdatetime())");
+            entity.HasKey(c => c.Id);
+            entity.HasMany(c => c.Items)
+                  .WithOne(ci => ci.Cart)
+                  .HasForeignKey(ci => ci.CartId);
+        });
 
-            entity.HasOne(d => d.User)
-                  .WithMany(p => p.CoursePurchases)
-                  .HasForeignKey(d => d.UserId)
-                  .HasConstraintName("FK_CoursePurchases_AppUsers");
+        // CartItem
+        modelBuilder.Entity<CartItem>(entity =>
+        {
+            entity.HasKey(ci => ci.Id);
+            entity.HasIndex(ci => new { ci.CartId, ci.PlanworkId }).IsUnique();
+        });
+
+        // Order
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasKey(o => o.Id);
+            entity.HasMany(o => o.Items)
+                  .WithOne(oi => oi.Order)
+                  .HasForeignKey(oi => oi.OrderId);
+
+            entity.HasMany(o => o.Payments)
+                  .WithOne(p => p.Order)
+                  .HasForeignKey(p => p.OrderId);
+        });
+
+        // OrderItem
+        modelBuilder.Entity<OrderItem>(entity =>
+        {
+            entity.HasKey(oi => oi.Id);
+            entity.HasIndex(oi => new { oi.OrderId, oi.PlanworkId }).IsUnique();
         });
 
         // Payment
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.PaymentDate).HasDefaultValueSql("(sysdatetime())");
-
-            entity.HasOne(d => d.User)
-                  .WithMany(p => p.Payments)
-                  .HasForeignKey(d => d.UserId)
-                  .HasConstraintName("FK_Payments_AppUsers");
+            entity.HasKey(p => p.Id);
         });
+
+
 
         modelBuilder.Entity<Action>(entity =>
         {

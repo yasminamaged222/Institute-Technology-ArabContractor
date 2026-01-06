@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Institute.Application.Services
+namespace Institute.Domain.Enums
 {
-    internal class CoursePurchaseService
+    public enum OrderStatus
     {
+        Pending,
+        Paid,
+        Cancelled
     }
 }

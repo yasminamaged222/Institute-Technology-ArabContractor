@@ -9,15 +9,16 @@ namespace Institute.Domain.Entities
     public class AppUser
     {
         public int Id { get; set; }
-        public string Username { get; set; } = null!;
-        public string PasswordHashed { get; set; } = null!;
-        public string Email { get; set; } = null!;
-        public string FirstName { get; set; } = null!;
-        public string LastName { get; set; } = null!;
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public string ClerkUserId { get; set; }
+        public string Username { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Email { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Navigation Properties
-        public virtual ICollection<CoursePurchase> CoursePurchases { get; set; } = new HashSet<CoursePurchase>();
-        public virtual ICollection<Payment> Payments { get; set; } = new HashSet<Payment>();
+        // Navigation
+        public ICollection<Cart>? Carts { get; set; } = new List<Cart>();
+        public ICollection<Order>? Orders { get; set; }
+
     }
 }

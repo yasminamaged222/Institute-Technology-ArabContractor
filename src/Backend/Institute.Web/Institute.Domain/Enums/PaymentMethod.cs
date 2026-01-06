@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Institute.Application.Interfaces.IService
+namespace Institute.Domain.Enums
 {
-    internal interface ICoursePurchaseService
+    public enum PaymentMethod
     {
+        Visa,
+        Fawry,
+        Instapay
     }
 }
