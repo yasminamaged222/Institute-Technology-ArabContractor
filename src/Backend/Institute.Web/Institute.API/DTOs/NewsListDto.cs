@@ -2,9 +2,10 @@
 {
     public class NewsListDto
     {
-        public DateTime? NewsDate { get; set; }
-        public string? ATitel { get; set; }
-        public string? ImageName { get; set; }
+        public int Id { get; set; }
+        public string Title { get; set; } = null!;
+        public DateTime PublishedAt { get; set; }
+        public string? ImageUrl { get; set; }
     }
 
 

@@ -48,25 +48,30 @@ namespace Institute.API.Controllers
         //}
 
         [HttpGet("getAllNews")]
-        public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews([FromQuery] NewsSpecParams newsParams)
+        public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews(
+     [FromQuery] NewsSpecParams newsParams)
         {
             // 1️⃣ Spec للبيانات
             var spec = new NewsWithMainPicSpec(newsParams);
 
-            // 2️⃣ جلب البيانات من الـ Repository
+            // 2️⃣ جلب البيانات
             var news = await _repo.GetAllWithSpecAsync(spec);
 
             // 3️⃣ Mapping
             var data = _mapper.Map<IReadOnlyList<Dailynews>, IReadOnlyList<NewsListDto>>(news);
 
-            // 4️⃣ Spec للـ Count
+            // 4️⃣ Count
             var countSpec = new NewsWithFiltersForCountSpec(newsParams);
             var count = await _repo.GetCountAsync(countSpec);
 
-            // 5️⃣ Return Pagination
-            return Ok(new Pagination<NewsListDto>(newsParams.PageIndex, newsParams.PageSize, count, data));
+            // 5️⃣ Pagination (final shape)
+            return Ok(new Pagination<NewsListDto>(
+                newsParams.PageIndex,
+                newsParams.PageSize,
+                count,
+                data
+            ));
         }
-
 
 
 

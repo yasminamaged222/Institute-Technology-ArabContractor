@@ -38,12 +38,9 @@ builder.Services.AddAuthentication("Bearer")
 #endregion
 
 // ======= AutoMapper =======
-//builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
-// ??????? ??????? ?????? Profile ???? ?? ????
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfiles>();
-    
 });
 
 
