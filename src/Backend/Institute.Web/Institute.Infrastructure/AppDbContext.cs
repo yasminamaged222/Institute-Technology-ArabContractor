@@ -87,7 +87,7 @@ public partial class AppDbContext : DbContext
                   .IsRequired()
                   .HasMaxLength(50);
             entity.Property(x => x.ClerkUserId)
-          .IsRequired();
+                  .IsRequired();
 
             entity.HasIndex(x => x.ClerkUserId)
                   .IsUnique();
@@ -103,9 +103,9 @@ public partial class AppDbContext : DbContext
                 .HasMaxLength(100)
                 .IsRequired(false);  // optional
 
-            entity.Property(e => e.PasswordHash)
-                .IsRequired()
-                .HasMaxLength(256);
+            //entity.Property(e => e.PasswordHash)
+            //    .IsRequired()
+            //    .HasMaxLength(256);
             entity.HasMany(u => u.Carts)
                   .WithOne(c => c.User)
                   .HasForeignKey(c => c.UserId);

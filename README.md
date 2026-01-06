@@ -66,3 +66,11 @@ Use git branches & descriptive commit messages
 
 ---
 
+
+
+
+
+
+## 🔗 Clerk Publishable Key
+
+    pk_test_Y3JlYXRpdmUtZXdlLTI2LmNsZXJrLmFjY291bnRzLmRldiQ
