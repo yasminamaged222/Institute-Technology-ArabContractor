@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Institute.Domain.specifications;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,5 +14,17 @@ namespace Institute.Application.Interfaces
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
+
+
+
+
+
+        Task<T> GetByIdWithSpecAsync(Ispecification<T> spec);
+        Task<IReadOnlyList<T>> GetAllWithSpecAsync(Ispecification<T> spec);
+
+        Task<int> GetCountAsync(Ispecification<T> spec);
+
+
+
     }
 }

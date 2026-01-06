@@ -1,4 +1,5 @@
 ﻿using Institute.Application.Interfaces;
+using Institute.Domain.specifications;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -28,5 +29,25 @@ namespace Institute.Infrastructure.Repositories
         public void Update(T entity) => _dbSet.Update(entity);
 
         public void Delete(T entity) => _dbSet.Remove(entity);
+
+        //add methods for specifications desgin pattern
+
+        //get all with spec method
+        public async Task<IReadOnlyList<T>> GetAllWithSpecAsync(Ispecification<T> spec)
+           => await ApplySpecification(spec).ToListAsync();
+
+        //get by id with spec method
+        public async Task<T> GetByIdWithSpecAsync(Ispecification<T> spec)
+           => await ApplySpecification(spec).FirstOrDefaultAsync();
+
+        //get count with spec method
+        public async Task<int> GetCountAsync(Ispecification<T> spec)
+            => await ApplySpecification(spec).CountAsync();
+
+        private IQueryable<T> ApplySpecification(Ispecification<T> spec)
+        {
+            // هنا DbContext هو اللي يعمل Set<T>()
+            return SpecificationEvaluator<T>.GetQuery(_context.Set<T>().AsQueryable(), spec);
+        }
     }
 }
