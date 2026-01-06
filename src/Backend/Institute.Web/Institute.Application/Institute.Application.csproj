@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Institute.Domain\Institute.Domain.csproj" />
+    <Folder Include="DTOs\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\" />
+    <ProjectReference Include="..\Institute.Domain\Institute.Domain.csproj" />
   </ItemGroup>
 
 </Project>

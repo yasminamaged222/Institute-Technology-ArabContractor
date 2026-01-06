@@ -14,4 +14,7 @@ public partial class Book
     public string? Author { get; set; }
 
     public int? BookDate { get; set; }
+    // Navigation Property
+    public BooksType BooksType { get; set; }
+
 }

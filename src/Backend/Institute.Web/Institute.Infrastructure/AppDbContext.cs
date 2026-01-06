@@ -67,7 +67,14 @@ public partial class AppDbContext : DbContext
     //        => optionsBuilder.UseSqlServer("Server=acdbweb-ac.fefc023eb221.database.windows.net;Database=ACicmet;User Id=ICadmin;Password=ICacdb#95_icemt;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
+    {//Book - BooksType relationship
+
+
+        modelBuilder.Entity<Book>()
+            .HasOne(b => b.BooksType)        // كل Book له BookType واحد
+            .WithMany(t => t.Books)          // كل BookType له مجموعة Books
+            .HasForeignKey(b => b.TypeId)    // المفتاح الخارجي في Book
+            .OnDelete(DeleteBehavior.Cascade); // اختيار سلوك الحذف (اختياري)
 
         // AppUser
         modelBuilder.Entity<AppUser>(entity =>
