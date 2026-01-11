@@ -1,0 +1,401 @@
+/* General Container Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.overview_intro {
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+}
+
+.btn_go_home {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.overview {
+    color: gray;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    justify-content: center;
+    text-align: center;
+    align-items: center;
+
+}
+
+.hr_style {
+    background-color: rgb(192, 189, 189);
+}
+
+
+.container {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #ffffff;
+    padding: 3rem;
+}
+
+.content-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Main Grid - 2 Columns (Left and Right) */
+.main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+/* Left Column - Image on top, Strategy on bottom */
+.left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* Right Column - Vision, Mission, and Image */
+.right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+/* Image Container with Overlay */
+.image-container {
+    position: relative;
+    width: 100%;
+}
+
+.main-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+}
+
+.image-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.overlay-title {
+    color: #ffffff;
+    font-size: 3rem;
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Vision and Mission Sections */
+.vision-section,
+.mission-section {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Section Titles */
+.section-title {
+    color: #ff8c00;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+}
+
+.text-right {
+    text-align: right;
+    direction: rtl;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Text Content */
+.text-content {
+    color: #333333;
+    line-height: 1.8;
+    font-size: 1.1rem;
+}
+
+/* Strategy Section */
+.strategy-section {
+    background-color: #ffffff;
+    padding: 1.5rem;
+}
+
+.strategy-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.strategy-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    direction: rtl;
+}
+
+.icon-box {
+    background-color: #ff8c00;
+    color: #ffffff;
+    padding: 1rem;
+    border-radius: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+    min-height: 60px;
+}
+
+.icon {
+    width: 2rem;
+    height: 2rem;
+}
+
+.strategy-text {
+    color: #333333;
+    text-align: right;
+    flex: 1;
+    line-height: 1.8;
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .overlay-title {
+        font-size: 2.5rem;
+    }
+
+    .section-title {
+        font-size: 2rem;
+    }
+
+    .container {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .overlay-title {
+        font-size: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+    }
+
+    .main-image {
+        height: 250px;
+    }
+
+    .container {
+        padding: 1rem;
+    }
+
+    .icon-box {
+        min-width: 50px;
+        min-height: 50px;
+        padding: 0.75rem;
+    }
+
+    .icon {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    .right-column {
+        gap: 2rem;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Goals Container */
+.goals-container {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #ffffff;
+    padding: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .goals-wrapper {
+    max-width: 1400px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+  
+  /* Top Boxes - 2 boxes side by side */
+  .top-boxes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  
+  /* Goals Title Section - Center */
+  .goals-title-section {
+    text-align: center;
+    padding: 2rem 0;
+  }
+  
+  .goals-title {
+    color: #ff8c00;
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    direction: rtl;
+  }
+  
+  .goals-subtitle {
+    color: #333333;
+    font-size: 1.3rem;
+    direction: rtl;
+    text-align: center;
+  }
+  
+  /* Bottom Boxes - 3 boxes side by side */
+  .bottom-boxes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+  
+  /* Goal Box Styling */
+  .goal-box {
+    background-color: #ffffff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+  
+  .goal-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    border-color: #ff8c00;
+  }
+  
+  /* Goal Icon */
+  .goal-icon {
+    width: 80px;
+    height: 80px;
+    background-color: #4a90e2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+  }
+  
+  .icon-svg {
+    width: 40px;
+    height: 40px;
+  }
+  
+  /* Goal Text */
+  .goal-text {
+    color: #333333;
+    font-size: 1.1rem;
+    line-height: 1.8;
+    direction: rtl;
+    text-align: center;
+    margin: 0;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .bottom-boxes {
+      grid-template-columns: 1fr;
+    }
+  
+    .goals-title {
+      font-size: 2.5rem;
+    }
+  
+    .goals-subtitle {
+      font-size: 1.1rem;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .top-boxes {
+      grid-template-columns: 1fr;
+    }
+  
+    .goals-container {
+      padding: 1.5rem;
+    }
+  
+    .goals-wrapper {
+      gap: 2rem;
+    }
+  
+    .goals-title {
+      font-size: 2rem;
+    }
+  
+    .goals-subtitle {
+      font-size: 1rem;
+    }
+  
+    .goal-box {
+      padding: 1.5rem;
+    }
+  
+    .goal-icon {
+      width: 60px;
+      height: 60px;
+    }
+  
+    .icon-svg {
+      width: 30px;
+      height: 30px;
+    }
+  
+    .goal-text {
+      font-size: 1rem;
+    }
+  }
