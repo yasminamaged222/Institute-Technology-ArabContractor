@@ -2,6 +2,7 @@ using AutoMapper;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
+using Institute.Application.Services;
 using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,7 @@ builder.Services.AddSwaggerGen();
 #region( Dependency Injecton ) 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>));
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver>();
 
 #endregion
