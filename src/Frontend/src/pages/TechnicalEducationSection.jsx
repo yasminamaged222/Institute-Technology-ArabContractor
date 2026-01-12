@@ -1,5 +1,4 @@
 import React from 'react';
-
 const TechnicalEducationSection = () => {
   return (
     <section className="py-1 bg-white">
@@ -102,12 +101,12 @@ const TechnicalEducationSection = () => {
             <div className="pt-100">
               <a
                 href="/Technical_Schools"
-                className="inline-flex items-center gap-3 bg-[#f57c00] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#065a8a] transition-all duration-300 hover:shadow-lg hover:scale-105"
               >
-                <svg className="w-5 h-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-                <span>اقرأ المزيد</span>
+                <button style={{
+                backgroundColor: '#f57c00', color: 'white', border: 'none', borderRadius: '30px', padding: '12px 40px', fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s'
+              }}>
+                اقرأ المزيد
+              </button>
               </a>
             </div>
           </div>
@@ -116,7 +115,7 @@ const TechnicalEducationSection = () => {
           <div className="relative">
             <div className="relative overflow-hidden rounded-lg shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&h=600&fit=crop"
+                src="/images/sch04.jpg" 
                 alt="مدرسة المقاولون العرب"
                 className="w-full h-[760px] object-cover"
               />

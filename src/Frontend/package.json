@@ -17,6 +17,7 @@
     "@mui/material": "^7.3.6",
     "axios": "^1.13.2",
     "countup.js": "^2.9.0",
+    "framer-motion": "^12.25.0",
     "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-countup": "^6.5.3",

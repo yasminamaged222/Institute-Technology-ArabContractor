@@ -33,35 +33,35 @@ const newsItems = [
     id: 1,
     date: '25 نوفمبر 2025',
     title: 'اتفاقية بين المعهد القومي للحوكمة والمعهد التكنولوجي لهندسة التشييد والإدارة',
-    image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&h=800&fit=crop',
+    image: '/images/news/news-01.jpg', // Path to your local file
     link: '/news/2025-68'
   },
   {
     id: 2,
     date: '22 أكتوبر 2025',
     title: 'ختام المرحلة الأولى من برنامج التدريب المشترك بين المقاولون العرب والجامعة',
-    image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&h=800&fit=crop',
+    image: '/images/news/news-02.jpg',
     link: '/news/2025-67'
   },
   {
     id: 3,
     date: '22 أكتوبر 2025',
     title: 'انطلاق البرنامج التدريبي للمهندسين من دولة زامبيا',
-    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=800&fit=crop',
+    image: '/images/news/news-03.jpg',
     link: '/news/2025-66'
   },
   {
     id: 4,
     date: '7 أكتوبر 2025',
     title: 'تجديد إعتماد المعهد من الجهاز المركزي للتنظيم والإدارة',
-    image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&h=800&fit=crop',
+    image: '/images/news/news-04.jpg',
     link: '/news/2025-65'
   },
   {
     id: 5,
     date: '3 سبتمبر 2025',
     title: 'المقاولون العرب تكرم أوئل الثانوية العامة',
-    image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&h=800&fit=crop',
+    image: '/images/news/news-05.jpg',
     link: '/news/2025-64'
   },
 ];
@@ -364,15 +364,15 @@ const Home = () => {
       </Container>
 
       {/* Section: About Institute */}
-      <div style={{ backgroundColor: '#f5f5f5', padding: '30px 0' }}>
+      <div style={{ backgroundColor: '#f5f5f5', padding: '20px' }}>
         <div style={{ 
           maxWidth: '1200px', 
-          margin: '0 auto', 
-          padding: '0 20px',
+          margin: 'auto', 
+          padding: '70px',
           display: 'flex',
           flexDirection: 'row-reverse', 
           alignItems: 'center',
-          gap: '30px',
+          gap: '50px',
           flexWrap: 'wrap' 
         }}>
           <div style={{ flex: '0 0 400px', maxWidth: '100%' }}>
@@ -380,7 +380,7 @@ const Home = () => {
               src={logo} 
               alt="المعهد التكنولوجي" 
               style={{ 
-                width: '100%', 
+                width: '150%', 
                 height: 'auto', 
                 borderRadius: '15px', 
                 boxShadow: '0 10px 30px rgba(0,0,0,0.1)' 
@@ -388,18 +388,18 @@ const Home = () => {
             />
           </div>
           <div style={{ flex: '1', minWidth: '300px', textAlign: 'right' }}>
-            <h2 style={{ color: '#0d47a1', fontSize: '1.8rem', fontWeight: 'bold', marginBottom: '10px' }}>
+            <h2 style={{ color: '#0d47a1', fontSize: '2rem', fontWeight: 'bold', marginBottom: '15px' }}>
               المعهد التكنولوجي لهندسة التشييد والإدارة
             </h2>
-            <p style={{ lineHeight: '1.6', color: '#666', fontSize: '1.1rem', marginBottom: '15px' }}>
+            <p style={{ lineHeight: '2', color: '#666', fontSize: '1.1rem', marginBottom: '15px' }}>
               توجد لدى شركة المقاولون العرب إيمانًا راسخًا بأهمية التدريب، فضلاً عن أهمية البحث العلمي والتطوير، هذه العناصر هي التي تشكل حجر الزاوية للشركة لتعزيز قدرتها التنافسية واستمرارية البقاء. وبعد توصية من المجموعة الدولية للاستشارات المتخصصة في إدارة الموارد البشرية، عند تكليفها لبحث تطوير الإدارة في المقاولون العرب، استطعنا تأسيس المعهد التكنولوجي لهندسة التشييد والإدارة في عام 1978.
             </p>
-            <p style={{ lineHeight: '1.6', color: '#666', fontSize: '1.1rem', marginBottom: '30px' }}>
+            <p style={{ lineHeight: '1.6', color: '#666', fontSize: '1.1rem', marginBottom: '15px' }}>
               للوصول إلى أعلى درجات التطوير والقدرة على الثبات وبالأخص في مجالات التسويق، إدارة الشركات، التخطيط المؤسسي، نظم المعلومات، الأشغال الكهروميكانيكية، وكذا التدريب المهني.
             </p>
             <Link to="/about" style={{ textDecoration: 'none' }}>
               <button style={{
-                backgroundColor: '#f57c00', color: 'white', border: 'none', borderRadius: '30px', padding: '12px 40px', fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold', transition: '0.3s'
+                backgroundColor: '#f57c00', color: 'white', border: 'none', borderRadius: '30px', padding: '12px 40px', fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s'
               }}>
                 اقرأ المزيد
               </button>
@@ -410,7 +410,7 @@ const Home = () => {
       {/* New Section: Downloads (التحميلات) */}
       <div style={{ 
         width: '100%', 
-        padding: '30px 0', 
+        padding: '100px 0', 
         backgroundImage: 'linear-gradient(#070707,#0865a8)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -419,14 +419,14 @@ const Home = () => {
         color: 'white'
       }}>
         <Container maxWidth="lg">
-          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 3, fontFamily: 'Cairo, sans-serif', position: 'relative', display: 'inline-block',
+          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 3, fontFamily: '"Droid Arabic Kufi", serif', position: 'relative', display: 'inline-block',
               '&::after': { content: '""', position: 'absolute', bottom: -15, left: '15%', width: '60%', height: '2px', bgcolor: 'white' }
           }}>
             تحميـلات
           </Typography>
           <Grid container spacing={2} justifyContent="center">
             {downloadItems.map((item, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
+              <Grid item xs={1200} sm={6} md={4} key={index}>
                 <Paper
                   elevation={2}
                   component="a"
@@ -434,7 +434,7 @@ const Home = () => {
                   target="_blank"
                   rel="noopener noreferrer"
                   sx={{
-                    p: 2,
+                    p: 4,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -449,7 +449,7 @@ const Home = () => {
                   <Typography variant="h6" sx={{ color: '#333', fontWeight: 'bold', textAlign: 'right', flex: 1, fontSize: '1rem', lineHeight: 1.4 }}>
                     {item.title}
                   </Typography>
-                  <Box sx={{ bgcolor: '#ff8a50', p: 1.5, borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', ml: 2 }}>
+                  <Box sx={{ bgcolor: '#f57c00', p: 1.5, borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', ml: 2 }}>
                     {item.icon}
                   </Box>
                 </Paper>
@@ -625,15 +625,15 @@ const Home = () => {
 
 
 {/* Latest News - 5 Items in Swiper - Modern Flat Style */}
-<Container maxWidth="lg" sx={{ py: 3, bgcolor: '#f8f9fa' }}>
+<Container maxWidth="lg" sx={{ py: 1, bgcolor: '#f8f9fa' }}>
   <Typography
     variant="h4"
     fontWeight="bold"
     textAlign="center"
     sx={{
-      mb: 3,
+      mb: 1,
       color: '#0d47a1',
-      fontFamily: '"Cairo", sans-serif',
+      fontFamily: '"Droid Arabic Kufi", serif',
     }}
   >
     أحدث الأخبــار
@@ -648,21 +648,21 @@ const Home = () => {
         prevEl: '.news-swiper-prev',
       }}
       loop={true}
-      spaceBetween={20}
-      slidesPerView={5}
+      spaceBetween={25}
+      slidesPerView={4}
       breakpoints={{
         640: { slidesPerView: 2 },
         1024: { slidesPerView: 3 },
         1280: { slidesPerView: 5 },
       }}
-      sx={{ pb: 4 }}
+      sx={{ pb: 40 }}
     >
       {newsItems.slice(0, 5).map((news) => (  // Show only latest 5
         <SwiperSlide key={news.id}>
           <Card
             sx={{
               height: '100%',
-              borderRadius: 3,
+              borderRadius: 10,
               overflow: 'hidden',
               boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
               transition: 'all 0.3s ease',
@@ -674,7 +674,7 @@ const Home = () => {
             }}
           >
             {/* Square Image Area */}
-            <Box sx={{ position: 'relative', paddingTop: '100%', bgcolor: '#e3f2fd' }}>
+            <Box sx={{ position: 'relative', paddingTop: '70%', bgcolor: '#e3f2fd' }}>
               <img
                 src={news.image}
                 alt={news.title}
@@ -697,8 +697,8 @@ const Home = () => {
                   color: 'white',
                   px: 2,
                   py: 0.5,
-                  borderRadius: 1,
-                  fontSize: '0.85rem',
+                  borderRadius: 5,
+                  fontSize: '0.8rem',
                   fontWeight: 500,
                   backdropFilter: 'blur(4px)',
                 }}
@@ -708,15 +708,15 @@ const Home = () => {
             </Box>
 
             {/* Content */}
-            <CardContent sx={{ p: 3, textAlign: 'right' }}>
+            <CardContent sx={{ p: 5, textAlign: 'right' }}>
               <Typography
                 variant="h6"
                 fontWeight="bold"
                 sx={{
                   mb: 2,
                   fontFamily: '"Droid Arabic Kufi", serif',
-                  lineHeight: 1.6,
-                  height: 72,
+                  lineHeight: 1.2,
+                  height: 70,
                   overflow: 'hidden',
                   display: '-webkit-box',
                   WebkitLineClamp: 3,
@@ -732,7 +732,7 @@ const Home = () => {
                 component={Link}
                 to={news.link}
                 sx={{
-                  mt: 2,
+                  mt: 3,
                   bgcolor: '#f57c00',
                   borderRadius: 30,
                   px: 5,

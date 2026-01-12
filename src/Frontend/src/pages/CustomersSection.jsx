@@ -5,7 +5,7 @@ const CustomersSection = () => {
   const [itemsPerSlide, setItemsPerSlide] = useState(6);
 
   const customers = [
-    { id: 1, name: 'جامعة حلوان', image: './assets/images/customer01.jpg' },
+    { id: 1, name: 'جامعة حلوان', image: 'customer01.jpg' },
     { id: 2, name: 'جامعة القاهرة', image: 'customer02.jpg' },
     { id: 3, name: 'نقابه المهندسين المصرية العامة', image: 'customer03.jpg' },
     { id: 4, name: 'المعهد العالى للتكنولوجيا السادس من اكتوبر', image: 'customer04.jpg' },
@@ -162,7 +162,7 @@ const CustomersSection = () => {
                 >
                   <div className="w-full aspect-square bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-xl">
                     <img
-                      src={`/assets/images/${customer.image}`}
+                      src={`/images/${customer.image}`}
                       alt={customer.name}
                       className="w-full h-full object-contain p-4"
                     />

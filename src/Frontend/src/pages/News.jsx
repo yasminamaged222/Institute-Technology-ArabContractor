@@ -432,7 +432,7 @@ const News = () => {
       {/* News Cards Grid */}
       <div className="news-content-wrapper">
         <div className="news-cards-grid">
-          {newsData[selectedYear] && newsData[selectedYear].length > 0 ? (
+          {newsData[selectedYear] && newsData[selectedYear].length > 1 ? (
             newsData[selectedYear].map(news => (
               <div key={news.id} className="news-card-item">
                 <div className="news-card-inner">
