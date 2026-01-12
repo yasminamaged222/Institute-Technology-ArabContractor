@@ -19,6 +19,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+#region (CORS)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        builder => builder
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+#endregion
+
 //// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 #region( Dependency Injecton ) 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
@@ -55,7 +66,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseAuthentication();    
 app.UseStaticFiles();
