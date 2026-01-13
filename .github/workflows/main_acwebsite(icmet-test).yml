@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy ASP app to Azure Web App - acwebsite
 
 on:
@@ -13,12 +10,12 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSBuild path
+      - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Setup NuGet
@@ -27,29 +24,32 @@ jobs:
       - name: Restore NuGet packages
         run: nuget restore
 
-      - name: Publish to folder
-        run: msbuild /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir="\published\"
+      - name: Publish project
+        run: |
+          msbuild /t:Build /p:Configuration=Release
+          msbuild /t:WebPublish /p:WebPublishMethod=FileSystem /p:PublishUrl=published /p:Configuration=Release
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ASP-app
-          path: '/published/**'
+          path: published
 
   deploy:
     runs-on: windows-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact
         uses: actions/download-artifact@v4
         with:
           name: ASP-app
-      
-      - name: Login to Azure
+          path: .
+
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_BAFCB93C95484876B6B7F58B10A51812 }}
@@ -57,10 +57,8 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6084EF5E5E704D24A7BFB6D53EEC03A8 }}
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'acwebsite'
-          slot-name: 'icmet-test'
+          app-name: acwebsite
+          slot-name: icmet-test
           package: .
-          
