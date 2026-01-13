@@ -7,6 +7,7 @@ using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -70,6 +71,17 @@ app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseAuthentication();    
 app.UseStaticFiles();
+// ‰ÿ·⁄ ŒÿÊ… ŒÿÊ… „‰ Backend ·„Ã·œ «·„‘—Ê⁄ «·Ã–—Ì
+var projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName;
+
+// »⁄œ ﬂœÂ ‰»‰Ì «·„”«— ··’Ê—
+var imagesPath = Path.Combine(projectRoot, "Frontend", "public", "images", "news");
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(imagesPath),
+    RequestPath = "/images/news"
+}); 
 app.UseAuthorization();
 
 app.MapControllers();

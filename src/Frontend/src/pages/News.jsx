@@ -501,6 +501,133 @@
 // export default News;
 
 
+
+
+
+
+
+// import React, { useState, useEffect } from 'react';
+// import './news.css';
+
+// const News = () => {
+//   const [news, setNews] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+//   const [selectedYear, setSelectedYear] = useState('2025');
+
+//   const years = ['2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
+
+//   useEffect(() => {
+//     fetch('https://localhost:7177/api/News/getAllNews')
+//       .then(response => response.json())
+//       .then(data => {
+//         setNews(data.data); // use data.data
+//         setLoading(false);
+//       })
+//       .catch(err => {
+//         setError(err.message);
+//         setLoading(false);
+//       });
+//   }, []);
+
+//   if (loading) {
+//     return <p>جارٍ تحميل الأخبار...</p>;
+//   }
+
+//   if (error) {
+//     return <p>حدث خطأ: {error}</p>;
+//   }
+
+//   // Filter news by selected year
+//   const filteredNews = news.filter(
+//     item => new Date(item.publishedAt).getFullYear().toString() === selectedYear
+//   );
+
+//   return (
+//     <div className="news-page-container">
+//       {/* Breadcrumb */}
+//       <div className="breadcrumb-wrapper">
+//         <div className="breadcrumb-content">
+//           <a href="/" className="breadcrumb-link">الصفحة الرئيسية</a>
+//           <span className="breadcrumb-arrow">→</span>
+//           <span className="breadcrumb-current">الأخبار</span>
+//         </div>
+//       </div>
+
+//       {/* Year Filter Pills */}
+//       <div className="year-filter-container">
+//         <div className="year-pills">
+//           {years.map(year => (
+//             <button
+//               key={year}
+//               className={`year-pill ${selectedYear === year ? 'year-pill-active' : ''}`}
+//               onClick={() => setSelectedYear(year)}
+//             >
+//               {year}
+//             </button>
+//           ))}
+//         </div>
+//       </div>
+
+//       {/* News Cards Grid */}
+//       <div className="news-content-wrapper">
+//         <div className="news-cards-grid">
+//           {filteredNews.length > 0 ? (
+//             filteredNews.map(item => (
+//               <div key={item.id} className="news-card-item">
+//                 <div className="news-card-inner">
+//                   {/* Date Badge */}
+//                   <div className="news-date-badge">
+//                     {new Date(item.publishedAt).toLocaleDateString('ar-EG', {
+//                       day: '2-digit',
+//                       month: 'long',
+//                       year: 'numeric'
+//                     })}
+//                   </div>
+
+//                   {/* Image */}
+//                   <a href={item.link || '#'} className="news-image-wrapper">
+//                     <img src={item.imageUrl} alt={item.title} className="news-image" />
+//                   </a>
+
+//                   {/* Title */}
+//                   <div className="news-title-wrapper">
+//                     <a href={item.link || '#'} className="news-title-link">
+//                       {item.title}
+//                     </a>
+//                   </div>
+//                 </div>
+//               </div>
+//             ))
+//           ) : (
+//             <div className="no-news-message">
+//               <p>لا توجد أخبار لهذا العام</p>
+//             </div>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Pagination */}
+//       {filteredNews.length > 0 && (
+//         <div className="pagination-wrapper">
+//           <div className="pagination-dots">
+//             <button className="pagination-arrow pagination-arrow-disabled">‹</button>
+//             <button className="pagination-dot pagination-dot-active">1</button>
+//             <button className="pagination-dot">2</button>
+//             <button className="pagination-arrow">›</button>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default News;
+
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import './news.css';
 
@@ -513,30 +640,25 @@ const News = () => {
   const years = ['2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
 
   useEffect(() => {
-    fetch('https://localhost:7177/api/News/getAllNews')
-      .then(response => response.json())
+    setLoading(true);
+    setError(null);
+
+    fetch(`https://localhost:7177/api/News/getAllNews?year=${selectedYear}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch news');
+        }
+        return response.json();
+      })
       .then(data => {
-        setNews(data.data); // use data.data
+        setNews(data.data); // 👈 الأخبار بتيجي هنا
         setLoading(false);
       })
       .catch(err => {
         setError(err.message);
         setLoading(false);
       });
-  }, []);
-
-  if (loading) {
-    return <p>جارٍ تحميل الأخبار...</p>;
-  }
-
-  if (error) {
-    return <p>حدث خطأ: {error}</p>;
-  }
-
-  // Filter news by selected year
-  const filteredNews = news.filter(
-    item => new Date(item.publishedAt).getFullYear().toString() === selectedYear
-  );
+  }, [selectedYear]); // 👈 كل ما السنة تتغير نعمل fetch
 
   return (
     <div className="news-page-container">
@@ -567,10 +689,16 @@ const News = () => {
       {/* News Cards Grid */}
       <div className="news-content-wrapper">
         <div className="news-cards-grid">
-          {filteredNews.length > 0 ? (
-            filteredNews.map(item => (
+
+          {loading && <p>جارٍ تحميل الأخبار...</p>}
+
+          {error && <p>حدث خطأ: {error}</p>}
+
+          {!loading && !error && news.length > 0 ? (
+            news.map(item => (
               <div key={item.id} className="news-card-item">
                 <div className="news-card-inner">
+                  
                   {/* Date Badge */}
                   <div className="news-date-badge">
                     {new Date(item.publishedAt).toLocaleDateString('ar-EG', {
@@ -581,29 +709,36 @@ const News = () => {
                   </div>
 
                   {/* Image */}
-                  <a href={item.link || '#'} className="news-image-wrapper">
-                    <img src={item.imageUrl} alt={item.title} className="news-image" />
+                  <a href={`/news/${item.id}`} className="news-image-wrapper">
+                    <img
+                      src={item.imageUrl}
+                      alt={item.title}
+                      className="news-image"
+                    />
                   </a>
 
                   {/* Title */}
                   <div className="news-title-wrapper">
-                    <a href={item.link || '#'} className="news-title-link">
+                    <a href={`/news/${item.id}`} className="news-title-link">
                       {item.title}
                     </a>
                   </div>
+
                 </div>
               </div>
             ))
           ) : (
-            <div className="no-news-message">
-              <p>لا توجد أخبار لهذا العام</p>
-            </div>
+            !loading && (
+              <div className="no-news-message">
+                <p>لا توجد أخبار لهذا العام</p>
+              </div>
+            )
           )}
         </div>
       </div>
 
-      {/* Pagination */}
-      {filteredNews.length > 0 && (
+      {/* Pagination (Static for now) */}
+      {news.length > 0 && (
         <div className="pagination-wrapper">
           <div className="pagination-dots">
             <button className="pagination-arrow pagination-arrow-disabled">‹</button>
