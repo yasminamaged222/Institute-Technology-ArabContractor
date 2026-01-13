@@ -38,14 +38,11 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install frontend dependencies
+      - name: Install and build frontend
+        shell: pwsh
         run: |
-          cd frontend
+          cd src/Frontend
           npm install
-
-      - name: Build frontend
-        run: |
-          cd frontend
           npm run build
 
       - name: Copy frontend build to backend wwwroot
@@ -143,3 +140,4 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
+
