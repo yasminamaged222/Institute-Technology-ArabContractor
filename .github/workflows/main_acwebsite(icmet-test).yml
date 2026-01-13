@@ -11,8 +11,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
@@ -26,30 +25,9 @@ jobs:
       - name: Build solution
         run: msbuild src/Backend/Institute.Web/Institute.Web.sln /p:Configuration=Release
 
-      - name: Build and publish API
-        run: |
-          Write-Host "Creating publish folder..."
-          New-Item -ItemType Directory -Force -Path published
-          Write-Host "Running MSBuild publish..."
-          msbuild src/Backend/Institute.Web/Institute.API/Institute.API.csproj `
-            /p:DeployOnBuild=true `
-            /p:WebPublishMethod=FileSystem `
-            /p:PublishUrl=published `
-            /p:Configuration=Release
+      - name: Build and publish
+        run: msbuild src/Backend/Institute.Web/Institute.API/Institute.API.csproj /p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:PublishUrl=published /p:Configuration=Release
 
-      - name: Show publish folder contents
-        run: dir published/bin/Release/net6.0/publish/
-
-      - name: Verify publish folder is not empty
-        run: |
-          $files = Get-ChildItem published/bin/Release/net6.0/publish/
-          if ($files.Count -eq 0) {
-            Write-Host "ERROR: Publish folder is empty! Build/publish failed."
-            exit 1
-          } else {
-            Write-Host "✅ Publish folder has files ready for artifact upload."
-            $files
-          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -72,17 +50,6 @@ jobs:
           name: ASP-app
           path: artifact
 
-      - name: Verify artifact download
-        run: |
-          $files = Get-ChildItem artifact
-          if ($files.Count -eq 0) {
-            Write-Host "ERROR: Artifact folder is empty! Download failed."
-            exit 1
-          } else {
-            Write-Host "✅ Artifact downloaded successfully."
-            $files
-          }
-
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -96,3 +63,5 @@ jobs:
           app-name: acwebsite
           slot-name: icmet-test
           package: artifact/
+
+
