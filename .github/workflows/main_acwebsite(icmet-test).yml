@@ -1,4 +1,4 @@
-name: Build and deploy ASP app to Azure Web App - acwebsite
+name: Build and deploy ASP+React to Azure Web App - acwebsite
 
 on:
   push:
@@ -11,9 +11,11 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      # ------------------ Checkout ------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ------------------ Backend ------------------
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
@@ -23,19 +25,75 @@ jobs:
       - name: Restore NuGet packages
         run: nuget restore src/Backend/Institute.Web/Institute.Web.sln
 
-      - name: Build solution
+      - name: Build backend solution
         run: msbuild src/Backend/Institute.Web/Institute.Web.sln /p:Configuration=Release
 
-      - name: Build and publish API
+      - name: Build and publish backend API
         run: |
-          echo "Running dotnet publish..."
           dotnet publish src/Backend/Institute.Web/Institute.API/Institute.API.csproj -c Release -o published
 
+      # ------------------ Frontend ------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm install
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+      - name: Copy frontend build to backend wwwroot
+        shell: pwsh
+        run: |
+          # تأكد إن المجلد موجود
+          if (!(Test-Path "published/wwwroot")) {
+            New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
+          }
+          # انسخ ملفات build للـ wwwroot
+          Copy-Item -Path frontend/build/* -Destination published/wwwroot -Recurse
+
+          
+      - name: Add web.config for React routing
+        shell: pwsh
+        run: |
+          $webConfig = @"
+          <configuration>
+            <system.webServer>
+              <rewrite>
+                <rules>
+                  <rule name="React Routes" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/index.html" />
+                  </rule>
+                </rules>
+              </rewrite>
+            </system.webServer>
+          </configuration>
+          "@
+          
+              if (!(Test-Path "published/wwwroot")) {
+                New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
+              }
+          
+              $webConfig | Out-File -FilePath "published/wwwroot/web.config" -Encoding utf8
+
+      # ------------------ Verify publish folder ------------------
       - name: Show publish folder contents
+        shell: pwsh
         run: Get-ChildItem -Path published -Recurse
 
       - name: Verify publish folder
+        shell: pwsh
         run: |
           $files = Get-ChildItem published -Recurse
           if ($files.Count -eq 0) {
@@ -44,8 +102,8 @@ jobs:
           } else {
             Write-Host "✅ Publish folder has files:"
             $files
-          }
 
+      # ------------------ Upload artifact ------------------
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -68,6 +126,7 @@ jobs:
           path: artifact
 
       - name: Verify downloaded artifact
+        shell: pwsh
         run: |
           $files = Get-ChildItem artifact -Recurse
           if ($files.Count -eq 0) {
@@ -76,9 +135,6 @@ jobs:
           } else {
             Write-Host "✅ Artifact downloaded successfully."
             $files
-          }
-
-      
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -87,7 +143,3 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
-
-
-
-
