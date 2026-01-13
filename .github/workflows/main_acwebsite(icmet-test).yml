@@ -102,6 +102,7 @@ jobs:
           } else {
             Write-Host "✅ Publish folder has files:"
             $files
+          }
 
       # ------------------ Upload artifact ------------------
       - name: Upload artifact
@@ -143,6 +144,7 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
+
 
 
 
