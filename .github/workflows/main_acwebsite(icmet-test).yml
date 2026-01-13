@@ -26,7 +26,7 @@ jobs:
         run: msbuild src/Backend/Institute.Web/Institute.Web.sln /p:Configuration=Release
 
       - name: Publish Web App
-        run: msbuild *.csproj ^
+        run: msbuild src/Backend/Institute.Web/Institute.API/Institute.API.csproj ^
              /p:DeployOnBuild=true ^
              /p:WebPublishMethod=FileSystem ^
              /p:PublishUrl=published ^
@@ -66,4 +66,5 @@ jobs:
           app-name: acwebsite
           slot-name: icmet-test
           package: .
+
 
