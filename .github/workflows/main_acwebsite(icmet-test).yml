@@ -28,14 +28,9 @@ jobs:
 
       - name: Build and publish API
         run: |
-          echo "Creating publish folder..."
-          New-Item -ItemType Directory -Force -Path published
-          echo "Running MSBuild publish..."
-          msbuild src/Backend/Institute.Web/Institute.API/Institute.API.csproj `
-            /p:DeployOnBuild=true `
-            /p:WebPublishMethod=FileSystem `
-            /p:PublishUrl=published `
-            /p:Configuration=Release
+          echo "Running dotnet publish..."
+          dotnet publish src/Backend/Institute.Web/Institute.API/Institute.API.csproj -c Release -o published
+
 
       - name: Show publish folder contents
         run: Get-ChildItem -Path published -Recurse
@@ -96,4 +91,5 @@ jobs:
           app-name: acwebsite
           slot-name: icmet-test
           package: artifact/
+
 
