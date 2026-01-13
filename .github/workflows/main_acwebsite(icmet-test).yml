@@ -43,17 +43,20 @@ jobs:
         run: |
           cd src/Frontend
           npm install
-          npm run build
-
-      - name: Copy frontend build to backend wwwroot
+    # Build frontend
+      - name: Build frontend
         shell: pwsh
         run: |
-          # تأكد إن المجلد موجود
+          cd src/Frontend
+          npm run build
+          
+      - name: Copy frontend to wwwroot
+        shell: pwsh
+        run: |
           if (!(Test-Path "published/wwwroot")) {
             New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
           }
-          # انسخ ملفات build للـ wwwroot
-          Copy-Item -Path frontend/build/* -Destination published/wwwroot -Recurse
+          Copy-Item -Path src/Frontend/dist/* -Destination published/wwwroot -Recurse -Force
 
           
       - name: Add web.config for React routing
@@ -140,5 +143,6 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
+
 
 
