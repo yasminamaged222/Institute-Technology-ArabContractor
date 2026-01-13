@@ -33,7 +33,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ASP-app
-          path: published/bin/Release/net6.0/publish/
+          path: published/
 
   deploy:
     runs-on: windows-latest
@@ -63,5 +63,6 @@ jobs:
           app-name: acwebsite
           slot-name: icmet-test
           package: artifact/
+
 
 
