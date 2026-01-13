@@ -16,13 +16,13 @@ namespace Institute.API.Controllers
         // In your controller
        
             private readonly IReadOnlyService<Book> _bookService;
-        private readonly IMapper _mapper;
+        private readonly IMapper _mapperr;
 
         public BookController(IReadOnlyService<Book> bookService, IMapper mapper)
             {
                 _bookService = bookService;
             
-            _mapper = mapper;
+            _mapperr = mapper;
         }
 
 
