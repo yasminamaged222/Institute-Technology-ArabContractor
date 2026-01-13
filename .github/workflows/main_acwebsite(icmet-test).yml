@@ -25,12 +25,9 @@ jobs:
       - name: Build solution
         run: msbuild src/Backend/Institute.Web/Institute.Web.sln /p:Configuration=Release
 
-      - name: Publish Web App
-        run: msbuild src/Backend/Institute.Web/Institute.API/Institute.API.csproj ^
-             /p:DeployOnBuild=true ^
-             /p:WebPublishMethod=FileSystem ^
-             /p:PublishUrl=published ^
-             /p:Configuration=Release
+      - name: Build and publish
+        run: msbuild src/Backend/Institute.Web/Institute.API/Institute.API.csproj /p:DeployOnBuild=true /p:WebPublishMethod=FileSystem /p:PublishUrl=published /p:Configuration=Release
+
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -66,5 +63,6 @@ jobs:
           app-name: acwebsite
           slot-name: icmet-test
           package: .
+
 
 
