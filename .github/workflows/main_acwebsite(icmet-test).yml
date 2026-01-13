@@ -26,15 +26,25 @@ jobs:
       - name: Build solution
         run: msbuild src/Backend/Institute.Web/Institute.Web.sln /p:Configuration=Release
 
-      - name: Build and publish
+      - name: Build and publish API
         run: |
+          echo "Creating publish folder..."
           mkdir published
+          echo "Running MSBuild publish..."
           msbuild src/Backend/Institute.Web/Institute.API/Institute.API.csproj `
             /p:DeployOnBuild=true `
             /p:WebPublishMethod=FileSystem `
             /p:PublishUrl=published `
             /p:Configuration=Release
+          echo "Checking published folder contents:"
           dir published
+
+      - name: Verify publish folder
+        run: |
+          if not exist published (
+            echo "ERROR: publish folder is empty or missing!"
+            exit 1
+          )
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -56,6 +66,15 @@ jobs:
         with:
           name: ASP-app
           path: artifact
+
+      - name: Verify artifact download
+        run: |
+          echo "Checking artifact folder contents:"
+          dir artifact
+          if not exist artifact (
+            echo "ERROR: Artifact folder is empty!"
+            exit 1
+          )
 
       - name: Azure Login
         uses: azure/login@v2
