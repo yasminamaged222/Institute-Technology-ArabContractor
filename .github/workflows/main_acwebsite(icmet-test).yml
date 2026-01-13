@@ -39,14 +39,15 @@ jobs:
           Write-Host "Checking published folder contents:"
           Get-ChildItem published
 
-      - name: Verify publish folder
+      - name: Verify publish folder is not empty
         run: |
-          if (-not (Test-Path -Path "published")) {
-            Write-Host "ERROR: publish folder is empty or missing!"
+          $files = Get-ChildItem published
+          if ($files.Count -eq 0) {
+            Write-Host "ERROR: Publish folder is empty! Build/publish failed."
             exit 1
           } else {
-            Write-Host "✅ Publish folder exists and ready."
-            Get-ChildItem published
+            Write-Host "✅ Publish folder has files and ready for artifact upload."
+            $files
           }
 
       - name: Upload artifact
@@ -72,12 +73,13 @@ jobs:
 
       - name: Verify artifact download
         run: |
-          if (-not (Test-Path -Path "artifact")) {
-            Write-Host "ERROR: Artifact folder is empty!"
+          $files = Get-ChildItem artifact
+          if ($files.Count -eq 0) {
+            Write-Host "ERROR: Artifact folder is empty! Download failed."
             exit 1
           } else {
-            Write-Host "✅ Artifact folder exists and ready."
-            Get-ChildItem artifact
+            Write-Host "✅ Artifact downloaded successfully."
+            $files
           }
 
       - name: Azure Login
