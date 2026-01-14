@@ -9,18 +9,20 @@ import './index.css';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import App from './App.jsx';
-
+import { AuthProvider } from "./context/AuthContext";
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <CacheProvider value={cacheRtl}>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <BrowserRouter>
+                <BrowserRouter>
+                    <AuthProvider>
       <div dir="rtl"> {/* <-- مهم جدًا للـ HTML كله */}
          <Navbar />
           <App />
         <Footer />
-          </div>
+                        </div>
+                    </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
     </CacheProvider>
