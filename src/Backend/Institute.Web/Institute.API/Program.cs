@@ -71,6 +71,7 @@ app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseAuthentication();    
 app.UseStaticFiles();
+app.MapFallbackToFile("index.html");
 //var projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName;
 
 //var imagesPath = Path.Combine(projectRoot, "Frontend", "public", "images", "news");
