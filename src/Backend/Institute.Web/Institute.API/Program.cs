@@ -71,17 +71,15 @@ app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseAuthentication();    
 app.UseStaticFiles();
-// ‰ÿ·⁄ ŒÿÊ… ŒÿÊ… „‰ Backend ·„Ã·œ «·„‘—Ê⁄ «·Ã–—Ì
-var projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName;
+//var projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName;
 
-// »⁄œ ﬂœÂ ‰»‰Ì «·„”«— ··’Ê—
-var imagesPath = Path.Combine(projectRoot, "Frontend", "public", "images", "news");
+//var imagesPath = Path.Combine(projectRoot, "Frontend", "public", "images", "news");
 
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(imagesPath),
-    RequestPath = "/images/news"
-}); 
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(imagesPath),
+//    RequestPath = "/images/news"
+//}); 
 app.UseAuthorization();
 
 app.MapControllers();
