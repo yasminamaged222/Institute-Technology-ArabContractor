@@ -9,7 +9,7 @@
 
 
 //   useEffect(() => {
-//     fetch('https://localhost:7177/api/News/getAllNews')
+//     fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews')
 //       .then(response => response.json())
 //       .then(data => {
 //         setNews(data);
