@@ -643,7 +643,7 @@ const News = () => {
     setLoading(true);
     setError(null);
 
-    fetch(`https://localhost:7177/api/News/getAllNews?year=${selectedYear}`)
+    fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews?year=${selectedYear}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Failed to fetch news');
