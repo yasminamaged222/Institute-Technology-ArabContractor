@@ -18,6 +18,8 @@ obj/
 *.suo
 *.userosscache
 *.sln.docstates
+tailwind.extension.json
+
 
 ##################################
 # Rider / JetBrains
