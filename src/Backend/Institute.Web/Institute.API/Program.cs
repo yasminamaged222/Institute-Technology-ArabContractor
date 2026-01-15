@@ -2,10 +2,12 @@ using AutoMapper;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
+using Institute.Application.Services;
 using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,10 +20,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+#region (CORS)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        builder => builder
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+#endregion
+
 //// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 #region( Dependency Injecton ) 
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>));
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver>();
 
 #endregion
@@ -53,10 +67,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseAuthentication();    
 app.UseStaticFiles();
+app.MapFallbackToFile("index.html");
+//var projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName;
+
+//var imagesPath = Path.Combine(projectRoot, "Frontend", "public", "images", "news");
+
+//app.UseStaticFiles(new StaticFileOptions
+//{
+//    FileProvider = new PhysicalFileProvider(imagesPath),
+//    RequestPath = "/images/news"
+//}); 
 app.UseAuthorization();
 
 app.MapControllers();

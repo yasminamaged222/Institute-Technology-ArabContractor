@@ -14,4 +14,7 @@ public partial class PlanFile
     public string? FileName { get; set; }
 
     public int? FilePeriorty { get; set; }
+
+    // 🔹 Navigation
+    public Planwork Plan { get; set; }
 }

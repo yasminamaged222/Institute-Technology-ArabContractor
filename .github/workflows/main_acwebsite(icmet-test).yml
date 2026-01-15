@@ -1,0 +1,153 @@
+name: Build and deploy ASP+React to Azure Web App - acwebsite
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      # ------------------ Checkout ------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------ Backend ------------------
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Setup NuGet
+        uses: NuGet/setup-nuget@v2
+
+      - name: Restore NuGet packages
+        run: nuget restore src/Backend/Institute.Web/Institute.Web.sln
+
+      - name: Build backend solution
+        run: msbuild src/Backend/Institute.Web/Institute.Web.sln /p:Configuration=Release
+
+      - name: Build and publish backend API
+        run: |
+          dotnet publish src/Backend/Institute.Web/Institute.API/Institute.API.csproj -c Release -o published
+
+      # ------------------ Frontend ------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+
+      - name: Install and build frontend
+        shell: pwsh
+        run: |
+          cd src/Frontend
+          npm install
+    # Build frontend
+      - name: Build frontend
+        shell: pwsh
+        run: |
+          cd src/Frontend
+          npm run build
+          
+      - name: Copy React dist to wwwroot
+        shell: pwsh
+        run: |
+          if (!(Test-Path "published/wwwroot")) {
+            New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
+          }
+          Copy-Item -Path src/Frontend/dist/* -Destination published/wwwroot -Recurse -Force
+          
+      - name: Add web.config for React routing
+        shell: pwsh
+        run: |
+          $webConfig = @"
+          <configuration>
+            <system.webServer>
+              <rewrite>
+                <rules>
+                  <rule name="React Routes" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/index.html" />
+                  </rule>
+                </rules>
+              </rewrite>
+            </system.webServer>
+          </configuration>
+          "@
+          
+              if (!(Test-Path "published/wwwroot")) {
+                New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
+              }
+          
+              $webConfig | Out-File -FilePath "published/wwwroot/web.config" -Encoding utf8
+
+      # ------------------ Verify publish folder ------------------
+      - name: Show publish folder contents
+        shell: pwsh
+        run: Get-ChildItem -Path published -Recurse
+
+      - name: Verify publish folder
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem published -Recurse
+          if ($files.Count -eq 0) {
+            Write-Host "❌ ERROR: Publish folder is empty! Build/publish failed."
+            exit 1
+          } else {
+            Write-Host "✅ Publish folder has files:"
+            $files
+          }
+
+      # ------------------ Upload artifact ------------------
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ASP-app
+          path: published/
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ASP-app
+          path: artifact
+
+      - name: Verify downloaded artifact
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem artifact -Recurse
+          if ($files.Count -eq 0) {
+            Write-Host "❌ ERROR: Artifact folder is empty! Download failed."
+            exit 1
+          } else {
+            Write-Host "✅ Artifact downloaded successfully."
+            $files
+          }
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: acwebsite
+          slot-name: icmet-test
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: artifact/
+
+
+
+
+
+
+
+
