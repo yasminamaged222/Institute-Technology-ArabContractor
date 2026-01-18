@@ -30,7 +30,6 @@ namespace Institute.API.Controllers
                 return Unauthorized();
 
             var user = await _context.AppUsers
-                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.ClerkUserId == clerkUserId);
 
             if (user == null)
@@ -38,10 +37,11 @@ namespace Institute.API.Controllers
                 user = new AppUser
                 {
                     ClerkUserId = clerkUserId,
-                    Username =
-                        User.FindFirstValue("email") ??
-                        User.FindFirstValue("name") ??
-                        "user"
+                    Email = User.FindFirstValue("email"),
+                    FirstName = User.FindFirstValue("given_name"),
+                    LastName = User.FindFirstValue("family_name"),
+                    Username = User.FindFirstValue("email") ?? "user",
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 _context.AppUsers.Add(user);
@@ -55,6 +55,7 @@ namespace Institute.API.Controllers
                 Username = user.Username
             });
         }
+
 
 
     }

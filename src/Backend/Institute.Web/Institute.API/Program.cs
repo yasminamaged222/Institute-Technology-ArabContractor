@@ -37,6 +37,10 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>));
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
+
 
 #endregion
 #region(Authentication And Authorization)
@@ -70,18 +74,10 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseAuthentication();    
+app.UseAuthorization();
 app.UseStaticFiles();
 app.MapFallbackToFile("index.html");
-//var projectRoot = Directory.GetParent(Directory.GetCurrentDirectory())!.Parent!.Parent!.FullName;
 
-//var imagesPath = Path.Combine(projectRoot, "Frontend", "public", "images", "news");
-
-//app.UseStaticFiles(new StaticFileOptions
-//{
-//    FileProvider = new PhysicalFileProvider(imagesPath),
-//    RequestPath = "/images/news"
-//}); 
-app.UseAuthorization();
 
 app.MapControllers();
 
