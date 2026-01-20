@@ -293,7 +293,7 @@ const Navbar = () => {
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', height: 450 }} dir="rtl">
+                <Box sx={{ display: 'flex', height: 450 }} dir="left">
                     <List sx={{ width: 280, borderLeft: '1px solid #d1d7dc', p: 0, bgcolor: '#f8f9fa' }}>
                         {mainCourses.map((cat) => (
                             <ListItemButton

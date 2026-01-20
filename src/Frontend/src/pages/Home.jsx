@@ -592,7 +592,7 @@ const Home = () => {
                       </Box>
 
                       {/* Text Side */}
-                      <Box sx={{ flex: '1', textAlign: { xs: 'center', md: 'right' } }}>
+                      <Box sx={{ flex: '1', textAlign: { xs: 'left', md: 'left' } }}>
                           <Typography
                               variant="h4"
                               sx={{
@@ -601,6 +601,7 @@ const Home = () => {
                                   fontWeight: 'bold',
                                   mb: { xs: 2, md: 3 },
                                   fontFamily: '"Droid Arabic Kufi", serif'
+
                               }}
                           >
                               المعهد التكنولوجي لهندسة التشييد والإدارة

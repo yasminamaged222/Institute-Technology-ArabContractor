@@ -122,7 +122,7 @@ const Footer = () => {
                             جميع الحقوق محفوظة 2025 © المعهد التكنولوجي لهندسة التشييد والإدارة | تصميم مركز معلومات الإدارة العليا
                         </Typography>
                         <Typography variant="caption" sx={{ color: '#ceb22f', fontWeight: 'bold', display: 'block', mt: 1 }}>
-                            Designed by Yasmina Maged
+                            Designed by Yasmina Maged & Ahmed Taha
                         </Typography>
                     </Box>
 
