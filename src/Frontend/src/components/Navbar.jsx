@@ -2,27 +2,32 @@ import React, { useState } from 'react';
 import {
   AppBar, Toolbar, Box, IconButton, InputBase, Menu, MenuItem,
   Avatar, Badge, Button, Divider, Typography, Stack, Popover, List, 
-  ListItemButton, ListItemText, useMediaQuery, useTheme, Grid // Added Grid here
+    ListItemButton, ListItemText, useMediaQuery, useTheme, Grid,Drawer, Collapse // Added Grid here
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import MenuIcon from '@mui/icons-material/Menu'; 
+import CloseIcon from '@mui/icons-material/Close'; // Added CloseIcon
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo-removebg-preview.png';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
+import AuthSync from '../components/AuthSync.jsx';
+
 
 const Navbar = () => {
-  const [coursesAnchor, setCoursesAnchor] = useState(null);
-  const [aboutAnchor, setAboutAnchor] = useState(null);
-  const [accountAnchor, setAccountAnchor] = useState(null);
-  const [language] = useState('ar');
+    const [coursesAnchor, setCoursesAnchor] = useState(null);
+    const [aboutAnchor, setAboutAnchor] = useState(null);
+    const [accountAnchor, setAccountAnchor] = useState(null);
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false);
   
-  // Responsive hooks
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
+    const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const aboutLinks = [
     'نبذة عامة', 'الرؤية والأهداف', 'الشهادات والاعتمادات', 'فريق العمل',
@@ -164,175 +169,211 @@ const Navbar = () => {
     setCoursesAnchor(null);
     setAccountAnchor(null);
   };
-
-  return (
-    <AppBar position="sticky" elevation={4} sx={{ bgcolor: 'white', color: 'black', py: 0.5 }}>
-      <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 2 } }}>
+    const toggleDrawer = (open) => () => setMobileOpen(open);
+    return (
+        <> {/* <--- ADDED FRAGMENT WRAPPER */}
+<AppBar position="sticky" elevation={4} sx={{ bgcolor: 'white', color: 'black', py: 0.5 }}>
+  <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
         
-        {/* LOGO SECTION - Tightened gaps */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {isMobile && <IconButton><MenuIcon /></IconButton>}
-          <Stack
-            direction="row"
-            alignItems="center"
-            component={Link}
-            to="/"
-            sx={{ textDecoration: 'none', color: 'inherit' }}
-          >
-            <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: { xs: 40, md: 55 }, width: 'auto' }} />
-            <Box sx={{ mr: 1, textAlign: 'left', display: { xs: 'none', sm: 'block' } }}>
-              <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#0d47a1', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: 1.2, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-                المقاولون العرب
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#0d47a1', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: 1.1, fontSize: '0.75rem' }}>
-              المعهد التكنولوجى لهندسة التشييد والإدارة
-              </Typography>
-            </Box>
-          </Stack>
+            {/* LOGO SECTION - Tightened gaps */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {isMobile && (
+                          <IconButton onClick={toggleDrawer(true)}>
+                              <MenuIcon />
+                          </IconButton>
+                      )}
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        component={Link}
+                        to="/"
+                        sx={{ textDecoration: 'none', color: 'inherit' }}
+                      >
+                        <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: { xs: 40, md: 55 }, width: 'auto' }} />
+                        {!isSmallMobile && (
+                            <Box sx={{ mr: 1, textAlign: 'left' }}>
+                              <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#0d47a1', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                                المقاولون العرب
+                              </Typography>
+                              <Typography variant="caption" sx={{ color: '#0d47a1', display: { xs: 'none', md: 'block' } }}>
+                                المعهد التكنولوجى لهندسة التشييد والإدارة
+                              </Typography>
+                            </Box>
+                          )}
+                      </Stack>
+                    </Box>
+
+                    {/* COURSES BUTTON - Right next to logo */}
+                          {!isMobile && (
+                              <Button
+                                  color="inherit"
+                                  endIcon={<KeyboardArrowDownIcon />}
+                                  onMouseEnter={handleCoursesOpen}
+                                  sx={{  px: 2, mx: 1, whiteSpace: 'nowrap' }}
+                              >
+                                  الدورات التدريبية
+                              </Button>
+                          )}
+
+                        {/* SEARCH BAR - Fixed flex and padding */}
+                              <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, justifyContent: 'center', maxWidth: { xs: '150px', md: '400px' }, mx: 2 }}>
+                          <Box sx={{ bgcolor: '#f1f3f4', borderRadius: 9, display: 'flex', alignItems: 'center', px: 2, py: 0.5, width: '100%' }}>
+                            <InputBase
+                              placeholder="بحث..."
+                              sx={{ color: 'black', flexGrow: 1, textAlign: 'right', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.85rem' }}
+                            />
+                            <SearchIcon sx={{ color: 'gray', fontSize: 20 }} />
+                          </Box>
+                        </Box>
+
+                    {/* NAV LINKS & AUTH */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 } }}>
+                        {!isMobile && (
+                            <Stack direction="row" spacing={1}>
+                                <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} onMouseEnter={(e) => setAboutAnchor(e.currentTarget)}>عن المعهد</Button>
+                                <Button color="inherit" component={Link} to="/news">الأخبار</Button>
+                                <Button color="inherit" component={Link} to="/lib">المكتبة</Button>
+                                <Button color="inherit" component={Link} to="/services">الخدمات</Button>
+                            </Stack>
+                        )}
+
+                  <IconButton color="inherit" size="small">
+                    <Badge badgeContent={2} color="primary">
+                                  <ShoppingCartIcon sx={{ fontSize: 22 }} />
+                    </Badge>
+                  </IconButton>
+
+                  <Box sx={{ borderRight: '1px solid #ddd', pl: 2, ml: 1, display: 'flex', alignItems: 'center' }}>
+                      <SignedOut><SignInButton mode="modal" /></SignedOut>
+                      <SignedIn><UserButton afterSignOutUrl="/" /><AuthSync /></SignedIn>
+                  </Box>
+
         </Box>
+   </Toolbar>
+ </AppBar>
+            {/* --- MOBILE DRAWER --- */}
+            <Drawer anchor="right" open={mobileOpen} onClose={toggleDrawer(false)}>
+                <Box sx={{ width: 280, p: 2 }} dir="rtl">
+                    <IconButton onClick={toggleDrawer(false)} sx={{ mb: 2 }}><CloseIcon /></IconButton>
+                    <List>
+                        <ListItemButton onClick={() => setMobileCoursesOpen(!mobileCoursesOpen)}>
+                            <ListItemText primary="الدورات التدريبية" />
+                            {mobileCoursesOpen ? <ExpandMoreIcon /> : <ChevronLeftIcon />}
+                        </ListItemButton>
+                        <Collapse in={mobileCoursesOpen} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding sx={{ pr: 2 }}>
+                                {mainCourses.map(course => (
+                                    <ListItemButton key={course.id} component={Link} to={course.link || '#'} onClick={toggleDrawer(false)}>
+                                        <ListItemText primary={course.title} />
+                                    </ListItemButton>
+                                ))}
+                            </List>
+                        </Collapse>
 
-        {/* COURSES BUTTON - Right next to logo */}
-        {!isMobile && (
-          <Button
-            color="inherit"
-            endIcon={<KeyboardArrowDownIcon />}
-            onMouseEnter={handleCoursesOpen}
-            sx={{ fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', px: 5, minWidth: 'auto', whiteSpace: 'nowrap' }}
-          >
-            الدورات التدريبية
-          </Button>
-        )}
+                        <Divider sx={{ my: 1 }} />
+                        {aboutLinks.map(link => (
+                            <ListItemButton key={link} component={Link} to={aboutLinkPaths[link] || '#'} onClick={toggleDrawer(false)}>
+                                <ListItemText primary={link} />
+                            </ListItemButton>
+                        ))}
+                    </List>
+                </Box>
+            </Drawer>
 
-        {/* SEARCH BAR - Fixed flex and padding */}
-        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, justifyContent: 'center', mx: { xs: 1, md: 2 } }}>
-          <Box sx={{ bgcolor: '#f1f3f4', borderRadius: 9, display: 'flex', alignItems: 'center', px: 1, py: 0.5, width: '100%', maxWidth: 300 }}>
-            <InputBase
-              placeholder="بحث..."
-              sx={{ color: 'black', flexGrow: 1, textAlign: 'right', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.8rem' }}
-            />
-            <SearchIcon sx={{ color: 'gray', fontSize: 20 }} />
-          </Box>
-        </Box>
+            {/* --- DESKTOP MEGA MENU --- */}
+            <Popover
+                open={Boolean(coursesAnchor)}
+                anchorEl={coursesAnchor}
+                onClose={handleClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+                slotProps={{
+                    paper: {
+                        onMouseLeave: handleClose,
+                        sx: { width: 900, mt: 1, borderRadius: 0, boxShadow: 6, border: '1px solid #d1d7dc' }
+                    }
+                }}
+            >
+                <Box sx={{ display: 'flex', height: 450 }} dir="rtl">
+                    <List sx={{ width: 280, borderLeft: '1px solid #d1d7dc', p: 0, bgcolor: '#f8f9fa' }}>
+                        {mainCourses.map((cat) => (
+                            <ListItemButton
+                                key={cat.id}
+                                onMouseEnter={() => setSelectedCatId(cat.id)}
+                                selected={selectedCatId === cat.id}
+                                sx={{ py: 1.5, '&.Mui-selected': { bgcolor: 'white', color: '#0d47a1' } }}
+                            >
+                                <ListItemText primary={cat.title} primaryTypographyProps={{ fontSize: 13.5, fontFamily: '"Droid Arabic Kufi", serif' }} />
+                                <ChevronLeft fontSize="small" sx={{ opacity: 0.3 }} />
+                            </ListItemButton>
+                        ))}
+                    </List>
+                    <Box sx={{ flexGrow: 1, p: 3, bgcolor: 'white' }}>
+                        <Typography variant="subtitle2" sx={{ color: '#f57c00', fontWeight: 'bold', mb: 2 }}>{activeCategory.title}</Typography>
+                        <Grid container spacing={2}>
+                            {activeCategory.sub?.map((sub) => (
+                                <Grid item xs={6} key={sub.id}>
+                                    <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: '#0865A8' }}>{sub.title}</Typography>
+                                    {sub.topics?.map((topic) => (
+                                        <Link key={topic.id} to={topic.link} style={{ textDecoration: 'none' }} onClick={handleClose}>
+                                            <Typography
+                                                variant="caption"
+                                                sx={{ display: 'block', color: '#666', mb: 0.5, cursor: 'pointer', '&:hover': { color: '#f57c00' } }}
+                                            >
+                                                • {topic.name}
+                                            </Typography>
+                                        </Link>
+                                    ))}
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                </Box>
+            </Popover>
 
-        {/* NAV LINKS & ICONS - Reduced gap from 5 to 1 or 2 */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 3} }}>
-          {!isMobile && (
-            <Stack direction="row" spacing={0.5}>
-              <Button
-                color="inherit"
-                endIcon={<KeyboardArrowDownIcon />}
-                onMouseEnter={(e) => setAboutAnchor(e.currentTarget)}
-                sx={{ fontWeight: 600, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.85rem' }}
-              >
-                عن المعهد
-              </Button>
-              <Button color="inherit" sx={{ fontWeight: 600, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.85rem' }}>
-                <a href="/news" style={{ textDecoration: 'none', color: 'inherit' }}>الأخبار</a>
-              </Button>
-              <Button color="inherit" sx={{ fontWeight: 600, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.85rem' }}>المكتبة</Button>
-              <Button color="inherit" sx={{ fontWeight: 600, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.85rem' }}>الخدمات</Button>
-            </Stack>
-          )}
-
-          <IconButton color="inherit" size="small">
-            <Badge badgeContent={2} color="primary">
-              <ShoppingCartIcon sx={{ color: '#555', fontSize: 22 }} />
-            </Badge>
-          </IconButton>
-
-          <IconButton onClick={(e) => setAccountAnchor(e.currentTarget)} sx={{ p: 0 }}>
-            <Avatar sx={{ bgcolor: '#0865A8', width: 35, height: 35, fontSize: '0.9rem' }}>YM</Avatar>
-          </IconButton>
-        </Box>
-
-        {/* --- ALL YOUR ORIGINAL MENUS AND POPOVERS STAY EXACTLY THE SAME BELOW --- */}
-        <Popover
-          open={Boolean(coursesAnchor)}
-          anchorEl={coursesAnchor}
-          onClose={handleClose}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          slotProps={{ paper: { onMouseLeave: handleClose, sx: { borderRadius: 0, mt: 1, boxShadow: 6, border: '1px solid #d1d7dc' } } }}
-        >
-          <Box sx={{ display: 'flex', height: 450, width: 800 }} dir="rtl">
-            <List sx={{ width: 260, borderLeft: '1px solid #d1d7dc', p: 0 }}>
-              {mainCourses.map((cat) => (
-                <ListItemButton 
-                  key={cat.id} 
-                  onMouseEnter={() => { setSelectedCatId(cat.id); setSelectedSubId(null); }}
-                  selected={selectedCatId === cat.id}
-                  sx={{ py: 1.5, '&.Mui-selected': { bgcolor: '#f7f9fa', color: '#0d47a1' } }}
-                >
-                  <ListItemText primary={cat.title} primaryTypographyProps={{ fontSize: 13.5, fontFamily: '"Droid Arabic Kufi", serif' }} />
-                  <ChevronLeft fontSize="small" sx={{ opacity: 0.3 }} />
-                </ListItemButton>
-              ))}
-            </List>
-            <Box sx={{ flexGrow: 1, p: 3, bgcolor: 'white' }}>
-              <Typography variant="subtitle2" sx={{ color: '#f57c00', fontWeight: 'bold', mb: 2 }}>{activeCategory.title}</Typography>
-              <Grid container spacing={2}>
-                {activeCategory.sub?.map((sub) => (
-                  <Grid item xs={6} key={sub.id}>
-                    <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: '#0865A8' }}>{sub.title}</Typography>
-                    {sub.topics?.map((topic) => (
-  <Link 
-    key={topic.id} 
-    to={topic.link}
-    style={{ textDecoration: 'none' }}
-    onClick={handleClose}
-  >
-    <Typography 
-      variant="caption" 
-      sx={{ 
-        display: 'block', 
-        color: '#666', 
-        mb: 0.5, 
-        cursor: 'pointer', 
-        '&:hover': { color: '#f57c00' } 
-      }}
-    >
-      • {topic.name}
-    </Typography>
-  </Link>
-))}
-                  </Grid>
+            {/* --- ABOUT MENU --- */}
+            <Menu
+                anchorEl={aboutAnchor}
+                open={Boolean(aboutAnchor)}
+                onClose={handleClose}
+                MenuListProps={{ onMouseLeave: handleClose }}
+                // This aligns the menu to the right edge of the button
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+                sx={{
+                    direction: 'rtl',
+                    '& .MuiPaper-root': {
+                        minWidth: '220px',
+                    }
+                }}
+            >
+                {aboutLinks.map((link) => (
+                    <MenuItem
+                        key={link}
+                        component={Link}
+                        to={aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`}
+                        onClick={handleClose}
+                        sx={{
+                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontSize: '0.85rem',
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'left', // In RTL flex-start is the right side
+                            textAlign: 'right',          // Force text to start from the right
+                            px: 2,                        // Add padding for breathing room
+                            '&:hover': { bgcolor: '#f5f5f5', color: '#0d47a1' }
+                        }}
+                    >
+                        {link}
+                    </MenuItem>
                 ))}
-              </Grid>
-            </Box>
-            {/* ... rest of your mega menu logic ... */}
-          </Box>
-        </Popover>
-
-        <Menu
-          anchorEl={aboutAnchor}
-          open={Boolean(aboutAnchor)}
-          onClose={handleClose}
-          MenuListProps={{ onMouseLeave: handleClose }}
-          sx={{ direction: 'rtl' }}
-        >
-          {aboutLinks.map((link) => (
-            <MenuItem key={link} component={Link} to={aboutLinkPaths[link] || '#'} onClick={handleClose} sx={{ fontFamily: '"Droid Arabic Kufi", serif' }}>
-              {link}
-            </MenuItem>
-          ))}
-        </Menu>
-
-        <Menu
-          anchorEl={accountAnchor}
-          open={Boolean(accountAnchor)}
-          onClose={handleClose}
-          PaperProps={{ sx: { width: 250, mt: 1.5 } }}
-        >
-          <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }} dir="rtl">
-             <Avatar sx={{ bgcolor: '#0865A8' }}>YM</Avatar>
-             <Typography variant="body2" sx={{ fontWeight: 'bold' }}>ياسمينا ماجد</Typography>
-          </Box>
-          <Divider />
-          <MenuItem sx={{ fontFamily: '"Droid Arabic Kufi", serif', justifyContent: 'flex-end' }}>تسجيل الخروج</MenuItem>
-        </Menu>
-
-      </Toolbar>
-    </AppBar>
+            </Menu>
+        </>
   );
 };
 

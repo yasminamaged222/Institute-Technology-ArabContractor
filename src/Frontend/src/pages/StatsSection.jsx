@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+﻿import React, { useEffect, useRef } from 'react';
 import { Users, GraduationCap, Monitor, Globe } from 'lucide-react';
 import { motion, useMotionValue, useSpring, useInView } from 'framer-motion';
 
@@ -67,26 +67,26 @@ const StatsSection = () => {
       textAlign: 'center',
       color: 'white'
     }}>        
-        <div className="text-center mb-12">
-          <h2 className="text-2xl md:text-4xl font-bold text-[#f57c00]">
+        <div className="mb-12 text-center">
+          <h2 className="text-2xl font-bold text-[#f57c00] md:text-4xl">
             لدينا خلال العام 2023 - 2024 أكثر من :
           </h2>
         </div>
 
                     {/* Professional Deep-Layered Container */}
           <div 
-            className="bg-white rounded-3xl p-8 md:p-12 border border-gray-200 transition-all duration-300"
+            className="rounded-3xl border border-gray-200 bg-white p-8 transition-all duration-300 md:p-12"
             style={{ 
               /* This creates a huge, deep professional shadow using layers */
               boxShadow: `
-                0px 1px 20px rgba(0, 0, 0, 0.06), 
-                0px 4px 80px rgba(0, 0, 0, 0.1), 
-                0px 20px 400px rgba(0, 0, 0, 0.15), 
-                0px 40px 800px rgba(0, 0, 0, 0.2)
+                0px 1px 2px rgba(0, 0, 0, 0.06), 
+                0px 4px 8px rgba(0, 0, 0, 0.1), 
+                0px 20px 40px rgba(0, 0, 0, 0.15), 
+                0px 40px 80px rgba(0, 0, 0, 0.2)
               `
             }}
           >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
+          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
               <motion.div 
                 key={stat.id}
@@ -94,12 +94,12 @@ const StatsSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: stat.id * 0.1 }}
-                className="flex flex-col items-start md:items-center lg:items-start space-y-4"
+                className="flex flex-col items-start space-y-4 md:items-center lg:items-start"
               >
                 <div className="flex items-center gap-4">
                   {/* الأيقونة باللون البرتقالي المخصص وخلفية فاتحة جداً */}
                   <div 
-                    className="p-3 rounded-xl flex items-center justify-center border"
+                    className="flex items-center justify-center rounded-xl border p-3"
                     style={{ 
                       color: '#f57c00', 
                       backgroundColor: '#fff7ed', 
@@ -110,13 +110,13 @@ const StatsSection = () => {
                   </div>
                   
                   {/* الرقم مع الزائد باللون البرتقالي */}
-                  <div className="text-3xl font-bold text-slate-800 tracking-tight flex items-center">
+                  <div className="flex items-center text-3xl font-bold tracking-tight text-slate-800">
                     <Counter value={stat.value} />
-                    <span style={{ color: '#f57c00' }} className="ml-1 font-extrabold text-2xl">+</span>
+                    <span style={{ color: '#f57c00' }} className="ml-1 text-2xl font-extrabold">+</span>
                   </div>
                 </div>
 
-                <div className="text-sm font-bold text-slate-500 pr-2 leading-relaxed">
+                <div className="pr-2 text-sm font-bold leading-relaxed text-slate-500">
                   {stat.label}
                 </div>
               </motion.div>

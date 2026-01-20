@@ -1,16 +1,20 @@
 import AppRoutes from "./routes/AppRoutes";
-import FloatingSocialBar from './components/FloatingSocialBar';
-
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import FloatingSocialBar from "./components/FloatingSocialBar";
+import ScrollToTopButton from "./components/ScrollToTopButton";
 
 function App() {
-  return (
-    <>
-      <FloatingSocialBar />
-      <AppRoutes />
-    </>
-  );
+    return (
+        <>
+            <Navbar />
+            <FloatingSocialBar />
+            <AppRoutes />
+            <Footer />
+            <ScrollToTopButton />
+        </>
+    );
 }
 
 export default App;
-
 

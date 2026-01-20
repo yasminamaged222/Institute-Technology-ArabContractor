@@ -1,13 +1,15 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Application.Services;
 using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
 using System;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,8 +28,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowLocalhost",
         builder => builder
             .WithOrigins("http://localhost:5173")
-            .AllowAnyMethod()
-            .AllowAnyHeader());
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
 #endregion
 
@@ -39,20 +41,28 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+//builder.Services.AddHttpClient<ClerkService>();
 
 
 
 #endregion
 #region(Authentication And Authorization)
-builder.Services.AddAuthentication("Bearer")
-.AddJwtBearer("Bearer", options =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme,options =>
 {
-    options.Authority = "https://YOUR_CLERK_DOMAIN.clerk.accounts.dev";
-    options.TokenValidationParameters = new()
+    options.Authority = "https://mighty-basilisk-11.clerk.accounts.dev";
+
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateAudience = false
+        ValidateIssuer = true,
+        ValidIssuer = "https://mighty-basilisk-11.clerk.accounts.dev",
+
+        ValidateAudience = false, // 👈 مهم جداً
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = false,
     };
 });
+
 #endregion
 
 // ======= AutoMapper =======
@@ -73,6 +83,7 @@ if (app.Environment.IsDevelopment())
 }
 app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
+app.UseRouting();
 app.UseAuthentication();    
 app.UseAuthorization();
 app.UseStaticFiles();

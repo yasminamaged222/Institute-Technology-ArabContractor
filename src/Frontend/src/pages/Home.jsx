@@ -8,23 +8,19 @@ import TechnicalEducationSection from './TechnicalEducationSection';
 import StatsSection from "./StatsSection";
 import CountUp from 'react-countup';
 import VisibilitySensor from 'react-visibility-sensor';
-// Standard MUI Icons to match your screenshot
 import LaptopMacIcon from '@mui/icons-material/LaptopMac';
 import SchoolIcon from '@mui/icons-material/School';
 import LanguageIcon from '@mui/icons-material/Language';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-// استيراد الأيقونات المطلوبة لقسم التحميلات
 import DescriptionIcon from '@mui/icons-material/Description';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import HomeWorkIcon from '@mui/icons-material/HomeWork';
-
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/autoplay';
-// import { useInView } from 'react-intersection-observer';
 import { Link } from 'react-router-dom';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
 
@@ -192,23 +188,18 @@ const courses = [
 let closeTimer;
 
 const Home = () => {
-  const [current, setCurrent] = React.useState(0);
+  const [current, setCurrent] = useState(0);
   const [popoverAnchor, setPopoverAnchor] = useState(null);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  // const { ref, inView } = useInView({
-  //   triggerOnce: true,
-  //   threshold: 0.1,
-  // });
-
-  React.useEffect(() => {
+    React.useEffect(() => {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+    }, []);
 
-  const slide = slides[current];
+ const slide = slides[current];
 
   
 
@@ -229,9 +220,204 @@ const Home = () => {
   };
 
   return (
-    <Box sx={{ position: 'relative' }}>
+      <Box sx={{ position: 'relative', overflowX: 'hidden' }}>
+          <style>
+              {`
+          /* Mobile First - 320px to 479px */
+          @media only screen and (min-width: 320px) and (max-width: 479px) {
+            .hero-section { height: 45vh !important; }
+            .hero-subtitle { font-size: 0.8rem !important; }
+            .hero-title { font-size: 1.2rem !important; }
+            .hero-button { font-size: 0.8rem !important; padding: 10px 20px !important; }
+            .feature-card { min-height: 170px !important; }
+            .feature-icon { width: 32px !important; height: 32px !important; }
+            .feature-title { font-size: 0.9rem !important; }
+            .feature-subtitle { font-size: 0.7rem !important; }
+            .about-title { font-size: 1.2rem !important; }
+            .about-text { font-size: 0.85rem !important; }
+            .section-title { font-size: 1.4rem !important; }
+            .course-card-height { height: 95px !important; }
+            .course-title { font-size: 0.8rem !important; height: 30px !important; }
+            .course-subtitle { font-size: 0.65rem !important; }
+            .course-price { font-size: 0.85rem !important; }
+            .course-button { font-size: 0.7rem !important; padding: 6px 12px !important; }
+            .news-card-title { font-size: 0.8rem !important; height: 50px !important; }
+            .news-date { font-size: 0.6rem !important; }
+            .download-item-title { font-size: 0.8rem !important; }
+            .download-icon { font-size: 1.1rem !important; }
+          }
+
+          /* Small Mobile - 480px to 599px */
+          @media only screen and (min-width: 480px) and (max-width: 599px) {
+            .hero-section { height: 50vh !important; }
+            .hero-subtitle { font-size: 0.9rem !important; }
+            .hero-title { font-size: 1.4rem !important; }
+            .hero-button { font-size: 0.85rem !important; padding: 12px 24px !important; }
+            .feature-card { min-height: 185px !important; }
+            .feature-icon { width: 36px !important; height: 36px !important; }
+            .feature-title { font-size: 0.95rem !important; }
+            .feature-subtitle { font-size: 0.75rem !important; }
+            .about-title { font-size: 1.35rem !important; }
+            .about-text { font-size: 0.9rem !important; }
+            .section-title { font-size: 1.5rem !important; }
+            .course-card-height { height: 105px !important; }
+            .course-title { font-size: 0.85rem !important; height: 32px !important; }
+            .course-subtitle { font-size: 0.68rem !important; }
+            .course-price { font-size: 0.9rem !important; }
+            .course-button { font-size: 0.75rem !important; padding: 7px 14px !important; }
+            .news-card-title { font-size: 0.85rem !important; height: 52px !important; }
+            .news-date { font-size: 0.65rem !important; }
+            .download-item-title { font-size: 0.85rem !important; }
+            .download-icon { font-size: 1.2rem !important; }
+          }
+
+          /* Tablet Portrait - 600px to 767px */
+          @media only screen and (min-width: 600px) and (max-width: 767px) {
+            .hero-section { height: 55vh !important; }
+            .hero-subtitle { font-size: 1rem !important; }
+            .hero-title { font-size: 1.6rem !important; }
+            .hero-button { font-size: 0.9rem !important; padding: 14px 28px !important; }
+            .feature-card { min-height: 200px !important; }
+            .feature-icon { width: 38px !important; height: 38px !important; }
+            .feature-title { font-size: 1rem !important; }
+            .feature-subtitle { font-size: 0.78rem !important; }
+            .about-title { font-size: 1.5rem !important; }
+            .about-text { font-size: 0.92rem !important; }
+            .section-title { font-size: 1.65rem !important; }
+            .course-card-height { height: 115px !important; }
+            .course-title { font-size: 0.88rem !important; height: 34px !important; }
+            .course-subtitle { font-size: 0.7rem !important; }
+            .course-price { font-size: 0.95rem !important; }
+            .course-button { font-size: 0.8rem !important; padding: 8px 16px !important; }
+            .news-card-title { font-size: 0.88rem !important; height: 55px !important; }
+            .news-date { font-size: 0.68rem !important; }
+            .download-item-title { font-size: 0.88rem !important; }
+            .download-icon { font-size: 1.3rem !important; }
+          }
+
+          /* Tablet Landscape - 768px to 991px */
+          @media only screen and (min-width: 768px) and (max-width: 991px) {
+            .hero-section { height: 60vh !important; }
+            .hero-subtitle { font-size: 1.1rem !important; }
+            .hero-title { font-size: 2rem !important; }
+            .hero-button { font-size: 0.95rem !important; padding: 15px 32px !important; }
+            .feature-card { min-height: 220px !important; }
+            .feature-icon { width: 42px !important; height: 42px !important; }
+            .feature-title { font-size: 1.05rem !important; }
+            .feature-subtitle { font-size: 0.8rem !important; }
+            .about-title { font-size: 1.65rem !important; }
+            .about-text { font-size: 0.95rem !important; }
+            .section-title { font-size: 1.8rem !important; }
+            .course-card-height { height: 125px !important; }
+            .course-title { font-size: 0.92rem !important; height: 36px !important; }
+            .course-subtitle { font-size: 0.72rem !important; }
+            .course-price { font-size: 1rem !important; }
+            .course-button { font-size: 0.85rem !important; padding: 9px 18px !important; }
+            .news-card-title { font-size: 0.92rem !important; height: 58px !important; }
+            .news-date { font-size: 0.7rem !important; }
+            .download-item-title { font-size: 0.92rem !important; }
+            .download-icon { font-size: 1.4rem !important; }
+          }
+
+          /* Small Desktop - 992px to 1199px */
+          @media only screen and (min-width: 992px) and (max-width: 1199px) {
+            .hero-section { height: 70vh !important; }
+            .hero-subtitle { font-size: 1.25rem !important; }
+            .hero-title { font-size: 3rem !important; }
+            .hero-button { font-size: 1.05rem !important; padding: 16px 40px !important; }
+            .feature-card { min-height: 240px !important; }
+            .feature-icon { width: 46px !important; height: 46px !important; }
+            .feature-title { font-size: 1.15rem !important; }
+            .feature-subtitle { font-size: 0.85rem !important; }
+            .about-title { font-size: 1.85rem !important; }
+            .about-text { font-size: 1.05rem !important; }
+            .section-title { font-size: 2rem !important; }
+            .course-card-height { height: 130px !important; }
+            .course-title { font-size: 0.96rem !important; height: 38px !important; }
+            .course-subtitle { font-size: 0.74rem !important; }
+            .course-price { font-size: 1.08rem !important; }
+            .course-button { font-size: 0.9rem !important; padding: 10px 20px !important; }
+            .news-card-title { font-size: 0.96rem !important; height: 62px !important; }
+            .news-date { font-size: 0.75rem !important; }
+            .download-item-title { font-size: 0.96rem !important; }
+            .download-icon { font-size: 1.6rem !important; }
+          }
+
+          /* Medium Desktop - 1200px to 1439px */
+          @media only screen and (min-width: 1200px) and (max-width: 1439px) {
+            .hero-section { height: 75vh !important; }
+            .hero-subtitle { font-size: 1.4rem !important; }
+            .hero-title { font-size: 3.8rem !important; }
+            .hero-button { font-size: 1.15rem !important; padding: 18px 50px !important; }
+            .feature-card { min-height: 250px !important; }
+            .feature-icon { width: 48px !important; height: 48px !important; }
+            .feature-title { font-size: 1.2rem !important; }
+            .feature-subtitle { font-size: 0.88rem !important; }
+            .about-title { font-size: 1.95rem !important; }
+            .about-text { font-size: 1.08rem !important; }
+            .section-title { font-size: 2.08rem !important; }
+            .course-card-height { height: 133px !important; }
+            .course-title { font-size: 0.98rem !important; height: 39px !important; }
+            .course-subtitle { font-size: 0.75rem !important; }
+            .course-price { font-size: 1.1rem !important; }
+            .course-button { font-size: 0.93rem !important; padding: 10px 20px !important; }
+            .news-card-title { font-size: 1rem !important; height: 66px !important; }
+            .news-date { font-size: 0.78rem !important; }
+            .download-item-title { font-size: 0.98rem !important; }
+            .download-icon { font-size: 1.8rem !important; }
+          }
+
+          /* Large Desktop - 1440px to 1919px */
+          @media only screen and (min-width: 1440px) and (max-width: 1919px) {
+            .hero-section { height: 80vh !important; }
+            .hero-subtitle { font-size: 1.55rem !important; }
+            .hero-title { font-size: 4.3rem !important; }
+            .hero-button { font-size: 1.25rem !important; padding: 20px 56px !important; }
+            .feature-card { min-height: 260px !important; }
+            .feature-icon { width: 50px !important; height: 50px !important; }
+            .feature-title { font-size: 1.25rem !important; }
+            .feature-subtitle { font-size: 0.9rem !important; }
+            .about-title { font-size: 2rem !important; }
+            .about-text { font-size: 1.1rem !important; }
+            .section-title { font-size: 2.125rem !important; }
+            .course-card-height { height: 135px !important; }
+            .course-title { font-size: 1rem !important; height: 40px !important; }
+            .course-subtitle { font-size: 0.75rem !important; }
+            .course-price { font-size: 1.125rem !important; }
+            .course-button { font-size: 0.95rem !important; padding: 10px 20px !important; }
+            .news-card-title { font-size: 1.08rem !important; height: 68px !important; }
+            .news-date { font-size: 0.8rem !important; }
+            .download-item-title { font-size: 1rem !important; }
+            .download-icon { font-size: 2rem !important; }
+          }
+
+          /* Extra Large Desktop - 1920px and above */
+          @media only screen and (min-width: 1920px) {
+            .hero-section { height: 85vh !important; }
+            .hero-subtitle { font-size: 1.7rem !important; }
+            .hero-title { font-size: 5rem !important; }
+            .hero-button { font-size: 1.35rem !important; padding: 22px 64px !important; }
+            .feature-card { min-height: 280px !important; }
+            .feature-icon { width: 54px !important; height: 54px !important; }
+            .feature-title { font-size: 1.35rem !important; }
+            .feature-subtitle { font-size: 0.95rem !important; }
+            .about-title { font-size: 2.2rem !important; }
+            .about-text { font-size: 1.15rem !important; }
+            .section-title { font-size: 2.3rem !important; }
+            .course-card-height { height: 145px !important; }
+            .course-title { font-size: 1.05rem !important; height: 42px !important; }
+            .course-subtitle { font-size: 0.78rem !important; }
+            .course-price { font-size: 1.2rem !important; }
+            .course-button { font-size: 1rem !important; padding: 11px 22px !important; }
+            .news-card-title { font-size: 1.15rem !important; height: 72px !important; }
+            .news-date { font-size: 0.85rem !important; }
+            .download-item-title { font-size: 1.05rem !important; }
+            .download-icon { font-size: 2.2rem !important; }
+          }
+        `}
+          </style>
       {/* Hero Slider */}
-      <Box sx={{ height: { xs: '60vh', md: '80vh' }, position: 'relative' }}>
+          <Box className="hero-section" sx={{ position: 'relative' }}>
         <Box
           sx={{
             position: 'absolute',
@@ -259,28 +445,31 @@ const Home = () => {
             justifyContent: 'center',
             textAlign: 'center',
             color: 'white',
-            px: 3,
+                      px: 2,
+
           }}
         >
-          <Typography variant="h6" gutterBottom sx={{ fontSize: { xs: '1.1rem', md: '1.6rem' }, opacity: 0.9 }}>
-            {slide.subtitle}
-          </Typography>
-          <Typography variant="h3" fontWeight="bold" gutterBottom sx={{ fontSize: { xs: '2.2rem', md: '4.5rem' }, lineHeight: 1.2 }}>
-            {slide.title}
-          </Typography>
+                  <Typography className="hero-subtitle" variant="h6" gutterBottom sx={{ opacity: 0.9, mb: 1 }}>
+                      {slide.subtitle}
+                  </Typography>
+                  <Typography className="hero-title" variant="h3" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.2, mb: 2 }}>
+                      {slide.title}
+                  </Typography>
           <Button
-            variant="contained"
-            size="large"
+                      className="hero-button"
+                      variant="contained"
+                      size="large"
             sx={{
-              mt: 5,
+                mt: 2,
               bgcolor: '#f57c00',
               color: 'white',
-              px: 7,
-              py: 2,
-              fontSize: '1.3rem',
               borderRadius: 30,
               boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-              '&:hover': { bgcolor: '#e65100' },
+                '&:hover': {
+                    bgcolor: '#e65100',
+                    transform: 'scale(1.05)'
+                },
+                transition: 'all 0.3s'
             }}
           >
             اقرأ المزيد
@@ -289,70 +478,77 @@ const Home = () => {
       </Box>
 
       {/* 3 Small Cards */}
-      <Container
-        maxWidth="lg"
-        sx={{
-          position: 'relative',
-          top: 80,
-          left: 0,
-          right: 0,
-          transform: 'translateY(-50%)',
-          zIndex: 2,
-        }}
-      >
-        <Grid container spacing={3} justifyContent="center">
+          <Container
+              maxWidth="lg"
+              sx={{
+                  position: 'relative',
+                  top: { xs: -30, sm: -40, md: -100 },
+                  zIndex: 2,
+                  px: 2,
+                  mb: { xs: 4, md: -5 }
+              }}
+          >
+              <Grid container spacing={2} justifyContent="center">
           {features.map((feature, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Card
-                sx={{
-                  height: '100%',
-                  minHeight: { xs: 220, md: 260 },
-                  borderRadius: 6,
-                  boxShadow: 8,
-                  bgcolor: 'white',
-                  textAlign: 'center',
-                  transition: '0.3s',
-                  '&:hover': {
-                    transform: 'translateY(-10px)',
-                    boxShadow: 16,
-                  },
-                }}
-              >
-                <Box sx={{ pt: 2 }}>
-                  <Box 
-                    component="img" 
-                    src={feature.icon} 
-                    alt="icon" 
-                    sx={{ 
-                      width: 50, 
-                      height: 50, 
-                      display: 'block',
-                      mx: 'auto'
-                    }} 
-                  />
+              <Grid item xs={12} sm={4} md={4} key={index}>
+                  <Card
+                      className="feature-card"
+                      sx={{
+                          height: '100%',
+                          borderRadius: 4,
+                          boxShadow: 8,
+                          bgcolor: 'white',
+                          textAlign: 'center',
+                          transition: '0.3s',
+                          '&:hover': {
+                              transform: 'translateY(-8px)',
+                              boxShadow: 16,
+                          },
+                      }}
+                  >
+                      <Box sx={{ pt: 2 }}>
+                          <Box
+                              component="img"
+                              src={feature.icon}
+                              alt="icon"
+                              className="feature-icon"
+                              sx={{
+                                  display: 'block',
+                                  mx: 'auto'
+                              }}
+                          />
                 </Box>
-                <CardContent sx={{ px: 3, pt: 2 }}>
-                  <Typography variant="h6" gutterBottom fontWeight="bold" color="#0d47a1">
-                    {feature.title}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.6, fontSize: '0.9rem' }}>
-                    {feature.subtitle}
-                  </Typography>
+                      <CardContent sx={{ px: 2, pt: 1.5 }}>
+                          <Typography
+                              className="feature-title"
+                              variant="h6"
+                              gutterBottom
+                              fontWeight="bold"
+                              color="#0d47a1"
+                          >
+                              {feature.title}
+                          </Typography>
+                          <Typography
+                              className="feature-subtitle"
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ lineHeight: 1.6 }}
+                          >
+                              {feature.subtitle}
+                          </Typography>
                 </CardContent>
-                <CardActions sx={{ justifyContent: 'center', pb: 3 }}>
+                      <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
                   <Button
                     variant="contained"
                     size="small"
                     sx={{
                       bgcolor: '#f57c00',
                       borderRadius: 30,
-                      px: 4,
-                      py: 1,
-                      fontSize: '0.85rem',
+                        px: 3,
+                        py: 1,
+                        fontSize: '0.75rem',
                       '&:hover': { bgcolor: '#e65100' },
                     }}
-                    component={Link}
-                    to={feature.link}
                   >
                     اقرأ المزيد
                   </Button>
@@ -363,95 +559,162 @@ const Home = () => {
         </Grid>
       </Container>
 
-      {/* Section: About Institute */}
-      <div style={{ backgroundColor: '#f5f5f5', padding: '20px' }}>
-        <div style={{ 
-          maxWidth: '1200px', 
-          margin: 'auto', 
-          padding: '70px',
-          display: 'flex',
-          flexDirection: 'row-reverse', 
-          alignItems: 'center',
-          gap: '50px',
-          flexWrap: 'wrap' 
-        }}>
-          <div style={{ flex: '0 0 400px', maxWidth: '100%' }}>
-            <img 
-              src={logo} 
-              alt="المعهد التكنولوجي" 
-              style={{ 
-                width: '150%', 
-                height: 'auto', 
-                borderRadius: '15px', 
-                boxShadow: '0 10px 30px rgba(0,0,0,0.1)' 
-              }} 
-            />
-          </div>
-          <div style={{ flex: '1', minWidth: '300px', textAlign: 'right' }}>
-            <h2 style={{ color: '#0d47a1', fontSize: '2rem', fontWeight: 'bold', marginBottom: '15px' }}>
-              المعهد التكنولوجي لهندسة التشييد والإدارة
-            </h2>
-            <p style={{ lineHeight: '2', color: '#666', fontSize: '1.1rem', marginBottom: '15px' }}>
-              توجد لدى شركة المقاولون العرب إيمانًا راسخًا بأهمية التدريب، فضلاً عن أهمية البحث العلمي والتطوير، هذه العناصر هي التي تشكل حجر الزاوية للشركة لتعزيز قدرتها التنافسية واستمرارية البقاء. وبعد توصية من المجموعة الدولية للاستشارات المتخصصة في إدارة الموارد البشرية، عند تكليفها لبحث تطوير الإدارة في المقاولون العرب، استطعنا تأسيس المعهد التكنولوجي لهندسة التشييد والإدارة في عام 1978.
-            </p>
-            <p style={{ lineHeight: '1.6', color: '#666', fontSize: '1.1rem', marginBottom: '15px' }}>
-              للوصول إلى أعلى درجات التطوير والقدرة على الثبات وبالأخص في مجالات التسويق، إدارة الشركات، التخطيط المؤسسي، نظم المعلومات، الأشغال الكهروميكانيكية، وكذا التدريب المهني.
-            </p>
-            <Link to="/about" style={{ textDecoration: 'none' }}>
-              <button style={{
-                backgroundColor: '#f57c00', color: 'white', border: 'none', borderRadius: '30px', padding: '12px 40px', fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s'
-              }}>
-                اقرأ المزيد
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
+          {/* Section: About Institute */}
+          <Box
+              component="section"
+              sx={{
+                  bgcolor: 'white',
+                  py: { xs: 8, md: 10 },
+                  my: 6, // Adds space between this and other sections
+                  borderTop: '1px solid #eee',
+                  borderBottom: '1px solid #eee'
+              }}
+          >
+              <Container maxWidth="lg">
+                  <Box sx={{
+                      display: 'flex',
+                      flexDirection: { xs: 'column', md: 'row-reverse' },
+                      alignItems: 'center',
+                      gap: { xs: 4, md: 8 },
+                  }}>
+                      {/* Image Side */}
+                      <Box sx={{ flex: { xs: '1', md: '0 0 45%' }, width: '100%', maxWidth: { xs: '100%', md: '500px' } }}>
+                          <img
+                              src={logo}
+                              alt="المعهد التكنولوجي"
+                              style={{
+                                  width: '100%',
+                                  height: 'auto',
+                                  borderRadius: '15px',
+                                  boxShadow: '0 10px 30px rgba(0,0,0,0.1)'
+                              }}
+                          />
+                      </Box>
+
+                      {/* Text Side */}
+                      <Box sx={{ flex: '1', textAlign: { xs: 'center', md: 'right' } }}>
+                          <Typography
+                              variant="h4"
+                              sx={{
+                                  color: '#0d47a1',
+                                  fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2.2rem' },
+                                  fontWeight: 'bold',
+                                  mb: { xs: 2, md: 3 },
+                                  fontFamily: '"Droid Arabic Kufi", serif'
+                              }}
+                          >
+                              المعهد التكنولوجي لهندسة التشييد والإدارة
+                          </Typography>
+
+                          <Typography
+                              sx={{
+                                  lineHeight: 2,
+                                  color: '#555',
+                                  fontSize: { xs: '0.95rem', md: '1.05rem' },
+                                  mb: 2,
+                                  textAlign: { xs: 'center', md: 'justify' }
+                              }}
+                          >
+                              توجد لدى شركة المقاولون العرب إيمانًا راسخًا بأهمية التدريب، فضلاً عن أهمية البحث العلمي والتطوير، هذه العناصر هي التي تشكل حجر الزاوية للشركة لتعزيز قدرتها التنافسية واستمرارية البقاء. وبعد توصية من المجموعة الدولية للاستشارات المتخصصة في إدارة الموارد البشرية، عند تكليفها لبحث تطوير الإدارة في المقاولون العرب، استطعنا تأسيس المعهد التكنولوجي لهندسة التشييد والإدارة في عام 1978.
+                          </Typography>
+
+                          <Typography
+                              sx={{
+                                  lineHeight: 1.8,
+                                  color: '#555',
+                                  fontSize: { xs: '0.95rem', md: '1.05rem' },
+                                  mb: 4,
+                                  textAlign: { xs: 'center', md: 'justify' }
+                              }}
+                          >
+                              للوصول إلى أعلى درجات التطوير والقدرة على الثبات وبالأخص في مجالات التسويق، إدارة الشركات، التخطيط المؤسسي، نظم المعلومات، الأشغال الكهروميكانيكية، وكذا التدريب المهني.
+                          </Typography>
+
+                          <Button
+                              variant="contained"
+                              component={Link}
+                              to="/overview"
+                              sx={{
+                                  bgcolor: '#f57c00',
+                                  color: 'white',
+                                  borderRadius: '30px',
+                                  px: { xs: 4, md: 6 },
+                                  py: { xs: 1.5, md: 2 },
+                                  fontSize: { xs: '0.9rem', md: '1rem' },
+                                  fontWeight: 'bold',
+                                  boxShadow: '0 4px 14px rgba(245, 124, 0, 0.4)',
+                                  '&:hover': {
+                                      bgcolor: '#e65100',
+                                      transform: 'translateY(-2px)',
+                                      boxShadow: '0 6px 20px rgba(230, 81, 0, 0.5)'
+                                  },
+                                  transition: 'all 0.3s'
+                              }}
+                          >
+                              اقرأ المزيد
+                          </Button>
+                      </Box>
+                  </Box>
+              </Container>
+          </Box>
       {/* New Section: Downloads (التحميلات) */}
       <div style={{ 
         width: '100%', 
-        padding: '100px 0', 
+              padding: '100px 0', 
+              py: { xs: 8, sm: 8, md: 12 },
+              mt: { xs: 4, md: 8 },
         backgroundImage: 'linear-gradient(#070707,#0865a8)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
+        backgroundAttachment: { xs: 'scroll', md: 'fixed' },
         textAlign: 'center',
         color: 'white'
       }}>
-        <Container maxWidth="lg">
-          <Typography variant="h3" sx={{ fontWeight: 'bold', mb: 3, fontFamily: '"Droid Arabic Kufi", serif', position: 'relative', display: 'inline-block',
-              '&::after': { content: '""', position: 'absolute', bottom: -15, left: '15%', width: '60%', height: '2px', bgcolor: 'white' }
+              <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+                  <Typography variant="h3" sx={{
+                      fontWeight: 'bold', mb: { xs: 4, md: 6 }, fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' }, fontFamily: '"Droid Arabic Kufi", serif', position: 'relative', display: 'inline-block',
+              '&::after': { content: '""', position: 'absolute', bottom: -15, left: '15%', width: '70%', height: '2px', bgcolor: 'white' }
           }}>
             تحميـلات
           </Typography>
-          <Grid container spacing={2} justifyContent="center">
+                  <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
             {downloadItems.map((item, index) => (
-              <Grid item xs={1200} sm={6} md={4} key={index}>
+              <Grid item xs={12} sm={6} md={4} key={index}>
                 <Paper
                   elevation={2}
                   component="a"
                   href={item.pdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  sx={{
-                    p: 4,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    textDecoration: 'none',
-                    borderRadius: '10px',
-                    transition: 'all 0.3s ease-in-out',
-                    bgcolor: 'white',
-                    '&:hover': { transform: 'translateY(-8px)', boxShadow: '0 12px 25px rgba(0,0,0,0.2)' },
-                    width:"310px"
-                  }}
-                >
-                  <Typography variant="h6" sx={{ color: '#333', fontWeight: 'bold', textAlign: 'right', flex: 1, fontSize: '1rem', lineHeight: 1.4 }}>
-                    {item.title}
+                        sx={{
+                            p: { xs: 2, sm: 2.5, md: 4 },
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            borderRadius: '10px',
+                            transition: 'all 0.3s ease-in-out',
+                            bgcolor: 'white',
+                            cursor: 'pointer',
+                            '&:hover': {
+                                transform: { xs: 'translateY(-3px)', md: 'translateY(-8px)' },
+                                boxShadow: '0 12px 25px rgba(0,0,0,0.2)'
+                            },
+                        }}
+                    >
+                        <Box sx={{ bgcolor: '#f57c00', p: { xs: 0.8, sm: 1, md: 1.5 }, borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', ml: 1 }}>
+                        <item.Icon sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }} />
+                        </Box>
+                        <Typography variant="h6" sx={{
+                            color: '#333',
+                            fontWeight: 'bold',
+                            textAlign: 'right',
+                            flex: 1,
+                            fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                            lineHeight: 1.4
+                        }}
+                           > {item.title}
                   </Typography>
-                  <Box sx={{ bgcolor: '#f57c00', p: 1.5, borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', ml: 2 }}>
-                    {item.icon}
-                  </Box>
+                        
                 </Paper>
               </Grid>
             ))}
@@ -459,26 +722,40 @@ const Home = () => {
         </Container>
       </div>
      {/* Courses Slide Show - Flat Design Style مثل Udemy */}
-     <Container maxWidth="xl" sx={{ py: 4, bgcolor: '#fff' }} dir="rtl">
-      <Typography variant="h4" fontWeight="bold" sx={{ mb: 2, color: '#1c1d1f', pr: 2 }}>
+          <Container maxWidth="xl"
+              sx={{
+                  py: { xs: 4, sm: 6, md: 10 },
+                  bgcolor: '#fff',
+                  px: { xs: 2, sm: 3 }
+              }}
+>
+              <Typography variant="h4"
+                  fontWeight="bold"
+                  sx={{
+            mb: { xs: 3, md: 4 },
+            color: '#1c1d1f',
+            fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.125rem' },
+            textAlign: 'center',
+          }}
+          >
       البرامج التدريبية     
        </Typography>
-      
-      <Box sx={{ position: 'relative', px: { xs: 2, md: 0 } }}>
-        <Swiper
-          modules={[Autoplay, Navigation]}
-          autoplay={{ delay: 5000 }}
-          navigation={{
-            nextEl: '.custom-next',
-            prevEl: '.custom-prev',
-          }}
+              <Box sx={{ position: 'relative' }}>
+              <Swiper
+                  modules={[Autoplay, Navigation]}
+                  autoplay={{ delay: 5000 }}
+                  navigation={{
+                      nextEl: '.custom-next',
+                      prevEl: '.custom-prev',
+                  }}
           spaceBetween={15}
           slidesPerView={4}
-          breakpoints={{
-            640: { slidesPerView: 2 },
-            1024: { slidesPerView: 4 },
-            1440: { slidesPerView: 5 },
-          }}
+                      breakpoints={{
+                          480: { slidesPerView: 2, spaceBetween: 10 },
+                          768: { slidesPerView: 3, spaceBetween: 15 },
+                          1024: { slidesPerView: 4, spaceBetween: 15 },
+                          1440: { slidesPerView: 5, spaceBetween: 15 },
+                      }}
         >
           {courses.map((course, index) => (
             <SwiperSlide key={index}>
@@ -489,7 +766,7 @@ const Home = () => {
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  borderRadius: 5, // Udemy uses flat edges
+                    borderRadius: { xs: 3, md: 5 },
                   border: '0.5px solid #0865a8',
                   boxShadow: 'none',
                   transition: '0.1s',
@@ -498,71 +775,109 @@ const Home = () => {
                 }}
               >
                 {/* Header: Course Icon */}
-                <Box sx={{ height: 135, overflow: 'hidden', bgcolor: '#f7f9fa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Box 
-                    component="img" 
-                    src={course.icon} 
-                    alt={course.title} 
-                    sx={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                  />
-                </Box>
-                <CardContent sx={{ p: 1.5, flexGrow: 1 }}>
-                  <Typography variant="subtitle1" fontWeight="bold" sx={{ 
-                    lineHeight: 1.2, 
-                    mb: 0.5, 
-                    height: 40, 
-                    overflow: 'hidden',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical'
-                  }}>
+                      <Box sx={{
+                          height: { xs: 100, sm: 120, md: 135 },
+                          overflow: 'hidden',
+                          bgcolor: '#f7f9fa',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                      }}>
+                          <Box
+                              component="img"
+                              src={course.icon}
+                              alt={course.title}
+                              sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                      </Box>
+                      <CardContent sx={{ p: {xs: 1.2, md: 1.5 }, flexGrow: 1 }}>
+                          <Typography variant="subtitle1" fontWeight="bold" sx={{
+                              lineHeight: 1.2,
+                              mb: 0.5,
+                              height: { xs: 32, sm: 35, md: 40 },
+                              overflow: 'hidden',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' }
+                          }}>
                     {course.title}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1 }}>
+                          <Typography variant="caption" color="text.secondary" display="block" sx={{
+                              mb: 1, fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' }
+                          }}>
                     {course.subtitle}
                   </Typography>
-                  
-                  {/* <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                    <Typography variant="body2" fontWeight="bold" color="#b4690e" sx={{ ml: 0.5 }}>4.8</Typography>
-                    <Rating value={4.8} precision={0.1} size="small" readOnly />
-                  </Box> */}
-
-                  <Typography variant="h6" fontWeight="bold">
-                    {course.Price} 100ج.م
-                  </Typography>
+                          <Typography variant="h6" fontWeight="bold" sx={{ fontSize: { xs: '0.9rem', sm: '0.95rem', md: '1.125rem' } }}>
+                              100ج.م
+                          </Typography>
                 </CardContent>
 
-                <CardActions sx={{ p: 1.5, pt: 1}}>
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{
-                      bgcolor: '#0865a8',
-                      borderRadius: 5,
-                      fontWeight: 'bold',
-                      textTransform: 'none',
-                      '&:hover': { bgcolor: '#070707' },
-                    }}
-                  >
-                    إضافة إلى السلة
-                  </Button>
-                </CardActions>
+                      <CardActions sx={{ p: { xs: 1.2, md: 1.5 }, pt: 0 }}>
+                          <Button
+                              fullWidth
+                              variant="contained"
+                              sx={{
+                                  bgcolor: '#0865a8',
+                                  borderRadius: { xs: 3, md: 5 },
+                                  fontWeight: 'bold',
+                                  textTransform: 'none',
+                                  fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
+                                  py: { xs: 0.7, sm: 0.8, md: 1 },
+                                  '&:hover': { bgcolor: '#070707' },
+                              }}
+                          >
+                              إضافة إلى السلة
+                          </Button>
+                      </CardActions>
               </Card>
             </SwiperSlide>
           ))}
         </Swiper>
 
         {/* Navigation Arrows */}
-        <Box className="custom-prev" sx={{ position: 'absolute', left: -25, top: '40%', zIndex: 10, bgcolor: '#0865a8', color: 'white', 
-        borderRadius: '50%', width: 48, height: 48, display: {xs: 'none', md: 'flex'}, 
-        alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid rgb(59, 85, 107)' }}>
-          <Typography variant="h4" sx={{ mt: -0.5 }}>‹</Typography>
-        </Box>
-        <Box className="custom-next" sx={{ position: 'absolute', right: -25, top: '40%', zIndex: 10, bgcolor: '#0865a8', color: 'white', 
-        borderRadius: '50%', width: 48, height: 48, display: {xs: 'none', md: 'flex'}, 
-        alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid #6a6f73' }}>
-          <Typography variant="h4" sx={{ mt: -0.5 }}>›</Typography>
-        </Box>
+                  <Box
+                      className="custom-prev"
+                      sx={{
+                          position: 'absolute',
+                          left: { xs: -15, sm: -20, md: -25 },
+                          top: '40%',
+                          zIndex: 10,
+                          bgcolor: '#0865a8',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: { xs: 30, sm: 35, md: 48 },
+                          height: { xs: 30, sm: 35, md: 48 },
+                          display: { xs: 'none', sm: 'flex' },
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          border: '1px solid rgb(59, 85, 107)'
+                      }}
+                  >
+                      <Typography variant="h4" sx={{ mt: -0.5, fontSize: { sm: '1.2rem', md: '2.125rem' } }}>‹</Typography>
+                  </Box>
+                  <Box
+                      className="custom-next"
+                      sx={{
+                          position: 'absolute',
+                          right: { xs: -15, sm: -20, md: -25 },
+                          top: '40%',
+                          zIndex: 10,
+                          bgcolor: '#0865a8',
+                          color: 'white',
+                          borderRadius: '50%',
+                          width: { xs: 30, sm: 35, md: 48 },
+                          height: { xs: 30, sm: 35, md: 48 },
+                          display: { xs: 'none', sm: 'flex' },
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          border: '1px solid #6a6f73'
+                      }}
+                  >
+                      <Typography variant="h4" sx={{ mt: -0.5, fontSize: { sm: '1.2rem', md: '2.125rem' } }}>›</Typography>
+                  </Box>
       </Box>
 
       {/* Popover Expansion (RTL Optimized) */}
@@ -586,24 +901,24 @@ const Home = () => {
           sx: { pointerEvents: 'auto' } // Make the popover content clickable/hoverable
         }}
       >
-        <Box sx={{ p: 10, maxWidth: 350, bgcolor: '#fff', pointerEvents: 'auto' }} >
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.2 }}>
-            {selectedCourse?.title}
-          </Typography>
-          <Typography variant="caption" color="success.main" fontWeight="bold" display="block" sx={{ mb: 1 }}>
-            تم التحديث مؤخراً
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {selectedCourse?.description}
-          </Typography>
-          
-          <Box sx={{ mb: 2 }}>
-            {['شامل للمبتدئين', 'تطبيقات عملية', 'شهادة معتمدة'].map((text, i) => (
-              <Typography key={i} variant="caption" display="block" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <span>✓</span> {text}
-              </Typography>
-            ))}
-          </Box>
+                  <Box sx={{ p: 3, maxWidth: 350, bgcolor: '#fff', pointerEvents: 'auto' }}>
+                      <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.2 }}>
+                          {selectedCourse?.title}
+                      </Typography>
+                      <Typography variant="caption" color="success.main" fontWeight="bold" display="block" sx={{ mb: 1 }}>
+                          تم التحديث مؤخراً
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {selectedCourse?.description}
+                      </Typography>
+
+                      <Box sx={{ mb: 2 }}>
+                          {['شامل للمبتدئين', 'تطبيقات عملية', 'شهادة معتمدة'].map((text, i) => (
+                              <Typography key={i} variant="caption" display="block" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <span>✓</span> {text}
+                              </Typography>
+                          ))}
+                      </Box>
           
           <Button fullWidth variant="outlined" sx={{ borderColor: '#070707', color: '#0865a8', fontWeight: 'bold', borderRadius: 5 }}>
             إقرأ المزيد
@@ -612,11 +927,9 @@ const Home = () => {
       </Popover>
     </Container>
 
-    <div>
-     
-      <StatsSection />
-      
-    </div>
+    <Box sx={{ py: { xs: 4, md: 8 }, px: { xs: 2, md: 0 } }}>
+  <StatsSection />
+</Box>
 
 {/* Technical Education Section - Tight spacing */}
 <Box sx={{ py: 2 }}>
@@ -625,16 +938,21 @@ const Home = () => {
 
 
 {/* Latest News - 5 Items in Swiper - Modern Flat Style */}
-<Container maxWidth="lg" sx={{ py: 1, bgcolor: '#f8f9fa' }}>
-  <Typography
-    variant="h4"
-    fontWeight="bold"
-    textAlign="center"
-    sx={{
-      mb: 1,
-      color: '#0d47a1',
-      fontFamily: '"Droid Arabic Kufi", serif',
-    }}
+          <Container maxWidth="lg" sx={{
+              py: { xs: 4, sm: 6, md: 10 },
+              bgcolor: '#f8f9fa',
+              px: { xs: 2, sm: 3 }
+          }}>
+              <Typography
+                  variant="h4"
+                  fontWeight="bold"
+                  textAlign="center"
+                  sx={{
+                      mb: { xs: 3, sm: 4, md: 6 },
+                      color: '#0d47a1',
+                      fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.125rem' },
+                      fontFamily: '"Droid Arabic Kufi", serif',
+                  }}
   >
     أحدث الأخبــار
   </Typography>
@@ -648,81 +966,82 @@ const Home = () => {
         prevEl: '.news-swiper-prev',
       }}
       loop={true}
-      spaceBetween={25}
-      slidesPerView={4}
-      breakpoints={{
-        640: { slidesPerView: 2 },
-        1024: { slidesPerView: 3 },
-        1280: { slidesPerView: 5 },
-      }}
-      sx={{ pb: 40 }}
+      spaceBetween={20}
+                      slidesPerView={3}  
+                      breakpoints={{
+                          600: { slidesPerView: 2, spaceBetween: 15 },
+                          960: { slidesPerView: 3, spaceBetween: 20 },
+                      }}
+      
     >
-      {newsItems.slice(0, 5).map((news) => (  // Show only latest 5
+      {newsItems.map((news) => (  // Show only latest 5
         <SwiperSlide key={news.id}>
-          <Card
-            sx={{
-              height: '100%',
-              borderRadius: 10,
-              overflow: 'hidden',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-              transition: 'all 0.3s ease',
-              bgcolor: 'white',
-              '&:hover': {
-                transform: 'translateY(-12px)',
-                boxShadow: '0 16px 40px rgba(0,0,0,0.12)',
-              },
-            }}
+              <Card
+                  sx={{
+                      height: '100%',
+                      borderRadius: { xs: 3, md: 5 },
+                      overflow: 'hidden',
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                      transition: 'all 0.3s ease',
+                      bgcolor: 'white',
+                      '&:hover': {
+                          transform: { xs: 'translateY(-5px)', md: 'translateY(-12px)' },
+                          boxShadow: '0 16px 40px rgba(0,0,0,0.12)',
+                      },
+                  }}
           >
             {/* Square Image Area */}
-            <Box sx={{ position: 'relative', paddingTop: '70%', bgcolor: '#e3f2fd' }}>
-              <img
-                src={news.image}
-                alt={news.title}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                }}
-              />
+                  <Box sx={{ position: 'relative', paddingTop: '70%', bgcolor: '#e3f2fd' }}>
+                      <img
+                          src={news.image}
+                          alt={news.title}
+                          style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                          }}
+                      />
               {/* Date Badge */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 16,
-                  right: 16,
-                  bgcolor: 'rgba(13, 71, 161, 0.9)',
-                  color: 'white',
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: 5,
-                  fontSize: '0.8rem',
-                  fontWeight: 500,
-                  backdropFilter: 'blur(4px)',
-                }}
-              >
+                      <Box
+                          sx={{
+                              position: 'absolute',
+                              top: { xs: 8, md: 16 },
+                              right: { xs: 8, md: 16 },
+                              bgcolor: 'rgba(13, 71, 161, 0.9)',
+                              color: 'white',
+                              px: { xs: 1, md: 2 },
+                              py: 0.5,
+                              borderRadius: { xs: 3, md: 5 },
+                              fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.8rem' },
+                              fontWeight: 500,
+                              backdropFilter: 'blur(4px)',
+                          }}
+                      >
                 {news.date}
               </Box>
             </Box>
 
             {/* Content */}
-            <CardContent sx={{ p: 5, textAlign: 'right' }}>
-              <Typography
-                variant="h6"
-                fontWeight="bold"
-                sx={{
-                  mb: 2,
-                  fontFamily: '"Droid Arabic Kufi", serif',
-                  lineHeight: 1.2,
-                  height: 70,
-                  overflow: 'hidden',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 3,
-                  WebkitBoxOrient: 'vertical',
-                }}
-              >
+                  <CardContent sx={{ p: { xs: 2, md: 3 }, textAlign: 'right' }}>
+                      <Typography
+                          variant="h6"
+                          fontWeight="bold"
+                          sx={{
+                              mb: { xs: 1.5, md: 2 },
+                              fontFamily: '"Droid Arabic Kufi", serif',
+                              lineHeight: 1.2,
+                              height: { xs: 55, sm: 60, md: 70 },
+                              overflow: 'hidden',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: 'vertical',
+                              fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.125rem' }
+
+                          }}
+                      >
                 {news.title}
               </Typography>
 
@@ -731,15 +1050,15 @@ const Home = () => {
                 size="small"
                 component={Link}
                 to={news.link}
-                sx={{
-                  mt: 3,
-                  bgcolor: '#f57c00',
-                  borderRadius: 30,
-                  px: 5,
-                  py: 1,
-                  fontSize: '0.95rem',
-                  '&:hover': { bgcolor: '#e65100' },
-                }}
+                          sx={{
+                              mt: { xs: 2, md: 3 },
+                              bgcolor: '#f57c00',
+                              borderRadius: 30,
+                              px: { xs: 3, sm: 4, md: 5 },
+                              py: 1,
+                              fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.95rem' },
+                              '&:hover': { bgcolor: '#e65100' },
+                          }}
               >
                 اقرأ المزيد
               </Button>
@@ -752,40 +1071,40 @@ const Home = () => {
     {/* Custom Navigation Arrows */}
     <Box
       className="news-swiper-prev"
-      sx={{
-        position: 'absolute',
-        left: -60,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        zIndex: 10,
-        bgcolor: 'white',
-        borderRadius: '50%',
-        width: 60,
-        height: 60,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        boxShadow: 6,
-        cursor: 'pointer',
-        '&:hover': { bgcolor: '#f0f0f0' },
-      }}
+                      sx={{
+                          position: 'absolute',
+                          left: { xs: -25, sm: -40, md: -60 },
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          zIndex: 10,
+                          bgcolor: 'white',
+                          borderRadius: '50%',
+                          width: { xs: 40, sm: 50, md: 60 },
+                          height: { xs: 40, sm: 50, md: 60 },
+                          display: { xs: 'none', sm: 'flex' },
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: 6,
+                          cursor: 'pointer',
+                          '&:hover': { bgcolor: '#f0f0f0' },
+                      }}
     >
-      <Typography sx={{ fontSize: '40px', color: '#0d47a1' }}>‹</Typography>
+    <Typography sx={{ fontSize: { sm: '30px', md: '40px' }, color: '#0d47a1' }}>‹</Typography>
     </Box>
 
     <Box
       className="news-swiper-next"
       sx={{
         position: 'absolute',
-        right: -60,
+          right: { xs: -25, sm: -40, md: -60 },
         top: '50%',
         transform: 'translateY(-50%)',
         zIndex: 10,
         bgcolor: 'white',
         borderRadius: '50%',
-        width: 60,
-        height: 60,
-        display: 'flex',
+          width: { xs: 40, sm: 50, md: 60 },
+          height: { xs: 40, sm: 50, md: 60 },
+          display: { xs: 'none', sm: 'flex' },
         alignItems: 'center',
         justifyContent: 'center',
         boxShadow: 6,
@@ -793,15 +1112,13 @@ const Home = () => {
         '&:hover': { bgcolor: '#f0f0f0' },
       }}
     >
-      <Typography sx={{ fontSize: '40px', color: '#0d47a1' }}>›</Typography>
+  <Typography sx={{ fontSize: { sm: '30px', md: '40px' }, color: '#0d47a1' }}>›</Typography>
     </Box>
   </Box>
 </Container>
       <div>
-      {/* Your other sections */}
       <CustomersSection />
-      {/* More content */}
-    </div>
+          </div>
     </Box>
   );
 };
