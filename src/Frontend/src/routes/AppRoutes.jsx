@@ -6,6 +6,8 @@ import Vision_goals from "../pages/vision_and_goals/vision_goals";
 import News from '../pages/News';
 import CoursesPage from "../pages/CoursesPage";
 import CourseCategory from '../pages/CourseCategory';
+import Library from '../pages/Library';
+
 const AppRoutes = () => {
     return (
 
@@ -17,6 +19,8 @@ const AppRoutes = () => {
         <Route path="/news" element={<News />} />
         <Route path="/courses/civil-engineer-training" element={<CoursesPage />} />
         <Route path="/courses/:category" element={<CourseCategory />} />
+        <Route path="/library" element={<Library />} />
+
       {/* </Route> */}
     </Routes>
   );

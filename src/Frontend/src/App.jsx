@@ -10,8 +10,9 @@ function App() {
             <Navbar />
             <FloatingSocialBar />
             <AppRoutes />
-            <Footer />
             <ScrollToTopButton />
+
+            <Footer />
         </>
     );
 }

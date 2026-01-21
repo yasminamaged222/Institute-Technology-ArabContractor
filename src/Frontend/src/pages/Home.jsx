@@ -223,6 +223,26 @@ const Home = () => {
       <Box sx={{ position: 'relative', overflowX: 'hidden' }}>
           <style>
               {`
+            /* Specific Mobile Breakpoint - 588px to 599px */
+          @media only screen and (min-width: 588px) and (max-width: 599px) {
+            .hero-section { height: 52vh !important; }
+            .hero-subtitle { font-size: 0.95rem !important; }
+            .hero-title { font-size: 1.5rem !important; }
+            .hero-button { font-size: 0.88rem !important; padding: 13px 26px !important; }
+            .feature-card { min-height: 190px !important; }
+            .feature-icon { width: 36px !important; height: 36px !important; }
+            .feature-title { font-size: 0.98rem !important; }
+            .feature-subtitle { font-size: 0.76rem !important; }
+            .about-title { font-size: 1.4rem !important; }
+            .about-text { font-size: 0.9rem !important; }
+            .section-title { font-size: 1.55rem !important; }
+            .course-card-height { height: 110px !important; }
+            .course-title { font-size: 0.86rem !important; }
+            .news-card-title { font-size: 0.86rem !important; height: 54px !important; }
+    
+            /* Wider Search Bar for this range */
+            .search-bar-container { width: 95% !important; max-width: 550px !important; }
+          }
           /* Mobile First - 320px to 479px */
           @media only screen and (min-width: 320px) and (max-width: 479px) {
             .hero-section { height: 45vh !important; }
@@ -1026,7 +1046,7 @@ const Home = () => {
             </Box>
 
             {/* Content */}
-                  <CardContent sx={{ p: { xs: 2, md: 3 }, textAlign: 'right' }}>
+                  <CardContent sx={{ p: { xs: 2, md: 3 } }}>
                       <Typography
                           variant="h6"
                           fontWeight="bold"
@@ -1039,20 +1059,21 @@ const Home = () => {
                               display: '-webkit-box',
                               WebkitLineClamp: 3,
                               WebkitBoxOrient: 'vertical',
-                              fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.125rem' }
+                              fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.125rem' },
+                              alignSelf: 'center' // Explicitly centers the button itself
 
                           }}
                       >
                 {news.title}
               </Typography>
-
+           <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, md: 3 } }}>
               <Button
                 variant="contained"
                 size="small"
                 component={Link}
                 to={news.link}
                           sx={{
-                              mt: { xs: 2, md: 3 },
+                              mt: 'auto',
                               bgcolor: '#f57c00',
                               borderRadius: 30,
                               px: { xs: 3, sm: 4, md: 5 },
@@ -1062,7 +1083,8 @@ const Home = () => {
                           }}
               >
                 اقرأ المزيد
-              </Button>
+                          </Button>
+                      </Box>
             </CardContent>
           </Card>
         </SwiperSlide>
@@ -1116,10 +1138,15 @@ const Home = () => {
   <Typography sx={{ fontSize: { sm: '30px', md: '40px' }, color: '#0d47a1' }}>›</Typography>
     </Box>
   </Box>
-</Container>
-      <div>
+          </Container>
+
+
+
+      <box>
       <CustomersSection />
-          </div>
+          </box>
+
+
     </Box>
   );
 };

@@ -126,15 +126,15 @@ const CustomersSection = () => {
     };
 
     return (
-        <section className="overflow-hidden bg-gray-50 py-12 md:py-20" dir="rtl">
+        <section className="bg-gray-5 overflow-hidden py-1 md:py-2" dir="rtl">
             <div className="container mx-auto px-6 lg:px-12">
 
                 {/* Header */}
                 <div className="mb-16 text-center">
-                    <h3 className="mb-4 text-3xl font-bold text-[#065a8a] md:text-4xl">
+                    <h3 className="mb-1 text-3xl font-bold text-[#065a8a] md:text-4xl">
                         عملاؤنا
                     </h3>
-                    <div className="mx-auto mb-4 h-1 w-20 rounded-full bg-[#065a8a]"></div>
+                    <div className="mx-auto mb-1 h-1 w-20 rounded-full bg-[#065a8a]"></div>
                     <p className="text-gray-600">نسعى دائما لإرضاء العميل بتقديم أفضل الخدمات</p>
                 </div>
 

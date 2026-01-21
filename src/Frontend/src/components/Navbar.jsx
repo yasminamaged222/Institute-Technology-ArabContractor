@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import {
-  AppBar, Toolbar, Box, IconButton, InputBase, Menu, MenuItem,
-  Avatar, Badge, Button, Divider, Typography, Stack, Popover, List, 
-    ListItemButton, ListItemText, useMediaQuery, useTheme, Grid,Drawer, Collapse // Added Grid here
+    AppBar, Toolbar, Box, IconButton, InputBase, Menu, MenuItem,
+    Avatar, Badge, Button, Divider, Typography, Stack, Popover, List,
+    ListItemButton, ListItemText, useMediaQuery, useTheme, Grid, Drawer, Collapse
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
-import MenuIcon from '@mui/icons-material/Menu'; 
-import CloseIcon from '@mui/icons-material/Close'; // Added CloseIcon
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import { Link } from 'react-router-dom';
 import logo from '../assets/logo-removebg-preview.png';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -21,255 +21,352 @@ import AuthSync from '../components/AuthSync.jsx';
 const Navbar = () => {
     const [coursesAnchor, setCoursesAnchor] = useState(null);
     const [aboutAnchor, setAboutAnchor] = useState(null);
+    const [servicesAnchor, setServicesAnchor] = useState(null); // Added for Services
     const [accountAnchor, setAccountAnchor] = useState(null);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false);
-  
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
     const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const aboutLinks = [
-    'نبذة عامة', 'الرؤية والأهداف', 'الشهادات والاعتمادات', 'فريق العمل',
-    'قائمة المحاضرين', 'الخطة التدريبية', 'التقرير الشهرى',
-    'مكتبة الصور والفيديوهات', 'البروتوكولات والإتفاقيات', 'عملاؤنا'
-  ];
+    const aboutLinks = [
+        'نبذة عامة', 'الرؤية والأهداف', 'الشهادات والاعتمادات', 'فريق العمل',
+        'قائمة المحاضرين', 'الخطة التدريبية', 'التقرير الشهرى',
+        'مكتبة الصور والفيديوهات', 'البروتوكولات والإتفاقيات', 'عملاؤنا'
+    ];
 
-  // هيكلة البيانات الجديدة للخطة التدريبية داخل القائمة
-  const mainCourses = [
-    {
-      id: 1,
-      title: 'برامج موجهة للمهندسين',
-      sub: [
+    // Added the specific Services links you requested
+    const serviceLinks = [
+        { title: 'التدريب الحرفى', path: '/craft-training' },
+        { title: 'التعليم الفنى', path: '/technical-education' },
+        { title: 'الإختبارات', path: '/tests' },
+        { title: 'مجلس قادة المستقبل', path: '/future-leaders' },
+    ];
+
+    const mainCourses = [
         {
-          id: 11,
-          title: 'برامج تأهيلية',
-          topics: [
-            { id: 111, name: 'برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة', link: '/courses/civil-engineer-training' },
-            { id: 112, name: 'إعداد وتأهيل مهندس حديث ميكانيكا وكهرباء', link: '/courses/mechanical-electrical-training' }
-          ]
+            id: 1,
+            title: 'برامج موجهة للمهندسين',
+            sub: [
+                {
+                    id: 11,
+                    title: 'برامج تأهيلية',
+                    topics: [
+                        { id: 111, name: 'برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة', link: '/courses/civil-engineer-training' },
+                        { id: 112, name: 'إعداد وتأهيل مهندس حديث ميكانيكا وكهرباء', link: '/courses/mechanical-electrical-training' }
+                    ]
+                },
+                {
+                    id: 12,
+                    title: 'برامج عامة',
+                    topics: [
+                        {
+                            id: 121,
+                            name: 'المحور الأول : المعلومات الهندسية الأساسية',
+                            link: '/courses/basic-engineering-info',
+                            subTopics: [
+                                { id: 1211, name: 'لمهندسى مدنى وعمارة', link: '/courses/basic-civil-architecture' },
+                                { id: 1212, name: 'لمهندسى ميكانيكا وكهرباء', link: '/courses/basic-mechanical-electrical' }
+                            ]
+                        },
+                        {
+                            id: 122,
+                            name: 'المحور الثانى : التطبيقات الهندسية المختلفة',
+                            link: '/courses/engineering-applications',
+                            subTopics: [
+                                { id: 1221, name: 'لمهندسى مساحة', link: '/courses/app-surveying' },
+                                { id: 1222, name: 'لمهندسى ميكانيكا', link: '/courses/app-mechanical' },
+                                { id: 1223, name: 'لمهندسى كهرباء', link: '/courses/app-electrical' },
+                                { id: 1224, name: 'لمهندسى مدنى و عمارة', link: '/courses/app-civil-architecture' }
+                            ]
+                        },
+                        {
+                            id: 123,
+                            name: 'المحور الثالث : إدارة المشروعات والجودة',
+                            link: '/courses/project-management-quality',
+                            subTopics: [
+                                { id: 1231, name: 'برامج إدارة المشروعات', link: '/courses/project-management-programs' },
+                                {
+                                    id: 1232,
+                                    name: 'برامج الجودة',
+                                    link: '/courses/quality-programs',
+                                    subSubTopics: [
+                                        { id: 12321, name: 'مهندسين التصنيع والتنفيذ ومهندسين الجودة QC', link: '/courses/quality-engineers-qc' },
+                                        { id: 12322, name: 'لحامين ومشرفين التنفيذ ومراقبي الجودة QC', link: '/courses/quality-welders-supervisors' }
+                                    ]
+                                }
+                            ]
+                        },
+                        { id: 124, name: 'المحور الرابع : الطرق المختلفة لدعم اتخاذ القرار وحل المشكلات', link: '/courses/decision-making' },
+                        { id: 125, name: 'المحور الخامس : العقود والعطاءات والمشتريات', link: '/courses/contracts-tenders' },
+                        { id: 126, name: 'المحور السادس : السلامه والصحة المهنية', link: '/courses/safety-health' },
+                        { id: 127, name: 'المحور السابع : البيئة والتنمية المستدامه', link: '/courses/environment-sustainability' },
+                        { id: 128, name: 'المحور الثامن : مهارات الإتصال و الإدارية و الإشرافية', link: '/courses/communication-skills' },
+                        { id: 129, name: 'المحور التاسع : اخلاقيات المهنه وتطوير المسار المهنى', link: '/courses/ethics-career' }
+                    ]
+                }
+            ]
         },
         {
-          id: 12,
-          title: 'برامج عامة',
-          topics: [
-            {
-              id: 121,
-              name: 'المحور الأول : المعلومات الهندسية الأساسية',
-              link: '/courses/basic-engineering-info',
-              subTopics: [
-                { id: 1211, name: 'لمهندسى مدنى وعمارة', link: '/courses/basic-civil-architecture' },
-                { id: 1212, name: 'لمهندسى ميكانيكا وكهرباء', link: '/courses/basic-mechanical-electrical' }
-              ]
-            },
-            {
-              id: 122,
-              name: 'المحور الثانى : التطبيقات الهندسية المختلفة',
-              link: '/courses/engineering-applications',
-              subTopics: [
-                { id: 1221, name: 'لمهندسى مساحة', link: '/courses/app-surveying' },
-                { id: 1222, name: 'لمهندسى ميكانيكا', link: '/courses/app-mechanical' },
-                { id: 1223, name: 'لمهندسى كهرباء', link: '/courses/app-electrical' },
-                { id: 1224, name: 'لمهندسى مدنى و عمارة', link: '/courses/app-civil-architecture' }
-              ]
-            },
-            {
-              id: 123,
-              name: 'المحور الثالث : إدارة المشروعات والجودة',
-              link: '/courses/project-management-quality',
-              subTopics: [
-                { id: 1231, name: 'برامج إدارة المشروعات', link: '/courses/project-management-programs' },
+            id: 2,
+            title: 'برامج موجهة للماليين',
+            sub: [
                 {
-                  id: 1232,
-                  name: 'برامج الجودة',
-                  link: '/courses/quality-programs',
-                  subSubTopics: [
-                    { id: 12321, name: 'مهندسين التصنيع والتنفيذ ومهندسين الجودة QC', link: '/courses/quality-engineers-qc' },
-                    { id: 12322, name: 'لحامين ومشرفين التنفيذ ومراقبي الجودة QC', link: '/courses/quality-welders-supervisors' }
-                  ]
+                    id: 21,
+                    title: 'برامج مالية',
+                    topics: [
+                        { id: 211, name: 'عليا', link: '/courses/financial-senior' },
+                        { id: 212, name: 'وسطى', link: '/courses/financial-middle' },
+                        { id: 213, name: 'تنفيذى', link: '/courses/financial-executive' }
+                    ]
                 }
-              ]
-            },
-            { id: 124, name: 'المحور الرابع : الطرق المختلفة لدعم اتخاذ القرار وحل المشكلات', link: '/courses/decision-making' },
-            { id: 125, name: 'المحور الخامس : العقود والعطاءات والمشتريات', link: '/courses/contracts-tenders' },
-            { id: 126, name: 'المحور السادس : السلامه والصحة المهنية', link: '/courses/safety-health' },
-            { id: 127, name: 'المحور السابع : البيئة والتنمية المستدامه', link: '/courses/environment-sustainability' },
-            { id: 128, name: 'المحور الثامن : مهارات الإتصال و الإدارية و الإشرافية', link: '/courses/communication-skills' },
-            { id: 129, name: 'المحور التاسع : اخلاقيات المهنه وتطوير المسار المهنى', link: '/courses/ethics-career' }
-          ]
-        }
-      ]
-    },
-    {
-      id: 2,
-      title: 'برامج موجهة للماليين',
-      sub: [
+            ]
+        },
+        { id: 3, title: 'برامج موجهة للأمن', link: '/courses/basic-security' },
+        { id: 4, title: 'برامج مركز جسر السويس', link: '/courses/suez-bridge-center' },
+        { id: 5, title: 'برامج مركز شبرا', link: '/courses/shubra-center' },
+        { id: 7, title: 'برامج مالية موجهه لغير الماليين', link: '/courses/financial-non-financial' },
+        { id: 8, title: 'برامج تأهيلية لأعضاء المجلس التنفيذى لشباب قادة المستقبل', link: '/courses/future-leaders' },
         {
-          id: 21,
-          title: 'برامج مالية',
-          topics: [
-            { id: 211, name: 'عليا', link: '/courses/financial-senior' },
-            { id: 212, name: 'وسطى', link: '/courses/financial-middle' },
-            { id: 213, name: 'تنفيذى', link: '/courses/financial-executive' }
-          ]
-        }
-      ]
-    },
-    // These are now correctly separated main domains
-    { id: 3, title: 'برامج موجهة للأمن', link: '/courses/basic-security' },
-    { id: 4, title: 'برامج مركز جسر السويس', link: '/courses/suez-bridge-center' },
-    { id: 5, title: 'برامج مركز شبرا', link: '/courses/shubra-center' },
-    { id: 7, title: 'برامج مالية موجهه لغير الماليين', link: '/courses/financial-non-financial' },
-    { id: 8, title: 'برامج تأهيلية لأعضاء المجلس التنفيذى لشباب قادة المستقبل', link: '/courses/future-leaders' },
-    {
-      id: 9,
-      title: 'برامج القطاع القانوني والعقارى',
-      sub: [
+            id: 9,
+            title: 'برامج القطاع القانوني والعقارى',
+            sub: [
+                {
+                    id: 31,
+                    title: 'برامج قانونية وعقارية',
+                    topics: [
+                        { id: 311, name: 'إجراءات وضمانات التحقيق الإداري وطرق التظلم من نتيجته على ضوء لوائح الشركة', link: '/courses/admin-investigation' },
+                        { id: 312, name: 'النفقات وحجز ما للمدين لدى الغير', link: '/courses/expenses-seizure' }
+                    ]
+                }
+            ]
+        },
         {
-          id: 31,
-          title: 'برامج قانونية وعقارية',
-          topics: [
-            { id: 311, name: 'إجراءات وضمانات التحقيق الإداري وطرق التظلم من نتيجته على ضوء لوائح الشركة', link: '/courses/admin-investigation' },
-            { id: 312, name: 'النفقات وحجز ما للمدين لدى الغير', link: '/courses/expenses-seizure' }
-          ]
+            id: 10,
+            title: 'برامج الإدارة الطبية',
+            sub: [
+                {
+                    id: 91,
+                    title: 'برامج إدارة طبية',
+                    topics: [
+                        { id: 911, name: 'برامج الإدارة الطبية', link: '/courses/medical-administration' }
+                    ]
+                }
+            ]
         }
-      ]
-    },
-    {
-      id: 10,
-      title: 'برامج الإدارة الطبية',
-      sub: [
-        {
-          id: 91,
-          title: 'برامج إدارة طبية',
-          topics: [
-            { id: 911, name: 'برامج الإدارة الطبية', link: '/courses/medical-administration' }
-          ]
-        }
-      ]
-    }
-  ];
+    ];
 
-  const aboutLinkPaths = {
-    'نبذة عامة': '/overview',
-    'الرؤية والأهداف': '/mission',
-    'فريق العمل': '/team',
-    'الشهادات والاعتمادات': '/certifications'
-  };
+    const aboutLinkPaths = {
+        'نبذة عامة': '/overview',
+        'الرؤية والأهداف': '/mission',
+        'فريق العمل': '/team',
+        'الشهادات والاعتمادات': '/certifications',
+    };
 
-  const [selectedCatId, setSelectedCatId] = useState(1);
-  const [selectedSubId, setSelectedSubId] = useState(null);
+    const [selectedCatId, setSelectedCatId] = useState(1);
+    const [selectedSubId, setSelectedSubId] = useState(null);
 
-  const activeCategory = mainCourses.find(c => c.id === selectedCatId) || mainCourses[0];
-  const activeSub = activeCategory.sub?.find(s => s.id === selectedSubId) || activeCategory.sub?.[0];
+    const activeCategory = mainCourses.find(c => c.id === selectedCatId) || mainCourses[0];
+    const activeSub = activeCategory.sub?.find(s => s.id === selectedSubId) || activeCategory.sub?.[0];
 
-  const handleCoursesOpen = (event) => setCoursesAnchor(event.currentTarget);
-  const handleClose = () => {
-    setAboutAnchor(null);
-    setCoursesAnchor(null);
-    setAccountAnchor(null);
-  };
+    const [openSub, setOpenSub] = React.useState(null);
+    const [openTopic, setOpenTopic] = React.useState(null);
+
+    const handleCoursesOpen = (event) => setCoursesAnchor(event.currentTarget);
+    const handleClose = () => {
+        setAboutAnchor(null);
+        setCoursesAnchor(null);
+        setServicesAnchor(null); // Close services
+        setAccountAnchor(null);
+    };
     const toggleDrawer = (open) => () => setMobileOpen(open);
+
     return (
-        <> {/* <--- ADDED FRAGMENT WRAPPER */}
-<AppBar position="sticky" elevation={4} sx={{ bgcolor: 'white', color: 'black', py: 0.5 }}>
-  <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
-        
-            {/* LOGO SECTION - Tightened gaps */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {isMobile && (
-                          <IconButton onClick={toggleDrawer(true)}>
-                              <MenuIcon />
-                          </IconButton>
-                      )}
-                      <Stack
-                        direction="row"
-                        alignItems="center"
-                        component={Link}
-                        to="/"
-                        sx={{ textDecoration: 'none', color: 'inherit' }}
-                      >
-                        <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: { xs: 40, md: 55 }, width: 'auto' }} />
-                        {!isSmallMobile && (
-                            <Box sx={{ mr: 1, textAlign: 'left' }}>
-                              <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#0d47a1', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
-                                المقاولون العرب
-                              </Typography>
-                              <Typography variant="caption" sx={{ color: '#0d47a1', display: { xs: 'none', md: 'block' } }}>
-                                المعهد التكنولوجى لهندسة التشييد والإدارة
-                              </Typography>
-                            </Box>
-                          )}
-                      </Stack>
+        <>
+            {/* Changed position to sticky and top to 0 to ensure it stays at top on scroll */}
+            <AppBar position="fixed" elevation={4} sx={{ bgcolor: 'white', color: 'black', py: 0.5, top: 1, zIndex: 1100 }}>
+                <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {isMobile && (
+                            <IconButton onClick={toggleDrawer(true)}>
+                                <MenuIcon />
+                            </IconButton>
+                        )}
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            component={Link}
+                            to="/"
+                            sx={{ textDecoration: 'none', color: 'inherit' }}
+                        >
+                            <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: { xs: 40, md: 55 }, width: 'auto' }} />
+                            {!isSmallMobile && (
+                                <Box sx={{ mr: 1, textAlign: 'left' }}>
+                                    <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#0d47a1', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                                        المقاولون العرب
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: '#0d47a1', display: { xs: 'none', md: 'block' } }}>
+                                        المعهد التكنولوجى لهندسة التشييد والإدارة
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Stack>
                     </Box>
 
-                    {/* COURSES BUTTON - Right next to logo */}
-                          {!isMobile && (
-                              <Button
-                                  color="inherit"
-                                  endIcon={<KeyboardArrowDownIcon />}
-                                  onMouseEnter={handleCoursesOpen}
-                                  sx={{  px: 2, mx: 1, whiteSpace: 'nowrap' }}
-                              >
-                                  الدورات التدريبية
-                              </Button>
-                          )}
+                    {!isMobile && (
+                        <Button
+                            color="inherit"
+                            endIcon={<KeyboardArrowDownIcon />}
+                            onMouseEnter={handleCoursesOpen}
+                            sx={{ px: 2, mx: 1, whiteSpace: 'nowrap' }}
+                        >
+                            الدورات التدريبية
+                        </Button>
+                    )}
 
-                        {/* SEARCH BAR - Fixed flex and padding */}
-                              <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, justifyContent: 'center', maxWidth: { xs: '150px', md: '400px' }, mx: 2 }}>
-                          <Box sx={{ bgcolor: '#f1f3f4', borderRadius: 9, display: 'flex', alignItems: 'center', px: 2, py: 0.5, width: '100%' }}>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexGrow: 1,
+                            justifyContent: 'center',
+                            maxWidth: { xs: '70%', sm: '500px', md: '800px' },
+                            mx: { xs: 1, md: 4 }
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                bgcolor: '#f1f3f4',
+                                borderRadius: 9,
+                                display: 'flex',
+                                alignItems: 'center',
+                                px: 2,
+                                py: 0.8,
+                                width: '100%',
+                                transition: 'all 0.3s ease',
+                                '&:focus-within': {
+                                    bgcolor: '#ffffff',
+                                    boxShadow: '0 0 0 2px #0d47a1',
+                                }
+                            }}
+                        >
                             <InputBase
-                              placeholder="بحث..."
-                              sx={{ color: 'black', flexGrow: 1, textAlign: 'right', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.85rem' }}
+                                placeholder="بحث عن الدورات..."
+                                sx={{
+                                    color: 'black',
+                                    flexGrow: 1,
+                                    textAlign: 'right',
+                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                    fontSize: { xs: '0.8rem', md: '0.95rem' },
+                                    pr: 1
+                                }}
                             />
-                            <SearchIcon sx={{ color: 'gray', fontSize: 20 }} />
-                          </Box>
+                            <SearchIcon sx={{ color: 'gray', fontSize: { xs: 18, md: 22 } }} />
                         </Box>
+                    </Box>
 
-                    {/* NAV LINKS & AUTH */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 } }}>
                         {!isMobile && (
                             <Stack direction="row" spacing={1}>
                                 <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} onMouseEnter={(e) => setAboutAnchor(e.currentTarget)}>عن المعهد</Button>
                                 <Button color="inherit" component={Link} to="/news">الأخبار</Button>
-                                <Button color="inherit" component={Link} to="/lib">المكتبة</Button>
-                                <Button color="inherit" component={Link} to="/services">الخدمات</Button>
+                                <Button color="inherit" component={Link} to="/#">المكتبة</Button>
+
+                                {/* Updated Services Button with hover */}
+                                <Button
+                                    color="inherit"
+                                    endIcon={<KeyboardArrowDownIcon />}
+                                    onMouseEnter={(e) => setServicesAnchor(e.currentTarget)}
+                                >
+                                    الخدمات
+                                </Button>
                             </Stack>
                         )}
 
-                  <IconButton color="inherit" size="small">
-                    <Badge badgeContent={2} color="primary">
-                                  <ShoppingCartIcon sx={{ fontSize: 22 }} />
-                    </Badge>
-                  </IconButton>
+                        <IconButton color="inherit" size="small">
+                            <Badge badgeContent={2} color="primary">
+                                <ShoppingCartIcon sx={{ fontSize: 22 }} />
+                            </Badge>
+                        </IconButton>
 
-                  <Box sx={{ borderRight: '1px solid #ddd', pl: 2, ml: 1, display: 'flex', alignItems: 'center' }}>
-                      <SignedOut><SignInButton mode="modal" /></SignedOut>
-                      <SignedIn><UserButton afterSignOutUrl="/" /><AuthSync /></SignedIn>
-                  </Box>
+                        <Box sx={{ borderRight: '1px solid #ddd', pl: 2, ml: 1, display: 'flex', alignItems: 'center' }}>
+                            <SignedOut><SignInButton mode="modal" /></SignedOut>
+                            <SignedIn><UserButton afterSignOutUrl="/" /><AuthSync /></SignedIn>
+                        </Box>
 
-        </Box>
-   </Toolbar>
- </AppBar>
-            {/* --- MOBILE DRAWER --- */}
-            <Drawer anchor="right" open={mobileOpen} onClose={toggleDrawer(false)}>
+                    </Box>
+                </Toolbar>
+            </AppBar>
+
+            <Drawer anchor="left" open={mobileOpen} onClose={toggleDrawer(false)}>
                 <Box sx={{ width: 280, p: 2 }} dir="rtl">
-                    <IconButton onClick={toggleDrawer(false)} sx={{ mb: 2 }}><CloseIcon /></IconButton>
-                    <List>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+                        <IconButton onClick={toggleDrawer(false)} sx={{ mb: 2 }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>                    <List>
                         <ListItemButton onClick={() => setMobileCoursesOpen(!mobileCoursesOpen)}>
-                            <ListItemText primary="الدورات التدريبية" />
+                            <ListItemText primary="الدورات التدريبية" sx={{ textAlign: 'right' }} />
                             {mobileCoursesOpen ? <ExpandMoreIcon /> : <ChevronLeftIcon />}
                         </ListItemButton>
+
                         <Collapse in={mobileCoursesOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding sx={{ pr: 2 }}>
                                 {mainCourses.map(course => (
-                                    <ListItemButton key={course.id} component={Link} to={course.link || '#'} onClick={toggleDrawer(false)}>
-                                        <ListItemText primary={course.title} />
-                                    </ListItemButton>
+                                    <React.Fragment key={course.id}>
+                                        <ListItemButton
+                                            onClick={() => course.sub && setOpenSub(openSub === course.id ? null : course.id)}
+                                            component={course.link ? Link : 'div'}
+                                            to={course.link || '#'}
+                                            sx={{ bgcolor: 'rgba(0,0,0,0.02)', mb: 0.5 }}
+                                        >
+                                            <ListItemText primary={course.title} />
+                                            {course.sub && (openSub === course.id ? <ExpandMoreIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />)}
+                                        </ListItemButton>
+
+                                        {course.sub && (
+                                            <Collapse in={openSub === course.id} timeout="auto" unmountOnExit>
+                                                <List component="div" disablePadding sx={{ pr: 2 }}>
+                                                    {course.sub.map(subItem => (
+                                                        <React.Fragment key={subItem.id}>
+                                                            <ListItemButton
+                                                                onClick={() => subItem.topics && setOpenTopic(openTopic === subItem.id ? null : subItem.id)}
+                                                                sx={{ borderRight: '2px solid #ddd' }}
+                                                            >
+                                                                <ListItemText primary={subItem.title} />
+                                                                {subItem.topics && (openTopic === subItem.id ? <ExpandMoreIcon fontSize="small" /> : <ChevronLeftIcon fontSize="small" />)}
+                                                            </ListItemButton>
+
+                                                            {subItem.topics && (
+                                                                <Collapse in={openTopic === subItem.id} timeout="auto" unmountOnExit>
+                                                                    <List component="div" disablePadding sx={{ pr: 2 }}>
+                                                                        {subItem.topics.map(topic => (
+                                                                            <ListItemButton
+                                                                                key={topic.id}
+                                                                                component={Link}
+                                                                                to={topic.link || '#'}
+                                                                                onClick={toggleDrawer(false)}
+                                                                            >
+                                                                                <ListItemText
+                                                                                    primary={topic.name}
+                                                                                    primaryTypographyProps={{ fontSize: '0.85rem', color: 'text.secondary' }}
+                                                                                />
+                                                                            </ListItemButton>
+                                                                        ))}
+                                                                    </List>
+                                                                </Collapse>
+                                                            )}
+                                                        </React.Fragment>
+                                                    ))}
+                                                </List>
+                                            </Collapse>
+                                        )}
+                                    </React.Fragment>
                                 ))}
                             </List>
                         </Collapse>
-
                         <Divider sx={{ my: 1 }} />
                         {aboutLinks.map(link => (
                             <ListItemButton key={link} component={Link} to={aboutLinkPaths[link] || '#'} onClick={toggleDrawer(false)}>
@@ -280,7 +377,6 @@ const Navbar = () => {
                 </Box>
             </Drawer>
 
-            {/* --- DESKTOP MEGA MENU --- */}
             <Popover
                 open={Boolean(coursesAnchor)}
                 anchorEl={coursesAnchor}
@@ -293,7 +389,7 @@ const Navbar = () => {
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', height: 450 }} dir="left">
+                <Box sx={{ display: 'flex', height: 450 }} dir="rtl">
                     <List sx={{ width: 280, borderLeft: '1px solid #d1d7dc', p: 0, bgcolor: '#f8f9fa' }}>
                         {mainCourses.map((cat) => (
                             <ListItemButton
@@ -330,26 +426,16 @@ const Navbar = () => {
                 </Box>
             </Popover>
 
-            {/* --- ABOUT MENU --- */}
             <Menu
                 anchorEl={aboutAnchor}
                 open={Boolean(aboutAnchor)}
                 onClose={handleClose}
                 MenuListProps={{ onMouseLeave: handleClose }}
-                // This aligns the menu to the right edge of the button
-                anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                }}
-                transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 sx={{
                     direction: 'rtl',
-                    '& .MuiPaper-root': {
-                        minWidth: '220px',
-                    }
+                    '& .MuiPaper-root': { minWidth: '220px' }
                 }}
             >
                 {aboutLinks.map((link) => (
@@ -359,22 +445,64 @@ const Navbar = () => {
                         to={aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`}
                         onClick={handleClose}
                         sx={{
+
                             fontFamily: '"Droid Arabic Kufi", serif',
+
                             fontSize: '0.85rem',
+
                             width: '100%',
+
                             display: 'flex',
+
                             justifyContent: 'left', // In RTL flex-start is the right side
+
                             textAlign: 'right',          // Force text to start from the right
+
                             px: 2,                        // Add padding for breathing room
-                            '&:hover': { bgcolor: '#f5f5f5', color: '#0d47a1' }
+
+                            '&:hover': { bgcolor: '#f5f5f5', color: '#f57c00' }
+
                         }}
                     >
                         {link}
                     </MenuItem>
                 ))}
             </Menu>
+
+            {/* --- NEW SERVICES DROPDOWN MENU --- */}
+            <Menu
+                anchorEl={servicesAnchor}
+                open={Boolean(servicesAnchor)}
+                onClose={handleClose}
+                MenuListProps={{ onMouseLeave: handleClose }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                sx={{
+                    direction: 'rtl',
+                    '& .MuiPaper-root': { minWidth: '200px' }
+                }}
+            >
+                {serviceLinks.map((item, index) => (
+                    <MenuItem
+                        key={index}
+                        component={Link}
+                        to={item.path}
+                        onClick={handleClose}
+                        sx={{
+                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontSize: '0.85rem',
+                            textAlign: 'right',
+                            width: '100%',
+                            justifyContent: 'flex-end',
+                            '&:hover': { bgcolor: '#f5f5f5', color: '#f57c00' }
+                        }}
+                    >
+                        {item.title}
+                    </MenuItem>
+                ))}
+            </Menu>
         </>
-  );
+    );
 };
 
 export default Navbar;
