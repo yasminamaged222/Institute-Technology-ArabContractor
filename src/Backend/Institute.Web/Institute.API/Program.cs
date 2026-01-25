@@ -41,27 +41,47 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
-//builder.Services.AddHttpClient<ClerkService>();
-
+builder.Services.AddHttpClient<ClerkService>();
+builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
 
 
 #endregion
 #region(Authentication And Authorization)
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme,options =>
+builder.Services
+.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+.AddJwtBearer(options =>
 {
     options.Authority = "https://mighty-basilisk-11.clerk.accounts.dev";
 
+    options.RequireHttpsMetadata = true;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,
-        ValidIssuer = "https://mighty-basilisk-11.clerk.accounts.dev",
-
-        ValidateAudience = false, // 👈 مهم جداً
+        ValidateIssuer = false,
+        ValidateAudience = false,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = false,
+        NameClaimType = "sub"
+    };
+
+    // 🔥🔥🔥 دي هتقولنا ليه 401
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            Console.WriteLine("❌ AUTH FAILED");
+            Console.WriteLine(context.Exception.Message);
+            return Task.CompletedTask;
+        },
+        OnTokenValidated = context =>
+        {
+            Console.WriteLine("✅ TOKEN VALIDATED");
+            return Task.CompletedTask;
+        }
     };
 });
+
+builder.Services.AddAuthorization();
 
 #endregion
 
