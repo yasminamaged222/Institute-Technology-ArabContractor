@@ -12,8 +12,8 @@ import CustomersPage from '../pages/CustomersPage'; // Adjust path accordingly
 import VocationalTraining from '../pages/VocationalTraining';
 import GesrElSuezPage from '../pages/GesrElSuezPage';
 import ShobraTrainingPage from '../pages/ShobraTrainingPage';
-import Certifications from '../pages/Certifications'; //  √ﬂœ „‰ «·„”«— «·’ÕÌÕ ··„·›
-import Team from '../pages/Team'; //  √ﬂœ „‰ «·„”«—
+import Certifications from '../pages/Certifications'; 
+import Team from '../pages/Team'; 
 import OnlineTrainingPage from "../pages/OnlineTrainingPage";
 import TechnicalSchoolPage from "../pages/TechnicalSchoolPage";
 import Protocols from '../pages/Protocols';
