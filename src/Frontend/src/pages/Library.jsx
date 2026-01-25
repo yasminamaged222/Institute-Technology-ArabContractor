@@ -1243,7 +1243,7 @@ function LibrarySearchSection({ isMobile, isTablet }) {
         const fetchBooks = async () => {
             try {
                 const res = await fetch(
-                    'https://localhost:7177/api/Book/getAllBooks'
+                    'https://acwebsite-icmet-test.azurewebsites.net/api/Book/getAllBooks'
                 );
                 const data = await res.json();
 
