@@ -106,11 +106,22 @@ const features = [
 ];
 
 const downloadItems = [
-  { title: "الشهادات والاعتمادات", Icon: EmojiEventsIcon },
-  { title: "التقارير الشهرية", Icon: DescriptionIcon },
-  { title: "البروتوكولات والاتفاقيات", Icon: HomeWorkIcon }
+    {
+        title: "الخطة التدريبية السنوية",
+        Icon: EmojiEventsIcon,
+        pdfUrl: '/pdf/ICEMT_Plan_Training.pdf' // Replace with actual PDF path
+    },
+    {
+        title: "التقرير الشهــرى",
+        Icon: DescriptionIcon,
+        pdfUrl: '/pdf/ICEMT_Monthly_Activity.pdf' // Replace with actual PDF path
+    },
+    {
+        title: "الخطة الاستراتيجية للمعهد",
+        Icon: HomeWorkIcon,
+        pdfUrl: '/pdf/StrategicPlan_2024_2030.pdf' // Replace with actual PDF path
+    }
 ];
-
 
 const courses = [
   {
@@ -475,25 +486,6 @@ const Home = () => {
                   <Typography className="hero-title" variant="h3" fontWeight="bold" gutterBottom sx={{ lineHeight: 1.2, mb: 2 }}>
                       {slide.title}
                   </Typography>
-          <Button
-                      className="hero-button"
-                      variant="contained"
-                      size="large"
-            sx={{
-                mt: 2,
-              bgcolor: '#f57c00',
-              color: 'white',
-              borderRadius: 30,
-              boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-                '&:hover': {
-                    bgcolor: '#e65100',
-                    transform: 'scale(1.05)'
-                },
-                transition: 'all 0.3s'
-            }}
-          >
-            اقرأ المزيد
-          </Button>
         </Box>
       </Box>
 
@@ -558,21 +550,23 @@ const Home = () => {
                           </Typography>
                 </CardContent>
                       <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      bgcolor: '#f57c00',
-                      borderRadius: 30,
-                        px: 3,
-                        py: 1,
-                        fontSize: '0.75rem',
-                      '&:hover': { bgcolor: '#e65100' },
-                    }}
-                  >
-                    اقرأ المزيد
-                  </Button>
-                </CardActions>
+                          <Button
+                              component={Link}    // جعل الزر يعمل كرابط
+                              to={feature.link}   // المسار المستهدف (مثلاً /library)
+                              variant="contained"
+                              size="small"
+                              sx={{
+                                  bgcolor: '#f57c00',
+                                  borderRadius: 30,
+                                  px: 3,
+                                  py: 1,
+                                  fontSize: '0.75rem',
+                                  '&:hover': { bgcolor: '#e65100' },
+                              }}
+                          >
+                              اقرأ المزيد
+                          </Button>
+                      </CardActions>
               </Card>
             </Grid>
           ))}
@@ -678,70 +672,93 @@ const Home = () => {
                   </Box>
               </Container>
           </Box>
-      {/* New Section: Downloads (التحميلات) */}
-      <div style={{ 
-        width: '100%', 
-              padding: '100px 0', 
-              py: { xs: 8, sm: 8, md: 12 },
-              mt: { xs: 4, md: 8 },
-        backgroundImage: 'linear-gradient(#070707,#0865a8)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: { xs: 'scroll', md: 'fixed' },
-        textAlign: 'center',
-        color: 'white'
-      }}>
+          {/* New Section: Downloads (التحميلات) */}
+          <div style={{
+              width: '100%',
+              padding: '100px 0',
+              backgroundImage: 'linear-gradient(#070707,#0865a8)',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              backgroundAttachment: 'fixed',
+              textAlign: 'center',
+              color: 'white'
+          }}>
               <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
                   <Typography variant="h3" sx={{
-                      fontWeight: 'bold', mb: { xs: 4, md: 6 }, fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' }, fontFamily: '"Droid Arabic Kufi", serif', position: 'relative', display: 'inline-block',
-              '&::after': { content: '""', position: 'absolute', bottom: -15, left: '15%', width: '70%', height: '2px', bgcolor: 'white' }
-          }}>
-            تحميـلات
-          </Typography>
-                  <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
-            {downloadItems.map((item, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Paper
-                  elevation={2}
-                  component="a"
-                  href={item.pdfUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                        sx={{
-                            p: { xs: 2, sm: 2.5, md: 4 },
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            borderRadius: '10px',
-                            transition: 'all 0.3s ease-in-out',
-                            bgcolor: 'white',
-                            cursor: 'pointer',
-                            '&:hover': {
-                                transform: { xs: 'translateY(-3px)', md: 'translateY(-8px)' },
-                                boxShadow: '0 12px 25px rgba(0,0,0,0.2)'
-                            },
-                        }}
-                    >
-                        <Box sx={{ bgcolor: '#f57c00', p: { xs: 0.8, sm: 1, md: 1.5 }, borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', ml: 1 }}>
-                        <item.Icon sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }} />
-                        </Box>
-                        <Typography variant="h6" sx={{
-                            color: '#333',
-                            fontWeight: 'bold',
-                            textAlign: 'right',
-                            flex: 1,
-                            fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
-                            lineHeight: 1.4
-                        }}
-                           > {item.title}
+                      fontWeight: 'bold',
+                      mb: { xs: 4, md: 6 },
+                      fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' },
+                      fontFamily: '"Droid Arabic Kufi", serif',
+                      position: 'relative',
+                      display: 'inline-block',
+                      '&::after': {
+                          content: '""',
+                          position: 'absolute',
+                          bottom: -15,
+                          left: '15%',
+                          width: '70%',
+                          height: '2px',
+                          bgcolor: 'white'
+                      }
+                  }}>
+                      تحميـلات
                   </Typography>
-                        
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </div>
+
+                  <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
+                      {downloadItems.map((item, index) => (
+                          <Grid item xs={12} sm={6} md={4} key={index}>
+                              <Paper
+                                  elevation={2}
+                                  component="a"
+                                  href={item.pdfUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  sx={{
+                                      p: { xs: 2, sm: 2.5, md: 4 },
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      borderRadius: '10px',
+                                      transition: 'all 0.3s ease-in-out',
+                                      bgcolor: 'white',
+                                      cursor: 'pointer',
+                                      textDecoration: 'none',
+                                      '&:hover': {
+                                          transform: { xs: 'translateY(-3px)', md: 'translateY(-8px)' },
+                                          boxShadow: '0 12px 25px rgba(0,0,0,0.2)'
+                                      },
+                                  }}
+                              >
+                                  <Box sx={{
+                                      bgcolor: '#f57c00',
+                                      p: { xs: 0.8, sm: 1, md: 1.5 },
+                                      borderRadius: '15px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      ml: 1
+                                  }}>
+                                      <item.Icon sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }} />
+                                  </Box>
+
+                                  <Typography variant="h6" sx={{
+                                      color: '#333',
+                                      fontWeight: 'bold',
+                                      textAlign: 'right',
+                                      flex: 1,
+                                      fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                                      lineHeight: 1.4
+                                  }}>
+                                      {item.title}
+                                  </Typography>
+                              </Paper>
+                          </Grid>
+                      ))}
+                  </Grid>
+              </Container>
+          </div>
+
+
      {/* Courses Slide Show - Flat Design Style مثل Udemy */}
           <Container maxWidth="xl"
               sx={{

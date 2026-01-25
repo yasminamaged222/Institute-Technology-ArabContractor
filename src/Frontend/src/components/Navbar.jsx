@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import {
     AppBar, Toolbar, Box, IconButton, InputBase, Menu, MenuItem,
     Avatar, Badge, Button, Divider, Typography, Stack, Popover, List,
@@ -10,8 +11,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
-import { Link } from 'react-router-dom';
-import logo from '../assets/logo-removebg-preview.png';
+import { Link, useNavigate } from 'react-router-dom'; import logo from '../assets/logo-removebg-preview.png';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
@@ -26,6 +26,8 @@ const Navbar = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false);
 
+    const navigate = useNavigate();
+
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
     const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -38,7 +40,10 @@ const Navbar = () => {
 
     // Added the specific Services links you requested
     const serviceLinks = [
-        { title: 'التدريب الحرفى', path: '/craft-training' },
+        {
+            title: 'التدريب الحرفى',
+            path: '/vocational-training', // رابط مباشر بدون قائمة فرعية
+        },
         { title: 'التعليم الفنى', path: '/technical-education' },
         { title: 'الإختبارات', path: '/tests' },
         { title: 'مجلس قادة المستقبل', path: '/future-leaders' },
@@ -160,8 +165,14 @@ const Navbar = () => {
     const aboutLinkPaths = {
         'نبذة عامة': '/overview',
         'الرؤية والأهداف': '/mission',
-        'فريق العمل': '/team',
         'الشهادات والاعتمادات': '/certifications',
+        'فريق العمل': '/team',
+        'قائمة المحاضرين': '/instructors',
+        'الخطة التدريبية': '/pdf/ICEMT_Plan_Training.pdf', // تأكد من وجود المجلد والملف في public
+        'التقرير الشهرى': '/pdf/ICEMT_Monthly_Activity.pdf',
+        'مكتبة الصور والفيديوهات': '/gallery',
+        'البروتوكولات والإتفاقيات': '/protocols',
+        'عملاؤنا': '/customers',
     };
 
     const [selectedCatId, setSelectedCatId] = useState(1);
@@ -172,6 +183,16 @@ const Navbar = () => {
 
     const [openSub, setOpenSub] = React.useState(null);
     const [openTopic, setOpenTopic] = React.useState(null);
+
+    const handleLinkClick = (path) => {
+        if (!path) return;
+        if (path.endsWith('.pdf')) {
+            window.open(path, '_blank');
+        } else {
+            navigate(path);
+        }
+        handleClose();
+    };
 
     const handleCoursesOpen = (event) => setCoursesAnchor(event.currentTarget);
     const handleClose = () => {
@@ -185,7 +206,7 @@ const Navbar = () => {
     return (
         <>
             {/* Changed position to sticky and top to 0 to ensure it stays at top on scroll */}
-            <AppBar position="fixed" elevation={4} sx={{ bgcolor: 'white', color: 'black', py: 0.5, top: 1, zIndex: 1100 }}>
+            <AppBar position="fixed" elevation={4}  sx={{ bgcolor: 'white', color: 'black', py: 0.5, top: 1, zIndex: 1100 }}>
                 <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -272,7 +293,7 @@ const Navbar = () => {
                             <Stack direction="row" spacing={1}>
                                 <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} onMouseEnter={(e) => setAboutAnchor(e.currentTarget)}>عن المعهد</Button>
                                 <Button color="inherit" component={Link} to="/news">الأخبار</Button>
-                                <Button color="inherit" component={Link} to="/#">المكتبة</Button>
+                                <Button color="inherit" component={Link} to="/library">المكتبة</Button>
 
                                 {/* Updated Services Button with hover */}
                                 <Button
@@ -438,69 +459,103 @@ const Navbar = () => {
                     '& .MuiPaper-root': { minWidth: '220px' }
                 }}
             >
-                {aboutLinks.map((link) => (
-                    <MenuItem
-                        key={link}
-                        component={Link}
-                        to={aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`}
-                        onClick={handleClose}
-                        sx={{
+                {aboutLinks.map((link) => {
+                    const path = aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`;
+                    const isPdf = path.endsWith('.pdf');
 
-                            fontFamily: '"Droid Arabic Kufi", serif',
-
-                            fontSize: '0.85rem',
-
-                            width: '100%',
-
-                            display: 'flex',
-
-                            justifyContent: 'left', // In RTL flex-start is the right side
-
-                            textAlign: 'right',          // Force text to start from the right
-
-                            px: 2,                        // Add padding for breathing room
-
-                            '&:hover': { bgcolor: '#f5f5f5', color: '#f57c00' }
-
-                        }}
-                    >
-                        {link}
-                    </MenuItem>
-                ))}
+                    return (
+                        <MenuItem
+                            key={link}
+                            // إذا كان الرابط PDF نستخدم 'a' لفتحه في نافذة جديدة، وإذا كان صفحة داخلية نستخدم Link
+                            component={isPdf ? 'a' : Link}
+                            to={!isPdf ? path : undefined}
+                            href={isPdf ? path : undefined}
+                            target={isPdf ? '_blank' : undefined}
+                            rel={isPdf ? 'noopener noreferrer' : undefined}
+                            onClick={handleClose}
+                            sx={{
+                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontSize: '0.85rem',
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'left',
+                                textAlign: 'right',
+                                px: 2,
+                                textDecoration: 'none', // لضمان عدم وجود خط تحت روابط الـ a
+                                color: 'inherit',
+                                '&:hover': { bgcolor: '#f5f5f5', color: '#f57c00' }
+                            }}
+                        >
+                            {link}
+                        </MenuItem>
+                    );
+                })}
             </Menu>
 
-            {/* --- NEW SERVICES DROPDOWN MENU --- */}
+            {/* --- UPDATED SERVICES DROPDOWN MENU --- */}
             <Menu
                 anchorEl={servicesAnchor}
                 open={Boolean(servicesAnchor)}
                 onClose={handleClose}
-                MenuListProps={{ onMouseLeave: handleClose }}
+                MenuListProps={{ onMouseLeave: () => setServicesAnchor(null) }}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                 sx={{
                     direction: 'rtl',
-                    '& .MuiPaper-root': { minWidth: '200px' }
+                    '& .MuiPaper-root': { minWidth: '220px' }
                 }}
             >
                 {serviceLinks.map((item, index) => (
-                    <MenuItem
-                        key={index}
-                        component={Link}
-                        to={item.path}
-                        onClick={handleClose}
-                        sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
-                            fontSize: '0.85rem',
-                            textAlign: 'right',
-                            width: '100%',
-                            justifyContent: 'flex-end',
-                            '&:hover': { bgcolor: '#f5f5f5', color: '#f57c00' }
-                        }}
-                    >
-                        {item.title}
-                    </MenuItem>
+                    <React.Fragment key={index}>
+                        {/* Main Category Link */}
+                        <MenuItem
+                            component={Link}
+                            to={item.path}
+                            onClick={() => setServicesAnchor(null)}
+                            sx={{
+                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontSize: '0.85rem',
+                                fontWeight: item.subLinks ? 'bold' : 'normal', // Bold if it has sub-items
+                                textAlign: 'right',
+                                width: '100%',
+                                justifyContent: 'flex-end',
+                                '&:hover': { bgcolor: '#f5f5f5', color: '#f57c00' }
+                            }}
+                        >
+                            {item.title}
+                        </MenuItem>
+
+                        {/* Sub-Links (e.g., جسر السويس / شبرا) */}
+                        {item.subLinks && item.subLinks.map((sub, subIndex) => (
+                            <MenuItem
+                                key={`${index}-${subIndex}`}
+                                component={Link}
+                                to={sub.path}
+                                onClick={() => setServicesAnchor(null)}
+                                sx={{
+                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                    fontSize: '0.75rem', // Slightly smaller
+                                    textAlign: 'right',
+                                    width: '100%',
+                                    justifyContent: 'flex-end',
+                                    pr: 4, // Indent to the right for RTL
+                                    '&:hover': { bgcolor: '#f5f5f5', color: '#f57c00' }
+                                }}
+                            >
+                                {sub.title}
+                                <span style={{ marginRight: '8px' }}>•</span>
+                            </MenuItem>
+                        ))}
+                    </React.Fragment>
                 ))}
             </Menu>
+            <br />
+            <br />
+            <br />
+
+           
+
+
         </>
     );
 };

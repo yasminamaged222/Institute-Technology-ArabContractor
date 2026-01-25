@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-
+import { Link } from 'react-router-dom'; // 1. Import Link at the top
 const CustomersSection = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [itemsPerSlide, setItemsPerSlide] = useState(6);
@@ -126,15 +126,17 @@ const CustomersSection = () => {
     };
 
     return (
-        <section className="bg-gray-5 overflow-hidden py-1 md:py-2" dir="rtl">
-            <div className="container mx-auto px-6 lg:px-12">
+        <section style={{ height: '500px' }} className="bg-gray-5 overflow-hidden py-1 md:py-2" dir="rtl">
+            <div  className="container mx-auto px-6 lg:px-12">
 
                 {/* Header */}
                 <div className="mb-16 text-center">
-                    <h3 className="mb-1 text-3xl font-bold text-[#065a8a] md:text-4xl">
-                        عملاؤنا
-                    </h3>
-                    <div className="mx-auto mb-1 h-1 w-20 rounded-full bg-[#065a8a]"></div>
+                    <Link to="/customers" className="group/title inline-block">
+                        <h3 className="mb-1 text-3xl font-bold text-[#065a8a] transition-colors group-hover/title:text-blue-700 md:text-4xl">
+                            عملاؤنا
+                        </h3>
+                        <div className="mx-auto mb-1 h-1 w-20 rounded-full bg-[#065a8a] transition-all group-hover/title:w-32"></div>
+                    </Link>
                     <p className="text-gray-600">نسعى دائما لإرضاء العميل بتقديم أفضل الخدمات</p>
                 </div>
 

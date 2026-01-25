@@ -1,6 +1,5 @@
 html, body {
     overflow-x: hidden;
+    font-family: Droid Arabic Kufi, serif;
     /*height: 100%;*/ /* This often kills scroll listeners */
 }
-
-

@@ -29,7 +29,7 @@ const Footer = () => {
     };
 
     return (
-        <Box sx={{
+        <Box  sx={{
             backgroundImage: 'linear-gradient(#070707,#0865a8)', // Apply your gradient here
             color: 'white',
             py: 6,
@@ -122,7 +122,7 @@ const Footer = () => {
                             جميع الحقوق محفوظة 2025 © المعهد التكنولوجي لهندسة التشييد والإدارة | تصميم مركز معلومات الإدارة العليا
                         </Typography>
                         <Typography variant="caption" sx={{ color: '#ceb22f', fontWeight: 'bold', display: 'block', mt: 1 }}>
-                            Designed by Yasmina Maged & Ahmed Taha
+                            Designed by Yasmina Maged, Samir Yousri & Ahmed Taha
                         </Typography>
                     </Box>
 

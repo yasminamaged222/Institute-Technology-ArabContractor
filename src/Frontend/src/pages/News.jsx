@@ -94,7 +94,7 @@ const News = () => {
       `}</style>
 
             {/* Breadcrumb */}
-            <div className="overview_intro" style={{ position: 'sticky', top: '70px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '10px 20px', borderBottom: '1px solid #eee' }}>
+            <div className="overview_intro" style={{ position: 'relative', bottom: '65px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '10px 20px', borderBottom: '1px solid #eee' }}>
                 <span className="overview"><a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار</span>
             </div>
 

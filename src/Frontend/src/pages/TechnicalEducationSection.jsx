@@ -1,4 +1,6 @@
 ﻿import React from 'react';
+import { Link } from "react-router-dom";
+
 const TechnicalEducationSection = () => {
   return (
     <section className="bg-white py-1">
@@ -98,17 +100,25 @@ const TechnicalEducationSection = () => {
             </div>
 
             {/* Read More Button */}
-            <div className="pt-100">
-              <a
-                href="/Technical_Schools"
-              >
-                <button style={{
-                backgroundColor: '#f57c00', color: 'white', border: 'none', borderRadius: '30px', padding: '12px 40px', fontSize: '1.1rem', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s'
-              }}>
-                اقرأ المزيد
-              </button>
-              </a>
-            </div>
+                      <div className="pt-100">
+                          <Link to="/Technical_Schools">
+                              <button
+                                  style={{
+                                      backgroundColor: "#f57c00",
+                                      color: "white",
+                                      border: "none",
+                                      borderRadius: "30px",
+                                      padding: "12px 40px",
+                                      fontSize: "1.1rem",
+                                      cursor: "pointer",
+                                      fontWeight: "bold",
+                                      transition: "0.2s",
+                                  }}
+                              >
+                                  اقرأ المزيد
+                              </button>
+                          </Link>
+                      </div>
           </div>
 
           {/* Right Side - Image */}
