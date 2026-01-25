@@ -45,8 +45,8 @@ export default function AuthSync() {
         if (!isSignedIn) return;
 
         const sync = async () => {
-            const token = await getToken();
-
+            const token = await getToken({ template: "backend" });
+            console.log("CLERK TOKEN:", token);
             await fetch("https://localhost:7177/api/Account/sync", {
 
 
