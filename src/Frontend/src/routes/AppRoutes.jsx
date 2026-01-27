@@ -22,6 +22,7 @@ import TestsSection from '../pages/TestsSection';
 import ContactPage from '../pages/ContactPage'; // Path where you saved the contact code
 import ShoppingCartPage from '../pages/ShoppingCartPage';
 import Galery from '../pages/Galary';
+import FutureLeadersCouncil from '../pages/Leaders';
 
 
 const AppRoutes = () => {
@@ -51,6 +52,9 @@ const AppRoutes = () => {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/gallery" element={<Galery />} />
+            <Route path="/future-leaders" element={<FutureLeadersCouncil />} />
+
+            
 
 
 

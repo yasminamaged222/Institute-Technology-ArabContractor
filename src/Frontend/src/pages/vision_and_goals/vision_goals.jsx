@@ -4,25 +4,27 @@ import { FaHardHat, FaCalendarAlt, FaUsers, FaLaptop, FaGraduationCap, FaCogs } 
 import img2 from '../../assets/img2.jpg';
 import img1 from '../../assets/img1.jpg';
 
-
-
-
 function Vision_goals() {
     return (
-
         <div>
-            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' }}>
-                <span className="overview" style={{ position: 'relative', bottom: '5px' }}><a href="/" className="btn_go_home">الصفحة الرئيسية</a> - الرؤية والأهداف</span>
+            {/* Fixed Overview Bar */}
+            <div className="overview_intro" style={{
+                position: 'fixed',
+                top: '70px',
+                background: '#F5F7E1',
+                width: '100%',
+                zIndex: '40',
+                borderBottom: '1px solid #d1d5db',
+                padding: '0.75rem 1.25rem'
+            }}>
+                <span className="overview">
+                    <a href="/" className="btn_go_home">الصفحة الرئيسية</a> - الرؤية والأهداف
+                </span>
             </div>
 
-
-            <hr className="hr_style" />
-
-            <div className="container">
-
-
-
-                <div className="content-wrapper" style={{marginTop:"20px"}}>
+            {/* Main Content Container - Vision & Mission Section */}
+            <div className="container" style={{ marginTop: '120px' }}>
+                <div className="content-wrapper">
                     {/* Main Grid - 2 columns */}
                     <div className="main-grid">
                         {/* Left Column */}
@@ -129,9 +131,8 @@ function Vision_goals() {
                 </div>
             </div>
 
-
-
-            <div className="goals-container">
+            {/* Goals Section - Separate Section */}
+            <div className="goals-container" style={{ marginTop: '4rem' }}>
                 <div className="goals-wrapper">
                     {/* Top Section - Two Boxes Side by Side */}
                     <div className="top-boxes">
@@ -210,11 +211,6 @@ function Vision_goals() {
                 </div>
             </div>
         </div>
-
-
-
-
-
     );
 }
 

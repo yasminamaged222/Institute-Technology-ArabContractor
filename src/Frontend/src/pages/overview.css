@@ -75,7 +75,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 10px;
+    border-radius: 50px;
     transition: transform 0.5s ease;
 }
 
@@ -86,7 +86,7 @@ body {
 .txt_card_sec_2 {
     text-align: center;
     color: #ECB22F;
-    font-size: 15px;
+    font-size: 20px;
 }
 
 /* Section 3 - Cards */
