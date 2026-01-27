@@ -206,7 +206,7 @@ const Navbar = () => {
     return (
         <>
             {/* Changed position to sticky and top to 0 to ensure it stays at top on scroll */}
-            <AppBar position="fixed" elevation={4}  sx={{ bgcolor: 'white', color: 'black', py: 0.5, top: 1, zIndex: 1100 }}>
+            <AppBar position="fixed" elevation={4} sx={{ bgcolor: 'white', color: 'black', py: 0.5, top: 1, zIndex: 1100 }}>
                 <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -306,8 +306,32 @@ const Navbar = () => {
                             </Stack>
                         )}
 
-                        <IconButton color="inherit" size="small">
-                            <Badge badgeContent={2} color="primary">
+                        <IconButton
+                            color="inherit"
+                            size="small"
+                            component={Link}
+                            to="/cart"
+                            sx={{
+                                position: 'relative',
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    backgroundColor: 'rgba(13, 71, 161, 0.08)',
+                                    transform: 'scale(1.05)',
+                                }
+                            }}
+                        >
+                            <Badge
+                                badgeContent={2}
+                                color="primary"
+                                sx={{
+                                    '& .MuiBadge-badge': {
+                                        fontSize: '0.7rem',
+                                        height: '18px',
+                                        minWidth: '18px',
+                                        padding: '0 4px',
+                                    }
+                                }}
+                            >
                                 <ShoppingCartIcon sx={{ fontSize: 22 }} />
                             </Badge>
                         </IconButton>
@@ -553,7 +577,7 @@ const Navbar = () => {
             <br />
             <br />
 
-           
+
 
 
         </>

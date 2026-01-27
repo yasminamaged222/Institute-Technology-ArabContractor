@@ -7,12 +7,11 @@ import ScrollToTopButton from "./components/ScrollToTopButton";
 function App() {
     return (
         <>
-            <Navbar />
-            <FloatingSocialBar />
-            <AppRoutes />
-            <ScrollToTopButton />
-
-            <Footer />
+                <Navbar />
+                <FloatingSocialBar />
+                <AppRoutes />
+                <ScrollToTopButton />
+                <Footer />
         </>
     );
 }

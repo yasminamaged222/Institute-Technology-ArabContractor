@@ -19,6 +19,9 @@ import TechnicalSchoolPage from "../pages/TechnicalSchoolPage";
 import Protocols from '../pages/Protocols';
 import TechnicalEducation from '../pages/TechnicalEducation';
 import TestsSection from '../pages/TestsSection';
+import ContactPage from '../pages/ContactPage'; // Path where you saved the contact code
+import ShoppingCartPage from '../pages/ShoppingCartPage';
+import Galery from '../pages/Galary';
 
 
 const AppRoutes = () => {
@@ -45,6 +48,11 @@ const AppRoutes = () => {
             <Route path="/protocols" element={<Protocols />} />
             <Route path="/technical-education" element={<TechnicalEducation />} />
             <Route path="/tests" element={<TestsSection />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/cart" element={<ShoppingCartPage />} />
+            <Route path="/gallery" element={<Galery />} />
+
+
 
 
 

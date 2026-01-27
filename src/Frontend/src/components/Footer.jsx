@@ -101,7 +101,7 @@ const Footer = () => {
                                 <MuiLink
                                     key={index}
                                     component={Link}
-                                    to={index === 0 ? "/" : index === 1 ? "/about" : index === 2 ? "/news" : "/contact"}
+                                    to={index === 0 ? "/" : index === 1 ? "/Overview" : index === 2 ? "/news" : "/contact"}
                                     color="inherit"
                                     underline="none"
                                     sx={{ display: 'flex', alignItems: 'center', fontFamily: 'Cairo, sans-serif', '&:hover': { color: '#90caf9' } }}
@@ -127,9 +127,9 @@ const Footer = () => {
                     </Box>
 
                     <Box sx={{ display: 'flex', gap: 1 }}>
-                        <IconButton size="small" sx={{ color: 'white', '&:hover': { color: '#1877F2' } }} href="#"><FacebookIcon /></IconButton>
+                        <IconButton size="small" sx={{ color: 'white', '&:hover': { color: '#1877F2' } }} href="https://ar-ar.facebook.com/arabcont2017/"><FacebookIcon /></IconButton>
                         <IconButton size="small" sx={{ color: 'white', '&:hover': { color: '#E4405F' } }} href="#"><InstagramIcon /></IconButton>
-                        <IconButton size="small" sx={{ color: 'white', '&:hover': { color: '#1DA1F2' } }} href="#"><TwitterIcon /></IconButton>
+                        <IconButton size="small" sx={{ color: 'white', '&:hover': { color: '#1DA1F2' } }} href="https://x.com/arabcont?lang=en"><TwitterIcon /></IconButton>
                     </Box>
 
                 </Box>
