@@ -49,7 +49,7 @@ export default function ContactPage() {
                                 <h4 className="mb-3 text-xl font-semibold text-gray-800">تليفون</h4>
                                 <p className="text-gray-600">
                                     <a href="tel:+20223892120" className="transition-colors hover:text-green-600">
-                                        +2 02 23892120
+                                        23892120 02 2+
                                     </a>
                                 </p>
                             </div>
@@ -84,10 +84,12 @@ export default function ContactPage() {
                                 <h4 className="mb-3 text-xl font-semibold text-gray-800">فاكس</h4>
                                 <p className="text-gray-600">
                                     <a href="tel:+20223892025" className="transition-colors hover:text-orange-600">
-                                        +2 02 23892025
+                                        23892025 02 2+
                                     </a>
                                 </p>
                             </div>
+
+
                         </div>
                     </div>
                 </section>

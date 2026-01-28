@@ -130,14 +130,316 @@ const albums = [
     },
 ];
 
+// TrainingPlan Component (Video Gallery Content)
 const VideoGalleryPage = () => {
+    // Function to launch YouTube video
+    const launchYouTube = (videoId) => {
+        window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+    };
+
+    // Video card component
+    const VideoCard = ({ videoId, title, color }) => {
+        const [imageError, setImageError] = useState(false);
+
+        return (
+            <div
+                onClick={() => launchYouTube(videoId)}
+                className="training-video-card"
+                style={{ borderColor: `${color}50` }}
+            >
+                <div className="training-video-thumbnail">
+                    {!imageError ? (
+                        <img
+                            src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                            alt={title}
+                            onError={() => setImageError(true)}
+                        />
+                    ) : (
+                        <div className="training-video-error">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="#999">
+                                <path d="M4 6h16v12H4z" />
+                            </svg>
+                        </div>
+                    )}
+                    <div className="training-video-overlay" />
+                    <div className="training-play-button">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                    </div>
+                    <div className="training-video-title">
+                        <span>{title}</span>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // Section component
+    const Section = ({ title, videos, color }) => {
+        return (
+            <div className="training-section">
+                <div className="training-section-header" style={{ background: `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)` }}>
+                    <h2>{title}</h2>
+                </div>
+                <div className="training-videos-grid">
+                    {videos.map((video, index) => (
+                        <VideoCard
+                            key={index}
+                            videoId={video.id}
+                            title={video.title}
+                            color={color}
+                        />
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    // Engineer group component
+    const EngineerGroup = ({ groupTitle, videos }) => {
+        return (
+            <div className="training-section">
+                <div className="training-section-header" style={{ background: 'linear-gradient(135deg, #E65100 0%, #FF6F00 100%)' }}>
+                    <h2>{groupTitle}</h2>
+                </div>
+                <div className="training-videos-grid training-engineer-grid">
+                    {videos.map((video, index) => (
+                        <VideoCard
+                            key={index}
+                            videoId={video.id}
+                            title={video.title}
+                            color="#E65100"
+                        />
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
     return (
-        <div className="video-gallery-container">
-            <svg className="video-icon" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4 6h2v12H4V6zm4 0h2v12H8V6zm4 0h2v12h-2V6zm4 0h2v12h-2V6z" />
-            </svg>
-            <div className="video-title">مكتبة الفيديوهات</div>
-            <div className="video-subtitle">سيتم إضافة الفيديوهات قريباً</div>
+        <div className="training-plan-container">
+            <style>{`
+                .training-plan-container {
+                    width: 100%;
+                    padding: 20px;
+                }
+
+                .training-section {
+                    background: white;
+                    border-radius: 16px;
+                    margin-bottom: 24px;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+                    overflow: hidden;
+                }
+
+                .training-section-header {
+                    padding: 20px;
+                    text-align: center;
+                }
+
+                .training-section-header h2 {
+                    color: white;
+                    font-size: 20px;
+                    font-weight: bold;
+                    margin: 0;
+                }
+
+                .training-cea-header {
+                    background: linear-gradient(135deg, #6A1B9A 0%, #9C27B0 100%);
+                    color: white;
+                    padding: 16px;
+                    margin-bottom: 24px;
+                    border-radius: 12px;
+                    text-align: center;
+                }
+
+                .training-cea-header h2 {
+                    font-size: 24px;
+                    font-weight: bold;
+                    margin: 0;
+                }
+
+                .training-videos-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                    gap: 16px;
+                    padding: 16px;
+                }
+
+                .training-engineer-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 12px;
+                }
+
+                @media (min-width: 600px) {
+                    .training-videos-grid {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                }
+
+                @media (min-width: 900px) {
+                    .training-engineer-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                }
+
+                @media (min-width: 1200px) {
+                    .training-videos-grid {
+                        grid-template-columns: repeat(3, 1fr);
+                    }
+                    .training-engineer-grid {
+                        grid-template-columns: repeat(4, 1fr);
+                    }
+                }
+
+                .training-video-card {
+                    border-radius: 12px;
+                    overflow: hidden;
+                    cursor: pointer;
+                    background-color: #f5f5f5;
+                    border: 2px solid;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    aspect-ratio: 16 / 10;
+                }
+
+                .training-video-card:hover {
+                    transform: translateY(-4px);
+                    box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+                }
+
+                .training-video-thumbnail {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                }
+
+                .training-video-thumbnail img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+
+                .training-video-error {
+                    width: 100%;
+                    height: 100%;
+                    background-color: #ddd;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .training-video-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%);
+                }
+
+                .training-play-button {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background-color: rgba(255, 0, 0, 0.9);
+                    width: 56px;
+                    height: 56px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                    transition: transform 0.2s;
+                }
+
+                .training-video-card:hover .training-play-button {
+                    transform: translate(-50%, -50%) scale(1.1);
+                }
+
+                .training-video-title {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    padding: 12px;
+                    text-align: center;
+                }
+
+                .training-video-title span {
+                    color: white;
+                    font-size: 14px;
+                    font-weight: bold;
+                    text-shadow: 0 0 4px rgba(0,0,0,0.8);
+                }
+            `}</style>
+
+            {/* Arabic Section */}
+            <Section
+                title="فيديوهات عن المقاولون العرب ودورها التعليمى فى هندسة التشييد والبناء"
+                videos={[
+                    { id: 'ZfDfud7dV50', title: 'فيديو 1' },
+                    { id: '5f4Pb_agNR8', title: 'فيديو 2' },
+                    { id: 'km_RuntColw', title: 'فيديو 3' },
+                ]}
+                color="#1565C0"
+            />
+
+            {/* English Section */}
+            <Section
+                title="The Arab Contractors and Their Educational Role"
+                videos={[
+                    { id: 'XL-8BmDEaKM', title: 'Video 1' },
+                    { id: 'DK91iVe4DuQ', title: 'Video 2' },
+                    { id: 'dR5LsCk4b2Y', title: 'Video 3' },
+                ]}
+                color="#2E7D32"
+            />
+
+            {/* French Section */}
+            <Section
+                title="Les entrepreneurs arabes et leur rôle éducatif"
+                videos={[
+                    { id: '78_PrybZMtA', title: 'Vidéo 1' },
+                    { id: '7CXLX7iCWcs', title: 'Vidéo 2' },
+                    { id: 'Lb-f8lk_cCg', title: 'Vidéo 3' },
+                ]}
+                color="#D32F2F"
+            />
+
+            {/* CEA Program Header */}
+            <div className="training-cea-header">
+                <h2>رأي بعض المهندسين في البرنامج CEA</h2>
+            </div>
+
+            {/* Group 1 */}
+            <EngineerGroup
+                groupTitle="ICEMT_CEA_Group1"
+                videos={[
+                    { id: 'qVacL0aaqHY', title: 'مهندس 1' },
+                    { id: 'MuQt0pQenhI', title: 'مهندس 2' },
+                    { id: 'wujlFjykJO0', title: 'مهندس 3' },
+                    { id: '4CA2Aj9xM0c', title: 'مهندس 4' },
+                    { id: 'v-BCi9TsaoM', title: 'مهندس 5' },
+                    { id: 'zYa5Ohpe2QE', title: 'مهندس 6' },
+                    { id: 'D2GsCDbjvdY', title: 'مهندس 7' },
+                ]}
+            />
+
+            {/* Group 2 */}
+            <EngineerGroup
+                groupTitle="ICEMT_CEA_Group2"
+                videos={[
+                    { id: '1FxSAiZSx9c', title: 'مهندس 1' },
+                    { id: 'fLsCp8m5gDw', title: 'مهندس 2' },
+                    { id: '6R3PvQZml6k', title: 'مهندس 3' },
+                    { id: 'pKkDOwUpQlE', title: 'مهندس 4' },
+                    { id: 'xXBddNMMZ8E', title: 'مهندس 5' },
+                    { id: 'qzmapa6fOo4', title: 'مهندس 6' },
+                    { id: '0gN8RTYHafk', title: 'مهندس 7' },
+                ]}
+            />
         </div>
     );
 };

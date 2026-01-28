@@ -23,6 +23,7 @@ import ContactPage from '../pages/ContactPage'; // Path where you saved the cont
 import ShoppingCartPage from '../pages/ShoppingCartPage';
 import Galery from '../pages/Galary';
 import FutureLeadersCouncil from '../pages/Leaders';
+import Instructors from '../pages/Instructors';
 
 
 const AppRoutes = () => {
@@ -53,6 +54,8 @@ const AppRoutes = () => {
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/gallery" element={<Galery />} />
             <Route path="/future-leaders" element={<FutureLeadersCouncil />} />
+            <Route path="/instructors" element={<Instructors />} />
+
 
             
 

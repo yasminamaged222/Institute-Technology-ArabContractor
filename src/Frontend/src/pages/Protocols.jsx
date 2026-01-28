@@ -2,6 +2,7 @@
 
 export default function Protocols() {
     const isMobile = window.innerWidth < 700;
+    const globalFont = '"Droid Arabic Kufi", serif';
 
     const partners = [
         "جمعية المحاسبين والمراجعين المصرية",
@@ -27,32 +28,49 @@ export default function Protocols() {
     };
 
     return (
-        <div dir="rtl" style={{ background: "#F7F9FC", minHeight: "100vh" }}>
-            {/* ===== FIXED HEADER ===== */}
-            {/* ======== ADDED PART (NO CHANGE) ======== */}
-            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' }}>
-                <span className="overview" style={{ position: 'relative', bottom: '5px' }}>
-                    <a href="/" className="btn_go_home">الصفحة الرئيسية</a> -البروتوكولات والاتفاقيات
-                </span>
+        <div
+            dir="rtl"
+            style={{
+                background: "#ffffff",
+                minHeight: "100vh",
+                fontFamily: globalFont,
+            }}
+        >
+            {/* Fixed Overview Bar — SAME STYLE & COLORS */}
+            <div className="fixed left-0 top-[64px] z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 font-['Droid_Arabic_Kufi']">
+                <div className="text-center">
+                    <span className="text-base">
+                        <a
+                            href="/"
+                            className="ml-3 text-gray-700 hover:text-gray-900"
+                        >
+                            الصفحة الرئيسية
+                        </a>
+                        <span className="text-gray-500">-</span>
+                        <span className="mr-3 text-gray-700">
+                            البروتوكولات والاتفاقيات
+                        </span>
+                    </span>
+                </div>
             </div>
 
-
-            {/* ===== CONTENT ===== */}
+            {/* CONTENT */}
             <div
                 style={{
-                    paddingTop: 80,
+                    paddingTop: 140, // navbar + overview
                     paddingLeft: isMobile ? 16 : 80,
                     paddingRight: isMobile ? 16 : 80,
                     paddingBottom: 40,
                 }}
             >
-                {/* ===== TITLE ===== */}
+                {/* TITLE */}
                 <div style={{ textAlign: "center" }}>
                     <h1
                         style={{
                             fontSize: isMobile ? 22 : 32,
-                            color: "#0A3D62",
+                            color: "#0865a8",
                             marginBottom: 10,
+                            fontFamily: globalFont,
                         }}
                     >
                         البروتوكولات والاتفاقيات
@@ -61,20 +79,21 @@ export default function Protocols() {
                         style={{
                             width: 90,
                             height: 4,
-                            background: "#0A3D62",
+                            background: "#f57c00",
                             borderRadius: 8,
                             margin: "0 auto",
                         }}
                     />
                 </div>
 
-                {/* ===== DESCRIPTION ===== */}
+                {/* DESCRIPTION */}
                 <p
                     style={{
                         marginTop: 30,
                         fontSize: isMobile ? 14 : 16,
                         lineHeight: 1.9,
-                        color: "#444",
+                        color: "#000",
+                        fontFamily: globalFont,
                     }}
                 >
                     تشرف المعهد بعقد بروتوكولات واتفاقيات تعاون وعقود تدريب مع العديد من
@@ -82,7 +101,7 @@ export default function Protocols() {
                     في:
                 </p>
 
-                {/* ===== PARTNERS GRID ===== */}
+                {/* PARTNERS GRID */}
                 <div
                     style={{
                         display: "grid",
@@ -100,13 +119,13 @@ export default function Protocols() {
                                 padding: "12px 14px",
                                 display: "flex",
                                 alignItems: "center",
-                                boxShadow: "0 5px 10px rgba(0,0,0,0.06)",
+                                boxShadow: "0 5px 12px rgba(0,0,0,0.08)",
                             }}
                         >
                             <span
                                 style={{
                                     fontSize: isMobile ? 20 : 22,
-                                    color: "#0A3D62",
+                                    color: "#0865a8",
                                     marginLeft: 10,
                                 }}
                             >
@@ -116,6 +135,8 @@ export default function Protocols() {
                                 style={{
                                     fontSize: isMobile ? 12 : 13.5,
                                     lineHeight: 1.5,
+                                    color: "#000",
+                                    fontFamily: globalFont,
                                 }}
                             >
                                 {p}
@@ -124,7 +145,7 @@ export default function Protocols() {
                     ))}
                 </div>
 
-                {/* ===== IMAGES ===== */}
+                {/* IMAGES */}
                 <div
                     style={{
                         display: isMobile ? "block" : "flex",
@@ -154,7 +175,11 @@ function ImageCard({ url }) {
                 <img
                     src={url}
                     alt=""
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                    }}
                 />
             </div>
         </div>

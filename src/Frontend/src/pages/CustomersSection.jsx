@@ -127,7 +127,7 @@ const CustomersSection = () => {
 
     return (
         <section style={{ height: '500px' }} className="bg-gray-5 overflow-hidden py-1 md:py-2" dir="rtl">
-            <div  className="container mx-auto px-6 lg:px-12">
+            <div className="container mx-auto px-6 lg:px-12">
 
                 {/* Header */}
                 <div className="mb-16 text-center">
@@ -171,7 +171,7 @@ const CustomersSection = () => {
                                         <img
                                             src={`/images/${customer.image}`}
                                             alt={customer.name}
-                                            className="max-h-full max-w-full object-contain grayscale filter transition-all duration-500 hover:grayscale-0"
+                                            className="max-h-full max-w-full object-contain transition-all duration-500 hover:scale-105"
                                         />
                                     </div>
                                     <h6 className="mt-4 line-clamp-2 px-2 text-center text-xs font-semibold text-gray-500 group-hover:text-[#065a8a] md:text-sm">
@@ -199,8 +199,8 @@ const CustomersSection = () => {
                             key={index}
                             onClick={() => setCurrentIndex(index)}
                             className={`transition-all duration-500 rounded-full ${currentIndex === index
-                                    ? 'w-8 h-2 bg-[#065a8a]'
-                                    : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                                ? 'w-8 h-2 bg-[#065a8a]'
+                                : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
                                 }`}
                             aria-label={`Go to slide ${index + 1}`}
                         />

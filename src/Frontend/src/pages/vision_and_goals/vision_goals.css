@@ -1,8 +1,9 @@
 /* General Container Styles */
 * {
     margin: 0;
-    padding: 1;
+    padding: 0;
     box-sizing: border-box;
+    font-family: 'Droid Arabic Kufi', serif;
 }
 
 .overview_intro {
@@ -10,22 +11,24 @@
     justify-content: center;
     padding-top: 10px;
     padding-bottom: 10px;
+    background-color: #ffffff;
 }
 
 .btn_go_home {
     text-decoration: none;
-    color: black;
+    color: #000000;
     font-weight: bold;
-    font-family: ADroid Arabic Kufi, serif;
+    font-family: 'Droid Arabic Kufi', serif;
+    transition: color 0.3s ease;
 }
 
     .btn_go_home:hover {
-        color: #111827;
+        color: #0865a8;
     }
 
 .overview {
-    color: gray;
-    font-family: Droid Arabic Kufi, serif;
+    color: #666666;
+    font-family: 'Droid Arabic Kufi', serif;
     font-weight: bold;
     justify-content: center;
     text-align: center;
@@ -37,8 +40,8 @@
     width: 100%;
     min-height: 100vh;
     background-color: #ffffff;
-    padding: 1rem;
-    margin-bottom: 4rem; /* Add space before goals section */
+    padding: 2rem;
+    margin-bottom: 4rem;
 }
 
 .content-wrapper {
@@ -65,21 +68,29 @@
 .right-column {
     display: flex;
     flex-direction: column;
-    gap: 5rem;
+    gap: 3rem;
 }
 
 /* Image Container with Overlay */
 .image-container {
     position: relative;
     width: 100%;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .main-image {
     width: 100%;
-    height: 300px;
+    height: 350px;
     object-fit: cover;
-    border-radius: 8px;
+    border-radius: 12px;
     display: block;
+    transition: transform 0.3s ease;
+}
+
+.image-container:hover .main-image {
+    transform: scale(1.05);
 }
 
 .image-overlay {
@@ -91,15 +102,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(8, 101, 168, 0.7), rgba(245, 124, 0, 0.7));
+    border-radius: 12px;
 }
 
 .overlay-title {
     color: #ffffff;
     font-size: 3rem;
     font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+    font-family: 'Droid Arabic Kufi', serif;
 }
 
 /* Vision and Mission Sections */
@@ -107,15 +119,40 @@
 .mission-section {
     display: flex;
     flex-direction: column;
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
+    .vision-section:hover,
+    .mission-section:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
 
 /* Section Titles */
 .section-title {
-    color: #ff8c00;
+    color: #f57c00;
     font-size: 2.5rem;
     font-weight: 700;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
+    font-family: 'Droid Arabic Kufi', serif;
+    position: relative;
+    padding-bottom: 1rem;
 }
+
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #f57c00, #0865a8);
+        border-radius: 2px;
+    }
 
 .text-right {
     text-align: right;
@@ -129,14 +166,17 @@
 /* Text Content */
 .text-content {
     color: #333333;
-    line-height: 1.8;
+    line-height: 2;
     font-size: 1.1rem;
+    font-family: 'Droid Arabic Kufi', serif;
 }
 
 /* Strategy Section */
 .strategy-section {
-    background-color: #ffffff;
-    padding: 5rem;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .strategy-items {
@@ -149,21 +189,33 @@
 .strategy-item {
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 1.5rem;
     direction: rtl;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
 }
 
+    .strategy-item:hover {
+        border-color: #0865a8;
+        transform: translateX(-5px);
+        box-shadow: 0 4px 12px rgba(8, 101, 168, 0.15);
+    }
+
 .icon-box {
-    background-color: #ff8c00;
+    background: linear-gradient(135deg, #f57c00, #ff9800);
     color: #ffffff;
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: 12px;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     min-width: 60px;
     min-height: 60px;
+    box-shadow: 0 4px 8px rgba(245, 124, 0, 0.3);
 }
 
 .icon {
@@ -175,11 +227,26 @@
     color: #333333;
     text-align: right;
     flex: 1;
-    line-height: 1.8;
-    font-size: 1rem;
+    line-height: 2;
+    font-size: 1.05rem;
+    font-family: 'Droid Arabic Kufi', serif;
 }
 
 /* Responsive Design for Vision/Mission Section */
+@media (max-width: 1200px) {
+    .main-grid {
+        gap: 2rem;
+    }
+
+    .overlay-title {
+        font-size: 2.5rem;
+    }
+
+    .section-title {
+        font-size: 2.2rem;
+    }
+}
+
 @media (max-width: 1024px) {
     .main-grid {
         grid-template-columns: 1fr;
@@ -187,7 +254,7 @@
     }
 
     .overlay-title {
-        font-size: 2.5rem;
+        font-size: 2.3rem;
     }
 
     .section-title {
@@ -197,11 +264,19 @@
     .container {
         padding: 1.5rem;
     }
+
+    .right-column {
+        gap: 2rem;
+    }
+
+    .main-image {
+        height: 300px;
+    }
 }
 
 @media (max-width: 768px) {
     .overlay-title {
-        font-size: 2rem;
+        font-size: 1.8rem;
     }
 
     .section-title {
@@ -229,7 +304,49 @@
     }
 
     .right-column {
-        gap: 2rem;
+        gap: 1.5rem;
+    }
+
+    .strategy-section {
+        padding: 2rem 1.5rem;
+    }
+
+    .text-content,
+    .strategy-text {
+        font-size: 1rem;
+        line-height: 1.8;
+    }
+
+    .vision-section,
+    .mission-section {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .overlay-title {
+        font-size: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+    }
+
+    .main-image {
+        height: 200px;
+    }
+
+    .container {
+        padding: 0.75rem;
+    }
+
+    .strategy-section {
+        padding: 1.5rem 1rem;
+    }
+
+    .strategy-item {
+        gap: 1rem;
+        padding: 0.75rem;
     }
 }
 
@@ -241,12 +358,12 @@
 .goals-container {
     width: 100%;
     min-height: 100vh;
-    background-color: #f9fafb; /* Slightly different background to distinguish */
-    padding: 4rem 3rem; /* Increased top padding */
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    padding: 4rem 3rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 0; /* Remove any default margin */
+    margin-top: 0;
 }
 
 .goals-wrapper {
@@ -273,18 +390,36 @@
 }
 
 .goals-title {
-    color: #ff8c00;
+    color: #f57c00;
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
     direction: rtl;
+    font-family: 'Droid Arabic Kufi', serif;
+    position: relative;
+    display: inline-block;
 }
+
+    .goals-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 4px;
+        background: linear-gradient(90deg, #f57c00, #0865a8);
+        border-radius: 2px;
+    }
 
 .goals-subtitle {
     color: #333333;
     font-size: 1.3rem;
     direction: rtl;
     text-align: center;
+    font-family: 'Droid Arabic Kufi', serif;
+    margin-top: 1.5rem;
+    line-height: 1.8;
 }
 
 /* Bottom Boxes - 3 boxes side by side */
@@ -298,56 +433,99 @@
 /* Goal Box Styling */
 .goal-box {
     background-color: #ffffff;
-    border: 2px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 2rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 2.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
     text-align: center;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
 }
 
+    .goal-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #f57c00, #0865a8);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .goal-box:hover::before {
+        transform: scaleX(1);
+    }
+
     .goal-box:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-        border-color: #ff8c00;
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(8, 101, 168, 0.15);
+        border-color: #0865a8;
     }
 
 /* Goal Icon */
 .goal-icon {
-    width: 80px;
-    height: 80px;
-    background-color: #4a90e2;
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, #0865a8, #0a7bc4);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
     flex-shrink: 0;
+    box-shadow: 0 6px 16px rgba(8, 101, 168, 0.3);
+    transition: all 0.3s ease;
+}
+
+.goal-box:hover .goal-icon {
+    background: linear-gradient(135deg, #f57c00, #ff9800);
+    box-shadow: 0 8px 20px rgba(245, 124, 0, 0.4);
+    transform: scale(1.1);
 }
 
 .icon-svg {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
 }
 
 /* Goal Text */
 .goal-text {
     color: #333333;
     font-size: 1.1rem;
-    line-height: 1.8;
+    line-height: 2;
     direction: rtl;
     text-align: center;
     margin: 0;
+    font-family: 'Droid Arabic Kufi', serif;
 }
 
 /* Responsive Design for Goals Section */
+@media (max-width: 1200px) {
+    .bottom-boxes {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .goals-title {
+        font-size: 2.7rem;
+    }
+
+    .goals-subtitle {
+        font-size: 1.2rem;
+    }
+}
+
 @media (max-width: 1024px) {
     .bottom-boxes {
         grid-template-columns: 1fr;
+        max-width: 600px;
+        margin: 1rem auto 0;
     }
 
     .goals-title {
@@ -355,21 +533,28 @@
     }
 
     .goals-subtitle {
-        font-size: 1.1rem;
+        font-size: 1.15rem;
     }
 
     .goals-container {
-        padding: 3rem 1.5rem;
+        padding: 3rem 2rem;
+    }
+
+    .top-boxes {
+        max-width: 900px;
+        margin: 0 auto 1rem;
     }
 }
 
 @media (max-width: 768px) {
     .top-boxes {
         grid-template-columns: 1fr;
+        max-width: 600px;
+        margin: 0 auto 1rem;
     }
 
     .goals-container {
-        padding: 2rem 1rem;
+        padding: 2.5rem 1.5rem;
         min-height: auto;
     }
 
@@ -381,12 +566,52 @@
         font-size: 2rem;
     }
 
+        .goals-title::after {
+            width: 80px;
+            bottom: -8px;
+        }
+
     .goals-subtitle {
         font-size: 1rem;
+        margin-top: 1.2rem;
     }
 
     .goal-box {
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
+    }
+
+    .goal-icon {
+        width: 70px;
+        height: 70px;
+    }
+
+    .icon-svg {
+        width: 35px;
+        height: 35px;
+    }
+
+    .goal-text {
+        font-size: 1rem;
+        line-height: 1.8;
+    }
+}
+
+@media (max-width: 480px) {
+    .goals-container {
+        padding: 2rem 1rem;
+    }
+
+    .goals-title {
+        font-size: 1.7rem;
+    }
+
+    .goals-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .goal-box {
+        padding: 1.5rem 1rem;
+        gap: 1.2rem;
     }
 
     .goal-icon {
@@ -400,6 +625,36 @@
     }
 
     .goal-text {
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
+}
+
+/* Additional utility classes for color consistency */
+.text-orange {
+    color: #f57c00;
+}
+
+.text-blue {
+    color: #0865a8;
+}
+
+.bg-orange {
+    background-color: #f57c00;
+}
+
+.bg-blue {
+    background-color: #0865a8;
+}
+
+.border-orange {
+    border-color: #f57c00;
+}
+
+.border-blue {
+    border-color: #0865a8;
+}
+
+/* Smooth scrolling for entire page */
+html {
+    scroll-behavior: smooth;
 }
