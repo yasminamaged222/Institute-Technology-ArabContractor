@@ -15,8 +15,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import logo from '../assets/logo-removebg-preview.png';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 import AuthSync from '../components/AuthSync.jsx';
+
 
 
 const Navbar = () => {
@@ -435,38 +436,64 @@ const Navbar = () => {
                             </Badge>
                         </IconButton>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                            <SignedOut>
-                                <SignInButton mode="modal">
-                                    <Button
-                                        variant="contained"
-                                        size="small"
-                                        sx={{
-                                            fontFamily: '"Droid Arabic Kufi", serif',
-                                            fontSize: '0.75rem',
-                                            bgcolor: '#0865a8',
-                                            color: 'white',
-                                            px: 2,
-                                            py: 0.5,
-                                            borderRadius: 1.5,
-                                            textTransform: 'none',
-                                            boxShadow: 'none',
-                                            minWidth: 'auto',
-                                            '&:hover': {
-                                                bgcolor: '#f57c00',
-                                                boxShadow: '0 2px 8px rgba(245, 124, 0, 0.3)'
-                                            }
-                                        }}
-                                    >
-                                        دخول
-                                    </Button>
-                                </SignInButton>
-                            </SignedOut>
-                            <SignedIn>
-                                <UserButton afterSignOutUrl="/" />
-                                <AuthSync />
-                            </SignedIn>
-                        </Box>
+                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
+  <SignedOut>
+    <SignInButton 
+      mode="modal"
+      appearance={{
+        variables: {
+          colorPrimary: '#0865a8',
+          fontFamily: '"Droid Arabic Kufi", serif',
+          borderRadius: '0.75rem',
+        },
+        elements: {
+          formButtonPrimary: {
+            backgroundColor: '#0865a8',
+            '&:hover': {
+              backgroundColor: '#f57c00',
+            }
+          }
+        }
+      }}
+    >
+      <Button
+        variant="contained"
+        size="small"
+        sx={{
+          fontFamily: '"Droid Arabic Kufi", serif',
+          fontSize: '0.75rem',
+          bgcolor: '#0865a8',
+          color: 'white',
+          px: 2,
+          py: 0.5,
+          borderRadius: 1.5,
+          textTransform: 'none',
+          boxShadow: 'none',
+          minWidth: 'auto',
+          '&:hover': {
+            bgcolor: '#f57c00',
+            boxShadow: '0 2px 8px rgba(245, 124, 0, 0.3)'
+          }
+        }}
+      >
+        دخول
+      </Button>
+    </SignInButton>
+  </SignedOut>
+
+  <SignedIn>
+    <UserButton 
+      afterSignOutUrl="/" 
+      appearance={{
+        variables: {
+          colorPrimary: '#0865a8',
+          fontFamily: '"Droid Arabic Kufi", serif',
+        }
+      }}
+    />
+    <AuthSync />
+  </SignedIn>
+</Box>
 
                     </Box>
                 </Toolbar>

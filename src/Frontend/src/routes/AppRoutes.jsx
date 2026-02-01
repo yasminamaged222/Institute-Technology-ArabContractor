@@ -24,6 +24,11 @@ import ShoppingCartPage from '../pages/ShoppingCartPage';
 import Galery from '../pages/Galary';
 import FutureLeadersCouncil from '../pages/Leaders';
 import Instructors from '../pages/Instructors';
+import CheckoutPage from "../pages/CheckoutPage";
+import NewsDetails from '../pages/NewsDetails';
+import CourseDetails from '../pages/CourseDetails';
+
+
 
 
 const AppRoutes = () => {
@@ -52,9 +57,13 @@ const AppRoutes = () => {
             <Route path="/tests" element={<TestsSection />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/cart" element={<ShoppingCartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+
             <Route path="/gallery" element={<Galery />} />
             <Route path="/future-leaders" element={<FutureLeadersCouncil />} />
             <Route path="/instructors" element={<Instructors />} />
+            <Route path="/news/:id" element={<NewsDetails />} />
+            <Route path="/course" element={<CourseDetails />} />
 
 
             
