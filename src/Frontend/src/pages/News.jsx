@@ -8,7 +8,7 @@ const News = () => {
     const [selectedYear, setSelectedYear] = useState('2025');
     const [animate, setAnimate] = useState(false);
 
-    // --- Pagination State ---
+    // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 9;
 
@@ -38,7 +38,7 @@ const News = () => {
             });
     }, [selectedYear]);
 
-    // --- Logic for Pagination Calculation ---
+    // Logic for Pagination Calculation
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentNews = news.slice(indexOfFirstItem, indexOfLastItem);
@@ -47,181 +47,161 @@ const News = () => {
     const handleScroll = (direction) => {
         if (scrollRef.current) {
             const scrollAmount = scrollRef.current.clientWidth;
-            scrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+            scrollRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
         }
     };
 
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+        window.scrollTo({ top: 200, behavior: 'smooth' });
+    };
+
     return (
-        <div className="news-page-container" style={{ paddingTop: '70px', backgroundColor: '#fff', direction: 'rtl' }}>
-
-            <style>{`
-        .timeline-scroller::-webkit-scrollbar { display: none; }
-        .timeline-scroller { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .news-fade-in {
-          opacity: 0;
-          transform: translateY(20px);
-          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-        .news-fade-in.active {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        .news-card-hover {
-          transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-        }
-        .news-card-hover:hover {
-          transform: translateY(-5px) scale(1.02);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-        }
-
-        .pagination-dot {
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          border: 1px solid #ddd;
-          background: #fff;
-          margin: 0 5px;
-          cursor: pointer;
-          transition: 0.3s;
-        }
-        .pagination-dot-active {
-          background: #f57c00 !important;
-          color: #fff !important;
-          border-color: #f57c00 !important;
-        }
-      `}</style>
-
-            {/* Breadcrumb */}
-            <div className="overview_intro" style={{ position: 'relative', bottom: '65px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee' }}>
-                <span className="overview"><a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار</span>
-            </div>
-
-            {/* 4-Year Slider */}
-            <div style={{ padding: '30px 5%', display: 'flex', justifyContent: 'center' }}>
-                <div style={{
-                    background: '#f5f5f5',
-                    borderRadius: '10px',
-                    border: '2px solid #ddd',
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '45px',
-                    overflow: 'hidden',
-                    maxWidth: '4000px', // Shorter container width
-                    width: '90%' // Responsive
-                }}>
-                    <div onClick={() => handleScroll('right')} style={arrowStyle}>«</div>
-                    <div ref={scrollRef} className="timeline-scroller" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        overflowX: 'auto',
-                        flexGrow: 1,
-                        height: '100%',
-                        scrollBehavior: 'smooth'
-                    }}>
-                        <div style={{ display: 'flex', width: 'max-content' }}>
-                            {years.map((year) => (
-                                <div
-                                    key={year}
-                                    onClick={() => setSelectedYear(year)}
-                                    style={{
-                                        minWidth: '80px', // Fixed width per year
-                                        height: '42px',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        cursor: 'pointer',
-                                        position: 'relative',
-                                        flexShrink: 0,
-                                        borderLeft: '1px solid rgba(0,0,0,0.05)'
-                                    }}
-                                >
-                                    <span style={{
-                                        fontSize: selectedYear === year ? '1rem' : '0.85rem',
-                                        fontWeight: selectedYear === year ? 'bold' : 'normal',
-                                        color: selectedYear === year ? '#f57c00' : '#333'
-                                    }}>
-                                        {year}
-                                    </span>
-                                    {selectedYear === year && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            height: '100%',
-                                            width: '100%',
-                                            borderLeft: '2.5px solid #f57c00',
-                                            borderRight: '2.5px solid #f57c00',
-                                            backgroundColor: 'rgba(245, 124, 0, 0.05)',
-                                            pointerEvents: 'none'
-                                        }} />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    <div onClick={() => handleScroll('left')} style={arrowStyle}>»</div>
+        <div className="news-page-container" style={{ paddingTop: '70px' }}>
+            {/* Fixed Overview Bar */}
+            <div className="fixed-overview-bar">
+                <div className="fixed-overview-content">
+                    <span>
+                        <a href="/" className="fixed-overview-home-link">
+                            الصفحة الرئيسية
+                        </a>
+                        <span className="fixed-overview-separator">-</span>
+                        <span className="fixed-overview-current">الأخبار</span>
+                    </span>
                 </div>
             </div>
 
-            {/* News Grid (Showing only 9 items) */}
-            <div className="news-content-wrapper" style={{ padding: '1 8% 70px' }}>
-                <div className={`news-cards-grid ${animate ? 'active' : ''} news-fade-in`}>
+            {/* Year Filter Slider */}
+            <div className="year-filter-container">
+                <div
+                    className="year-scroll-arrow"
+                    onClick={() => handleScroll('right')}
+                    role="button"
+                    aria-label="التمرير إلى اليمين"
+                >
+                    «
+                </div>
 
-                    {loading && <p style={{ textAlign: 'center', width: '100%', padding: '50px', color: '#f57c00' }}>جارٍ تحميل الأخبار...</p>}
+                <div ref={scrollRef} className="year-scroller">
+                    <div className="year-items-container">
+                        {years.map((year) => (
+                            <div
+                                key={year}
+                                onClick={() => setSelectedYear(year)}
+                                className="year-item"
+                                role="button"
+                                aria-label={`اختر سنة ${year}`}
+                                aria-pressed={selectedYear === year}
+                            >
+                                <span className={selectedYear === year ? 'year-text year-text-active' : 'year-text'}>
+                                    {year}
+                                </span>
+                                {selectedYear === year && (
+                                    <div className="year-item-highlight" />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div
+                    className="year-scroll-arrow"
+                    onClick={() => handleScroll('left')}
+                    role="button"
+                    aria-label="التمرير إلى اليسار"
+                >
+                    »
+                </div>
+            </div>
+
+            {/* News Grid */}
+            <div className="news-content-wrapper">
+                <div className={`news-cards-grid ${animate ? 'active' : ''} news-fade-in`}>
+                    {loading && (
+                        <div className="news-loading-message">
+                            جارٍ تحميل الأخبار...
+                        </div>
+                    )}
+
+                    {!loading && error && (
+                        <div className="news-empty-message" style={{ color: '#f57c00' }}>
+                            حدث خطأ في تحميل الأخبار: {error}
+                        </div>
+                    )}
 
                     {!loading && !error && currentNews.length > 0 ? (
                         currentNews.map(item => (
-                            <div key={item.id} className="news-card-item news-card-hover">
+                            <div key={item.id} className="news-card-item">
                                 <div className="news-card-inner">
                                     <div className="news-date-badge">
-                                        {new Date(item.publishedAt).toLocaleDateString('ar-EG', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                        {new Date(item.publishedAt).toLocaleDateString('ar-EG', {
+                                            day: '2-digit',
+                                            month: 'long',
+                                            year: 'numeric'
+                                        })}
                                     </div>
                                     <a href={`/news/${item.id}`} className="news-image-wrapper">
-                                        <img src={item.imageUrl} alt={item.title} className="news-image" />
+                                        <img
+                                            src={item.imageUrl}
+                                            alt={item.title}
+                                            className="news-image"
+                                            loading="lazy"
+                                        />
                                     </a>
                                     <div className="news-title-wrapper">
-                                        <a href={`/news/${item.id}`} className="news-title-link">{item.title}</a>
+                                        <a href={`/news/${item.id}`} className="news-title-link">
+                                            {item.title}
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        !loading && !error && <div style={{ textAlign: 'center', width: '100%', padding: '50px' }}>لا توجد أخبار لعام {selectedYear}</div>
+                        !loading && !error && (
+                            <div className="news-empty-message">
+                                لا توجد أخبار لعام {selectedYear}
+                            </div>
+                        )
                     )}
                 </div>
             </div>
 
-            {/* Dynamic Pagination Bar */}
-            {!loading && totalPages > 1 && (
-                <div className="pagination-wrapper" style={{ display: 'flex', justifyContent: 'center', paddingBottom: '50px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+            {/* Pagination */}
+            {!loading && !error && totalPages > 1 && (
+                <div className="pagination-wrapper">
+                    <div className="pagination-container">
+                        {/* Previous Button */}
                         <button
-                            className="pagination-dot"
+                            className={`pagination-arrow ${currentPage === 1 ? 'pagination-arrow-disabled' : ''}`}
                             disabled={currentPage === 1}
-                            onClick={() => setCurrentPage(prev => prev - 1)}
-                            style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            aria-label="الصفحة السابقة"
                         >
                             ‹
                         </button>
 
+                        {/* Page Numbers */}
                         {[...Array(totalPages)].map((_, index) => (
                             <button
                                 key={index}
                                 className={`pagination-dot ${currentPage === index + 1 ? 'pagination-dot-active' : ''}`}
-                                onClick={() => {
-                                    setCurrentPage(index + 1);
-                                    window.scrollTo({ top: 300, behavior: 'smooth' }); // Scroll up to see new results
-                                }}
+                                onClick={() => handlePageChange(index + 1)}
+                                aria-label={`الصفحة ${index + 1}`}
+                                aria-current={currentPage === index + 1 ? 'page' : undefined}
                             >
                                 {index + 1}
                             </button>
                         ))}
 
+                        {/* Next Button */}
                         <button
-                            className="pagination-dot"
+                            className={`pagination-arrow ${currentPage === totalPages ? 'pagination-arrow-disabled' : ''}`}
                             disabled={currentPage === totalPages}
-                            onClick={() => setCurrentPage(prev => prev + 1)}
-                            style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            aria-label="الصفحة التالية"
                         >
                             ›
                         </button>
@@ -230,11 +210,6 @@ const News = () => {
             )}
         </div>
     );
-};
-
-const arrowStyle = {
-    padding: '0 15px', color: '#f57c00', fontWeight: 'bold', cursor: 'pointer',
-    zIndex: 10, fontSize: '1.5rem', userSelect: 'none', background: '#f5f5f5'
 };
 
 export default News;

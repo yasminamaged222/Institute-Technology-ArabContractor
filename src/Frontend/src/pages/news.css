@@ -1,209 +1,292 @@
-﻿/* News Page Container */
+﻿/* Import Droid Arabic Kufi Font */
+@import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap');
+
+/* News Page Container */
 .news-page-container {
     min-height: 100vh;
-    background-color: #f5f5f5;
+    background-color: #ffffff;
     padding-bottom: 60px;
     direction: rtl;
-  }
-  
-  /* Breadcrumb */
-  .breadcrumb-wrapper {
-    background-color: white;
-    border-bottom: 1px solid #e0e0e0;
-    padding: 20px 0;
-    margin-bottom: 30px;
-  }
-  
-  .breadcrumb-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
+    font-family: 'Droid Arabic Kufi', serif;
+}
+
+/* Fixed Overview Bar */
+.fixed-overview-bar {
+    position: fixed;
+    top: 70px; /* Positioned under navbar */
+    left: 0;
+    z-index: 40;
+    width: 100%;
+    border-bottom: 2px solid #e0e0e0;
+    background-color: #F5F7E1;
+    padding: 8px 20px;
+}
+
+.fixed-overview-content {
+    text-align: center;
+}
+
+    .fixed-overview-content span {
+        font-size: 15px;
+    }
+
+.fixed-overview-home-link {
+    margin-left: 12px;
+    color: #000000;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+    .fixed-overview-home-link:hover {
+        color: #f57c00;
+    }
+
+.fixed-overview-separator {
+    color: #666666;
+    margin: 0 8px;
+}
+
+.fixed-overview-current {
+    margin-right: 12px;
+    color: #000000;
+}
+
+/* Year Filter Container */
+.year-filter-container {
+    background-color: #f5f5f5;
+    padding: 5px;
+    margin: 14px auto 40px; /* Adjusted top margin for fixed bar */
+    max-width: 73%;
+    border-radius: 10px;
+    border: 2px solid #dddddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.year-scroll-arrow {
+    padding: 0 15px;
+    color: #f57c00;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    font-size: 1.5rem;
+    user-select: none;
+    background: #f5f5f5;
+    transition: color 0.3s;
+}
+
+    .year-scroll-arrow:hover {
+        color: #0865a8;
+    }
+
+.year-scroller {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 14px;
-  }
-  
-  .breadcrumb-link {
-    color: #666;
-    text-decoration: none;
-    transition: color 0.3s;
-  }
-  
-  .breadcrumb-link:hover {
-    color: #ff8c00;
-  }
-  
-  .breadcrumb-arrow {
-    color: #999;
-  }
-  
-  .breadcrumb-current {
-    color: #333;
-    font-weight: 500;
-  }
-  
-  /* Year Filter Pills */
-  .year-filter-container {
-    background-color: white;
-    padding: 20px;
-    margin: 0 auto 40px;
-    max-width: 1200px;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  }
-  
-  .year-pills {
+    overflow-x: auto;
+    flex-grow: 1;
+    height: 45px;
+    scroll-behavior: smooth;
+}
+
+    .year-scroller::-webkit-scrollbar {
+        display: none;
+    }
+
+.year-scroller {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.year-items-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
+    width: max-content;
+}
+
+.year-item {
+    min-width: 60px;
+    height: 20px;
+    display: flex;
     justify-content: center;
-  }
-  
-  .year-pill {
-    padding: 10px 24px;
-    background-color: white;
-    border: 1px solid #ddd;
-    border-radius: 25px;
+    align-items: center;
     cursor: pointer;
-    font-size: 15px;
-    font-weight: 500;
-    color: #555;
+    position: relative;
+    flex-shrink: 0;
+    border-left: 1px solid rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
-    font-family: 'Arial', sans-serif;
-  }
-  
-  .year-pill:hover {
-    background-color: #fff5e6;
-    border-color: #ff8c00;
-    color: #ff8c00;
-  }
-  
-  .year-pill-active {
-    background-color: #ff8c00;
-    color: white;
-    border-color: #ff8c00;
-  }
-  
-  /* News Content */
-  .news-content-wrapper {
+}
+
+    .year-item:hover {
+        background-color: rgba(8, 101, 168, 0.05);
+    }
+
+.year-text {
+    font-size: 0.85rem;
+    font-weight: normal;
+    color: #333333;
+    transition: all 0.3s ease;
+}
+
+.year-text-active {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #f57c00;
+}
+
+.year-item-highlight {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    border-left: 2.5px solid #f57c00;
+    border-right: 2.5px solid #f57c00;
+    background-color: rgba(245, 124, 0, 0.05);
+    pointer-events: none;
+}
+
+/* News Content */
+.news-content-wrapper {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 0 20px;
-  }
-  
-  .news-cards-grid {
+    padding: 0 8% 70px;
+}
+
+.news-cards-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 30px;
-  }
-  
-  /* News Card */
-  .news-card-item {
-    background: white;
+}
+
+/* Fade In Animation */
+.news-fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+    .news-fade-in.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+/* News Card */
+.news-card-item {
+    background: #ffffff;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     border: 1px solid #e8e8e8;
-  }
-  
-  .news-card-item:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-    transform: translateY(-5px);
-  }
-  
-  .news-card-inner {
+}
+
+    .news-card-item:hover {
+        box-shadow: 0 10px 20px rgba(8, 101, 168, 0.15);
+        transform: translateY(-5px) scale(1.02);
+    }
+
+.news-card-inner {
     display: flex;
     flex-direction: column;
     height: 100%;
-  }
-  
-  /* Date Badge */
-  .news-date-badge {
-    background-color: #ff8c00;
-    color: white;
-    padding: 8px 16px;
+}
+
+/* Date Badge */
+.news-date-badge {
+    background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
+    color: #ffffff;
+    padding: 10px 16px;
     font-size: 13px;
     font-weight: 600;
     text-align: center;
     border-radius: 4px 4px 0 0;
-  }
-  
-  /* Image */
-  .news-image-wrapper {
+    font-family: 'Droid Arabic Kufi', serif;
+}
+
+/* Image */
+.news-image-wrapper {
     display: block;
     width: 100%;
     height: 220px;
     overflow: hidden;
     background-color: #f0f0f0;
-  }
-  
-  .news-image {
+    position: relative;
+}
+
+.news-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.4s ease;
-  }
-  
-  .news-card-item:hover .news-image {
+}
+
+.news-card-item:hover .news-image {
     transform: scale(1.08);
-  }
-  
-  /* Title */
-  .news-title-wrapper {
+}
+
+/* Title */
+.news-title-wrapper {
     padding: 18px;
     flex-grow: 1;
     display: flex;
     align-items: center;
     background-color: #fafafa;
-  }
-  
-  .news-title-link {
-    color: #333;
+}
+
+.news-title-link {
+    color: #333333;
     text-decoration: none;
     font-size: 15px;
     line-height: 1.6;
     font-weight: 500;
     display: block;
     transition: color 0.3s;
-  }
-  
-  .news-title-link:hover {
-    color: #ff8c00;
-  }
-  
-  /* No News Message */
-  .no-news-message {
-    grid-column: 1 / -1;
+    font-family: 'Droid Arabic Kufi', serif;
+}
+
+    .news-title-link:hover {
+        color: #0865a8;
+    }
+
+/* Loading and Error Messages */
+.news-loading-message,
+.news-empty-message {
     text-align: center;
-    padding: 80px 20px;
-    color: #999;
+    width: 100%;
+    padding: 50px;
+    color: #f57c00;
     font-size: 18px;
-  }
-  
-  /* Pagination */
-  .pagination-wrapper {
+    font-family: 'Droid Arabic Kufi', serif;
+}
+
+.news-empty-message {
+    color: #999999;
+}
+
+/* Pagination */
+.pagination-wrapper {
     max-width: 1200px;
     margin: 50px auto 0;
     padding: 0 20px;
-  }
-  
-  .pagination-dots {
     display: flex;
     justify-content: center;
+    padding-bottom: 50px;
+}
+
+.pagination-container {
+    display: flex;
     align-items: center;
     gap: 8px;
-  }
-  
-  .pagination-dot,
-  .pagination-arrow {
+}
+
+.pagination-dot,
+.pagination-arrow {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    border: 1px solid #ddd;
-    background-color: white;
-    color: #666;
+    border: 1px solid #dddddd;
+    background-color: #ffffff;
+    color: #666666;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -211,105 +294,170 @@
     font-size: 14px;
     font-weight: 500;
     transition: all 0.3s ease;
-  }
-  
-  .pagination-dot:hover,
-  .pagination-arrow:hover {
-    background-color: #ff8c00;
-    color: white;
-    border-color: #ff8c00;
-  }
-  
-  .pagination-dot-active {
-    background-color: #ff8c00;
-    color: white;
-    border-color: #ff8c00;
-  }
-  
-  .pagination-arrow {
+    font-family: 'Droid Arabic Kufi', serif;
+}
+
+    .pagination-dot:hover,
+    .pagination-arrow:hover {
+        background-color: #0865a8;
+        color: #ffffff;
+        border-color: #0865a8;
+    }
+
+.pagination-dot-active {
+    background-color: #f57c00;
+    color: #ffffff;
+    border-color: #f57c00;
+}
+
+.pagination-arrow {
     font-size: 20px;
-  }
-  
-  .pagination-arrow-disabled {
+}
+
+.pagination-arrow-disabled {
     opacity: 0.4;
     cursor: not-allowed;
-  }
-  
-  .pagination-arrow-disabled:hover {
-    background-color: white;
-    color: #666;
-    border-color: #ddd;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 1024px) {
+}
+
+    .pagination-arrow-disabled:hover {
+        background-color: #ffffff;
+        color: #666666;
+        border-color: #dddddd;
+    }
+
+/* Responsive Design */
+@media (max-width: 1024px) {
     .news-cards-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 25px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
     }
-  }
-  
-  @media (max-width: 768px) {
-    .news-cards-grid {
-      grid-template-columns: 1fr;
-      gap: 20px;
-    }
-  
-    .year-pills {
-      gap: 8px;
-    }
-  
-    .year-pill {
-      padding: 8px 18px;
-      font-size: 14px;
-    }
-  
-    .breadcrumb-content {
-      padding: 0 15px;
-    }
-  
+
     .news-content-wrapper {
-      padding: 0 15px;
+        padding: 0 5% 70px;
     }
-  
-    .pagination-wrapper {
-      padding: 0 15px;
+}
+
+@media (max-width: 768px) {
+    .fixed-overview-bar {
+        top: 60px; /* Adjust for smaller navbar if needed */
+        padding: 6px 15px;
     }
-  }
-  
-  @media (max-width: 480px) {
+
+    .fixed-overview-content span {
+        font-size: 14px;
+    }
+
     .year-filter-container {
-      padding: 15px;
-      margin: 0 15px 30px;
+        margin: 120px auto 30px;
+        padding: 15px;
     }
-  
-    .year-pills {
-      justify-content: flex-start;
-      overflow-x: auto;
-      flex-wrap: nowrap;
-      padding-bottom: 5px;
+
+    .year-item {
+        min-width: 70px;
     }
-  
-    .year-pill {
-      flex-shrink: 0;
-      padding: 7px 16px;
-      font-size: 13px;
+
+    .news-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
-  
+
+    .news-content-wrapper {
+        padding: 0 4% 50px;
+    }
+
+    .pagination-wrapper {
+        padding: 0 15px;
+        padding-bottom: 40px;
+    }
+
+    .pagination-dot,
+    .pagination-arrow {
+        width: 35px;
+        height: 35px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .fixed-overview-bar {
+        padding: 5px 10px;
+    }
+
+    .fixed-overview-content span {
+        font-size: 13px;
+    }
+
+    .fixed-overview-home-link,
+    .fixed-overview-current {
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+
+    .year-filter-container {
+        margin: 110px 15px 25px;
+        padding: 12px;
+        max-width: calc(100% - 30px);
+    }
+
+    .year-item {
+        min-width: 65px;
+    }
+
+    .year-text {
+        font-size: 0.8rem;
+    }
+
+    .year-text-active {
+        font-size: 0.95rem;
+    }
+
     .news-image-wrapper {
-      height: 200px;
+        height: 200px;
     }
-  
+
     .news-title-wrapper {
-      padding: 15px;
+        padding: 15px;
     }
-  
+
     .news-title-link {
-      font-size: 14px;
+        font-size: 14px;
     }
-  
+
     .news-date-badge {
-      font-size: 12px;
-      padding: 7px 14px;
+        font-size: 12px;
+        padding: 8px 14px;
     }
-  }
+
+    .pagination-dot,
+    .pagination-arrow {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .news-content-wrapper {
+        padding: 0 3% 40px;
+    }
+}
+
+/* Extra Small Devices */
+@media (max-width: 360px) {
+    .year-item {
+        min-width: 60px;
+    }
+
+    .year-scroll-arrow {
+        padding: 0 10px;
+        font-size: 1.3rem;
+    }
+
+    .pagination-container {
+        gap: 5px;
+    }
+
+    .pagination-dot,
+    .pagination-arrow {
+        width: 30px;
+        height: 30px;
+    }
+}

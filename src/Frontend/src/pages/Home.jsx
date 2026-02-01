@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Box, Typography, Button, Grid, Card, CardContent,
     CardActions, Container, Paper, CardMedia, Tooltip,
@@ -25,44 +25,6 @@ import 'swiper/css/navigation';
 import 'swiper/css/autoplay';
 import { Link } from 'react-router-dom';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
-
-const newsItems = [
-    {
-        id: 1,
-        date: '25 نوفمبر 2025',
-        title: 'اتفاقية بين المعهد القومي للحوكمة والمعهد التكنولوجي لهندسة التشييد والإدارة',
-        image: '/images/news/news-01.jpg',
-        link: '/news/2025-68'
-    },
-    {
-        id: 2,
-        date: '22 أكتوبر 2025',
-        title: 'ختام المرحلة الأولى من برنامج التدريب المشترك بين المقاولون العرب والجامعة',
-        image: '/images/news/news-02.jpg',
-        link: '/news/2025-67'
-    },
-    {
-        id: 3,
-        date: '22 أكتوبر 2025',
-        title: 'انطلاق البرنامج التدريبي للمهندسين من دولة زامبيا',
-        image: '/images/news/news-03.jpg',
-        link: '/news/2025-66'
-    },
-    {
-        id: 4,
-        date: '7 أكتوبر 2025',
-        title: 'تجديد إعتماد المعهد من الجهاز المركزي للتنظيم والإدارة',
-        image: '/images/news/news-04.jpg',
-        link: '/news/2025-65'
-    },
-    {
-        id: 5,
-        date: '3 سبتمبر 2025',
-        title: 'المقاولون العرب تكرم أوئل الثانوية العامة',
-        image: '/images/news/news-05.jpg',
-        link: '/news/2025-64'
-    },
-];
 
 const slides = [
     {
@@ -205,6 +167,8 @@ const Home = () => {
     const [current, setCurrent] = useState(0);
     const [popoverAnchor, setPopoverAnchor] = useState(null);
     const [selectedCourse, setSelectedCourse] = useState(null);
+    const [newsItems, setNewsItems] = useState([]);
+    const [newsLoading, setNewsLoading] = useState(true);
 
     React.useEffect(() => {
         const timer = setInterval(() => {
@@ -215,6 +179,22 @@ const Home = () => {
 
     const slide = slides[current];
 
+    useEffect(() => {
+        fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews')
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to fetch news');
+                return res.json();
+            })
+            .then(data => {
+                const latestFive = (data.data || [])
+                    .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+                    .slice(0, 5);
+
+                setNewsItems(latestFive);
+                setNewsLoading(false);
+            })
+            .catch(() => setNewsLoading(false));
+    }, []);
 
 
     const handlePopoverOpen = (event, course) => {
@@ -261,7 +241,7 @@ const Home = () => {
             .hero-subtitle { font-size: 0.8rem !important; }
             .hero-title { font-size: 1.2rem !important; }
             .hero-button { font-size: 0.8rem !important; padding: 10px 20px !important; }
-            .feature-card { min-height: 170px !important; }
+            .feature-card { min-height: 170px !important; width: 250px !important; }
             .feature-icon { width: 32px !important; height: 32px !important; }
             .feature-title { font-size: 0.9rem !important; }
             .feature-subtitle { font-size: 0.7rem !important; }
@@ -285,8 +265,8 @@ const Home = () => {
             .hero-subtitle { font-size: 0.9rem !important; }
             .hero-title { font-size: 1.4rem !important; }
             .hero-button { font-size: 0.85rem !important; padding: 12px 24px !important; }
-            .feature-card { min-height: 185px !important; }
-            .feature-icon { width: 36px !important; height: 36px !important; }
+.feature-card { min-height: 28px  !important; width: 350px !important; }
+.feature-icon { width: 36px !important; height: 36px !important; }
             .feature-title { font-size: 0.95rem !important; }
             .feature-subtitle { font-size: 0.75rem !important; }
             .about-title { font-size: 1.35rem !important; }
@@ -309,7 +289,7 @@ const Home = () => {
             .hero-subtitle { font-size: 1rem !important; }
             .hero-title { font-size: 1.6rem !important; }
             .hero-button { font-size: 0.9rem !important; padding: 14px 28px !important; }
-            .feature-card { min-height: 200px !important; }
+            .feature-card { min-height: 28px  !important; width: 350px !important; }
             .feature-icon { width: 38px !important; height: 38px !important; }
             .feature-title { font-size: 1rem !important; }
             .feature-subtitle { font-size: 0.78rem !important; }
@@ -333,7 +313,7 @@ const Home = () => {
             .hero-subtitle { font-size: 1.1rem !important; }
             .hero-title { font-size: 2rem !important; }
             .hero-button { font-size: 0.95rem !important; padding: 15px 32px !important; }
-            .feature-card { min-height: 220px !important; }
+            .feature-card { min-height: 28px  !important; width: 225px !important; }
             .feature-icon { width: 42px !important; height: 42px !important; }
             .feature-title { font-size: 1.05rem !important; }
             .feature-subtitle { font-size: 0.8rem !important; }
@@ -357,7 +337,7 @@ const Home = () => {
             .hero-subtitle { font-size: 1.25rem !important; }
             .hero-title { font-size: 3rem !important; }
             .hero-button { font-size: 1.05rem !important; padding: 16px 40px !important; }
-            .feature-card { min-height: 240px !important; }
+            .feature-card { min-height: 28px  !important; width: 270px !important; }
             .feature-icon { width: 46px !important; height: 46px !important; }
             .feature-title { font-size: 1.15rem !important; }
             .feature-subtitle { font-size: 0.85rem !important; }
@@ -381,7 +361,7 @@ const Home = () => {
             .hero-subtitle { font-size: 1.4rem !important; }
             .hero-title { font-size: 3.8rem !important; }
             .hero-button { font-size: 1.15rem !important; padding: 18px 50px !important; }
-            .feature-card { min-height: 250px !important; }
+            .feature-card { min-height: 250px !important; width: 350px !important; }
             .feature-icon { width: 48px !important; height: 48px !important; }
             .feature-title { font-size: 1.2rem !important; }
             .feature-subtitle { font-size: 0.88rem !important; }
@@ -429,7 +409,7 @@ const Home = () => {
             .hero-subtitle { font-size: 1.7rem !important; }
             .hero-title { font-size: 5rem !important; }
             .hero-button { font-size: 1.35rem !important; padding: 22px 64px !important; }
-            .feature-card { min-height: 280px !important; }
+            .feature-card { min-height: 28px  !important; width: 350px !important; }
             .feature-icon { width: 54px !important; height: 54px !important; }
             .feature-title { font-size: 1.35rem !important; }
             .feature-subtitle { font-size: 0.95rem !important; }
@@ -1084,7 +1064,7 @@ const Home = () => {
                 <TechnicalEducationSection />
             </Box>
 
-            {/* Latest News - 5 Items in Swiper */}
+            {/* Latest News - Dynamic Swiper */}
             <Container
                 maxWidth="lg"
                 sx={{
@@ -1107,172 +1087,172 @@ const Home = () => {
                     أحدث الأخبــار
                 </Typography>
 
-                <Box sx={{ position: 'relative' }}>
-                    <Swiper
-                        modules={[Autoplay, Navigation]}
-                        autoplay={{ delay: 5000, disableOnInteraction: false }}
-                        navigation={{
-                            nextEl: '.news-swiper-next',
-                            prevEl: '.news-swiper-prev',
-                        }}
-                        loop={true}
-                        spaceBetween={20}
-                        slidesPerView={3}
-                        breakpoints={{
-                            600: { slidesPerView: 2, spaceBetween: 15 },
-                            960: { slidesPerView: 3, spaceBetween: 20 },
-                        }}
+                {!newsLoading && newsItems.length > 0 && (
+                    <Box sx={{ position: 'relative' }}>
+                        <Swiper
+                            modules={[Autoplay, Navigation]}
+                            autoplay={{ delay: 5000, disableOnInteraction: false }}
+                            navigation={{
+                                nextEl: '.news-swiper-next',
+                                prevEl: '.news-swiper-prev',
+                            }}
+                            loop
+                            spaceBetween={20}
+                            slidesPerView={3}
+                            breakpoints={{
+                                0: { slidesPerView: 1 },
+                                600: { slidesPerView: 2, spaceBetween: 15 },
+                                960: { slidesPerView: 3, spaceBetween: 20 },
+                            }}
+                        >
+                            {newsItems.map(news => (
+                                <SwiperSlide key={news.id}>
+                                    <Card
+                                        sx={{
+                                            height: '100%',
+                                            borderRadius: { xs: 3, md: 5 },
+                                            overflow: 'hidden',
+                                            boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                transform: 'translateY(-8px)',
+                                                boxShadow: '0 16px 40px rgba(0,0,0,0.12)',
+                                            },
+                                        }}
+                                    >
+                                        {/* Image */}
+                                        <Box sx={{ position: 'relative', paddingTop: '70%' }}>
+                                            <img
+                                                src={news.imageUrl}
+                                                alt={news.title}
+                                                style={{
+                                                    position: 'absolute',
+                                                    inset: 0,
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    objectFit: 'cover',
+                                                }}
+                                            />
 
-                    >
-                        {newsItems.map((news) => (
-                            <SwiperSlide key={news.id}>
-                                <Card
-                                    sx={{
-                                        height: '100%',
-                                        borderRadius: { xs: 3, md: 5 },
-                                        overflow: 'hidden',
-                                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                                        transition: 'all 0.3s ease',
-                                        bgcolor: 'white',
-                                        '&:hover': {
-                                            transform: { xs: 'translateY(-5px)', md: 'translateY(-12px)' },
-                                            boxShadow: '0 16px 40px rgba(0,0,0,0.12)',
-                                        },
-                                    }}
-                                >
-                                    {/* Square Image Area */}
-                                    <Box sx={{ position: 'relative', paddingTop: '70%', bgcolor: '#e3f2fd' }}>
-                                        <img
-                                            src={news.image}
-                                            alt={news.title}
-                                            style={{
-                                                position: 'absolute',
-                                                top: 0,
-                                                left: 0,
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: 'cover',
-                                            }}
-                                        />
-                                        {/* Date Badge */}
-                                        <Box
-                                            sx={{
-                                                position: 'absolute',
-                                                top: { xs: 8, md: 16 },
-                                                right: { xs: 8, md: 16 },
-                                                bgcolor: 'rgba(8, 101, 168, 0.9)',
-                                                color: 'white',
-                                                px: { xs: 1, md: 2 },
-                                                py: 0.5,
-                                                borderRadius: { xs: 3, md: 5 },
-                                                fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.8rem' },
-                                                fontWeight: 500,
-                                                backdropFilter: 'blur(4px)',
-                                                fontFamily: '"Droid Arabic Kufi", serif'
-                                            }}
-                                        >
-                                            {news.date}
-                                        </Box>
-                                    </Box>
-
-                                    {/* Content */}
-                                    <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-                                        <Typography
-                                            variant="h6"
-                                            fontWeight="bold"
-                                            sx={{
-                                                mb: { xs: 1.5, md: 2 },
-                                                fontFamily: '"Droid Arabic Kufi", serif',
-                                                lineHeight: 1.2,
-                                                height: { xs: 55, sm: 60, md: 70 },
-                                                overflow: 'hidden',
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 3,
-                                                WebkitBoxOrient: 'vertical',
-                                                fontSize: { xs: '0.85rem', sm: '0.95rem', md: '1.125rem' },
-                                                color: '#000'
-                                            }}
-                                        >
-                                            {news.title}
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: { xs: 2, md: 3 } }}>
-                                            <Button
-                                                variant="contained"
-                                                size="small"
-                                                component={Link}
-                                                to={news.link}
+                                            {/* Date */}
+                                            <Box
                                                 sx={{
-                                                    mt: 'auto',
-                                                    bgcolor: '#f57c00',
-                                                    borderRadius: 30,
-                                                    px: { xs: 3, sm: 4, md: 5 },
-                                                    py: 1,
-                                                    fontSize: { xs: '0.8rem', sm: '0.85rem', md: '0.95rem' },
-                                                    fontFamily: '"Droid Arabic Kufi", serif',
-                                                    '&:hover': { bgcolor: '#e65100' },
+                                                    position: 'absolute',
+                                                    top: 16,
+                                                    right: 16,
+                                                    bgcolor: 'rgba(8,101,168,.9)',
+                                                    color: '#fff',
+                                                    px: 2,
+                                                    py: .5,
+                                                    borderRadius: 4,
+                                                    fontSize: '0.75rem',
+                                                    fontFamily: '"Droid Arabic Kufi", serif'
                                                 }}
                                             >
-                                                اقرأ المزيد
-                                            </Button>
+                                                {new Date(news.publishedAt).toLocaleDateString('ar-EG', {
+                                                    day: '2-digit',
+                                                    month: 'long',
+                                                    year: 'numeric',
+                                                })}
+                                            </Box>
                                         </Box>
-                                    </CardContent>
-                                </Card>
-                            </SwiperSlide>
-                        ))}
-                    </Swiper>
 
-                    {/* Custom Navigation Arrows */}
-                    <Box
-                        className="news-swiper-prev"
-                        sx={{
-                            position: 'absolute',
-                            left: { xs: -25, sm: -40, md: -60 },
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 10,
-                            bgcolor: 'white',
-                            borderRadius: '50%',
-                            width: { xs: 40, sm: 50, md: 60 },
-                            height: { xs: 40, sm: 50, md: 60 },
-                            display: { xs: 'none', sm: 'flex' },
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: 6,
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: '#f0f0f0' },
-                        }}
-                    >
-                        <Typography sx={{ fontSize: { sm: '30px', md: '40px' }, color: '#0865a8' }}>‹</Typography>
-                    </Box>
+                                        {/* Content */}
+                                        <CardContent>
+                                            <Typography
+                                                fontWeight="bold"
+                                                sx={{
+                                                    mb: 2,
+                                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                                    lineHeight: 1.3,
+                                                    height: 65,
+                                                    overflow: 'hidden',
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 3,
+                                                    WebkitBoxOrient: 'vertical',
+                                                }}
+                                            >
+                                                {news.title}
+                                            </Typography>
 
-                    <Box
-                        className="news-swiper-next"
-                        sx={{
-                            position: 'absolute',
-                            right: { xs: -25, sm: -40, md: -60 },
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 10,
-                            bgcolor: 'white',
-                            borderRadius: '50%',
-                            width: { xs: 40, sm: 50, md: 60 },
-                            height: { xs: 40, sm: 50, md: 60 },
-                            display: { xs: 'none', sm: 'flex' },
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: 6,
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: '#f0f0f0' },
-                        }}
-                    >
-                        <Typography sx={{ fontSize: { sm: '30px', md: '40px' }, color: '#0865a8' }}>›</Typography>
+                                            <Box textAlign="center">
+                                                <Button
+                                                    component={Link}
+                                                    to={`/news/${news.id}`}
+                                                    variant="contained"
+                                                    sx={{
+                                                        bgcolor: '#f57c00',
+                                                        borderRadius: 30,
+                                                        px: 4,
+                                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                                        '&:hover': { bgcolor: '#e65100' }
+                                                    }}
+                                                >
+                                                    اقرأ المزيد
+                                                </Button>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+
+                        {/* Arrows */}
+                        {/* Custom Navigation Arrows */}
+                        <Box
+                            className="news-swiper-prev"
+                            sx={{
+                                position: 'absolute',
+                                left: { xs: -25, sm: -40, md: -60 },
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                zIndex: 10,
+                                bgcolor: 'white',
+                                borderRadius: '50%',
+                                width: { xs: 40, sm: 50, md: 60 },
+                                height: { xs: 40, sm: 50, md: 60 },
+                                display: { xs: 'none', sm: 'flex' },
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: 6,
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: '#f0f0f0' },
+                            }}
+                        >
+                            <Typography sx={{ fontSize: { xs: 25, sm: 30, md: 40 }, color: '#0865a8' }}>‹</Typography>
+                        </Box>
+
+                        <Box
+                            className="news-swiper-next"
+                            sx={{
+                                position: 'absolute',
+                                right: { xs: -25, sm: -40, md: -60 },
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                zIndex: 10,
+                                bgcolor: 'white',
+                                borderRadius: '50%',
+                                width: { xs: 40, sm: 50, md: 60 },
+                                height: { xs: 40, sm: 50, md: 60 },
+                                display: { xs: 'none', sm: 'flex' },
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: 6,
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: '#f0f0f0' },
+                            }}
+                        >
+                            <Typography sx={{ fontSize: { xs: 25, sm: 30, md: 40 }, color: '#0865a8' }}>›</Typography>
+                        </Box>
+
                     </Box>
-                </Box>
+                )}
             </Container>
 
-            <box>
+
+            <Box>
                 <CustomersSection />
-            </box>
+            </Box>
 
         </Box>
     );

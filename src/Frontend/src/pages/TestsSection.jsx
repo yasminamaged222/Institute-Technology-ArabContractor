@@ -1,6 +1,8 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 
 export default function ICMETTests() {
+    const [selectedImg, setSelectedImg] = useState(null);
+
     const externalClients = [
         { name: 'هيئة المجتمعات العمرانية', count: 226 },
         { name: 'شركة اليو مصر', count: 16 },
@@ -37,11 +39,11 @@ export default function ICMETTests() {
         @import url('https://fonts.googleapis.com/earlyaccess/droidarabickufi.css');
         
         :root {
-          --primary: #1a5490;
-          --secondary: #e67e22;
-          --accent: #c0392b;
-          --dark: #2c3e50;
-          --light: #ecf0f1;
+          --primary: #0865a8;
+          --secondary: #f57c00;
+          --accent: #000000;
+          --dark: #000000;
+          --light: #ffffff;
           --gold: #d4af37;
         }
 
@@ -53,7 +55,7 @@ export default function ICMETTests() {
 
         body {
           font-family: 'Droid Arabic Kufi', serif;
-          background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          background: #ffffff;
           color: var(--dark);
           line-height: 1.8;
         }
@@ -62,7 +64,7 @@ export default function ICMETTests() {
           text-align: right;
           direction: rtl;
           min-height: 100vh;
-          padding-top: 130px; /* Add padding for fixed nav + overview bar (80px + 50px) */
+          padding-top: 130px; 
         }
 
         /* Hero Section */
@@ -73,7 +75,7 @@ export default function ICMETTests() {
         }
 
         .hero-title {
-          font-family: 'Amiri', serif;
+          font-family: 'Droid Arabic Kufi', serif;
           font-size: 3.5rem;
           font-weight: 800;
           color: var(--primary);
@@ -98,36 +100,18 @@ export default function ICMETTests() {
         }
 
         @keyframes fadeInScale {
-          0% {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
+          0% { opacity: 0; transform: scale(0.9); }
+          100% { opacity: 1; transform: scale(1); }
         }
 
         @keyframes fadeInUp {
-          0% {
-            opacity: 0;
-            transform: translateY(30px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          0% { opacity: 0; transform: translateY(30px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes fadeInRight {
-          0% {
-            opacity: 0;
-            transform: translateX(30px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateX(0);
-          }
+          0% { opacity: 0; transform: translateX(30px); }
+          100% { opacity: 1; transform: translateX(0); }
         }
 
         .hero-description {
@@ -136,9 +120,9 @@ export default function ICMETTests() {
           color: var(--dark);
           margin-bottom: 1.5rem;
           padding: 2rem;
-          background: white;
+          background: #f9f9f9;
           border-radius: 16px;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
           border-right: 5px solid var(--secondary);
           animation: fadeInUp 0.8s ease-out 0.2s both;
         }
@@ -163,19 +147,13 @@ export default function ICMETTests() {
           position: relative;
           overflow: hidden;
           animation: fadeInUp 0.8s ease-out;
-          aspect-ratio: 1 / 1; /* Make cards square */
+          aspect-ratio: 1 / 1;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: center;
           gap: 0.5rem;
         }
-
-        .stat-card:nth-child(1) { animation-delay: 0.1s; }
-        .stat-card:nth-child(2) { animation-delay: 0.2s; }
-        .stat-card:nth-child(3) { animation-delay: 0.3s; }
-        .stat-card:nth-child(4) { animation-delay: 0.4s; }
-        .stat-card:nth-child(5) { animation-delay: 0.5s; }
 
         .stat-card::before {
           content: '';
@@ -184,19 +162,17 @@ export default function ICMETTests() {
           right: 0;
           width: 100%;
           height: 5px;
-          background: linear-gradient(90deg, var(--primary), var(--secondary));
+          background: var(--primary);
           transform: scaleX(0);
           transform-origin: right;
           transition: transform 0.5s ease;
         }
 
-        .stat-card:hover::before {
-          transform: scaleX(1);
-        }
+        .stat-card:hover::before { transform: scaleX(1); }
 
         .stat-card:hover {
           transform: translateY(-12px) scale(1.03);
-          box-shadow: 0 25px 70px rgba(26, 84, 144, 0.25);
+          box-shadow: 0 25px 70px rgba(8, 101, 168, 0.25);
         }
 
         .stat-icon {
@@ -216,16 +192,12 @@ export default function ICMETTests() {
           font-weight: 700;
           color: var(--dark);
           margin-bottom: 0.3rem;
-          line-height: 1.3;
         }
 
         .stat-number {
           font-size: 2rem;
           font-weight: 800;
-          background: linear-gradient(135deg, var(--primary), var(--secondary));
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
+          color: var(--primary);
         }
 
         /* Content Sections */
@@ -244,14 +216,10 @@ export default function ICMETTests() {
         }
 
         @media (max-width: 968px) {
-          .content-grid {
-            grid-template-columns: 1fr;
-          }
+          .content-grid { grid-template-columns: 1fr; }
         }
 
-        .content-text {
-          animation: fadeInRight 0.8s ease-out;
-        }
+        .content-text { animation: fadeInRight 0.8s ease-out; }
 
         .content-image {
           border-radius: 24px;
@@ -259,75 +227,39 @@ export default function ICMETTests() {
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
           position: relative;
           animation: fadeInUp 0.8s ease-out 0.2s both;
-        }
-
-        .content-image::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(135deg, var(--primary) 0%, transparent 100%);
-          opacity: 0;
-          transition: opacity 0.4s ease;
-          z-index: 1;
-        }
-
-        .content-image:hover::before {
-          opacity: 0.2;
+          cursor: pointer;
+          background: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .content-image img {
           width: 100%;
           height: 100%;
-          object-fit: cover;
+          object-fit: contain; /* Prevents zooming, fits perfectly */
           transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        .content-image:hover img {
-          transform: scale(1.08);
-        }
-
-        .image-placeholder {
-          width: 100%;
-          height: 350px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 3rem;
-          color: white;
-        }
+        .content-image:hover img { transform: scale(1.05); }
 
         .list-container {
           background: white;
           padding: 2.5rem;
           border-radius: 20px;
           box-shadow: 0 15px 50px rgba(0, 0, 0, 0.08);
+          border: 1px solid #eee;
         }
 
-        .custom-list {
-          list-style: none;
-          padding: 0;
-        }
+        .custom-list { list-style: none; padding: 0; }
 
         .custom-list > li {
           margin-bottom: 1.5rem;
           padding-right: 2.5rem;
           position: relative;
           font-size: 1.1rem;
-          line-height: 1.8;
-          animation: fadeInRight 0.6s ease-out;
-          animation-fill-mode: both;
+          animation: fadeInRight 0.6s ease-out both;
         }
-
-        .custom-list > li:nth-child(1) { animation-delay: 0.1s; }
-        .custom-list > li:nth-child(2) { animation-delay: 0.2s; }
-        .custom-list > li:nth-child(3) { animation-delay: 0.3s; }
-        .custom-list > li:nth-child(4) { animation-delay: 0.4s; }
-        .custom-list > li:nth-child(5) { animation-delay: 0.5s; }
-        .custom-list > li:nth-child(6) { animation-delay: 0.6s; }
 
         .custom-list > li::before {
           content: '✓';
@@ -336,7 +268,7 @@ export default function ICMETTests() {
           top: 0;
           width: 28px;
           height: 28px;
-          background: linear-gradient(135deg, var(--secondary), var(--accent));
+          background: var(--secondary);
           color: white;
           border-radius: 50%;
           display: flex;
@@ -344,21 +276,15 @@ export default function ICMETTests() {
           justify-content: center;
           font-weight: bold;
           font-size: 0.9rem;
-          box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3);
         }
 
-        .nested-list {
-          list-style: none;
-          margin-top: 1rem;
-          padding-right: 1.5rem;
-        }
+        .nested-list { list-style: none; margin-top: 1rem; padding-right: 1.5rem; }
 
         .nested-list li {
           margin-bottom: 0.8rem;
           padding-right: 2rem;
           position: relative;
-          font-size: 1rem;
-          color: #555;
+          color: #333;
         }
 
         .nested-list li::before {
@@ -366,44 +292,23 @@ export default function ICMETTests() {
           position: absolute;
           right: 0;
           color: var(--primary);
-          font-size: 0.8rem;
         }
 
         /* Large Stats Section */
         .large-stats-section {
-          background: linear-gradient(135deg, var(--primary) 0%, #2c3e50 100%);
+          background: var(--primary);
           padding: 3rem 2rem;
           position: relative;
-          overflow: hidden;
           margin: 5rem 0;
         }
 
-        .large-stats-section::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='2'/%3E%3Ccircle cx='13' cy='13' r='2'/%3E%3C/g%3E%3C/svg%3E");
-          background-size: 20px 20px;
-        }
-
-        .large-stats-content {
-          max-width: 1200px;
-          margin: 0 auto;
-          text-align: center;
-          position: relative;
-          z-index: 1;
-        }
-
         .large-stats-title {
-          font-family: 'Amiri', serif;
+          font-family: 'Droid Arabic Kufi', serif;
           font-size: 2.8rem;
           color: white;
           margin-bottom: 2rem;
           font-weight: 700;
-          animation: fadeInScale 0.8s ease-out;
+          text-align: center;
         }
 
         .large-stat-display {
@@ -411,58 +316,18 @@ export default function ICMETTests() {
           flex-direction: column;
           align-items: center;
           gap: 1rem;
-          animation: fadeInUp 0.8s ease-out 0.3s both;
         }
 
-        .large-stat-icon {
-          font-size: 3.5rem;
-          color: var(--gold);
-          animation: bounce 2s ease-in-out infinite;
-        }
+        .large-stat-icon { font-size: 3.5rem; color: var(--secondary); animation: bounce 2s ease-in-out infinite; }
 
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-20px); }
         }
 
-        .large-stat-number {
-          font-size: 6rem;
-          font-weight: 900;
-          color: white;
-          text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-          line-height: 1;
-        }
+        .large-stat-number { font-size: 6rem; font-weight: 900; color: white; }
 
-        .large-stat-label {
-          font-size: 2rem;
-          color: rgba(255, 255, 255, 0.9);
-          font-weight: 600;
-        }
-
-        /* Section Title */
-        .section-title {
-          font-family: 'Amiri', serif;
-          font-size: 2.5rem;
-          color: var(--primary);
-          margin-bottom: 3rem;
-          font-weight: 700;
-          position: relative;
-          display: inline-block;
-          animation: fadeInRight 0.8s ease-out;
-        }
-
-        .section-title::before {
-          content: '';
-          position: absolute;
-          top: -10px;
-          right: -20px;
-          width: 50px;
-          height: 50px;
-          background: var(--secondary);
-          opacity: 0.1;
-          border-radius: 10px;
-          transform: rotate(45deg);
-        }
+        .large-stat-label { font-size: 2rem; color: white; font-weight: 600; }
 
         /* News Section */
         .news-section {
@@ -476,21 +341,14 @@ export default function ICMETTests() {
         .news-item {
           padding: 2rem;
           margin-bottom: 2rem;
-          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          background: #fcfcfc;
           border-radius: 16px;
           border-right: 4px solid var(--primary);
           position: relative;
           padding-right: 3rem;
           line-height: 2;
-          font-size: 1.05rem;
-          animation: fadeInRight 0.6s ease-out;
-          animation-fill-mode: both;
+          animation: fadeInRight 0.6s ease-out both;
         }
-
-        .news-item:nth-child(1) { animation-delay: 0.1s; }
-        .news-item:nth-child(2) { animation-delay: 0.2s; }
-        .news-item:nth-child(3) { animation-delay: 0.3s; }
-        .news-item:nth-child(4) { animation-delay: 0.4s; }
 
         .news-item::before {
           content: '✓';
@@ -499,17 +357,15 @@ export default function ICMETTests() {
           top: 2rem;
           width: 24px;
           height: 24px;
-          background: linear-gradient(135deg, var(--secondary), var(--accent));
+          background: var(--secondary);
           color: white;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 0.8rem;
-          font-weight: bold;
         }
 
-        /* Image Grid */
         .image-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -517,43 +373,51 @@ export default function ICMETTests() {
           margin: 4rem 0;
         }
 
-        @media (max-width: 768px) {
-          .image-grid {
-            grid-template-columns: 1fr;
-          }
+        /* Modal Dialog Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            cursor: pointer;
         }
 
-        /* Responsive Typography */
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .modal-content img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.5);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
-          .hero-title {
-            font-size: 2.5rem;
-          }
-
-          .hero-description {
-            font-size: 1rem;
-            padding: 1.5rem;
-          }
-
-          .section-title {
-            font-size: 2rem;
-          }
-
-          .large-stats-title {
-            font-size: 2rem;
-          }
-
-          .large-stat-number {
-            font-size: 4rem;
-          }
-
-          .large-stat-label {
-            font-size: 1.5rem;
-          }
+          .image-grid { grid-template-columns: 1fr; }
+          .hero-title { font-size: 2.5rem; }
         }
       `}</style>
 
-            {/* Fixed Overview Bar - positioned after nav */}
-            <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: '75px' }}>
+            {/* Fixed Overview Bar - Exactly as requested */}
+            <div className="top-100 fixed left-0 z-50 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: '75px' }}>
                 <div className="text-center">
                     <span className="text-base">
                         <a href="/" className="ml-3 text-gray-700 hover:text-gray-900">الصفحة الرئيسية</a>
@@ -566,21 +430,11 @@ export default function ICMETTests() {
             {/* Hero Section */}
             <section className="hero-section">
                 <h1 className="hero-title">الاختبارات</h1>
-
                 <p className="hero-description">
                     تم انشاء قسم الاختبارات بالمعهد مواكبة لاحد النظم في اختيار الموارد البشرية وايماناً من الشركة بأهمية اختيار افضل العناصر لشغل الوظائف المختلفة بالشركة وفقاً للضوابط والمعايير المطلوبة لكل وظيفة
                 </p>
-
                 <p className="hero-description">
                     يعد معهد الإدارة والتكنولوجيا- المقاولون العرب واحد من أوائل المعاهد في جمهورية مصر العربية ، حيث يقوم هذا القسم  باجراء عدد كبير من الاختبارات المقننة الى العملاء الخارجيين طبقا للتعاقد وجميع الفروع والإدارات داخل الشركة
-                </p>
-
-                <p className="hero-description">
-                    كما يقوم القسم بعمل التقييمات اللازمة لتحديد مدى صلاحية الموظف لشغل الوظيفة ، معتمداً على خبرة السادة المحاضرين في عمل فنية تقييمات مناسبة لكافة الوظائف والمهن المختلفة ذات مرجعية لاختبارات الشهادات الدولية مثل ( ICDL & Toefl ) ، كذلك مستويات المهارات القومية ، واصدار النتيجة المعتمدة والمحددة لصلاحية شغل الوظيفة
-                </p>
-
-                <p className="hero-description">
-                    ولم يقتصر العمل في قسم الاختبارات على العاملين بالشركة فقط ، بل امتد عمل التقييمات ليشمل العملاء خارجيين ايضاً، مثال :
                 </p>
             </section>
 
@@ -612,17 +466,16 @@ export default function ICMETTests() {
                             </ul>
                         </div>
                     </div>
-                    <div className="content-image">
+                    <div className="content-image" onClick={() => setSelectedImg('/images/test-01.jpg')}>
                         <img src="/images/test-01.jpg" alt="Testing facilities" />
                     </div>
                 </div>
 
-                {/* Image Grid */}
                 <div className="image-grid">
-                    <div className="content-image">
+                    <div className="content-image" onClick={() => setSelectedImg('/images/test-02.jpg')}>
                         <img src="/images/test-02.jpg" alt="Testing environment" />
                     </div>
-                    <div className="content-image">
+                    <div className="content-image" onClick={() => setSelectedImg('/images/test-03.jpg')}>
                         <img src="/images/test-03.jpg" alt="Testing sessions" />
                     </div>
                 </div>
@@ -640,19 +493,10 @@ export default function ICMETTests() {
                 </div>
             </section>
 
-            {/* Test Types and News */}
+            {/* News Section */}
             <section className="content-section">
-                <h2 className="section-title">انواع الاختبارات</h2>
-                <div className="list-container">
-                    <ul className="custom-list">
-                        {testTypes.map((type, index) => (
-                            <li key={index}>{type}</li>
-                        ))}
-                    </ul>
-                </div>
-
                 <div className="news-section">
-                    <h2 className="section-title">من اخبار قسم الاختبارات</h2>
+                    <h2 className="section-title" style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '2rem', marginBottom: '20px' }}>من اخبار قسم الاختبارات</h2>
                     {news.map((item, index) => (
                         <div key={index} className="news-item">
                             {item}
@@ -660,6 +504,16 @@ export default function ICMETTests() {
                     ))}
                 </div>
             </section>
+
+            {/* Modal Dialog */}
+            {selectedImg && (
+                <div className="modal-overlay" onClick={() => setSelectedImg(null)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <span className="close-modal">&times;</span>
+                        <img src={selectedImg} alt="Larger View" />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
