@@ -106,11 +106,11 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();    
 app.UseAuthorization();
-app.UseStaticFiles();
-app.MapFallbackToFile("index.html");
-
-
 app.MapControllers();
+app.MapFallbackToFile("index.html");
+app.UseStaticFiles();
+
+
 
 app.Run();
 
