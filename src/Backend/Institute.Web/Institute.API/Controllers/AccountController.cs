@@ -39,7 +39,13 @@ namespace Institute.API.Controllers
                 return Unauthorized("User not found in Clerk");
 
             var user = await _context.AppUsers
+                .IgnoreQueryFilters() // include deleted users
                 .FirstOrDefaultAsync(x => x.ClerkUserId == clerkUserId);
+
+            if (user != null && user.IsDeleted)
+            {
+                return BadRequest("This account has been deleted.");
+            }
 
             if (user == null)
             {
