@@ -95,7 +95,7 @@ public partial class AppDbContext : DbContext
                   .HasMaxLength(50);
             entity.Property(x => x.ClerkUserId)
                   .IsRequired();
-
+            entity.HasQueryFilter(u => !u.IsDeleted);
             entity.HasIndex(x => x.ClerkUserId)
                   .IsUnique();
             entity.Property(e => e.Email)

@@ -18,7 +18,7 @@ namespace Institute.Domain.Entities
         public string? Email { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
+        public bool IsDeleted { get; set; }
         // Navigation
         public ICollection<Cart> Carts { get; set; } = new HashSet<Cart>();
         public ICollection<Order> Orders { get; set; } = new HashSet<Order>();
