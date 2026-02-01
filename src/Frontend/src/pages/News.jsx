@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import './news.css';
 
 const News = () => {
@@ -94,21 +94,66 @@ const News = () => {
       `}</style>
 
             {/* Breadcrumb */}
-            <div className="overview_intro" style={{ position: 'sticky', top: '70px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '10px 20px', borderBottom: '1px solid #eee' }}>
+            <div className="overview_intro" style={{ position: 'relative', bottom: '65px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee' }}>
                 <span className="overview"><a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار</span>
             </div>
 
             {/* 4-Year Slider */}
-            <div style={{ padding: '20px 5%' }}>
-                <div style={{ background: '#f5f5f5', borderRadius: '4px', border: '1px solid #ddd', display: 'flex', alignItems: 'center', height: '42px', overflow: 'hidden' }}>
+            <div style={{ padding: '30px 5%', display: 'flex', justifyContent: 'center' }}>
+                <div style={{
+                    background: '#f5f5f5',
+                    borderRadius: '10px',
+                    border: '2px solid #ddd',
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '45px',
+                    overflow: 'hidden',
+                    maxWidth: '4000px', // Shorter container width
+                    width: '90%' // Responsive
+                }}>
                     <div onClick={() => handleScroll('right')} style={arrowStyle}>«</div>
-                    <div ref={scrollRef} className="timeline-scroller" style={{ display: 'flex', alignItems: 'center', overflowX: 'auto', flexGrow: 1, height: '100%', scrollBehavior: 'smooth' }}>
-                        <div style={{ display: 'flex', width: '50%' }}>
+                    <div ref={scrollRef} className="timeline-scroller" style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        overflowX: 'auto',
+                        flexGrow: 1,
+                        height: '100%',
+                        scrollBehavior: 'smooth'
+                    }}>
+                        <div style={{ display: 'flex', width: 'max-content' }}>
                             {years.map((year) => (
-                                <div key={year} onClick={() => setSelectedYear(year)} style={{ minWidth: '25%', height: '42px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', position: 'relative', flexShrink: 0, borderLeft: '1px solid rgba(0,0,0,0.05)' }}>
-                                    <span style={{ fontSize: selectedYear === year ? '1rem' : '0.85rem', fontWeight: selectedYear === year ? 'bold' : 'normal', color: selectedYear === year ? '#f57c00' : '#333' }}>{year}</span>
+                                <div
+                                    key={year}
+                                    onClick={() => setSelectedYear(year)}
+                                    style={{
+                                        minWidth: '80px', // Fixed width per year
+                                        height: '42px',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                        flexShrink: 0,
+                                        borderLeft: '1px solid rgba(0,0,0,0.05)'
+                                    }}
+                                >
+                                    <span style={{
+                                        fontSize: selectedYear === year ? '1rem' : '0.85rem',
+                                        fontWeight: selectedYear === year ? 'bold' : 'normal',
+                                        color: selectedYear === year ? '#f57c00' : '#333'
+                                    }}>
+                                        {year}
+                                    </span>
                                     {selectedYear === year && (
-                                        <div style={{ position: 'absolute', height: '100%', width: '100%', borderLeft: '2.5px solid #f57c00', borderRight: '2.5px solid #f57c00', backgroundColor: 'rgba(245, 124, 0, 0.05)', pointerEvents: 'none' }} />
+                                        <div style={{
+                                            position: 'absolute',
+                                            height: '100%',
+                                            width: '100%',
+                                            borderLeft: '2.5px solid #f57c00',
+                                            borderRight: '2.5px solid #f57c00',
+                                            backgroundColor: 'rgba(245, 124, 0, 0.05)',
+                                            pointerEvents: 'none'
+                                        }} />
                                     )}
                                 </div>
                             ))}
@@ -119,7 +164,7 @@ const News = () => {
             </div>
 
             {/* News Grid (Showing only 9 items) */}
-            <div className="news-content-wrapper" style={{ padding: '0 5% 50px' }}>
+            <div className="news-content-wrapper" style={{ padding: '1 8% 70px' }}>
                 <div className={`news-cards-grid ${animate ? 'active' : ''} news-fade-in`}>
 
                     {loading && <p style={{ textAlign: 'center', width: '100%', padding: '50px', color: '#f57c00' }}>جارٍ تحميل الأخبار...</p>}
