@@ -41,6 +41,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddHttpClient<ClerkService>();
 builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
 
@@ -106,11 +107,11 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();    
 app.UseAuthorization();
-app.UseStaticFiles();
-app.MapFallbackToFile("index.html");
-
-
 app.MapControllers();
+app.MapFallbackToFile("index.html");
+app.UseStaticFiles();
+
+
 
 app.Run();
 

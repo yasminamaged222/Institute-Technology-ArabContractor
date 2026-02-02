@@ -1,5 +1,4 @@
 ﻿using Institute.Infrastructure;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Svix;
@@ -28,10 +27,16 @@ namespace Institute.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Handle()
         {
-            var body = await new StreamReader(Request.Body).ReadToEndAsync();
-
             try
             {
+                // =========================
+                // READ BODY
+                // =========================
+                using var reader = new StreamReader(Request.Body);
+                var body = await reader.ReadToEndAsync();
+
+                _logger.LogInformation("Webhook body: " + body);
+
                 // =========================
                 // 🔒 VERIFY SIGNATURE
                 // =========================
@@ -39,21 +44,20 @@ namespace Institute.API.Controllers
                 var webhook = new Webhook(secret);
 
                 var headers = new System.Net.WebHeaderCollection();
-
                 foreach (var h in Request.Headers)
                 {
-                    headers.Add(h.Key, h.Value);
+                    headers.Add(h.Key, h.Value.FirstOrDefault() ?? "");
                 }
-                webhook.Verify(body, headers);
+
+                webhook.Verify(body, headers); // لو فشل، هيرمي Exception عادي
+                _logger.LogInformation("Webhook signature verified");
 
                 // =========================
                 // PARSE JSON
                 // =========================
-                var doc = System.Text.Json.JsonDocument.Parse(body);
-
+                using var doc = JsonDocument.Parse(body);
                 var type = doc.RootElement.GetProperty("type").GetString();
                 var data = doc.RootElement.GetProperty("data");
-
                 var clerkUserId = data.GetProperty("id").GetString();
 
                 _logger.LogInformation($"Webhook received: {type} for {clerkUserId}");
@@ -71,16 +75,15 @@ namespace Institute.API.Controllers
                     {
                         user.IsDeleted = true;
                         await _context.SaveChangesAsync();
-
                         _logger.LogInformation($"User soft deleted: {clerkUserId}");
                     }
                 }
 
                 return Ok();
             }
-            catch (Exception ex)
+            catch (Exception ex) // catch عام عشان يشمل كل الاستثناءات
             {
-                _logger.LogError(ex, "Webhook failed");
+                _logger.LogError(ex, "Webhook failed or signature invalid");
                 return Unauthorized();
             }
         }
