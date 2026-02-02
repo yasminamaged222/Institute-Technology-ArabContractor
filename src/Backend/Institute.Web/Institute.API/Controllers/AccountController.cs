@@ -44,6 +44,7 @@ namespace Institute.API.Controllers
 
             if (user != null && user.IsDeleted)
             {
+                user.IsDeleted = false;
                 return BadRequest("This account has been deleted.");
             }
 
