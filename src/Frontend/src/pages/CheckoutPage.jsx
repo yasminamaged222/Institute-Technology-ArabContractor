@@ -1,9 +1,8 @@
 ﻿import { useState, useEffect } from "react";
 import { ArrowRight, CreditCard, ShieldCheck, Lock, CheckCircle } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function CheckoutPage() {
-    const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -89,6 +88,7 @@ export default function CheckoutPage() {
 
         try {
             // Prepare order data for backend
+            // eslint-disable-next-line no-unused-vars
             const orderData = {
                 fullName: formData.fullName,
                 email: formData.email,
@@ -121,12 +121,6 @@ export default function CheckoutPage() {
             // const data = await response.json();
 
             // Simulate success
-            const mockPaymentUrl = `https://banquemisr.gateway.mastercard.com/checkout/pay/SESSION${Date.now()}`;
-
-            // In production, redirect to the payment gateway URL:
-            // window.location.href = data.paymentUrl;
-
-            // For demo purposes, show success message
             setPaymentSuccess(true);
 
             // Clear cart after successful order

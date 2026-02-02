@@ -1,5 +1,5 @@
 import { useSearchParams, Link } from 'react-router-dom';
-//import { coursesData } from '../data/coursesData';
+import { coursesData } from './coursesData';
 import './CourseDetails.css';
 
 const CourseDetails = () => {
