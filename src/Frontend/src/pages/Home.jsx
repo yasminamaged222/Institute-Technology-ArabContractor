@@ -213,221 +213,368 @@ const Home = () => {
 
     return (
         <Box sx={{ position: 'relative', overflowX: 'hidden' }}>
+
+
             <style>
                 {`
-            /* Specific Mobile Breakpoint - 588px to 599px */
-          @media only screen and (min-width: 588px) and (max-width: 599px) {
-            .hero-section { height: 52vh !important; }
-            .hero-subtitle { font-size: 0.95rem !important; }
-            .hero-title { font-size: 1.5rem !important; }
-            .hero-button { font-size: 0.88rem !important; padding: 13px 26px !important; }
-            .feature-card { min-height: 190px !important; }
-            .feature-icon { width: 36px !important; height: 36px !important; }
-            .feature-title { font-size: 0.98rem !important; }
-            .feature-subtitle { font-size: 0.76rem !important; }
-            .about-title { font-size: 1.4rem !important; }
-            .about-text { font-size: 0.9rem !important; }
-            .section-title { font-size: 1.55rem !important; }
-            .course-card-height { height: 110px !important; }
-            .course-title { font-size: 0.86rem !important; }
-            .news-card-title { font-size: 0.86rem !important; height: 54px !important; }
-    
-            /* Wider Search Bar for this range */
-            .search-bar-container { width: 95% !important; max-width: 550px !important; }
-          }
-          /* Mobile First - 320px to 479px */
-          @media only screen and (min-width: 320px) and (max-width: 479px) {
-            .hero-section { height: 45vh !important; }
-            .hero-subtitle { font-size: 0.8rem !important; }
-            .hero-title { font-size: 1.2rem !important; }
-            .hero-button { font-size: 0.8rem !important; padding: 10px 20px !important; }
-            .feature-card { min-height: 170px !important; width: 250px !important; }
-            .feature-icon { width: 32px !important; height: 32px !important; }
-            .feature-title { font-size: 0.9rem !important; }
-            .feature-subtitle { font-size: 0.7rem !important; }
-            .about-title { font-size: 1.2rem !important; }
-            .about-text { font-size: 0.85rem !important; }
-            .section-title { font-size: 1.4rem !important; }
-            .course-card-height { height: 95px !important; }
-            .course-title { font-size: 0.8rem !important; height: 30px !important; }
-            .course-subtitle { font-size: 0.65rem !important; }
-            .course-price { font-size: 0.85rem !important; }
-            .course-button { font-size: 0.7rem !important; padding: 6px 12px !important; }
-            .news-card-title { font-size: 0.8rem !important; height: 50px !important; }
-            .news-date { font-size: 0.6rem !important; }
-            .download-item-title { font-size: 0.8rem !important; }
-            .download-icon { font-size: 1.1rem !important; }
-          }
+/* ===================================
+   SWIPER GLOBAL FIXES
+   =================================== */
+.courses-swiper {
+    padding: 0 !important;
+    margin: 0 auto;
+    overflow: visible !important;
+}
 
-          /* Small Mobile - 480px to 599px */
-          @media only screen and (min-width: 480px) and (max-width: 599px) {
-            .hero-section { height: 50vh !important; }
-            .hero-subtitle { font-size: 0.9rem !important; }
-            .hero-title { font-size: 1.4rem !important; }
-            .hero-button { font-size: 0.85rem !important; padding: 12px 24px !important; }
-.feature-card { min-height: 28px  !important; width: 350px !important; }
-.feature-icon { width: 36px !important; height: 36px !important; }
-            .feature-title { font-size: 0.95rem !important; }
-            .feature-subtitle { font-size: 0.75rem !important; }
-            .about-title { font-size: 1.35rem !important; }
-            .about-text { font-size: 0.9rem !important; }
-            .section-title { font-size: 1.5rem !important; }
-            .course-card-height { height: 105px !important; }
-            .course-title { font-size: 0.85rem !important; height: 32px !important; }
-            .course-subtitle { font-size: 0.68rem !important; }
-            .course-price { font-size: 0.9rem !important; }
-            .course-button { font-size: 0.75rem !important; padding: 7px 14px !important; }
-            .news-card-title { font-size: 0.85rem !important; height: 52px !important; }
-            .news-date { font-size: 0.65rem !important; }
-            .download-item-title { font-size: 0.85rem !important; }
-            .download-icon { font-size: 1.2rem !important; }
-          }
+.courses-swiper .swiper-wrapper {
+    align-items: stretch;
+}
 
-          /* Tablet Portrait - 600px to 767px */
-          @media only screen and (min-width: 600px) and (max-width: 767px) {
-            .hero-section { height: 55vh !important; }
-            .hero-subtitle { font-size: 1rem !important; }
-            .hero-title { font-size: 1.6rem !important; }
-            .hero-button { font-size: 0.9rem !important; padding: 14px 28px !important; }
-            .feature-card { min-height: 28px  !important; width: 350px !important; }
-            .feature-icon { width: 38px !important; height: 38px !important; }
-            .feature-title { font-size: 1rem !important; }
-            .feature-subtitle { font-size: 0.78rem !important; }
-            .about-title { font-size: 1.5rem !important; }
-            .about-text { font-size: 0.92rem !important; }
-            .section-title { font-size: 1.65rem !important; }
-            .course-card-height { height: 115px !important; }
-            .course-title { font-size: 0.88rem !important; height: 34px !important; }
-            .course-subtitle { font-size: 0.7rem !important; }
-            .course-price { font-size: 0.95rem !important; }
-            .course-button { font-size: 0.8rem !important; padding: 8px 16px !important; }
-            .news-card-title { font-size: 0.88rem !important; height: 55px !important; }
-            .news-date { font-size: 0.68rem !important; }
-            .download-item-title { font-size: 0.88rem !important; }
-            .download-icon { font-size: 1.3rem !important; }
-          }
+.courses-swiper .swiper-slide {
+    height: auto;
+    display: flex;
+}
 
-          /* Tablet Landscape - 768px to 991px */
-          @media only screen and (min-width: 768px) and (max-width: 991px) {
-            .hero-section { height: 60vh !important; }
-            .hero-subtitle { font-size: 1.1rem !important; }
-            .hero-title { font-size: 2rem !important; }
-            .hero-button { font-size: 0.95rem !important; padding: 15px 32px !important; }
-            .feature-card { min-height: 28px  !important; width: 225px !important; }
-            .feature-icon { width: 42px !important; height: 42px !important; }
-            .feature-title { font-size: 1.05rem !important; }
-            .feature-subtitle { font-size: 0.8rem !important; }
-            .about-title { font-size: 1.65rem !important; }
-            .about-text { font-size: 0.95rem !important; }
-            .section-title { font-size: 1.8rem !important; }
-            .course-card-height { height: 125px !important; }
-            .course-title { font-size: 0.92rem !important; height: 36px !important; }
-            .course-subtitle { font-size: 0.72rem !important; }
-            .course-price { font-size: 1rem !important; }
-            .course-button { font-size: 0.85rem !important; padding: 9px 18px !important; }
-            .news-card-title { font-size: 0.92rem !important; height: 58px !important; }
-            .news-date { font-size: 0.7rem !important; }
-            .download-item-title { font-size: 0.92rem !important; }
-            .download-icon { font-size: 1.4rem !important; }
-          }
+/* ===================================
+   CARD HOVER EFFECTS
+   =================================== */
+.MuiCard-root {
+    position: relative;
+    overflow: hidden;
+}
 
-          /* Small Desktop - 992px to 1199px */
-          @media only screen and (min-width: 992px) and (max-width: 1199px) {
-            .hero-section { height: 70vh !important; }
-            .hero-subtitle { font-size: 1.25rem !important; }
-            .hero-title { font-size: 3rem !important; }
-            .hero-button { font-size: 1.05rem !important; padding: 16px 40px !important; }
-            .feature-card { min-height: 28px  !important; width: 270px !important; }
-            .feature-icon { width: 46px !important; height: 46px !important; }
-            .feature-title { font-size: 1.15rem !important; }
-            .feature-subtitle { font-size: 0.85rem !important; }
-            .about-title { font-size: 1.85rem !important; }
-            .about-text { font-size: 1.05rem !important; }
-            .section-title { font-size: 2rem !important; }
-            .course-card-height { height: 130px !important; }
-            .course-title { font-size: 0.96rem !important; height: 38px !important; }
-            .course-subtitle { font-size: 0.74rem !important; }
-            .course-price { font-size: 1.08rem !important; }
-            .course-button { font-size: 0.9rem !important; padding: 10px 20px !important; }
-            .news-card-title { font-size: 0.96rem !important; height: 62px !important; }
-            .news-date { font-size: 0.75rem !important; }
-            .download-item-title { font-size: 0.96rem !important; }
-            .download-icon { font-size: 1.6rem !important; }
-          }
+.MuiCard-root::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(8, 101, 168, 0.05) 0%, rgba(6, 74, 122, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+}
 
-          /* Medium Desktop - 1200px to 1439px */
-          @media only screen and (min-width: 1200px) and (max-width: 1439px) {
-            .hero-section { height: 75vh !important; }
-            .hero-subtitle { font-size: 1.4rem !important; }
-            .hero-title { font-size: 3.8rem !important; }
-            .hero-button { font-size: 1.15rem !important; padding: 18px 50px !important; }
-            .feature-card { min-height: 250px !important; width: 350px !important; }
-            .feature-icon { width: 48px !important; height: 48px !important; }
-            .feature-title { font-size: 1.2rem !important; }
-            .feature-subtitle { font-size: 0.88rem !important; }
-            .about-title { font-size: 1.95rem !important; }
-            .about-text { font-size: 1.08rem !important; }
-            .section-title { font-size: 2.08rem !important; }
-            .course-card-height { height: 133px !important; }
-            .course-title { font-size: 0.98rem !important; height: 39px !important; }
-            .course-subtitle { font-size: 0.75rem !important; }
-            .course-price { font-size: 1.1rem !important; }
-            .course-button { font-size: 0.93rem !important; padding: 10px 20px !important; }
-            .news-card-title { font-size: 1rem !important; height: 66px !important; }
-            .news-date { font-size: 0.78rem !important; }
-            .download-item-title { font-size: 0.98rem !important; }
-            .download-icon { font-size: 1.8rem !important; }
-          }
+.MuiCard-root:hover::before {
+    opacity: 1;
+}
 
-          /* Large Desktop - 1440px to 1919px */
-          @media only screen and (min-width: 1440px) and (max-width: 1919px) {
-            .hero-section { height: 80vh !important; }
-            .hero-subtitle { font-size: 1.55rem !important; }
-            .hero-title { font-size: 4.3rem !important; }
-            .hero-button { font-size: 1.25rem !important; padding: 20px 56px !important; }
-            .feature-card { min-height: 260px !important; }
-            .feature-icon { width: 50px !important; height: 50px !important; }
-            .feature-title { font-size: 1.25rem !important; }
-            .feature-subtitle { font-size: 0.9rem !important; }
-            .about-title { font-size: 2rem !important; }
-            .about-text { font-size: 1.1rem !important; }
-            .section-title { font-size: 2.125rem !important; }
-            .course-card-height { height: 135px !important; }
-            .course-title { font-size: 1rem !important; height: 40px !important; }
-            .course-subtitle { font-size: 0.75rem !important; }
-            .course-price { font-size: 1.125rem !important; }
-            .course-button { font-size: 0.95rem !important; padding: 10px 20px !important; }
-            .news-card-title { font-size: 1.08rem !important; height: 68px !important; }
-            .news-date { font-size: 0.8rem !important; }
-            .download-item-title { font-size: 1rem !important; }
-            .download-icon { font-size: 2rem !important; }
-          }
+.course-card-image {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
 
-          /* Extra Large Desktop - 1920px and above */
-          @media only screen and (min-width: 1920px) {
-            .hero-section { height: 85vh !important; }
-            .hero-subtitle { font-size: 1.7rem !important; }
-            .hero-title { font-size: 5rem !important; }
-            .hero-button { font-size: 1.35rem !important; padding: 22px 64px !important; }
-            .feature-card { min-height: 28px  !important; width: 350px !important; }
-            .feature-icon { width: 54px !important; height: 54px !important; }
-            .feature-title { font-size: 1.35rem !important; }
-            .feature-subtitle { font-size: 0.95rem !important; }
-            .about-title { font-size: 2.2rem !important; }
-            .about-text { font-size: 1.15rem !important; }
-            .section-title { font-size: 2.3rem !important; }
-            .course-card-height { height: 145px !important; }
-            .course-title { font-size: 1.05rem !important; height: 42px !important; }
-            .course-subtitle { font-size: 0.78rem !important; }
-            .course-price { font-size: 1.2rem !important; }
-            .course-button { font-size: 1rem !important; padding: 11px 22px !important; }
-            .news-card-title { font-size: 1.15rem !important; height: 72px !important; }
-            .news-date { font-size: 0.85rem !important; }
-            .download-item-title { font-size: 1.05rem !important; }
-            .download-icon { font-size: 2.2rem !important; }
-          }
-        `}
+.course-button {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    z-index: 2;
+}
+
+
+/* ===================================
+   MOBILE FIRST - 320px to 479px
+   =================================== */
+@media only screen and (min-width: 320px) and (max-width: 479px) {
+    .courses-swiper { max-width: 100% !important; padding: 0 8px !important; }
+    .hero-section { height: 45vh !important; }
+    .hero-subtitle { font-size: 0.8rem !important; }
+    .hero-title { font-size: 1.2rem !important; }
+    .hero-button { font-size: 0.8rem !important; padding: 10px 20px !important; }
+    .feature-card { min-height: 170px !important; width: 250px !important; max-width: 280px; margin: 0 auto; }
+    .feature-icon { width: 32px !important; height: 32px !important; }
+    .feature-title { font-size: 0.9rem !important; }
+    .feature-subtitle { font-size: 0.7rem !important; }
+    .about-title { font-size: 1.2rem !important; }
+    .about-text { font-size: 0.85rem !important; }
+    .section-title { font-size: 1.3rem !important; margin-bottom: 1.5rem !important; }
+    .course-card-height { height: 95px !important; }
+    .course-title { font-size: 0.8rem !important; min-height: 32px !important; }
+    .course-subtitle { font-size: 0.65rem !important; }
+    .course-price { font-size: 0.85rem !important; }
+    .course-button { font-size: 0.7rem !important; padding: 6px 12px !important; }
+    .news-card-title { font-size: 0.8rem !important; height: 50px !important; }
+    .news-date { font-size: 0.6rem !important; }
+    .download-item-title { font-size: 0.8rem !important; }
+    .download-icon { font-size: 1.1rem !important; }
+    .search-bar-container { width: 95% !important; max-width: 300px !important; }
+}
+
+/* ===================================
+   SMALL MOBILE - 480px to 599px
+   =================================== */
+@media only screen and (min-width: 480px) and (max-width: 599px) {
+    .courses-swiper { max-width: 100% !important; padding: 0 10px !important; }
+    .hero-section { height: 50vh !important; }
+    .hero-subtitle { font-size: 0.9rem !important; }
+    .hero-title { font-size: 1.4rem !important; }
+    .hero-button { font-size: 0.85rem !important; padding: 12px 24px !important; }
+    .feature-card { min-height: 180px !important; width: 300px !important; max-width: 350px; margin: 0 auto; }
+    .feature-icon { width: 36px !important; height: 36px !important; }
+    .feature-title { font-size: 0.95rem !important; }
+    .feature-subtitle { font-size: 0.75rem !important; }
+    .about-title { font-size: 1.35rem !important; }
+    .about-text { font-size: 0.9rem !important; }
+    .section-title { font-size: 1.5rem !important; margin-bottom: 1.75rem !important; }
+    .course-card-height { height: 105px !important; }
+    .course-title { font-size: 0.85rem !important; min-height: 36px !important; }
+    .course-subtitle { font-size: 0.68rem !important; }
+    .course-price { font-size: 0.9rem !important; }
+    .course-button { font-size: 0.75rem !important; padding: 7px 14px !important; }
+    .news-card-title { font-size: 0.85rem !important; height: 52px !important; }
+    .news-date { font-size: 0.65rem !important; }
+    .download-item-title { font-size: 0.85rem !important; }
+    .download-icon { font-size: 1.2rem !important; }
+    .search-bar-container { width: 95% !important; max-width: 400px !important; }
+}
+
+/* ===================================
+   SPECIFIC MOBILE - 588px to 599px
+   =================================== */
+@media only screen and (min-width: 588px) and (max-width: 599px) {
+    .hero-section { height: 52vh !important; }
+    .hero-subtitle { font-size: 0.95rem !important; }
+    .hero-title { font-size: 1.5rem !important; }
+    .hero-button { font-size: 0.88rem !important; padding: 13px 26px !important; }
+    .feature-card { min-height: 190px !important; width: 250px !important; max-width: 400px; margin: 0 auto; }
+    .feature-icon { width: 36px !important; height: 36px !important; }
+    .feature-title { font-size: 0.98rem !important; }
+    .feature-subtitle { font-size: 0.76rem !important; }
+    .about-title { font-size: 1.4rem !important; }
+    .about-text { font-size: 0.9rem !important; }
+    .section-title { font-size: 1.55rem !important; }
+    .course-card-height { height: 110px !important; }
+    .course-title { font-size: 0.86rem !important; }
+    .news-card-title { font-size: 0.86rem !important; height: 54px !important; }
+    .search-bar-container { width: 95% !important; max-width: 550px !important; }
+}
+
+/* ===================================
+   TABLET PORTRAIT - 600px to 767px
+   =================================== */
+@media only screen and (min-width: 600px) and (max-width: 767px) {
+    .courses-swiper { max-width: 100% !important; padding: 0 12px !important; }
+    .hero-section { height: 55vh !important; }
+    .hero-subtitle { font-size: 1rem !important; }
+    .hero-title { font-size: 1.6rem !important; }
+    .hero-button { font-size: 0.9rem !important; padding: 14px 28px !important; }
+    .feature-card { min-height: 200px !important;width: 250px !important; max-width: 350px; }
+    .feature-icon { width: 38px !important; height: 38px !important; }
+    .feature-title { font-size: 1rem !important; }
+    .feature-subtitle { font-size: 0.78rem !important; }
+    .about-title { font-size: 1.5rem !important; }
+    .about-text { font-size: 0.92rem !important; }
+    .section-title { font-size: 1.65rem !important; margin-bottom: 2rem !important; }
+    .course-card-height { height: 115px !important; }
+    .course-title { font-size: 0.88rem !important; min-height: 38px !important; }
+    .course-subtitle { font-size: 0.7rem !important; }
+    .course-price { font-size: 0.95rem !important; }
+    .course-button { font-size: 0.8rem !important; padding: 8px 16px !important; }
+    .news-card-title { font-size: 0.88rem !important; height: 55px !important; }
+    .news-date { font-size: 0.68rem !important; }
+    .download-item-title { font-size: 0.88rem !important; }
+    .download-icon { font-size: 1.3rem !important; }
+}
+
+/* ===================================
+   TABLET LANDSCAPE - 768px to 991px
+   =================================== */
+@media only screen and (min-width: 768px) and (max-width: 991px) {
+    .courses-swiper { max-width: 100% !important; padding: 0 15px !important; }
+    .hero-section { height: 60vh !important; }
+    .hero-subtitle { font-size: 1.1rem !important; }
+    .hero-title { font-size: 2rem !important; }
+    .hero-button { font-size: 0.95rem !important; padding: 15px 32px !important; }
+    .feature-card { min-height: 220px !important;width: 300px !important; }
+    .feature-icon { width: 42px !important; height: 42px !important; }
+    .feature-title { font-size: 1.05rem !important; }
+    .feature-subtitle { font-size: 0.8rem !important; }
+    .about-title { font-size: 1.65rem !important; }
+    .about-text { font-size: 0.95rem !important; }
+    .section-title { font-size: 1.8rem !important; margin-bottom: 2.5rem !important; }
+    .course-card-height { height: 125px !important; }
+    .course-title { font-size: 0.92rem !important; min-height: 40px !important; }
+    .course-subtitle { font-size: 0.72rem !important; }
+    .course-price { font-size: 1rem !important; }
+    .course-button { font-size: 0.85rem !important; padding: 9px 18px !important; }
+    .news-card-title { font-size: 0.92rem !important; height: 58px !important; }
+    .news-date { font-size: 0.7rem !important; }
+    .download-item-title { font-size: 0.92rem !important; }
+    .download-icon { font-size: 1.4rem !important; }
+}
+
+/* ===================================
+   SMALL DESKTOP - 992px to 1199px
+   =================================== */
+@media only screen and (min-width: 992px) and (max-width: 1199px) {
+    .courses-swiper { max-width: 100% !important; }
+    .hero-section { height: 70vh !important; }
+    .hero-subtitle { font-size: 1.25rem !important; }
+    .hero-title { font-size: 3rem !important; }
+    .hero-button { font-size: 1.05rem !important; padding: 16px 40px !important; }
+    .feature-card { min-height: 240px !important; width: 300px !important; }
+    .feature-icon { width: 46px !important; height: 46px !important; }
+    .feature-title { font-size: 1.15rem !important; }
+    .feature-subtitle { font-size: 0.85rem !important; }
+    .about-title { font-size: 1.85rem !important; }
+    .about-text { font-size: 1.05rem !important; }
+    .section-title { font-size: 2rem !important; margin-bottom: 3rem !important; }
+    .course-card-height { height: 130px !important; }
+    .course-title { font-size: 0.96rem !important; min-height: 42px !important; }
+    .course-subtitle { font-size: 0.74rem !important; }
+    .course-price { font-size: 1.08rem !important; }
+    .course-button { font-size: 0.9rem !important; padding: 10px 20px !important; }
+    .news-card-title { font-size: 0.96rem !important; height: 62px !important; }
+    .news-date { font-size: 0.75rem !important; }
+    .download-item-title { font-size: 0.96rem !important; }
+    .download-icon { font-size: 1.6rem !important; }
+}
+
+/* ===================================
+   MEDIUM DESKTOP - 1200px to 1439px
+   =================================== */
+@media only screen and (min-width: 1200px) and (max-width: 1439px) {
+    .courses-swiper { max-width: 100% !important; }
+    .hero-section { height: 75vh !important; }
+    .hero-subtitle { font-size: 1.4rem !important; }
+    .hero-title { font-size: 3.8rem !important; }
+    .hero-button { font-size: 1.15rem !important; padding: 18px 50px !important; }
+    .feature-card { min-height: 250px !important; width: 350px !important; }
+    .feature-icon { width: 48px !important; height: 48px !important; }
+    .feature-title { font-size: 1.2rem !important; }
+    .feature-subtitle { font-size: 0.88rem !important; }
+    .about-title { font-size: 1.95rem !important; }
+    .about-text { font-size: 1.08rem !important; }
+    .section-title { font-size: 2.08rem !important; margin-bottom: 3rem !important; }
+    .course-card-height { height: 133px !important; }
+    .course-title { font-size: 0.98rem !important; min-height: 42px !important; }
+    .course-subtitle { font-size: 0.75rem !important; }
+    .course-price { font-size: 1.1rem !important; }
+    .course-button { font-size: 0.93rem !important; padding: 10px 20px !important; }
+    .news-card-title { font-size: 1rem !important; height: 66px !important; }
+    .news-date { font-size: 0.78rem !important; }
+    .download-item-title { font-size: 0.98rem !important; }
+    .download-icon { font-size: 1.8rem !important; }
+}
+
+/* ===================================
+   LARGE DESKTOP - 1440px to 1919px
+   =================================== */
+@media only screen and (min-width: 1440px) and (max-width: 1919px) {
+    .courses-swiper { max-width: 100% !important; }
+    .hero-section { height: 80vh !important; }
+    .hero-subtitle { font-size: 1.55rem !important; }
+    .hero-title { font-size: 4.3rem !important; }
+    .hero-button { font-size: 1.25rem !important; padding: 20px 56px !important; }
+    .feature-card { min-height: 260px !important; width: 373px !important; }
+    .feature-icon { width: 50px !important; height: 50px !important; }
+    .feature-title { font-size: 1.25rem !important; }
+    .feature-subtitle { font-size: 0.90rem !important; }
+    .about-title { font-size: 2rem !important; }
+    .about-text { font-size: 1.1rem !important; }
+    .section-title { font-size: 2.125rem !important; margin-bottom: 3rem !important; }
+    .course-card-height { height: 135px !important; }
+    .course-title { font-size: 1rem !important; min-height: 44px !important; }
+    .course-subtitle { font-size: 0.75rem !important; }
+    .course-price { font-size: 1.125rem !important; }
+    .course-button { font-size: 0.95rem !important; padding: 10px 20px !important; }
+    .news-card-title { font-size: 1.08rem !important; height: 68px !important; }
+    .news-date { font-size: 0.8rem !important; }
+    .download-item-title { font-size: 1rem !important; }
+    .download-icon { font-size: 2rem !important; }
+}
+
+/* ===================================
+   EXTRA LARGE DESKTOP - 1920px+
+   =================================== */
+@media only screen and (min-width: 1920px) {
+    .courses-swiper { max-width: 100% !important; }
+    .hero-section { height: 85vh !important; }
+    .hero-subtitle { font-size: 1.7rem !important; }
+    .hero-title { font-size: 5rem !important; }
+    .hero-button { font-size: 1.35rem !important; padding: 22px 64px !important; }
+    .feature-card { min-height: 280px !important; width: 350px !important; }
+    .feature-icon { width: 54px !important; height: 54px !important; }
+    .feature-title { font-size: 1.35rem !important; }
+    .feature-subtitle { font-size: 0.95rem !important; }
+    .about-title { font-size: 2.2rem !important; }
+    .about-text { font-size: 1.15rem !important; }
+    .section-title { font-size: 2.3rem !important; margin-bottom: 3.5rem !important; }
+    .course-card-height { height: 145px !important; }
+    .course-title { font-size: 1.05rem !important; min-height: 46px !important; }
+    .course-subtitle { font-size: 0.78rem !important; }
+    .course-price { font-size: 1.2rem !important; }
+    .course-button { font-size: 1rem !important; padding: 11px 22px !important; }
+    .news-card-title { font-size: 1.15rem !important; height: 72px !important; }
+    .news-date { font-size: 0.85rem !important; }
+    .download-item-title { font-size: 1.05rem !important; }
+    .download-icon { font-size: 2.2rem !important; }
+}
+
+/* ===================================
+   NAVIGATION ARROWS RESPONSIVE
+   =================================== */
+@media only screen and (max-width: 599px) {
+    .custom-prev, .custom-next { display: none !important; }
+}
+
+.custom-prev, .custom-next {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 8px rgba(8, 101, 168, 0.2);
+}
+
+.custom-prev:hover, .custom-next:hover {
+    box-shadow: 0 4px 16px rgba(8, 101, 168, 0.3) !important;
+}
+
+.custom-prev:active, .custom-next:active {
+    transform: translateY(-50%) scale(0.95) !important;
+}
+
+
+/* ===================================
+   RTL OPTIMIZATION
+   =================================== */
+[dir="rtl"] .courses-swiper { direction: rtl; }
+[dir="rtl"] .custom-prev { right: -25px; left: auto; }
+[dir="rtl"] .custom-next { left: -25px; right: auto; }
+
+/* ===================================
+   PERFORMANCE OPTIMIZATIONS
+   =================================== */
+.courses-swiper * {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+}
+
+/* Smooth scrolling */
+.courses-swiper .swiper-wrapper {
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Prevent text selection during swipe */
+.courses-swiper {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Enable text selection inside cards */
+.MuiCard-root {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+`}
             </style>
+
+
+
             {/* Hero Slider */}
             <Box className="hero-section" sx={{ position: 'relative' }}>
                 <Box
@@ -684,7 +831,7 @@ const Home = () => {
             {/* New Section: Downloads (التحميلات) */}
             <div style={{
                 width: '100%',
-                padding: '100px 0',
+                padding: '50px 0',
                 backgroundImage: 'linear-gradient(#000000, #0865a8)',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
@@ -695,6 +842,7 @@ const Home = () => {
                 <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
                     <Typography
                         variant="h3"
+                        className="section-title"
                         sx={{
                             fontWeight: 'bold',
                             mb: { xs: 4, md: 6 },
@@ -716,9 +864,9 @@ const Home = () => {
                         تحميـلات
                     </Typography>
 
-                    <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
+                    <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center" alignItems="stretch">
                         {downloadItems.map((item, index) => (
-                            <Grid item xs={12} sm={6} md={4} key={index}>
+                            <Grid item xs={12} sm={6} md={4} key={index} sx={{ display: 'flex' }}>
                                 <Paper
                                     elevation={2}
                                     component="a"
@@ -735,6 +883,10 @@ const Home = () => {
                                         bgcolor: 'white',
                                         cursor: 'pointer',
                                         textDecoration: 'none',
+                                        // FIXED SIZING START
+                                        width: '270px',      // Fixed width: all boxes will be exactly this wide
+                                        minHeight: '100px',   // Fixed height: all boxes will be exactly this tall
+                                        // FIXED SIZING END
                                         '&:hover': {
                                             transform: { xs: 'translateY(-3px)', md: 'translateY(-8px)' },
                                             boxShadow: '0 12px 25px rgba(0,0,0,0.2)'
@@ -750,11 +902,15 @@ const Home = () => {
                                         justifyContent: 'center',
                                         ml: 1
                                     }}>
-                                        <item.Icon sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }} />
+                                        <item.Icon
+                                            className="download-icon"
+                                            sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}
+                                        />
                                     </Box>
 
                                     <Typography
                                         variant="h6"
+                                        className="download-item-title"
                                         sx={{
                                             color: '#000',
                                             fontWeight: 'bold',
@@ -780,41 +936,58 @@ const Home = () => {
                 sx={{
                     py: { xs: 4, sm: 6, md: 10 },
                     bgcolor: '#fff',
-                    px: { xs: 2, sm: 3 }
+                    px: { xs: 2, sm: 3, md: 4 }
                 }}
             >
-                <Typography
-                    variant="h4"
-                    fontWeight="bold"
-                    sx={{
-                        mb: { xs: 3, md: 4 },
-                        color: '#0865a8',
-                        fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.125rem' },
-                        textAlign: 'center',
-                        fontFamily: '"Droid Arabic Kufi", serif'
-                    }}
-                >
-                    البرامج التدريبية
-                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 3, md: 4 } }}>
+                    <Typography
+                        variant="h4"
+                        fontWeight="bold"
+                        className="section-title"
+                        sx={{
+                            mb: 1,
+                            color: '#0865a8',
+                            fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.125rem' },
+                            textAlign: 'center',
+                            fontFamily: '"Droid Arabic Kufi", serif'
+                        }}
+                    >
+                        البرامج التدريبية
+                    </Typography>
+                    <Box
+                        sx={{
+                            width: { xs: '60px', sm: '80px', md: '100px' },
+                            height: '4px',
+                            background: 'linear-gradient(90deg, #0865a8 0%, #f39c12 100%)',
+                            borderRadius: '2px'
+                        }}
+                    />
+                </Box>
+
                 <Box sx={{ position: 'relative' }}>
                     <Swiper
+                        className="courses-swiper"
                         modules={[Autoplay, Navigation]}
-                        autoplay={{ delay: 5000 }}
+                        autoplay={{ delay: 5000, disableOnInteraction: false }}
                         navigation={{
                             nextEl: '.custom-next',
                             prevEl: '.custom-prev',
                         }}
                         spaceBetween={15}
-                        slidesPerView={4}
+                        slidesPerView={1.2}
+                        centeredSlides={false}
                         breakpoints={{
-                            480: { slidesPerView: 2, spaceBetween: 10 },
+                            320: { slidesPerView: 1.5, spaceBetween: 10 },
+                            480: { slidesPerView: 2, spaceBetween: 12 },
+                            600: { slidesPerView: 2.5, spaceBetween: 15 },
                             768: { slidesPerView: 3, spaceBetween: 15 },
-                            1024: { slidesPerView: 4, spaceBetween: 15 },
-                            1440: { slidesPerView: 5, spaceBetween: 15 },
+                            992: { slidesPerView: 4, spaceBetween: 15 },
+                            1200: { slidesPerView: 4, spaceBetween: 20 },
+                            1440: { slidesPerView: 5, spaceBetween: 20 },
                         }}
                     >
                         {courses.map((course, index) => (
-                            <SwiperSlide key={index}>
+                            <SwiperSlide key={index} style={{ height: 'auto', display: 'flex' }}>
                                 <Card
                                     onMouseEnter={(e) => handlePopoverOpen(e, course)}
                                     onMouseLeave={handlePopoverClose}
@@ -822,87 +995,158 @@ const Home = () => {
                                         height: '100%',
                                         display: 'flex',
                                         flexDirection: 'column',
-                                        borderRadius: { xs: 3, md: 5 },
+                                        borderRadius: { xs: 2, sm: 3, md: 4 },
                                         border: '0.5px solid #0865a8',
-                                        boxShadow: 'none',
-                                        transition: '0.1s',
+                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                         cursor: 'pointer',
-                                        '&:hover': { opacity: 0.5 },
+                                        willChange: 'transform, box-shadow, opacity',
+                                        '&:hover': {
+                                            transform: 'translateY(-6px)',
+                                            boxShadow: '0 8px 24px rgba(8, 101, 168, 0.2)',
+                                            borderColor: '#064a7a',
+                                            '& .course-card-image': {
+                                                transform: 'scale(1.05)',
+                                            },
+                                            '& .course-button': {
+                                                bgcolor: '#064a7a',
+                                                transform: 'scale(1.02)',
+                                            }
+                                        },
                                     }}
                                 >
                                     {/* Header: Course Icon */}
-                                    <Box sx={{
-                                        height: { xs: 100, sm: 120, md: 135 },
-                                        overflow: 'hidden',
-                                        bgcolor: '#f7f9fa',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}>
+                                    <Box
+                                        className="course-card-height"
+                                        sx={{
+                                            height: {
+                                                xs: '95px',
+                                                sm: '110px',
+                                                md: '120px',
+                                                lg: '130px',
+                                                xl: '140px'
+                                            },
+                                            overflow: 'hidden',
+                                            bgcolor: '#f7f9fa',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            borderRadius: { xs: '8px 8px 0 0', md: '16px 16px 0 0' }
+                                        }}
+                                    >
                                         <Box
                                             component="img"
+                                            className="course-card-image"
                                             src={course.icon}
                                             alt={course.title}
-                                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            sx={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover',
+                                                transition: 'transform 0.3s ease'
+                                            }}
                                         />
                                     </Box>
-                                    <CardContent sx={{ p: { xs: 1.2, md: 1.5 }, flexGrow: 1 }}>
+
+                                    <CardContent
+                                        sx={{
+                                            p: { xs: 1.2, sm: 1.5, md: 2 },
+                                            flexGrow: 1,
+                                            display: 'flex',
+                                            flexDirection: 'column'
+                                        }}
+                                    >
                                         <Typography
                                             variant="subtitle1"
                                             fontWeight="bold"
+                                            className="course-title"
                                             sx={{
-                                                lineHeight: 1.2,
+                                                lineHeight: 1.3,
                                                 mb: 0.5,
-                                                height: { xs: 32, sm: 35, md: 40 },
+                                                minHeight: { xs: '32px', sm: '36px', md: '40px' },
                                                 overflow: 'hidden',
                                                 display: '-webkit-box',
                                                 WebkitLineClamp: 2,
                                                 WebkitBoxOrient: 'vertical',
-                                                fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
+                                                fontSize: {
+                                                    xs: '0.8rem',
+                                                    sm: '0.88rem',
+                                                    md: '0.95rem',
+                                                    lg: '1rem'
+                                                },
                                                 color: '#000',
                                                 fontFamily: '"Droid Arabic Kufi", serif'
                                             }}
                                         >
                                             {course.title}
                                         </Typography>
+
                                         <Typography
                                             variant="caption"
                                             color="text.secondary"
                                             display="block"
+                                            className="course-subtitle"
                                             sx={{
                                                 mb: 1,
-                                                fontSize: { xs: '0.65rem', sm: '0.7rem', md: '0.75rem' },
+                                                fontSize: {
+                                                    xs: '0.65rem',
+                                                    sm: '0.7rem',
+                                                    md: '0.75rem'
+                                                },
                                                 fontFamily: '"Droid Arabic Kufi", serif'
                                             }}
                                         >
                                             {course.subtitle}
                                         </Typography>
+
                                         <Typography
                                             variant="h6"
                                             fontWeight="bold"
+                                            className="course-price"
                                             sx={{
-                                                fontSize: { xs: '0.9rem', sm: '0.95rem', md: '1.125rem' },
+                                                fontSize: {
+                                                    xs: '0.85rem',
+                                                    sm: '0.95rem',
+                                                    md: '1rem',
+                                                    lg: '1.125rem'
+                                                },
                                                 color: '#000',
-                                                fontFamily: '"Droid Arabic Kufi", serif'
+                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                mt: 'auto'
                                             }}
                                         >
                                             100ج.م
                                         </Typography>
                                     </CardContent>
 
-                                    <CardActions sx={{ p: { xs: 1.2, md: 1.5 }, pt: 0 }}>
+                                    <CardActions
+                                        sx={{
+                                            p: { xs: 1.2, sm: 1.5, md: 2 },
+                                            pt: 0
+                                        }}
+                                    >
                                         <Button
                                             fullWidth
                                             variant="contained"
+                                            className="course-button"
                                             sx={{
                                                 bgcolor: '#0865a8',
-                                                borderRadius: { xs: 3, md: 5 },
+                                                borderRadius: { xs: 2, sm: 3, md: 4 },
                                                 fontWeight: 'bold',
                                                 textTransform: 'none',
-                                                fontSize: { xs: '0.75rem', sm: '0.85rem', md: '0.95rem' },
-                                                py: { xs: 0.7, sm: 0.8, md: 1 },
+                                                fontSize: {
+                                                    xs: '0.7rem',
+                                                    sm: '0.8rem',
+                                                    md: '0.9rem',
+                                                    lg: '0.95rem'
+                                                },
+                                                py: { xs: 0.7, sm: 0.9, md: 1 },
                                                 fontFamily: '"Droid Arabic Kufi", serif',
-                                                '&:hover': { bgcolor: '#064a7a' },
+                                                transition: 'all 0.3s ease',
+                                                '&:hover': {
+                                                    bgcolor: '#064a7a',
+                                                    transform: 'scale(1.02)'
+                                                },
                                             }}
                                         >
                                             إضافة إلى السلة
@@ -918,45 +1162,72 @@ const Home = () => {
                         className="custom-prev"
                         sx={{
                             position: 'absolute',
-                            left: { xs: -15, sm: -20, md: -25 },
-                            top: '40%',
+                            left: { xs: -10, sm: -15, md: -20, lg: -25 },
+                            top: '50%',
+                            transform: 'translateY(-50%)',
                             zIndex: 10,
                             bgcolor: '#0865a8',
                             color: 'white',
                             borderRadius: '50%',
-                            width: { xs: 30, sm: 35, md: 48 },
-                            height: { xs: 30, sm: 35, md: 48 },
+                            width: { xs: 32, sm: 38, md: 44, lg: 48 },
+                            height: { xs: 32, sm: 38, md: 44, lg: 48 },
                             display: { xs: 'none', sm: 'flex' },
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
                             border: '1px solid #064a7a',
-                            '&:hover': { bgcolor: '#064a7a' }
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                bgcolor: '#064a7a',
+                                transform: 'translateY(-50%) scale(1.1)'
+                            }
                         }}
                     >
-                        <Typography variant="h4" sx={{ mt: -0.5, fontSize: { sm: '1.2rem', md: '2.125rem' } }}>‹</Typography>
+                        <Typography
+                            variant="h4"
+                            sx={{
+                                mt: -0.5,
+                                fontSize: { sm: '1.2rem', md: '1.8rem', lg: '2.125rem' }
+                            }}
+                        >
+                            ‹
+                        </Typography>
                     </Box>
+
                     <Box
                         className="custom-next"
                         sx={{
                             position: 'absolute',
-                            right: { xs: -15, sm: -20, md: -25 },
-                            top: '40%',
+                            right: { xs: -10, sm: -15, md: -20, lg: -25 },
+                            top: '50%',
+                            transform: 'translateY(-50%)',
                             zIndex: 10,
                             bgcolor: '#0865a8',
                             color: 'white',
                             borderRadius: '50%',
-                            width: { xs: 30, sm: 35, md: 48 },
-                            height: { xs: 30, sm: 35, md: 48 },
+                            width: { xs: 32, sm: 38, md: 44, lg: 48 },
+                            height: { xs: 32, sm: 38, md: 44, lg: 48 },
                             display: { xs: 'none', sm: 'flex' },
                             alignItems: 'center',
                             justifyContent: 'center',
                             cursor: 'pointer',
                             border: '1px solid #064a7a',
-                            '&:hover': { bgcolor: '#064a7a' }
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                                bgcolor: '#064a7a',
+                                transform: 'translateY(-50%) scale(1.1)'
+                            }
                         }}
                     >
-                        <Typography variant="h4" sx={{ mt: -0.5, fontSize: { sm: '1.2rem', md: '2.125rem' } }}>›</Typography>
+                        <Typography
+                            variant="h4"
+                            sx={{
+                                mt: -0.5,
+                                fontSize: { sm: '1.2rem', md: '1.8rem', lg: '2.125rem' }
+                            }}
+                        >
+                            ›
+                        </Typography>
                     </Box>
                 </Box>
 
@@ -977,7 +1248,10 @@ const Home = () => {
                             if (closeTimer) clearTimeout(closeTimer);
                         },
                         onMouseLeave: handlePopoverClose,
-                        sx: { pointerEvents: 'auto' }
+                        sx: {
+                            pointerEvents: 'auto',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                        }
                     }}
                 >
                     <Box sx={{ p: 3, maxWidth: 350, bgcolor: '#fff', pointerEvents: 'auto' }}>
@@ -986,13 +1260,14 @@ const Home = () => {
                             fontWeight="bold"
                             gutterBottom
                             sx={{
-                                lineHeight: 1.2,
+                                lineHeight: 1.3,
                                 color: '#000',
                                 fontFamily: '"Droid Arabic Kufi", serif'
                             }}
                         >
                             {selectedCourse?.title}
                         </Typography>
+
                         <Typography
                             variant="caption"
                             color="success.main"
@@ -1005,6 +1280,7 @@ const Home = () => {
                         >
                             تم التحديث مؤخراً
                         </Typography>
+
                         <Typography
                             variant="body2"
                             color="text.secondary"
@@ -1026,10 +1302,11 @@ const Home = () => {
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 1,
+                                        mb: 0.5,
                                         fontFamily: '"Droid Arabic Kufi", serif'
                                     }}
                                 >
-                                    <span>✓</span> {text}
+                                    <span style={{ color: '#0865a8', fontWeight: 'bold' }}>✓</span> {text}
                                 </Typography>
                             ))}
                         </Box>
@@ -1041,11 +1318,14 @@ const Home = () => {
                                 borderColor: '#0865a8',
                                 color: '#0865a8',
                                 fontWeight: 'bold',
-                                borderRadius: 5,
+                                borderRadius: 4,
+                                py: 1,
                                 fontFamily: '"Droid Arabic Kufi", serif',
+                                transition: 'all 0.3s ease',
                                 '&:hover': {
                                     borderColor: '#064a7a',
-                                    bgcolor: 'rgba(8, 101, 168, 0.05)'
+                                    bgcolor: 'rgba(8, 101, 168, 0.08)',
+                                    transform: 'translateY(-2px)'
                                 }
                             }}
                         >
