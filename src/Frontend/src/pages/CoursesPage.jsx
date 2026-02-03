@@ -1,80 +1,360 @@
-﻿import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+
+const styles = {
+    overviewBar: {
+        position: 'fixed',
+        left: 0,
+        top: '64px',
+        zIndex: 40,
+        width: '100%',
+        borderBottom: '1px solid #d1d5db',
+        backgroundColor: '#F5F7E1',
+        padding: '8px 20px',
+        boxSizing: 'border-box',
+    },
+    overviewBarText: {
+        textAlign: 'center',
+        fontSize: '14px',
+    },
+    breadcrumbLink: {
+        marginLeft: '12px',
+        color: '#374151',
+        textDecoration: 'none',
+        transition: 'color 0.2s',
+        cursor: 'pointer',
+    },
+    breadcrumbSeparator: {
+        color: '#6b7280',
+    },
+    breadcrumbCurrent: {
+        marginRight: '12px',
+        color: '#374151',
+    },
+    mainContainer: {
+        maxWidth: '1200px',
+        margin: '0 auto',
+        marginTop: '96px',
+        padding: '24px 16px 48px',
+        boxSizing: 'border-box',
+    },
+    pageTitle: {
+        textAlign: 'center',
+        marginBottom: '32px',
+    },
+    h1: {
+        fontSize: '30px',
+        fontWeight: 'bold',
+        color: '#0865a8',
+        marginBottom: '16px',
+    },
+    subtitle: {
+        fontSize: '18px',
+        color: '#4b5563',
+    },
+    loadingContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+        fontSize: '18px',
+        color: '#4b5563',
+    },
+    errorContainer: {
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '400px',
+        fontSize: '18px',
+        color: '#dc2626',
+        flexDirection: 'column',
+        gap: '16px',
+    },
+    grid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+        gap: '24px',
+    },
+    card: {
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: '16px',
+        borderTop: '4px solid #f57c00',
+        backgroundColor: '#ffffff',
+        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1)',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        cursor: 'default',
+        
+    },
+    cardHover: {
+        transform: 'translateY(-8px)',
+        boxShadow: '0 25px 25px -5px rgba(0,0,0,0.15)',
+    },
+    cardImageWrapper: {
+        position: 'relative',
+        height: '192px',
+        overflow: 'hidden',
+        background: 'linear-gradient(to bottom right, #0865a8, #f57c00)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iconCircle: {
+        borderRadius: '50%',
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        padding: '32px',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    icon: {
+        width: '64px',
+        height: '64px',
+        color: '#ffffff',
+    },
+    discountBadge: {
+        position: 'absolute',
+        left: '12px',
+        top: '12px',
+        borderRadius: '9999px',
+        backgroundColor: '#f57c00',
+        padding: '4px 12px',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        color: '#ffffff',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+    },
+    cardBody: {
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        padding: '24px',
+    },
+    courseTitle: {
+        fontSize: '18px',
+        fontWeight: 'bold',
+        color: '#0865a8',
+        marginBottom: '16px',
+        lineHeight: '1.4',
+        minHeight: '80px',  // Increased from 56px
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+    },
+    infoRow: {
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: '8px',
+        fontSize: '14px',
+        color: '#374151',
+        marginBottom: '12px',
+    },
+    infoRowCenter: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        fontSize: '14px',
+        color: '#374151',
+        marginBottom: '16px',
+    },
+    infoIcon: {
+        width: '20px',
+        height: '20px',
+        flexShrink: 0,
+        color: '#f57c00',
+        marginTop: '2px',
+    },
+    infoIconNoMargin: {
+        width: '20px',
+        height: '20px',
+        flexShrink: 0,
+        color: '#f57c00',
+    },
+    clampText: {
+        display: '-webkit-box',
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+    },
+    statsRow: {
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '12px',
+        fontSize: '12px',
+        color: '#4b5563',
+        marginBottom: '16px',
+    },
+    statItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+    },
+    statIcon: {
+        width: '16px',
+        height: '16px',
+        color: '#0865a8',
+    },
+    statNumber: {
+        fontWeight: '600',
+        color: '#111827',
+    },
+    levelBadge: {
+        borderRadius: '9999px',
+        backgroundColor: '#eff6ff',
+        padding: '4px 8px',
+        fontWeight: '500',
+        color: '#0865a8',
+    },
+    description: {
+        fontSize: '14px',
+        lineHeight: '1.625',
+        color: '#6b7280',
+        marginBottom: '24px',
+        flex: 1,
+        display: '-webkit-box',
+        WebkitLineClamp: 3,
+        WebkitBoxOrient: 'vertical',
+        overflow: 'hidden',
+    },
+    priceSection: {
+        display: 'flex',
+        alignItems: 'flex-end',
+        justifyContent: 'space-between',
+        borderTop: '1px solid #f3f4f6',
+        paddingTop: '16px',
+        marginBottom: '16px',
+    },
+    originalPrice: {
+        fontSize: '12px',
+        color: '#6b7280',
+        textDecoration: 'line-through',
+    },
+    currentPrice: {
+        fontSize: '24px',
+        fontWeight: 'bold',
+        color: '#f57c00',
+    },
+    ratingRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        fontSize: '12px',
+        color: '#4b5563',
+    },
+    starIcon: {
+        width: '16px',
+        height: '16px',
+        fill: '#fbbf24',
+        color: '#fbbf24',
+    },
+    ratingNumber: {
+        fontWeight: 'bold',
+        color: '#111827',
+    },
+    buttonsRow: {
+        display: 'flex',
+        gap: '8px',
+    },
+    addToCartBtn: {
+        flex: 1,
+        borderRadius: '8px',
+        background: 'linear-gradient(to right, #0865a8, #f57c00)',
+        padding: '12px 24px',
+        fontWeight: 'bold',
+        color: '#ffffff',
+        border: 'none',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+        transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+        cursor: 'pointer',
+        fontSize: '14px',
+    },
+    addToCartBtnHover: {
+        transform: 'scale(1.05)',
+        boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)',
+    },
+    detailsBtn: {
+        borderRadius: '8px',
+        border: '2px solid #0865a8',
+        backgroundColor: '#ffffff',
+        padding: '12px 24px',
+        fontWeight: 'bold',
+        color: '#0865a8',
+        transition: 'background-color 0.3s ease, color 0.3s ease',
+        cursor: 'pointer',
+        fontSize: '14px',
+    },
+    detailsBtnHover: {
+        backgroundColor: '#0865a8',
+        color: '#ffffff',
+    },
+};
 
 const CoursesPage = () => {
     const navigate = useNavigate();
+    const { id, slug } = useParams(); // Get both id and slug from URL params
+    
     const [cart, setCart] = useState(() => {
         const savedCart = localStorage.getItem('cartItems');
         return savedCart ? JSON.parse(savedCart) : [];
     });
 
-    const courses = [
-        {
-            id: 1,
-            title: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الأولى ( أعمال الهيكل الخرساني)',
-            institute: 'المعهد التكنولوجي لهندسة التشييد والإدارة',
-            startDate: '2025/11/02',
-            endDate: '2025/11/13',
-            description: 'تزويد مهندسى مدني وعمارة حديثي التخرج حديثي التعيين بالمهارات والمعارف اللازمة للعمل في المشروعات بالطرق الصحيحة والآمنة بالجودة المطلوبة.',
-            price: 299.99,
-            originalPrice: 499.99,
-            instructor: 'د. محمد أحمد',
-            hours: 45,
-            lectures: 128,
-            level: 'مبتدئ',
-            image: 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg'
-        },
-        {
-            id: 2,
-            title: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الثانيه ( أعمال التشطيبات الأساسية)',
-            institute: 'المعهد التكنولوجي لهندسة التشييد والإدارة',
-            startDate: '2025/12/07',
-            endDate: '2025/12/18',
-            description: 'تزويد مهندسى مدني وعمارة حديثى التخرج حديثى التعيين بالمعارف والمهارات اللازمه لتنفيذ مشروعات التشييد بالطرق الصحيحة والآمنة وكذلك بالجودة المطلوبة.',
-            price: 349.99,
-            originalPrice: 549.99,
-            instructor: 'د. سارة محمود',
-            hours: 52,
-            lectures: 156,
-            level: 'متوسط',
-            image: 'https://img-c.udemycdn.com/course/240x135/3237889_1bcc_2.jpg'
-        },
-        {
-            id: 3,
-            title: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الثالثة (إدارة المشروعات والمالية)',
-            institute: 'المعهد التكنولوجي لهندسة التشييد والإدارة',
-            startDate: '2026/01/11',
-            endDate: '2026/01/22',
-            description: 'تزويد مهندسي مدني وعمارة حديثي التخرج حديثي التعيين بالمعارف والمهارات اللازمه لتنفيذ مشروعات التشييد بالطرق الصحيحة والآمنة وكذلك بالجودة المطلوبة.',
-            price: 399.99,
-            originalPrice: 599.99,
-            instructor: 'د. خالد عبد الرحمن',
-            hours: 60,
-            lectures: 180,
-            level: 'متقدم',
-            image: 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg'
-        }
-    ];
+    const [hoveredCard, setHoveredCard] = useState(null);
+    const [hoveredAddBtn, setHoveredAddBtn] = useState(null);
+    const [hoveredDetailsBtn, setHoveredDetailsBtn] = useState(null);
+    
+    const [programData, setProgramData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchCourses = async () => {
+            try {
+                setLoading(true);
+                
+                // Use ID from params, or default to 15 if not provided
+                const programId = id || 15;
+                
+                const response = await fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/course/programs/${programId}/courses`);
+                
+                if (!response.ok) {
+                    throw new Error('فشل في تحميل البيانات');
+                }
+                
+                const data = await response.json();
+                setProgramData(data);
+                setError(null);
+            } catch (err) {
+                setError(err.message);
+                console.error('Error fetching courses:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCourses();
+    }, [id]); // Re-fetch when id changes
 
     const addToCart = (course) => {
         const existingCart = localStorage.getItem('cartItems');
         const cartItems = existingCart ? JSON.parse(existingCart) : [];
 
-        // Check if course already in cart
         const isInCart = cartItems.some(item => item.id === course.id);
         if (!isInCart) {
             const cartItem = {
                 id: course.id,
                 title: course.title,
-                instructor: course.instructor,
-                image: course.image,
+                instructor: course.instructor || 'غير محدد',
+                image: course.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
                 rating: 4.6,
                 reviews: 5500,
-                hours: course.hours,
-                lectures: course.lectures,
-                level: course.level,
-                currentPrice: course.price,
-                originalPrice: course.originalPrice,
+                hours: course.hours || 45,
+                lectures: course.lectures || 128,
+                level: course.level || 'متوسط',
+                currentPrice: course.price || 299.99,
+                originalPrice: course.originalPrice || 499.99,
                 badge: 'الأكثر مبيعاً',
                 coupon: 'DISCOUNT2025'
             };
@@ -84,149 +364,257 @@ const CoursesPage = () => {
             setCart(cartItems);
             window.dispatchEvent(new Event('cartUpdated'));
 
-            // Navigate to cart
             navigate('/cart');
         }
     };
 
+    if (loading) {
+        return (
+            <>
+                <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
+                <style>{`
+                    * {
+                        font-family: "Droid Arabic Kufi", serif !important;
+                    }
+                `}</style>
+                <div dir="rtl">
+                    <div style={styles.overviewBar}>
+                        <div style={styles.overviewBarText}>
+                            <span>
+                                <a
+                                    href="/"
+                                    style={styles.breadcrumbLink}
+                                    onMouseEnter={e => e.target.style.color = '#111827'}
+                                    onMouseLeave={e => e.target.style.color = '#374151'}
+                                >
+                                    الصفحة الرئيسية
+                                </a>
+                                <span style={styles.breadcrumbSeparator}> - </span>
+                                <span style={styles.breadcrumbCurrent}>جاري التحميل...</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div style={styles.loadingContainer}>
+                        <div>جاري تحميل الدورات...</div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    if (error) {
+        return (
+            <>
+                <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
+                <style>{`
+                    * {
+                        font-family: "Droid Arabic Kufi", serif !important;
+                    }
+                `}</style>
+                <div dir="rtl">
+                    <div style={styles.overviewBar}>
+                        <div style={styles.overviewBarText}>
+                            <span>
+                                <a
+                                    href="/"
+                                    style={styles.breadcrumbLink}
+                                    onMouseEnter={e => e.target.style.color = '#111827'}
+                                    onMouseLeave={e => e.target.style.color = '#374151'}
+                                >
+                                    الصفحة الرئيسية
+                                </a>
+                                <span style={styles.breadcrumbSeparator}> - </span>
+                                <span style={styles.breadcrumbCurrent}>خطأ</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div style={styles.errorContainer}>
+                        <div>⚠️ {error}</div>
+                        <button 
+                            onClick={() => window.location.reload()} 
+                            style={{
+                                ...styles.addToCartBtn,
+                                flex: 'none',
+                                width: 'auto'
+                            }}
+                        >
+                            إعادة المحاولة
+                        </button>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    const courses = programData?.courses || [];
+
     return (
         <>
-            {/* Google Fonts */}
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
 
             <style>{`
-        * {
-          font-family: "Droid Arabic Kufi", serif !important;
-        }
-      `}</style>
+                * {
+                    font-family: "Droid Arabic Kufi", serif !important;
+                }
+            `}</style>
 
             <div dir="rtl">
-                {/* Fixed Overview Bar - positioned under navbar */}
-                <div className="fixed left-0 top-16 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20">
-                    <div className="text-center">
-                        <span className="text-sm md:text-base">
-                            <a href="/" className="ml-3 text-gray-700 transition-colors hover:text-gray-900">الصفحة الرئيسية</a>
-                            <span className="text-gray-500"> - </span>
-                            <span className="mr-3 text-gray-700">الخطة التدريبية - برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة</span>
+                {/* Fixed Overview Bar */}
+                <div style={styles.overviewBar}>
+                    <div style={styles.overviewBarText}>
+                        <span>
+                            <a
+                                href="/"
+                                style={styles.breadcrumbLink}
+                                onMouseEnter={e => e.target.style.color = '#111827'}
+                                onMouseLeave={e => e.target.style.color = '#374151'}
+                            >
+                                الصفحة الرئيسية
+                            </a>
+                            <span style={styles.breadcrumbSeparator}> - </span>
+                            <span style={styles.breadcrumbCurrent}>
+                                الخطة التدريبية - {programData?.programName || 'برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة'}
+                            </span>
                         </span>
                     </div>
                 </div>
 
-                {/* Main Content - with proper padding for fixed header */}
-                <div className="container mx-auto mt-24 px-4 pb-12 pt-6 md:mt-32">
-                    <div className="mb-8 text-center">
-                        <h1 className="mb-4 text-3xl font-bold text-[#0865a8] md:text-4xl">
-                            دورات إعداد وتأهيل المهندسين
-                        </h1>
-                        <p className="text-lg text-gray-600">
-                            اختر الدورة المناسبة لك وابدأ رحلتك التعليمية
-                        </p>
+                {/* Main Content */}
+                <div style={styles.mainContainer}>
+                    <div style={styles.pageTitle}>
+                        <h1 style={styles.h1}>{programData?.programName || 'دورات إعداد وتأهيل المهندسين'}</h1>
+                        <p style={styles.subtitle}>اختر الدورة المناسبة لك وابدأ رحلتك التعليمية</p>
                     </div>
 
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {courses.map((course) => (
-                            <div
-                                key={course.id}
-                                className="flex flex-col overflow-hidden rounded-2xl border-t-4 border-[#f57c00] bg-white shadow-lg transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl"
-                            >
-                                {/* Course Image */}
-                                <div className="relative h-48 overflow-hidden bg-gradient-to-br from-[#0865a8] to-[#f57c00]">
-                                    <div className="flex h-full items-center justify-center">
-                                        <div className="rounded-full bg-white/20 p-8 backdrop-blur-sm">
-                                            <svg className="h-16 w-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                                            </svg>
+                    {courses.length === 0 ? (
+                        <div style={styles.loadingContainer}>
+                            <div>لا توجد دورات متاحة حالياً</div>
+                        </div>
+                    ) : (
+                        <div style={styles.grid}>
+                            {courses.map((course) => {
+                                // Use cost from API if available, otherwise calculate mock price
+                                let originalPrice = null;
+                                let currentPrice = null;
+                                let discountPercent = 40;
+                                
+                                if (course.cost !== null && course.cost !== undefined) {
+                                    // If cost is provided by API, use it
+                                    currentPrice = course.cost;
+                                    originalPrice = course.cost / 0.6; // Assume 40% discount
+                                } else {
+                                    // If cost is null, leave prices as null (don't show)
+                                    originalPrice = null;
+                                    currentPrice = null;
+                                }
+                                
+                                return (
+                                    <div
+                                        key={course.id}
+                                        style={{
+                                            ...styles.card,
+                                            ...(hoveredCard === course.id ? styles.cardHover : {}),
+                                        }}
+                                        onMouseEnter={() => setHoveredCard(course.id)}
+                                        onMouseLeave={() => setHoveredCard(null)}
+                                    >
+                                        {/* Course Image / Header */}
+                                        <div style={styles.cardImageWrapper}>
+                                            <div style={styles.iconCircle}>
+                                                <svg style={styles.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l9-5-9-5-9 5 9 5z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                                </svg>
+                                            </div>
+                                            {currentPrice !== null && (
+                                                <div style={styles.discountBadge}>
+                                                    {discountPercent}% خصم
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div style={styles.cardBody}>
+                                            {/* Title */}
+                                            <h3 style={styles.courseTitle}>{course.title}</h3>
+
+                                            {/* Institute */}
+                                            <div style={styles.infoRow}>
+                                                <svg style={styles.infoIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                                </svg>
+                                                <span style={styles.clampText}>{course.place}</span>
+                                            </div>
+
+                                            {/* Date */}
+                                            <div style={styles.infoRowCenter}>
+                                                <svg style={styles.infoIconNoMargin} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                <span>{course.date}</span>
+                                            </div>
+
+                                            {/* Description */}
+                                            <p style={styles.description}>{course.description}</p>
+
+                                            {/* Price */}
+                                            {currentPrice !== null ? (
+                                                <div style={styles.priceSection}>
+                                                    <div>
+                                                        <p style={styles.originalPrice}>{originalPrice.toFixed(2)} ج.م</p>
+                                                        <p style={styles.currentPrice}>{currentPrice.toFixed(2)} ج.م</p>
+                                                    </div>
+                                                    
+                                                </div>
+                                            ) : (
+                                                <div style={{...styles.priceSection, borderTop: 'none'}}>
+                                                    <div style={styles.ratingRow}>
+                                                        
+                                                        
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Buttons */}
+                                            <div style={styles.buttonsRow}>
+                                                <button
+                                                    onClick={() => addToCart({
+                                                        ...course,
+                                                        price: currentPrice || 0,
+                                                        originalPrice: originalPrice || 0,
+                                                        image: 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                                                        instructor: 'غير محدد',
+                                                        hours: 45,
+                                                        lectures: 128,
+                                                        level: 'متوسط'
+                                                    })}
+                                                    style={{
+                                                        ...styles.addToCartBtn,
+                                                        ...(hoveredAddBtn === course.id ? styles.addToCartBtnHover : {}),
+                                                    }}
+                                                    onMouseEnter={() => setHoveredAddBtn(course.id)}
+                                                    onMouseLeave={() => setHoveredAddBtn(null)}
+                                                >
+                                                    أضف إلى السلة
+                                                </button>
+                                                <button
+                                                    style={{
+                                                        ...styles.detailsBtn,
+                                                        ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}),
+                                                    }}
+                                                    onMouseEnter={() => setHoveredDetailsBtn(course.id)}
+                                                    onMouseLeave={() => setHoveredDetailsBtn(null)}
+                                                >
+                                                    التفاصيل
+                                                </button>
+                                            </div>
+
+                                            
                                         </div>
                                     </div>
-                                    <div className="absolute left-3 top-3">
-                                        <span className="rounded-full bg-[#f57c00] px-3 py-1 text-xs font-bold text-white shadow-lg">
-                                            {Math.round(((course.originalPrice - course.price) / course.originalPrice) * 100)}% خصم
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-1 flex-col p-6">
-                                    {/* Title */}
-                                    <h3 className="mb-4 line-clamp-2 min-h-[3.5rem] text-lg font-bold leading-tight text-[#0865a8]">
-                                        {course.title}
-                                    </h3>
-
-                                    {/* Institute */}
-                                    <div className="mb-3 flex items-start gap-2 text-sm text-gray-700">
-                                        <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-[#f57c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                                        </svg>
-                                        <span className="line-clamp-2">{course.institute}</span>
-                                    </div>
-
-                                    {/* Date */}
-                                    <div className="mb-4 flex items-center gap-2 text-sm text-gray-700">
-                                        <svg className="h-5 w-5 flex-shrink-0 text-[#f57c00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        <span>{course.startDate} - {course.endDate}</span>
-                                    </div>
-
-                                    {/* Course Stats */}
-                                    <div className="mb-4 flex flex-wrap gap-3 text-xs text-gray-600">
-                                        <span className="flex items-center gap-1">
-                                            <svg className="h-4 w-4 text-[#0865a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                            <span className="font-semibold text-gray-900">{course.hours}</span> ساعة
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <svg className="h-4 w-4 text-[#0865a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                            </svg>
-                                            <span className="font-semibold text-gray-900">{course.lectures}</span> محاضرة
-                                        </span>
-                                        <span className="rounded-full bg-blue-50 px-2 py-1 font-medium text-[#0865a8]">
-                                            {course.level}
-                                        </span>
-                                    </div>
-
-                                    {/* Description */}
-                                    <p className="mb-6 line-clamp-3 flex-1 text-sm leading-relaxed text-gray-600">
-                                        {course.description}
-                                    </p>
-
-                                    {/* Price */}
-                                    <div className="mb-4 flex items-end justify-between border-t border-gray-100 pt-4">
-                                        <div>
-                                            <p className="text-xs text-gray-500 line-through">
-                                                {course.originalPrice} ج.م
-                                            </p>
-                                            <p className="text-2xl font-bold text-[#f57c00]">
-                                                {course.price} ج.م
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-1 text-xs text-gray-600">
-                                            <svg className="h-4 w-4 fill-amber-400 text-amber-400" viewBox="0 0 20 20">
-                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                            </svg>
-                                            <span className="font-bold text-gray-900">4.6</span>
-                                            <span>(5,500+)</span>
-                                        </div>
-                                    </div>
-
-                                    {/* Buttons */}
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => addToCart(course)}
-                                            className="flex-1 rounded-lg bg-gradient-to-r from-[#0865a8] to-[#f57c00] px-6 py-3 font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
-                                        >
-                                            أضف إلى السلة
-                                        </button>
-                                        <button className="rounded-lg border-2 border-[#0865a8] bg-white px-6 py-3 font-bold text-[#0865a8] transition-all duration-300 hover:bg-[#0865a8] hover:text-white">
-                                            التفاصيل
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
         </>

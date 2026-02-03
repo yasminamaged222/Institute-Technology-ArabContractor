@@ -385,6 +385,9 @@ function ModernBookCard({ book, onClick, index, isMobile }) {
     );
 }
 
+// ─────────────────────────────────────────────────────────────
+// LibrarySearchSection  —  ONLY the useEffect fetch changed
+// ─────────────────────────────────────────────────────────────
 function LibrarySearchSection({ isMobile, isTablet }) {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
@@ -395,40 +398,62 @@ function LibrarySearchSection({ isMobile, isTablet }) {
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const booksPerPage = 10;
-    
 
-    // Fetch books from API on component mount
+    // ── CHANGED: fetches every page from the paginated API, then merges ──
     useEffect(() => {
-        const fetchBooks = async () => {
+        let cancelled = false; // abort flag if component unmounts mid-fetch
+
+        const fetchAllPages = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('https://acwebsite-icmet-test.azurewebsites.net/api/book/getAllBooks');
-                
-                if (!response.ok) {
-                    throw new Error('Failed to fetch books');
+
+                // 1) Fetch page 1 first to learn totalPages
+                const firstResponse = await fetch(
+                    'https://acwebsite-icmet-test.azurewebsites.net/api/book/getAllBooks?pageIndex=1'
+                );
+                if (!firstResponse.ok) throw new Error('Failed to fetch books');
+                const firstData = await firstResponse.json();
+
+                const totalPages = firstData.totalPages || 1;
+                let allItems = [...(firstData.data || [])];
+
+                // 2) Fetch remaining pages in parallel
+                if (totalPages > 1) {
+                    const promises = [];
+                    for (let page = 2; page <= totalPages; page++) {
+                        promises.push(
+                            fetch(
+                                `https://acwebsite-icmet-test.azurewebsites.net/api/book/getAllBooks?pageIndex=${page}`
+                            ).then(res => {
+                                if (!res.ok) throw new Error(`Page ${page} failed`);
+                                return res.json();
+                            })
+                        );
+                    }
+                    const pages = await Promise.all(promises);
+                    pages.forEach(page => {
+                        allItems = allItems.concat(page.data || []);
+                    });
                 }
-                
-                const data = await response.json();
-                
-                // Transform API data to match component structure
-                const transformedBooks = data.map((book, index) => {
-                    // Extract year from bookDate
+
+                if (cancelled) return; // component unmounted while fetching
+
+                // 3) Transform — same mapping as before
+                const placeholderImages = [
+                    'https://images.unsplash.com/photo-1589998059171-988d887df646?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=300&h=400&fit=crop',
+                    'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300&h=400&fit=crop'
+                ];
+
+                const transformedBooks = allItems.map((book, index) => {
                     const year = book.bookDate ? book.bookDate.substring(0, 4) : 'N/A';
-                    
-                    // Generate a placeholder image (you can customize this)
-                    const placeholderImages = [
-                        'https://images.unsplash.com/photo-1589998059171-988d887df646?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1505664194779-8beaceb93744?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=300&h=400&fit=crop',
-                        'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300&h=400&fit=crop'
-                    ];
-                    
                     return {
                         id: index + 1,
                         category: book.typeName || 'غير مصنف',
@@ -438,21 +463,22 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                         image: placeholderImages[index % placeholderImages.length]
                     };
                 });
-                
+
                 setBooksDatabase(transformedBooks);
                 setLoading(false);
             } catch (err) {
+                if (cancelled) return;
                 console.error('Error fetching books:', err);
                 setError(err.message);
                 setLoading(false);
             }
         };
 
-        fetchBooks();
+        fetchAllPages();
+
+        return () => { cancelled = true; }; // cleanup on unmount
     }, []);
-
-
-    
+    // ── END OF CHANGED BLOCK ──────────────────────────────────────────────
 
     // Get unique categories from API data
     const categories = React.useMemo(() => {
@@ -715,7 +741,7 @@ function Pagination({ currentPage, totalPages, onPageChange, isMobile }) {
     const handlePageClick = (page) => {
         if (page !== '...' && page !== currentPage) {
             onPageChange(page);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            // window.scrollTo({ top: 50, behavior: 'smooth' });
         }
     };
 

@@ -72,6 +72,22 @@ const Certifications = () => {
     return (
         <div style={{ direction: "rtl", fontFamily: globalFont }}>
 
+            {/* Custom CSS for Swiper Pagination */}
+            <style>{`
+                .swiper-pagination {
+                    bottom: 0px !important;
+                }
+                
+                .swiper-pagination-bullet {
+                    background-color: ${primaryColor};
+                    opacity: 0.5;
+                }
+                
+                .swiper-pagination-bullet-active {
+                    opacity: 1;
+                }
+            `}</style>
+
             {/* Fixed Overview Bar */}
             <div className="fixed left-0 top-[64px] z-50 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 font-['Droid_Arabic_Kufi']">
                 <div className="text-center">
@@ -219,6 +235,9 @@ const Certifications = () => {
                             breakpoints={{
                                 640: { slidesPerView: 2 },
                                 1024: { slidesPerView: 3 },
+                            }}
+                            style={{
+                                paddingBottom: '50px' // Add space for pagination dots
                             }}
                         >
                             {thankImages.map((img, i) => (

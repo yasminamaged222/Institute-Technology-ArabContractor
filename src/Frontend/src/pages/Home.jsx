@@ -30,22 +30,32 @@ const slides = [
     {
         title: 'خدمات تدريبية مميزة',
         subtitle: 'يقدم المعهد خدمات مميزة',
-        image: 'https://heavyequipmentcollege.edu/wp-content/uploads/2020/10/ppe-kit-in-construction-heavyequipmentcollegesof-america-scaled-1-1024x683.jpg',
+        link: '/training-methods',
+        image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070&auto=format&fit=crop',
     },
     {
-        title: 'برامج تدريبية متنوعة',
+        title: 'ورش فى مجال تدريب الميكانيكا والكهرباء',
         subtitle: 'يقدم المعهد خدمات مميزة',
-        image: 'https://ccemagazine.com/wp-content/uploads/sites/11/2023/08/Image-of-construction-workers-training-on-site-2-scaled.jpeg',
+        link: '/shobra',
+        image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=2069&auto=format&fit=crop',
     },
     {
-        title: 'التدريب في موقع العمل',
+        title: 'التدريب فى موقع العمل',
         subtitle: 'يقدم المعهد خدمات مميزة',
-        image: 'https://pe.gatech.edu/sites/default/files/styles/medium_4_3_/public/Construction_and_General_Industry_What_You_Will_Learn_750_x_500.jpg?h=4cdf7179&itok=HgEN7uZA',
+        link: '/onsite-training',
+        image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2131&auto=format&fit=crop',
     },
     {
-        title: 'دورات متقدمة في الهندسة',
+        title: 'Commercial Engineering Apprenticeship Program (CEA)',
         subtitle: 'يقدم المعهد خدمات مميزة',
-        image: 'https://regionalhca.org/wp-content/uploads/2025/02/Workforce-Training-Program-4-1024x576.png',
+        link: '/cea-program',
+        image: 'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?q=80&w=2070&auto=format&fit=crop',
+    },
+    {
+        title: 'مدرسة المقاولون العرب الثانوية الفنية',
+        subtitle: 'يقدم المعهد خدمات مميزة',
+        link: '/Technical_Schools',
+        image: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070&auto=format&fit=crop',
     },
 ];
 
@@ -164,7 +174,7 @@ const courses = [
 let closeTimer;
 
 const Home = () => {
-    const [current, setCurrent] = useState(0);
+    const [currentSlide, setCurrentSlide] = useState(0);
     const [popoverAnchor, setPopoverAnchor] = useState(null);
     const [selectedCourse, setSelectedCourse] = useState(null);
     const [newsItems, setNewsItems] = useState([]);
@@ -172,12 +182,12 @@ const Home = () => {
 
     React.useEffect(() => {
         const timer = setInterval(() => {
-            setCurrent((prev) => (prev + 1) % slides.length);
-        }, 6000);
+            setCurrentSlide((prev) => (prev + 1) % slides.length);
+        }, 5000);
         return () => clearInterval(timer);
-    }, []);
+    }, [slides.length]);
 
-    const slide = slides[current];
+    const slide = slides[currentSlide];
 
     useEffect(() => {
         fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews')
@@ -576,7 +586,7 @@ const Home = () => {
 
 
             {/* Hero Slider */}
-            <Box className="hero-section" sx={{ position: 'relative' }}>
+            <Box className="hero-section" sx={{ position: 'relative', height: '600px', overflow: 'hidden', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
                 <Box
                     sx={{
                         position: 'absolute',
@@ -588,9 +598,11 @@ const Home = () => {
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         transition: 'background-image 1s ease-in-out',
+                        borderBottomLeftRadius: '24px',
+                        borderBottomRightRadius: '24px'
                     }}
                 />
-                <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0, 0, 0, 0.45)' }} />
+                <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0, 0, 0, 0.45)', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }} />
 
                 {/* Hero Content */}
                 <Box
@@ -626,12 +638,67 @@ const Home = () => {
                         gutterBottom
                         sx={{
                             lineHeight: 1.2,
-                            mb: 2,
-                            fontFamily: '"Droid Arabic Kufi", serif'
+                            mb: 3,
+                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontSize: { xs: '2rem', sm: '2.5rem', md: '3rem' }
                         }}
                     >
                         {slide.title}
                     </Typography>
+                    <Button
+                        variant="contained"
+                        href={slide.link}
+                        sx={{
+                            mt: { xs: 2, sm: 3 },
+                            px: 4,
+                            py: 1.5,
+                            fontSize: '1rem',
+                            fontFamily: '"Droid Arabic Kufi", serif',
+                            bgcolor: '#f57c00',
+                            borderRadius: '25px',
+                            '&:hover': {
+                                bgcolor: '#e65100',
+                                transform: 'translateY(-2px)',
+                                transition: 'all 0.3s ease',
+                            }
+                        }}
+                    >
+                        اقرأ المزيد
+                    </Button>
+                </Box>
+
+                {/* Vertical Circular Pagination - Right Side */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        left: 30,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 2,
+                        zIndex: 2
+                    }}
+                >
+                    {slides.map((_, index) => (
+                        <Box
+                            key={index}
+                            onClick={() => setCurrentSlide(index)}
+                            sx={{
+                                width: 14,
+                                height: 14,
+                                borderRadius: '50%',
+                                bgcolor: currentSlide === index ? '#f57c00' : 'rgba(255, 255, 255, 0.5)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                border: currentSlide === index ? '2px solid white' : 'none',
+                                '&:hover': {
+                                    bgcolor: currentSlide === index ? '#f57c00' : 'rgba(255, 255, 255, 0.8)',
+                                    transform: 'scale(1.3)'
+                                }
+                            }}
+                        />
+                    ))}
                 </Box>
             </Box>
 
@@ -939,24 +1006,29 @@ const Home = () => {
                     px: { xs: 2, sm: 3, md: 4 }
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: { xs: 3, md: 4 } }}>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    mb: { xs: 3, md: 4 }
+                }}>
                     <Typography
                         variant="h4"
                         fontWeight="bold"
-                        className="section-title"
                         sx={{
                             mb: 1,
                             color: '#0865a8',
                             fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.125rem' },
                             textAlign: 'center',
                             fontFamily: '"Droid Arabic Kufi", serif'
+                            // Remove className="section-title" or override it
                         }}
                     >
                         البرامج التدريبية
                     </Typography>
                     <Box
                         sx={{
-                            width: { xs: '60px', sm: '80px', md: '100px' },
+                            width: '100px',
                             height: '4px',
                             background: 'linear-gradient(90deg, #0865a8 0%, #f39c12 100%)',
                             borderRadius: '2px'

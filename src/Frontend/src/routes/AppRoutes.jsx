@@ -27,6 +27,9 @@ import Instructors from '../pages/Instructors';
 import CheckoutPage from "../pages/CheckoutPage";
 import NewsDetails from '../pages/NewsDetails';
 import CourseDetails from '../pages/CourseDetails';
+import TrainingMethods from '../pages/TrainingMethods';
+import OnsiteTraining from '../pages/OnsiteTraining_fixed';
+import CEAProgram from '../pages/CEAProgram';
 
 
 
@@ -44,8 +47,8 @@ const AppRoutes = () => {
         <Route path="/overview" element={<Overview />} />
         <Route path="/mission" element={<Vision_goals />} />
         <Route path="/news" element={<News />} />
-        <Route path="/courses/civil-engineer-training" element={<CoursesPage />} />
-        <Route path="/courses/:category" element={<CourseCategory />} />
+            <Route path="/courses/:id/:slug" element={<CoursesPage />} />
+            <Route path="/courses/:category" element={<CourseCategory />} />
             <Route path="/library" element={<Library />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/certifications" element={<Certifications />} />
@@ -64,6 +67,9 @@ const AppRoutes = () => {
             <Route path="/instructors" element={<Instructors />} />
             <Route path="/news/:id" element={<NewsDetails />} />
             <Route path="/course" element={<CourseDetails />} />
+            <Route path="/training-methods" element={<TrainingMethods />} />
+            <Route path="/cea-program" element={<CEAProgram />} />
+            <Route path="/onsite-training" element={<OnsiteTraining />} />
 
 
             
