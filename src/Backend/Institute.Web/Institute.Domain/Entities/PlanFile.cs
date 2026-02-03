@@ -14,4 +14,5 @@ public partial class PlanFile
     public string? FileName { get; set; }
 
     public int? FilePeriorty { get; set; }
+    public Planwork Planwork { get; set; } = null!; 
 }

@@ -328,7 +328,9 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<PlanFile>(entity =>
         {
             entity.HasKey(e => new { e.PlanId, e.FileId });
-
+            entity.HasOne(d => d.Planwork).WithMany(p => p.PlanFiles)
+                .HasForeignKey(d => d.PlanId);
+                
             entity.Property(e => e.PlanId).HasColumnName("Plan_id");
             entity.Property(e => e.FileName).HasColumnName("File_name");
             entity.Property(e => e.FilePeriorty).HasColumnName("File_periorty");

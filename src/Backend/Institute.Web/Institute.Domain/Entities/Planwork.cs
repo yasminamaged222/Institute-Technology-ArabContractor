@@ -36,4 +36,5 @@ public partial class Planwork
     public decimal? PlanCost { get; set; }
 
     public bool? PlanSale { get; set; }
+    public ICollection<PlanFile> PlanFiles { get; set; } = new List<PlanFile>();
 }

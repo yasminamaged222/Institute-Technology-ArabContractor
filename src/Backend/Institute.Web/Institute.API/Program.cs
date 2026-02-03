@@ -1,7 +1,9 @@
 using AutoMapper;
+using Institute.API.DTOs;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
+using Institute.Application.Services;
 using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +25,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>));
 builder.Services.AddScoped<NewsPictureUrlResolver>();
+builder.Services.Configure<BankMisrOptions>(
+    builder.Configuration.GetSection("BankMisr"));
 
+builder.Services.AddHttpClient<BankMisrPaymentService>();
+
+builder.Services.AddScoped<BankMisrPaymentService>();
 #endregion
 #region(Authentication And Authorization)
 builder.Services.AddAuthentication("Bearer")
