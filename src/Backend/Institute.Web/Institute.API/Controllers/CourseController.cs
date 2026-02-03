@@ -123,6 +123,56 @@ namespace Institute.API.Controllers
 
         }
 
+        [HttpGet("{courseId}")]
+        public async Task<IActionResult> GetCourseById(int courseId)
+        {
+            var planworks = (await _planRepo.GetAllAsync()).ToList();
+            var files = (await _fileRepo.GetAllAsync()).ToList();
+
+            // =========================
+            // find course
+            // =========================
+            var course = planworks.FirstOrDefault(x =>
+                x.ChildId == courseId &&
+                x.DetailsFlag == false &&
+                x.CourseDate != null
+            );
+
+            if (course == null)
+                return NotFound($"Course with id {courseId} not found");
+
+            // =========================
+            // files mapping (from PlanFile)
+            // =========================
+            var courseFiles = files
+                .Where(f => f.PlanId == courseId)
+                .OrderBy(f => f.FilePeriorty)
+                .Select(f => new CourseFileDto
+                {
+                    Title = f.FileTitle,
+                    FileName = f.FileName
+                })
+                .ToList();
+
+            // =========================
+            // map to CourseDto
+            // =========================
+            var dto = new CourseDto
+            {
+                Id = course.ChildId,
+                Title = course.ServiceTitle,
+                Description = course.CourseDesc,
+                Place = course.CoursePlace,
+                Date = course.CourseDate,
+                Days = course.CourseDays,
+                Content = course.CourseContent,
+                Cost = course.PlanCost,
+                Files = courseFiles
+            };
+
+            return Ok(dto);
+        }
+
 
     }
 }
