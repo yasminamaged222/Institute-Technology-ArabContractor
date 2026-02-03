@@ -13,7 +13,7 @@ namespace Institute.Domain.specifications.CourseSpec
         {
             AddOrderBy(x => x.Priority);
 
-            AddInclude(x => x.PlanFiles); // لو Navigation Property موجودة
+            AddInclude(x => x.Files); // لو Navigation Property موجودة
         }
     }
 }
