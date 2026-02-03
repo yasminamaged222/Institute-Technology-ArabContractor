@@ -328,7 +328,9 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<PlanFile>(entity =>
         {
             entity.HasKey(e => new { e.PlanId, e.FileId });
-
+            entity.HasOne(d => d.Planwork).WithMany(p => p.Files)
+                .HasForeignKey(d => d.PlanId);
+                
             entity.Property(e => e.PlanId).HasColumnName("Plan_id");
             entity.Property(e => e.FileName).HasColumnName("File_name");
             entity.Property(e => e.FilePeriorty).HasColumnName("File_periorty");
@@ -363,7 +365,7 @@ public partial class AppDbContext : DbContext
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasMany(e => e.Files)
-                  .WithOne(f => f.Plan)
+                  .WithOne(f => f.Planwork)
                   .HasForeignKey(f => f.PlanId);
         });
 

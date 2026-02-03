@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using Institute.API.DTOs;
+using Institute.API.Helpers;
+using Institute.Application.Interfaces;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.BookSpec;
 using Institute.Infrastructure.Repositories;
@@ -13,17 +15,19 @@ namespace Institute.API.Controllers
     [ApiController]
     public class BookController : ControllerBase
     {
-        // In your controller
+           // In your controller
        
             private readonly IReadOnlyService<Book> _bookService;
         private readonly IMapper _mapper;
+        private readonly IRepository<Book> _repository;
 
-        public BookController(IReadOnlyService<Book> bookService, IMapper mapper)
+        public BookController(IReadOnlyService<Book> bookService, IMapper mapper, IRepository<Book> repository)
             {
                 _bookService = bookService;
             
-            _mapper = mapper;
-        }
+                _mapper = mapper;
+                _repository = repository;
+            }
 
 
 
@@ -36,23 +40,48 @@ namespace Institute.API.Controllers
         //    return Ok(books);
         //}
 
+        //[HttpGet("getAllBooks")]
+        //public async Task<IActionResult> GetAllBooks()
+        //{
+        //    var spec = new Book_LoadNafigationProperty();
+        //    // جلب البيانات من قاعدة البيانات
+        //    var books = await _bookService.GetAllWithSpec(spec);
+
+        //    // تحويل الـ Entity للـ DTO
+        //    var booksDto = _mapper.Map<List<BookResponseDto>>(books);
+
+        //    return Ok(booksDto);
+        //}
+
         [HttpGet("getAllBooks")]
-        public async Task<IActionResult> GetAllBooks()
+        public async Task<ActionResult<Pagination<BookResponseDto>>> GetAllBooks(
+    [FromQuery] BookSpecParams bookParams)
         {
-            var spec = new Book_LoadNafigationProperty();
-            // جلب البيانات من قاعدة البيانات
+            var spec = new Book_LoadNafigationProperty(bookParams);
             var books = await _bookService.GetAllWithSpec(spec);
 
-            // تحويل الـ Entity للـ DTO
-            var booksDto = _mapper.Map<List<BookResponseDto>>(books);
+            var data = _mapper.Map<IReadOnlyList<Book>, IReadOnlyList<BookResponseDto>>(books);
 
-            return Ok(booksDto);
+            var countSpec = new Book_LoadNafigationProperty(bookParams, true);
+            var count = await _repository.GetCountAsync(countSpec);
+
+            return Ok(new Pagination<BookResponseDto>(
+                bookParams.PageIndex,
+                bookParams.PageSize,
+                count,
+                data
+            ));
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetBook(int id)
         {
-            var spec = new Book_LoadNafigationProperty();
+            var spec = new Book_LoadNafigationProperty(new BookSpecParams
+            {
+                PageIndex = 1,
+                PageSize = 1,
+                Search = null
+            });
 
             var book = await _bookService.GetEntityWithSpec(spec);
 
@@ -61,5 +90,5 @@ namespace Institute.API.Controllers
         }
 
 
-        }
+    }
 }
