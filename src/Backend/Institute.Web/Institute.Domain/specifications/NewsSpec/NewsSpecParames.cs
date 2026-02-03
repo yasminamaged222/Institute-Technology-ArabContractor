@@ -12,7 +12,7 @@ namespace Institute.Domain.specifications.NewsSpec
         public class NewsSpecParams
         {
             public int PageIndex { get; set; } = 1;
-            public int PageSize { get; set; } = 10;
+            public int PageSize { get; set; } = 9;
 
             public int? Year { get; set; }
         }

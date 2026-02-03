@@ -72,7 +72,7 @@ public partial class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {//Book - BooksType relationship
 
-
+        
         modelBuilder.Entity<Book>()
             .HasOne(b => b.BooksType)        // كل Book له BookType واحد
             .WithMany(t => t.Books)          // كل BookType له مجموعة Books
@@ -95,7 +95,7 @@ public partial class AppDbContext : DbContext
                   .HasMaxLength(50);
             entity.Property(x => x.ClerkUserId)
                   .IsRequired();
-
+            entity.HasQueryFilter(u => !u.IsDeleted);
             entity.HasIndex(x => x.ClerkUserId)
                   .IsUnique();
             entity.Property(e => e.Email)
@@ -344,18 +344,32 @@ public partial class AppDbContext : DbContext
             entity.ToTable("Planwork");
 
             entity.Property(e => e.ChildId).HasColumnName("ChildID");
+            entity.Property(e => e.ParentId).HasColumnName("ParentID");
+
             entity.Property(e => e.CourseContent).HasColumnName("course_content");
             entity.Property(e => e.CourseDate).HasColumnName("course_date");
             entity.Property(e => e.CourseDays).HasColumnName("course_days");
             entity.Property(e => e.CourseDesc).HasColumnName("course_Desc");
             entity.Property(e => e.CoursePlace).HasColumnName("course_place");
-            entity.Property(e => e.DetailsFlag).HasColumnName("details_flag");
+
             entity.Property(e => e.MainFlag).HasColumnName("main_flag");
-            entity.Property(e => e.ParentId).HasColumnName("ParentID");
-            entity.Property(e => e.PlanCost).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.DetailsFlag).HasColumnName("details_flag");
             entity.Property(e => e.SpecialFlag).HasColumnName("special_flag");
+
+            entity.Property(e => e.PlanCost).HasColumnType("decimal(18, 0)");
+
+            // 🔥 Relationships
+            entity.HasOne(e => e.Parent)
+                  .WithMany(e => e.Children)
+                  .HasForeignKey(e => e.ParentId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(e => e.Files)
+                  .WithOne(f => f.Plan)
+                  .HasForeignKey(f => f.PlanId);
         });
 
+        
         modelBuilder.Entity<SitePic>(entity =>
         {
             entity.HasKey(e => e.ImageId);

@@ -22,7 +22,7 @@ const FloatingSocialBar = () => {
       <Tooltip title="تابعنا على فيسبوك" placement="right">
         <IconButton
           component="a"
-          href="https://facebook.com" // غيري بالرابط الرسمي
+                  href="https://ar-ar.facebook.com/arabcont2017/" // غيري بالرابط الرسمي
           target="_blank"
           sx={{
             bgcolor: 'white',
@@ -43,7 +43,7 @@ const FloatingSocialBar = () => {
       <Tooltip title="تابعنا على يوتيوب" placement="right">
         <IconButton
           component="a"
-          href="https://youtube.com" // غيري بالرابط الرسمي
+                  href="https://www.youtube.com/user/arabcontCompany" // غيري بالرابط الرسمي
           target="_blank"
           sx={{
             bgcolor: 'white',
@@ -64,7 +64,7 @@ const FloatingSocialBar = () => {
       <Tooltip title="تابعنا على جوجل" placement="right">
         <IconButton
           component="a"
-          href="https://google.com" // أو رابط Google Business
+                  href="https://acwebsite-icmet-test.azurewebsites.net/" // أو رابط Google Business
           target="_blank"
           sx={{
             bgcolor: 'white',

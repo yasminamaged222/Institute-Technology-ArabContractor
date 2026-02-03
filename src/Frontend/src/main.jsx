@@ -9,20 +9,29 @@ import './index.css';
 import Navbar from './components/Navbar.jsx';
 import Footer from './components/Footer.jsx';
 import App from './App.jsx';
+import { ClerkProvider } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
+
+const PUBLISHABLE_KEY = "pk_test_bWlnaHR5LWJhc2lsaXNrLTExLmNsZXJrLmFjY291bnRzLmRldiQ"
+
+if (!PUBLISHABLE_KEY) {
+    throw new Error('Add your Clerk Publishable Key to the .env file')
+}
+
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
-    <CacheProvider value={cacheRtl}>
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <BrowserRouter>
-      <div dir="rtl"> {/* <-- مهم جدًا للـ HTML كله */}
-         <Navbar />
-          <App />
-        <Footer />
-          </div>
-      </BrowserRouter>
-    </ThemeProvider>
-    </CacheProvider>
-  </React.StrictMode>
+    <React.StrictMode>
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+            <CacheProvider value={cacheRtl}>
+                <ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <BrowserRouter>
+                        <div dir="rtl">
+                            <App />
+                        </div>
+                    </BrowserRouter>
+                </ThemeProvider>
+            </CacheProvider>
+        </ClerkProvider>
+    </React.StrictMode>
 );
