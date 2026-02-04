@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import './vision_goals.css'
 import { FaHardHat, FaCalendarAlt, FaUsers, FaLaptop, FaGraduationCap, FaCogs } from 'react-icons/fa';
 import img2 from '/images/vision.jfif';
