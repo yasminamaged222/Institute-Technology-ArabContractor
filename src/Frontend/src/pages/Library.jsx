@@ -6,15 +6,20 @@ export default function ModernLibrary() {
         typeof window !== 'undefined' ? window.innerWidth : 1200
     );
     const [scrollY, setScrollY] = useState(0);
-    const [activeSection, setActiveSection] = useState('hero');
+    const [scrollProgress, setScrollProgress] = useState(0);
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
-        const handleScroll = () => setScrollY(window.scrollY);
-        
+        const handleScroll = () => {
+            setScrollY(window.scrollY);
+            const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = (window.scrollY / totalHeight) * 100;
+            setScrollProgress(progress);
+        };
+
         window.addEventListener('resize', handleResize);
         window.addEventListener('scroll', handleScroll);
-        
+
         return () => {
             window.removeEventListener('resize', handleResize);
             window.removeEventListener('scroll', handleScroll);
@@ -33,20 +38,20 @@ export default function ModernLibrary() {
 
     const features = [
         {
-            text: "تضم المكتبة نخبة من الكتب المتميزة والتي تزيد عن أربعة آلاف كتاباً في جميع مجالات العلوم الهندسية المختلفة (مدنية – معمارية – ميكانيكا – كهرباء – صحي – مساحة) إلى جانب العلوم الأخرى",
-            gradient: 'linear-gradient(135deg, #0865a8 0%, #064a7a 100%)'
+            text: "تضم المكتبة تخبه من الكتب المتميزة والتي تزيد عن أربعة ألف كتاباً في جميع مجالات العلوم الهندسية المختلفة (مدنية – معمارية – ميكانيكا – كهرباء – صحي – مساحة .....) الى جانب العلوم الاخرى (الادارة – الاقتصاد – القانون – المحاسبة – الحاسب الآلي...)",
+            color: '#0865a8'
         },
         {
             text: "تشترك المكتبة في 17 دورية علمية متخصصة تغطي معظم المجالات المختلفة والتي تخدم جميع مشروعات الشركة",
-            gradient: 'linear-gradient(135deg, #f57c00 0%, #c96300 100%)'
+            color: '#f57c00'
         },
         {
             text: "3 مواقع متخصصة (موقع global render – موقع خلاصات كتب المدير وملفات المختار الإداري – موقع بوابة الخدمات القانونية)",
-            gradient: 'linear-gradient(135deg, #0865a8 0%, #0a7ec4 100%)'
+            color: '#0865a8'
         },
         {
-            text: "تحتوي المكتبة على أكثر من 2500 مادة علمية متخصصة بها خلاصة الخبرات العلمية لمشروعات الشركة",
-            gradient: 'linear-gradient(135deg, #f57c00 0%, #ff9100 100%)'
+            text: "تحتوي المكتبة على أكثر من 2500 مادة علمية متخصصة بها خلاصة الخبرات العلمية لمشروعات الشركة والتي تم اعدادها من قبل الخبراء والمتخصصين بالشركة بهدف نقل الخبرات المختلفة الى جميع العاملين من خلال العملية التدريبية.",
+            color: '#f57c00'
         }
     ];
 
@@ -78,38 +83,44 @@ export default function ModernLibrary() {
         window.open(url, '_blank', 'noopener,noreferrer');
     };
 
-    const parallaxOffset = scrollY * 0.5;
-
     return (
         <div style={styles.page}>
-            {/* Animated Background */}
-            <div style={styles.backgroundAnimation}>
-                <div style={{...styles.floatingShape, ...styles.shape1}}></div>
-                <div style={{...styles.floatingShape, ...styles.shape2}}></div>
-                <div style={{...styles.floatingShape, ...styles.shape3}}></div>
+            {/* Progress Bar */}
+            <div style={styles.progressBar}>
+                <div style={{ ...styles.progressFill, width: `${scrollProgress}%` }} />
+            </div>
+
+            {/* Fixed Overview Bar */}
+            <div className="fixed left-0 z-30 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: '80px' }}>
+                <div className="text-center">
+                    <span className="text-base">
+                        <a href="/" className="ml-3 text-gray-700 hover:text-gray-900">الصفحة الرئيسية</a>
+                        <span className="text-gray-500">-</span>
+                        <span className="mr-3 text-gray-700">المكــتبة</span>
+                    </span>
+                </div>
             </div>
 
             {/* Hero Section */}
-            <section style={{...styles.heroSection, transform: `translateY(${parallaxOffset}px)`}}>
+            <section style={{ ...styles.heroSection, paddingTop: isMobile ? '140px' : '160px' }}>
                 <div style={styles.heroContent}>
                     <div style={styles.heroIcon}>
                         <BookOpen style={styles.heroIconSvg} />
-                        <div style={styles.iconPulse}></div>
                     </div>
-                    <h1 style={{...styles.heroTitle, fontSize: isMobile ? '36px' : isTablet ? '48px' : '64px'}}>
+                    <h1 style={{ ...styles.heroTitle, fontSize: isMobile ? '36px' : isTablet ? '48px' : '64px' }}>
                         المكتبة الرقمية
                     </h1>
                     <div style={styles.heroUnderline}>
                         <div style={styles.underlineAnimate}></div>
                     </div>
-                    <p style={{...styles.heroSubtitle, fontSize: isMobile ? '16px' : '20px'}}>
+                    <p style={{ ...styles.heroSubtitle, fontSize: isMobile ? '16px' : '20px' }}>
                         رحلة معرفية تبدأ منذ 1975 • مكتبة عريقة • محتوى متجدد
                     </p>
                 </div>
             </section>
 
             {/* Stats Cards */}
-            <section style={{...styles.statsSection, padding: isMobile ? '40px 16px' : '60px 32px'}}>
+            <section style={{ ...styles.statsSection, padding: isMobile ? '40px 16px' : '60px 32px' }}>
                 <div style={styles.container}>
                     <div style={{
                         ...styles.statsGrid,
@@ -123,7 +134,7 @@ export default function ModernLibrary() {
             </section>
 
             {/* Description with Image */}
-            <section style={{...styles.descriptionSection, padding: isMobile ? '40px 16px' : '80px 32px'}}>
+            <section style={{ ...styles.descriptionSection, padding: isMobile ? '40px 16px' : '80px 32px' }}>
                 <div style={styles.container}>
                     <div style={{
                         ...styles.descriptionGrid,
@@ -135,16 +146,15 @@ export default function ModernLibrary() {
                                 <Sparkles size={16} />
                                 <span>نبذة عن المكتبة</span>
                             </div>
-                            <h2 style={{...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px'}}>
+                            <h2 style={{ ...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px' }}>
                                 مكتبة عريقة منذ 1975
                             </h2>
-                            <p style={{...styles.descriptionText, fontSize: isMobile ? '16px' : '18px'}}>
-                                لدينا مكتبة عريقة تم إنشاؤها منذ عام 1975 وذلك إيماناً من شركة المقاولون العرب بأهمية القراءة والاطلاع المستمر ومعرفة كل ما هو حديث وجديد بسوق العمل. نسعى دائماً لتوفير أحدث المراجع العلمية والتقنية لخدمة مشاريعنا ومنسوبينا.
-                            </p>
+                            <p style={{ ...styles.descriptionText, fontSize: isMobile ? '16px' : '18px' }}>
+دينا مكتبة عريقة تم إنشاؤها منذ عام 1975 وذلك إيماناً من شركة المقاولون العرب بأهمية القراءة والاطلاع المستمر ومعرفة كل ما هو حديث وجديد بسوق العمل                            </p>
                             <div style={styles.descriptionFeatures}>
                                 <DescriptionFeature icon={Check} text="محتوى محدث باستمرار" color="#0865a8" />
                                 <DescriptionFeature icon={Check} text="تغطية شاملة لجميع التخصصات" color="#f57c00" />
-                                <DescriptionFeature icon={Check} text="وصول سهل وسريع" color="#6b7280" />
+                                <DescriptionFeature icon={Check} text="وصول سهل وسريع" color="#000000" />
                             </div>
                         </div>
                         <div style={styles.imageWrapper}>
@@ -152,7 +162,7 @@ export default function ModernLibrary() {
                                 <img
                                     src="https://www.arabcont.com/icemt/assets/images/library-02.jpg"
                                     alt="المكتبة"
-                                    style={{...styles.mainImage, height: isMobile ? '300px' : '400px'}}
+                                    style={{ ...styles.mainImage, height: isMobile ? '300px' : '400px' }}
                                 />
                                 <div style={styles.imageOverlay}></div>
                             </div>
@@ -162,10 +172,10 @@ export default function ModernLibrary() {
             </section>
 
             {/* Features Grid */}
-            <section style={{...styles.featuresSection, padding: isMobile ? '40px 16px' : '80px 32px'}}>
+            <section style={{ ...styles.featuresSection, padding: isMobile ? '40px 16px' : '80px 32px' }}>
                 <div style={styles.container}>
                     <div style={styles.sectionHeader}>
-                        <h2 style={{...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px'}}>
+                        <h2 style={{ ...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px' }}>
                             مميزات المكتبة
                         </h2>
                         <p style={styles.sectionSubtitle}>
@@ -189,10 +199,10 @@ export default function ModernLibrary() {
             </section>
 
             {/* Books Showcase */}
-            <section style={{...styles.booksSection, padding: isMobile ? '40px 16px' : '80px 32px'}}>
+            <section style={{ ...styles.booksSection, padding: isMobile ? '40px 16px' : '80px 32px' }}>
                 <div style={styles.container}>
                     <div style={styles.sectionHeader}>
-                        <h2 style={{...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px'}}>
+                        <h2 style={{ ...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px' }}>
                             أمثلة من الكتب
                         </h2>
                         <p style={styles.sectionSubtitle}>
@@ -219,13 +229,14 @@ export default function ModernLibrary() {
             {/* Search Section */}
             <LibrarySearchSection isMobile={isMobile} isTablet={isTablet} />
 
-            {/* Footer Badge */}
-            <section style={styles.footerSection}>
-                <div style={styles.footerBadge}>
-                    <Award size={20} />
-                    <span>القسم الأول - المحتوى الثابت</span>
-                </div>
-            </section>
+            
+
+            {/* Font Import */}
+            <style>
+                {`
+                    @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap');
+                `}
+            </style>
         </div>
     );
 }
@@ -246,16 +257,15 @@ function StatCard({ stat, index, isMobile }) {
             transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: `all 0.6s ease ${index * 0.1}s`
         }}>
-            <div style={{...styles.statIcon, background: stat.color}}>
+            <div style={{ ...styles.statIcon, background: stat.color }}>
                 <Icon size={isMobile ? 24 : 28} color="white" />
             </div>
             <div style={styles.statContent}>
-                <div style={{...styles.statValue, fontSize: isMobile ? '28px' : '36px'}}>
+                <div style={{ ...styles.statValue, fontSize: isMobile ? '28px' : '36px' }}>
                     {stat.value}
                 </div>
                 <div style={styles.statLabel}>{stat.label}</div>
             </div>
-            <div style={{...styles.statGlow, background: `${stat.color}33`}}></div>
         </div>
     );
 }
@@ -263,8 +273,8 @@ function StatCard({ stat, index, isMobile }) {
 function DescriptionFeature({ icon: Icon, text, color }) {
     return (
         <div style={styles.descFeature}>
-            <div style={{...styles.descFeatureIcon, background: `${color}15`, color: color}}>
-                <Icon size={20} />
+            <div style={{ ...styles.descFeatureIcon, background: 'white', border: `2px solid ${color}` }}>
+                <Icon size={20} color={color} />
             </div>
             <span style={styles.descFeatureText}>{text}</span>
         </div>
@@ -284,9 +294,9 @@ function ModernFeatureCard({ feature, index, isMobile }) {
         <div
             style={{
                 ...styles.modernFeatureCard,
-                background: isHovered ? feature.gradient : 'white',
+                background: isHovered ? feature.color : 'white',
                 opacity: isVisible ? 1 : 0,
-                transform: isVisible 
+                transform: isVisible
                     ? (isHovered ? 'translateY(-8px) scale(1.02)' : 'translateY(0)')
                     : 'translateY(30px)',
                 transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -298,7 +308,7 @@ function ModernFeatureCard({ feature, index, isMobile }) {
             <div style={styles.featureNumber}>
                 <span style={{
                     ...styles.featureNumberText,
-                    color: isHovered ? 'white' : feature.gradient
+                    color: isHovered ? 'white' : feature.color
                 }}>
                     {index + 1}
                 </span>
@@ -306,19 +316,18 @@ function ModernFeatureCard({ feature, index, isMobile }) {
             <div style={styles.featureCheckIcon}>
                 <div style={{
                     ...styles.checkIconCircle,
-                    background: isHovered ? 'rgba(255,255,255,0.2)' : feature.gradient
+                    background: isHovered ? 'rgba(255,255,255,0.2)' : feature.color
                 }}>
-                    <Check size={isMobile ? 18 : 22} color={isHovered ? 'white' : 'white'} />
+                    <Check size={isMobile ? 18 : 22} color="white" />
                 </div>
             </div>
             <p style={{
                 ...styles.modernFeatureText,
-                color: isHovered ? 'white' : '#374151',
+                color: isHovered ? 'white' : '#000000',
                 fontSize: isMobile ? '15px' : '17px'
             }}>
                 {feature.text}
             </p>
-            <div style={styles.featureShine}></div>
         </div>
     );
 }
@@ -337,7 +346,7 @@ function ModernBookCard({ book, onClick, index, isMobile }) {
             style={{
                 ...styles.modernBookCard,
                 opacity: isVisible ? 1 : 0,
-                transform: isVisible 
+                transform: isVisible
                     ? (isHovered ? 'translateY(-12px) scale(1.03)' : 'translateY(0)')
                     : 'translateY(30px)',
                 transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -366,16 +375,16 @@ function ModernBookCard({ book, onClick, index, isMobile }) {
                     </div>
                     <div style={styles.bookAction}>اقرأ الآن</div>
                 </div>
-                <div style={{...styles.bookBadge, background: book.color}}>
+                <div style={{ ...styles.bookBadge, background: book.color }}>
                     {book.publisher}
                 </div>
             </div>
             <div style={styles.bookDetails}>
-                <h3 style={{...styles.bookTitle, fontSize: isMobile ? '16px' : '18px'}}>
+                <h3 style={{ ...styles.bookTitle, fontSize: isMobile ? '16px' : '18px' }}>
                     {book.title}
                 </h3>
                 <div style={styles.bookFooter}>
-                    <div style={{...styles.bookCta, color: book.color}}>
+                    <div style={{ ...styles.bookCta, color: book.color }}>
                         تصفح الكتاب
                         <ChevronLeft size={16} />
                     </div>
@@ -385,9 +394,6 @@ function ModernBookCard({ book, onClick, index, isMobile }) {
     );
 }
 
-// ─────────────────────────────────────────────────────────────
-// LibrarySearchSection  —  ONLY the useEffect fetch changed
-// ─────────────────────────────────────────────────────────────
 function LibrarySearchSection({ isMobile, isTablet }) {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
@@ -399,15 +405,13 @@ function LibrarySearchSection({ isMobile, isTablet }) {
     const [currentPage, setCurrentPage] = useState(1);
     const booksPerPage = 10;
 
-    // ── CHANGED: fetches every page from the paginated API, then merges ──
     useEffect(() => {
-        let cancelled = false; // abort flag if component unmounts mid-fetch
+        let cancelled = false;
 
         const fetchAllPages = async () => {
             try {
                 setLoading(true);
 
-                // 1) Fetch page 1 first to learn totalPages
                 const firstResponse = await fetch(
                     'https://acwebsite-icmet-test.azurewebsites.net/api/book/getAllBooks?pageIndex=1'
                 );
@@ -417,7 +421,6 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                 const totalPages = firstData.totalPages || 1;
                 let allItems = [...(firstData.data || [])];
 
-                // 2) Fetch remaining pages in parallel
                 if (totalPages > 1) {
                     const promises = [];
                     for (let page = 2; page <= totalPages; page++) {
@@ -436,9 +439,8 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                     });
                 }
 
-                if (cancelled) return; // component unmounted while fetching
+                if (cancelled) return;
 
-                // 3) Transform — same mapping as before
                 const placeholderImages = [
                     'https://images.unsplash.com/photo-1589998059171-988d887df646?w=300&h=400&fit=crop',
                     'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=300&h=400&fit=crop',
@@ -476,11 +478,9 @@ function LibrarySearchSection({ isMobile, isTablet }) {
 
         fetchAllPages();
 
-        return () => { cancelled = true; }; // cleanup on unmount
+        return () => { cancelled = true; };
     }, []);
-    // ── END OF CHANGED BLOCK ──────────────────────────────────────────────
 
-    // Get unique categories from API data
     const categories = React.useMemo(() => {
         const uniqueCategories = [...new Set(booksDatabase.map(book => book.category))];
         return uniqueCategories.map((cat, index) => ({
@@ -490,24 +490,21 @@ function LibrarySearchSection({ isMobile, isTablet }) {
         }));
     }, [booksDatabase]);
 
-    // Display books based on filters or show all by default
     const filteredBooks = booksDatabase.filter(book => {
         const matchesCategory = !selectedCategory || book.category === selectedCategory;
         const matchesYear = !selectedYear || book.year === selectedYear;
-        const matchesSearch = !searchText.trim() || 
+        const matchesSearch = !searchText.trim() ||
             book.title.toLowerCase().includes(searchText.toLowerCase()) ||
             book.author.toLowerCase().includes(searchText.toLowerCase());
-        
+
         return matchesCategory && matchesYear && matchesSearch;
     });
 
-    // Calculate pagination
     const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
     const startIndex = (currentPage - 1) * booksPerPage;
     const endIndex = startIndex + booksPerPage;
     const currentBooks = filteredBooks.slice(startIndex, endIndex);
 
-    // Reset to page 1 when filters change
     useEffect(() => {
         setCurrentPage(1);
     }, [selectedCategory, selectedYear, searchText]);
@@ -526,18 +523,17 @@ function LibrarySearchSection({ isMobile, isTablet }) {
         return years.sort((a, b) => b.localeCompare(a));
     }
 
-    // Show message based on filter state
     const isFiltering = selectedCategory || selectedYear || searchText.trim();
-    const resultMessage = isFiltering 
+    const resultMessage = isFiltering
         ? `تم العثور على ${filteredBooks.length} نتيجة`
         : `عرض جميع الكتب (${filteredBooks.length})`;
 
     return (
-        <section style={{...styles.searchSection, padding: isMobile ? '40px 16px' : '80px 32px'}}>
+        <section style={{ ...styles.searchSection, padding: isMobile ? '40px 16px' : '80px 32px' }}>
             <div style={styles.container}>
                 <div style={styles.searchContainer}>
                     <div style={styles.sectionHeader}>
-                        <h2 style={{...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px'}}>
+                        <h2 style={{ ...styles.sectionTitle, fontSize: isMobile ? '28px' : '42px' }}>
                             ابحث في المكتبة
                         </h2>
                         <p style={styles.sectionSubtitle}>
@@ -547,7 +543,7 @@ function LibrarySearchSection({ isMobile, isTablet }) {
 
                     <div style={{
                         ...styles.searchForm,
-                        gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr 1fr'
+                        gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr'
                     }}>
                         <div style={styles.searchInputWrapper}>
                             <input
@@ -564,11 +560,11 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                                 }}
                                 disabled={loading}
                             />
-                            <Search 
+                            <Search
                                 style={{
                                     ...styles.inputIcon,
                                     color: isSearchFocused ? '#0865a8' : '#9ca3af'
-                                }} 
+                                }}
                             />
                         </div>
 
@@ -614,7 +610,7 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                             <span>جاري تحميل الكتب...</span>
                         </div>
                     ) : error ? (
-                        <div style={{...styles.resultsInfo, background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)', color: '#ef4444'}}>
+                        <div style={{ ...styles.resultsInfo, background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)', color: '#ef4444' }}>
                             <span>حدث خطأ في تحميل الكتب: {error}</span>
                         </div>
                     ) : (
@@ -655,9 +651,8 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                             </div>
                         )}
 
-                        {/* Pagination */}
                         {filteredBooks.length > 0 && totalPages > 1 && (
-                            <Pagination 
+                            <Pagination
                                 currentPage={currentPage}
                                 totalPages={totalPages}
                                 onPageChange={setCurrentPage}
@@ -678,47 +673,39 @@ function Pagination({ currentPage, totalPages, onPageChange, isMobile }) {
         setIsVisible(true);
     }, []);
 
-    // Generate page numbers to display
     const getPageNumbers = () => {
         const pages = [];
         const maxVisible = isMobile ? 3 : 5;
-        
+
         if (totalPages <= maxVisible + 2) {
-            // Show all pages if total is small
             for (let i = 1; i <= totalPages; i++) {
                 pages.push(i);
             }
         } else {
-            // Always show first page
             pages.push(1);
-            
+
             let start = Math.max(2, currentPage - Math.floor(maxVisible / 2));
             let end = Math.min(totalPages - 1, start + maxVisible - 1);
-            
-            // Adjust start if we're near the end
+
             if (end === totalPages - 1) {
                 start = Math.max(2, end - maxVisible + 1);
             }
-            
-            // Add ellipsis after first page if needed
+
             if (start > 2) {
                 pages.push('...');
             }
-            
-            // Add middle pages
+
             for (let i = start; i <= end; i++) {
                 pages.push(i);
             }
-            
-            // Add ellipsis before last page if needed
+
             if (end < totalPages - 1) {
                 pages.push('...');
             }
-            
-            // Always show last page
+
             pages.push(totalPages);
         }
-        
+
         return pages;
     };
 
@@ -741,7 +728,6 @@ function Pagination({ currentPage, totalPages, onPageChange, isMobile }) {
     const handlePageClick = (page) => {
         if (page !== '...' && page !== currentPage) {
             onPageChange(page);
-            // window.scrollTo({ top: 50, behavior: 'smooth' });
         }
     };
 
@@ -813,7 +799,7 @@ function SearchResultCard({ book, index }) {
     }, [index]);
 
     const getCategoryInfo = (categoryName) => {
-        const colors = ['#0865a8', '#f57c00', '#6b7280'];
+        const colors = ['#0865a8', '#f57c00', '#000000'];
         const colorIndex = categoryName.length % colors.length;
         return { name: categoryName, color: colors[colorIndex] };
     };
@@ -825,7 +811,7 @@ function SearchResultCard({ book, index }) {
             style={{
                 ...styles.resultCard,
                 opacity: isVisible ? 1 : 0,
-                transform: isVisible 
+                transform: isVisible
                     ? (isHovered ? 'translateY(-8px)' : 'translateY(0)')
                     : 'translateY(20px)',
                 transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -849,14 +835,14 @@ function SearchResultCard({ book, index }) {
                 }}></div>
             </div>
             <div style={styles.resultContent}>
-                <div style={{...styles.resultCategory, background: categoryInfo.color}}>
+                <div style={{ ...styles.resultCategory, background: categoryInfo.color }}>
                     {categoryInfo.name}
                 </div>
                 <h4 style={styles.resultTitle}>{book.title}</h4>
                 <p style={styles.resultAuthor}>{book.author}</p>
                 <div style={styles.resultFooter}>
                     <span style={styles.resultYear}>{book.year}</span>
-                    <div style={{...styles.resultDot, background: categoryInfo.color}}></div>
+                    <div style={{ ...styles.resultDot, background: categoryInfo.color }}></div>
                 </div>
             </div>
         </div>
@@ -866,56 +852,31 @@ function SearchResultCard({ book, index }) {
 const styles = {
     page: {
         minHeight: '100vh',
-        background: '#0f172a',
-        fontFamily: "'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        background: 'white',
+        fontFamily: '"Droid Arabic Kufi", serif',
         position: 'relative',
         overflow: 'hidden'
     },
-    backgroundAnimation: {
+    progressBar: {
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
-        bottom: 0,
-        pointerEvents: 'none',
-        zIndex: 0
+        height: '4px',
+        background: '#e5e7eb',
+        zIndex: 9999
     },
-    floatingShape: {
-        position: 'absolute',
-        borderRadius: '50%',
-        filter: 'blur(80px)',
-        opacity: 0.15,
-        animation: 'float 20s infinite ease-in-out'
-    },
-    shape1: {
-        width: '400px',
-        height: '400px',
-        background: 'linear-gradient(135deg, #0865a8 0%, #064a7a 100%)',
-        top: '-200px',
-        right: '-200px',
-        animationDelay: '0s'
-    },
-    shape2: {
-        width: '300px',
-        height: '300px',
-        background: 'linear-gradient(135deg, #f57c00 0%, #c96300 100%)',
-        bottom: '10%',
-        left: '-150px',
-        animationDelay: '7s'
-    },
-    shape3: {
-        width: '350px',
-        height: '350px',
-        background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
-        top: '50%',
-        right: '10%',
-        animationDelay: '14s'
+    progressFill: {
+        height: '100%',
+        background: 'linear-gradient(to right, #f57c00, #0865a8)',
+        transition: 'width 0.3s ease'
     },
     heroSection: {
         position: 'relative',
         zIndex: 1,
-        padding: '120px 32px 80px',
-        textAlign: 'center'
+        padding: '160px 32px 80px',
+        textAlign: 'center',
+        background: 'white'
     },
     heroContent: {
         maxWidth: '900px',
@@ -931,8 +892,7 @@ const styles = {
         background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
         borderRadius: '30px',
         marginBottom: '32px',
-        boxShadow: '0 20px 60px rgba(8, 101, 168, 0.4)',
-        animation: 'bounce 2s infinite'
+        boxShadow: '0 20px 60px rgba(8, 101, 168, 0.4)'
     },
     heroIconSvg: {
         width: '56px',
@@ -941,28 +901,17 @@ const styles = {
         position: 'relative',
         zIndex: 2
     },
-    iconPulse: {
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        borderRadius: '30px',
-        background: 'rgba(8, 101, 168, 0.4)',
-        animation: 'pulse 2s infinite'
-    },
     heroTitle: {
         fontSize: '64px',
         fontWeight: '800',
-        background: 'linear-gradient(135deg, #ffffff 0%, #94a3b8 100%)',
-        WebkitBackgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundClip: 'text',
+        color: '#000000',
         marginBottom: '24px',
         lineHeight: '1.2'
     },
     heroUnderline: {
         width: '200px',
         height: '6px',
-        background: 'rgba(255, 255, 255, 0.1)',
+        background: '#e5e7eb',
         borderRadius: '999px',
         margin: '0 auto 32px',
         overflow: 'hidden',
@@ -977,7 +926,7 @@ const styles = {
     },
     heroSubtitle: {
         fontSize: '20px',
-        color: '#94a3b8',
+        color: '#6b7280',
         fontWeight: '500',
         letterSpacing: '0.5px'
     },
@@ -988,25 +937,26 @@ const styles = {
         zIndex: 1
     },
     statsSection: {
-        padding: '60px 32px'
+        padding: '60px 32px',
+        background: 'white'
     },
     statsGrid: {
         display: 'grid',
         gap: '24px'
     },
     statCard: {
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
+        background: 'white',
         borderRadius: '20px',
         padding: '32px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '2px solid #e5e7eb',
         display: 'flex',
         alignItems: 'center',
         gap: '20px',
         position: 'relative',
         overflow: 'hidden',
         cursor: 'pointer',
-        transition: 'all 0.4s ease'
+        transition: 'all 0.4s ease',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
     },
     statIcon: {
         width: '64px',
@@ -1024,28 +974,17 @@ const styles = {
     statValue: {
         fontSize: '36px',
         fontWeight: '800',
-        color: 'white',
+        color: '#000000',
         marginBottom: '4px'
     },
     statLabel: {
         fontSize: '16px',
-        color: '#94a3b8',
+        color: '#6b7280',
         fontWeight: '500'
     },
-    statGlow: {
-        position: 'absolute',
-        top: '-50%',
-        right: '-50%',
-        width: '200%',
-        height: '200%',
-        borderRadius: '50%',
-        filter: 'blur(60px)',
-        opacity: 0,
-        transition: 'opacity 0.4s ease',
-        pointerEvents: 'none'
-    },
     descriptionSection: {
-        padding: '80px 32px'
+        padding: '80px 32px',
+        background: 'white'
     },
     descriptionGrid: {
         display: 'grid',
@@ -1060,8 +999,8 @@ const styles = {
         alignItems: 'center',
         gap: '8px',
         padding: '10px 20px',
-        background: 'rgba(8, 101, 168, 0.1)',
-        border: '1px solid rgba(8, 101, 168, 0.2)',
+        background: 'white',
+        border: '2px solid #0865a8',
         borderRadius: '999px',
         color: '#0865a8',
         fontSize: '14px',
@@ -1071,13 +1010,13 @@ const styles = {
     sectionTitle: {
         fontSize: '42px',
         fontWeight: '800',
-        color: 'white',
+        color: '#000000',
         marginBottom: '24px',
         lineHeight: '1.2'
     },
     descriptionText: {
         fontSize: '18px',
-        color: '#94a3b8',
+        color: '#4b5563',
         lineHeight: '1.8',
         marginBottom: '32px'
     },
@@ -1100,7 +1039,7 @@ const styles = {
         justifyContent: 'center'
     },
     descFeatureText: {
-        color: 'white',
+        color: '#000000',
         fontSize: '16px',
         fontWeight: '500'
     },
@@ -1111,7 +1050,8 @@ const styles = {
         position: 'relative',
         borderRadius: '24px',
         overflow: 'hidden',
-        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.4)'
+        boxShadow: '0 25px 50px rgba(0, 0, 0, 0.1)',
+        border: '3px solid #e5e7eb'
     },
     mainImage: {
         width: '100%',
@@ -1125,11 +1065,12 @@ const styles = {
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'linear-gradient(135deg, rgba(8, 101, 168, 0.3) 0%, rgba(245, 124, 0, 0.3) 100%)',
+        background: 'linear-gradient(135deg, rgba(8, 101, 168, 0.2) 0%, rgba(245, 124, 0, 0.2) 100%)',
         pointerEvents: 'none'
     },
     featuresSection: {
-        padding: '80px 32px'
+        padding: '80px 32px',
+        background: '#f9fafb'
     },
     sectionHeader: {
         textAlign: 'center',
@@ -1137,7 +1078,7 @@ const styles = {
     },
     sectionSubtitle: {
         fontSize: '18px',
-        color: '#94a3b8',
+        color: '#6b7280',
         marginTop: '12px'
     },
     featuresGrid: {
@@ -1147,10 +1088,11 @@ const styles = {
     modernFeatureCard: {
         padding: '40px',
         borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        border: '2px solid #e5e7eb',
         position: 'relative',
         overflow: 'hidden',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
     },
     featureNumber: {
         position: 'absolute',
@@ -1159,16 +1101,15 @@ const styles = {
         width: '48px',
         height: '48px',
         borderRadius: '50%',
-        background: 'rgba(255, 255, 255, 0.1)',
+        background: 'white',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backdropFilter: 'blur(10px)'
+        border: '2px solid #e5e7eb'
     },
     featureNumberText: {
         fontSize: '20px',
-        fontWeight: '800',
-        backgroundClip: 'text'
+        fontWeight: '800'
     },
     featureCheckIcon: {
         marginBottom: '24px'
@@ -1188,30 +1129,22 @@ const styles = {
         position: 'relative',
         zIndex: 1
     },
-    featureShine: {
-        position: 'absolute',
-        top: '-50%',
-        right: '-50%',
-        width: '200%',
-        height: '200%',
-        background: 'linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent)',
-        transform: 'rotate(45deg)',
-        transition: 'all 0.6s ease'
-    },
     booksSection: {
-        padding: '80px 32px'
+        padding: '80px 32px',
+        background: 'white'
     },
     booksGrid: {
         display: 'grid',
         gap: '32px'
     },
     modernBookCard: {
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
+        background: 'white',
         borderRadius: '24px',
         overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        cursor: 'pointer'
+        border: '2px solid #e5e7eb',
+        cursor: 'pointer',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+        transition: 'all 0.3s ease'
     },
     bookImageContainer: {
         position: 'relative',
@@ -1245,13 +1178,12 @@ const styles = {
         backdropFilter: 'blur(10px)',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        animation: 'scaleIn 0.4s ease'
+        justifyContent: 'center'
     },
     bookAction: {
         padding: '12px 32px',
         background: 'white',
-        color: '#0f172a',
+        color: '#000000',
         borderRadius: '999px',
         fontSize: '16px',
         fontWeight: '700'
@@ -1265,8 +1197,7 @@ const styles = {
         color: 'white',
         fontSize: '12px',
         fontWeight: '700',
-        textTransform: 'uppercase',
-        backdropFilter: 'blur(10px)'
+        textTransform: 'uppercase'
     },
     bookDetails: {
         padding: '24px'
@@ -1274,7 +1205,7 @@ const styles = {
     bookTitle: {
         fontSize: '18px',
         fontWeight: '700',
-        color: 'white',
+        color: '#000000',
         lineHeight: '1.4',
         marginBottom: '16px',
         minHeight: '50px'
@@ -1292,15 +1223,15 @@ const styles = {
     },
     searchSection: {
         padding: '80px 32px',
-        background: 'rgba(15, 23, 42, 0.5)'
+        background: '#f9fafb'
     },
     searchContainer: {
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(20px)',
+        background: 'white',
         borderRadius: '32px',
         padding: '48px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        marginBottom: '48px'
+        border: '2px solid #e5e7eb',
+        marginBottom: '48px',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
     },
     searchForm: {
         display: 'grid',
@@ -1314,10 +1245,10 @@ const styles = {
         width: '100%',
         padding: '16px 50px 16px 24px',
         fontSize: '16px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '2px solid rgba(255, 255, 255, 0.1)',
+        background: 'white',
+        border: '2px solid #e5e7eb',
         borderRadius: '16px',
-        color: 'white',
+        color: '#000000',
         outline: 'none',
         transition: 'all 0.3s ease',
         fontFamily: 'inherit',
@@ -1330,10 +1261,10 @@ const styles = {
         width: '100%',
         padding: '16px 50px 16px 24px',
         fontSize: '16px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '2px solid rgba(255, 255, 255, 0.1)',
+        background: 'white',
+        border: '2px solid #e5e7eb',
         borderRadius: '16px',
-        color: 'white',
+        color: '#000000',
         outline: 'none',
         cursor: 'pointer',
         transition: 'all 0.3s ease',
@@ -1346,33 +1277,16 @@ const styles = {
         right: '18px',
         top: '50%',
         transform: 'translateY(-50%)',
-        color: '#94a3b8',
+        color: '#9ca3af',
         width: '20px',
         height: '20px',
         pointerEvents: 'none'
-    },
-    modernSearchButton: {
-        padding: '16px 40px',
-        fontSize: '18px',
-        fontWeight: '700',
-        color: 'white',
-        background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
-        border: 'none',
-        borderRadius: '16px',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '12px',
-        transition: 'all 0.3s ease',
-        fontFamily: 'inherit',
-        boxShadow: '0 10px 30px rgba(8, 101, 168, 0.3)'
     },
     resultsInfo: {
         marginTop: '32px',
         padding: '16px 24px',
         background: 'rgba(8, 101, 168, 0.1)',
-        border: '1px solid rgba(8, 101, 168, 0.2)',
+        border: '2px solid rgba(8, 101, 168, 0.2)',
         borderRadius: '16px',
         display: 'flex',
         alignItems: 'center',
@@ -1388,15 +1302,14 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'center',
         padding: '80px 20px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
+        background: 'white',
         borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
+        border: '2px solid #e5e7eb'
     },
     loadingSpinner: {
         width: '48px',
         height: '48px',
-        border: '4px solid rgba(255, 255, 255, 0.1)',
+        border: '4px solid #e5e7eb',
         borderTop: '4px solid #0865a8',
         borderRadius: '50%',
         animation: 'spin 1s linear infinite',
@@ -1404,7 +1317,7 @@ const styles = {
     },
     loadingText: {
         fontSize: '18px',
-        color: '#94a3b8',
+        color: '#6b7280',
         fontWeight: '500'
     },
     resultsGrid: {
@@ -1412,12 +1325,13 @@ const styles = {
         gap: '24px'
     },
     resultCard: {
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
+        background: 'white',
         borderRadius: '20px',
         overflow: 'hidden',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        cursor: 'pointer'
+        border: '2px solid #e5e7eb',
+        cursor: 'pointer',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+        transition: 'all 0.3s ease'
     },
     resultImageWrapper: {
         position: 'relative',
@@ -1436,7 +1350,7 @@ const styles = {
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'linear-gradient(to top, rgba(15, 23, 42, 0.8), transparent)',
+        background: 'linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent)',
         transition: 'opacity 0.3s ease'
     },
     resultContent: {
@@ -1456,14 +1370,14 @@ const styles = {
     resultTitle: {
         fontSize: '16px',
         fontWeight: '700',
-        color: 'white',
+        color: '#000000',
         lineHeight: '1.4',
         marginBottom: '8px',
         minHeight: '44px'
     },
     resultAuthor: {
         fontSize: '13px',
-        color: '#94a3b8',
+        color: '#6b7280',
         marginBottom: '12px',
         textAlign: 'right'
     },
@@ -1476,7 +1390,7 @@ const styles = {
     resultYear: {
         fontSize: '12px',
         fontWeight: '600',
-        color: '#64748b'
+        color: '#9ca3af'
     },
     resultDot: {
         width: '8px',
@@ -1486,10 +1400,9 @@ const styles = {
     noResults: {
         textAlign: 'center',
         padding: '80px 20px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
+        background: 'white',
         borderRadius: '24px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
+        border: '2px solid #e5e7eb'
     },
     noResultsIcon: {
         fontSize: '64px',
@@ -1498,27 +1411,27 @@ const styles = {
     noResultsTitle: {
         fontSize: '28px',
         fontWeight: '800',
-        color: 'white',
+        color: '#000000',
         marginBottom: '12px'
     },
     noResultsText: {
         fontSize: '16px',
-        color: '#94a3b8'
+        color: '#6b7280'
     },
     footerSection: {
         padding: '60px 32px',
-        textAlign: 'center'
+        textAlign: 'center',
+        background: 'white'
     },
     footerBadge: {
         display: 'inline-flex',
         alignItems: 'center',
         gap: '12px',
         padding: '16px 32px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'white',
+        border: '2px solid #e5e7eb',
         borderRadius: '999px',
-        color: '#94a3b8',
+        color: '#6b7280',
         fontSize: '16px',
         fontWeight: '600'
     },
@@ -1529,15 +1442,14 @@ const styles = {
         gap: '12px',
         marginTop: '48px',
         padding: '24px',
-        background: 'rgba(255, 255, 255, 0.05)',
-        backdropFilter: 'blur(10px)',
+        background: 'white',
         borderRadius: '20px',
-        border: '1px solid rgba(255, 255, 255, 0.1)'
+        border: '2px solid #e5e7eb'
     },
     paginationButton: {
         background: 'transparent',
         border: 'none',
-        color: 'white',
+        color: '#000000',
         fontFamily: 'inherit',
         fontSize: '16px',
         fontWeight: '600',
@@ -1551,8 +1463,8 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'white',
+        border: '2px solid #e5e7eb',
         cursor: 'pointer'
     },
     paginationNumbers: {
@@ -1567,47 +1479,29 @@ const styles = {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(255, 255, 255, 0.05)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
+        background: 'white',
+        border: '2px solid #e5e7eb',
         cursor: 'pointer',
         padding: '0 12px'
     },
     paginationNumberActive: {
         background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
-        border: '1px solid transparent',
-        boxShadow: '0 4px 12px rgba(8, 101, 168, 0.4)'
+        border: '2px solid transparent',
+        color: 'white'
     },
     paginationEllipsis: {
-        color: '#64748b',
+        color: '#9ca3af',
         fontSize: '16px',
         fontWeight: '600',
         padding: '0 8px'
     }
 };
 
-// Add CSS animations
 const styleSheet = document.createElement('style');
 styleSheet.textContent = `
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0) rotate(0deg); }
-        33% { transform: translate(30px, -30px) rotate(120deg); }
-        66% { transform: translate(-20px, 20px) rotate(240deg); }
-    }
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 0.4; }
-        50% { transform: scale(1.15); opacity: 0.8; }
-    }
-    @keyframes bounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-    }
     @keyframes slide {
         0% { transform: translateX(-100%); }
         100% { transform: translateX(350%); }
-    }
-    @keyframes scaleIn {
-        from { transform: scale(0); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
     }
     @keyframes spin {
         from { transform: rotate(0deg); }
@@ -1615,12 +1509,12 @@ styleSheet.textContent = `
     }
     
     input::placeholder, select option:first-child {
-        color: #64748b;
+        color: #9ca3af;
     }
     
     select option {
-        background: #1e293b;
-        color: white;
+        background: white;
+        color: #000000;
     }
 `;
 document.head.appendChild(styleSheet);

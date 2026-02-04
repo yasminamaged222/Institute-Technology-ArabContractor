@@ -63,19 +63,19 @@ const features = [
     {
         icon: 'https://static.vecteezy.com/system/resources/thumbnails/008/143/259/small/blue-book-icon-book-sign-flat-style-blue-book-symbol-vector.jpg',
         title: 'مكتبة علمية متخصصة',
-        subtitle: 'نمتلك مكتبة متخصصة في العلوم الهندسية والمالية والإدارية',
+        subtitle: 'نمتلك مكتبة متخصصة فى العلوم الهندسية والمالية والإدارية لخدمة قطاع البناء والتشييد',
         link: '/library',
     },
     {
         icon: 'https://www.shutterstock.com/image-vector/blue-graduation-cap-vector-icon-260nw-2627871193.jpg',
         title: 'مجموعة متميزة من المدربين',
-        subtitle: 'نعتمد على الخبرات والكفاءات البشرية الفريدة',
+        subtitle: 'نعتمد على الخبرات والكفاءات البشرية الفريدة التي تتسم بقدر عالي من المهارات والقدرات والحماس',
         link: '/instructors',
     },
     {
         icon: 'https://static.vecteezy.com/system/resources/previews/024/283/038/non_2x/flat-style-blue-color-laptop-icon-vector.jpg',
         title: 'التدريب عن بعد ( اونلاين )',
-        subtitle: 'نسعى لتطبيق التدريب والتطوير القائم على التكنولوجيا',
+        subtitle: 'نسعى دائما لنصبح الأفضل في تطبيق التدريب والتطوير القائم على التكنولوجيا حيث نقوم بتصميم وإجراء دورات تدريبية عبر الإنترنت',
         link: '/online-training',
     },
 ];

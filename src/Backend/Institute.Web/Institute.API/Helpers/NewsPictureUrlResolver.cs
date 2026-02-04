@@ -7,8 +7,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace Institute.API.Helpers
 {
-    public class NewsPictureUrlResolver
-     : IValueResolver<Dailynews, NewsListDto, string?>
+    public class NewsPictureUrlResolver<TDestination>
+     : IValueResolver<Dailynews, TDestination, string?>
     {
         private readonly IConfiguration _configuration;
 
@@ -19,7 +19,7 @@ namespace Institute.API.Helpers
 
         public string? Resolve(
             Dailynews source,
-            NewsListDto destination,
+            TDestination destination,
             string? destMember,
             ResolutionContext context)
         {

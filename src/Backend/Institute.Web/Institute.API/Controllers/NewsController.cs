@@ -81,14 +81,14 @@ namespace Institute.API.Controllers
             if (id <= 0)
                 return BadRequest("Invalid news id");
 
-            var spec = new NewsWithMainPicSpec(id);
+            var spec = new NewsWithDetailsSpec(id);
 
             var news = await _bookService.GetEntityWithSpec(spec);
 
             if (news == null)
                 return NotFound();
 
-            var newsDto = _mapper.Map<NewsListDto>(news);
+            var newsDto = _mapper.Map<NewsDetailsDto>(news);
 
             return Ok(newsDto);
         }

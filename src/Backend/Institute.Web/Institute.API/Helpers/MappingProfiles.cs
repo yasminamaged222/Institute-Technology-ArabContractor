@@ -21,9 +21,20 @@ namespace Institute.API.Helpers
                o => o.MapFrom(s => s.ATitel)) // اسم العمود الحقيقي
            .ForMember(d => d.PublishedAt,
                o => o.MapFrom(s => s.NewsDate))
-           .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom<NewsPictureUrlResolver>());
-       
-                        
+           .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom<NewsPictureUrlResolver<NewsListDto>>());
+
+
+            CreateMap<Dailynews, NewsDetailsDto>()
+    .ForMember(d => d.Id,
+        o => o.MapFrom(s => s.NewsId))
+    .ForMember(d => d.Title,
+        o => o.MapFrom(s => s.ATitel))
+    .ForMember(d => d.Details,
+        o => o.MapFrom(s => s.ADetails)) // اسم العمود الحقيقي
+    .ForMember(d => d.PublishedAt,
+        o => o.MapFrom(s => s.NewsDate))
+    .ForMember(d => d.ImageUrl,
+        o => o.MapFrom<NewsPictureUrlResolver<NewsDetailsDto>>());
 
 
         }

@@ -21,25 +21,25 @@ const Certifications = () => {
         },
         {
             title: "ISO 9001:2015",
-            text: "تم الحصول على شهادة الجودة منذ عام 2000 مع تحديثها سنويًا",
+            text: "تم الحصول علي شهادة الجودة منذ عام 2000 في مجال تصميم وإدارة وتنفيذ الخدمات التدريبية والتقييم والاختبارات مع تحديثها سنويا وحتي أخر إصدار لها (ISO9001:2015) وذلك لتقديم أفضل خدمة للمتدربين",
             image:
                 "https://images.weserv.nl/?url=www.arabcont.com/icemt/assets/images/iso9001.jpg",
         },
         {
             title: "PMI",
-            text: "إعتماد المعهد من معهد إدارة الأعمال PMI لإعداد المتدربين لإجتياز PMP",
+            text: "تم إعتماد المعهد التكنولوجي لهندسة التشييد والإدارة من معهد إدارة الأعمال (PMI) لإعداد المتدربين لإجتياز إختبار شهادة ال PMP",
             image:
                 "https://images.weserv.nl/?url=www.arabcont.com/icemt/assets/images/pmi.jpg",
         },
         {
             title: "Authorized Training Partner",
-            text: "إعتماد المعهد كشريك تدريب معتمد",
+            text: " تم إعتماد المعهد التكنولوجي لهندسة التشييد والإدارة (Authorized Training Partner)",
             image:
                 "https://images.weserv.nl/?url=www.arabcont.com/icemt/assets/images/Partner.jpg",
         },
         {
             title: "Autodesk Training Center",
-            text: "مركز تدريب معتمد من Autodesk",
+            text: "تم إعتماد المعهد التكنولوجي لهندسة التشييد والإدارة (Autodesk Authorized Training Center)",
             image:
                 "https://images.weserv.nl/?url=www.arabcont.com/icemt/assets/images/autodeskCert.jpg",
         },
@@ -222,7 +222,7 @@ const Certifications = () => {
                             خطابات الشكر
                         </h2>
                         <p style={{ color: "#555", marginBottom: "30px" }}>
-                            بعض خطابات الشكر الموجهة للمعهد من عملاؤنا
+                            بعض خطابات الشكر الموجهة الى المعهد التكنولوجي من عملاؤئنا الكرام داخل وخارج جمهورية مصر العربية
                         </p>
 
                         <Swiper

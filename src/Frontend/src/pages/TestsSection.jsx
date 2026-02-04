@@ -53,12 +53,13 @@ export default function ICMETTests() {
           box-sizing: border-box;
         }
 
-        body {
+       body {
           font-family: 'Droid Arabic Kufi', serif;
           background: #ffffff;
           color: var(--dark);
           line-height: 1.8;
         }
+
 
         .rtl-layout {
           text-align: right;
@@ -72,6 +73,11 @@ export default function ICMETTests() {
           max-width: 1200px;
           margin: 1rem auto;
           animation: fadeInUp 0.8s ease-out;
+
+          /* ✅ ADD ONLY THIS */
+          background: #ffffff;
+          padding: 2rem;
+          border-radius: 24px;
         }
 
         .hero-title {
@@ -436,12 +442,17 @@ export default function ICMETTests() {
                 <p className="hero-description">
                     يعد معهد الإدارة والتكنولوجيا- المقاولون العرب واحد من أوائل المعاهد في جمهورية مصر العربية ، حيث يقوم هذا القسم  باجراء عدد كبير من الاختبارات المقننة الى العملاء الخارجيين طبقا للتعاقد وجميع الفروع والإدارات داخل الشركة
                 </p>
+                <p className="hero-description">
+كما يقوم القسم بعمل التقييمات اللازمة لتحديد مدى صلاحية الموظف لشغل الوظيفة ، معتمداً على خبرة السادة المحاضرين في عمل فنية تقييمات مناسبة لكافة الوظائف والمهن المختلفة ذات مرجعية لاختبارات الشهادات الدولية مثل ( ICDL & Toefl ) ، كذلك مستويات المهارات القومية ، واصدار النتيجة المعتمدة والمحددة لصلاحية شغل الوظيفة                </p>
             </section>
-
+            <section className="hero-section">
+                <h1 className="hero-title">ولم يقتصر العمل في قسم الاختبارات على العاملين بالشركة فقط ، بل امتد عمل التقييمات ليشمل العملاء خارجيين ايضاً، مثال </h1>
+                            </section>
             {/* External Clients Stats */}
-            <div className="stats-grid">
+            <div className="stats-grid" >
                 {externalClients.map((client, index) => (
                     <div key={index} className="stat-card">
+
                         <div className="stat-icon">📊</div>
                         <h3 className="stat-title">{client.name}</h3>
                         <div className="stat-number">{client.count}</div>
