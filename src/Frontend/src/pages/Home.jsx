@@ -707,7 +707,7 @@ const Home = () => {
                 maxWidth="lg"
                 sx={{
                     position: 'relative',
-                    top: { xs: -30, sm: -40, md: -100 },
+                    top: { xs: -30, sm: -40, md: -65 },
                     zIndex: 2,
                     px: 2,
                     mb: { xs: 4, md: -5 }
