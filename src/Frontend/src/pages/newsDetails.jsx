@@ -149,8 +149,8 @@ const NewsDetails = () => {
                     borderRadius: '10px',
                     boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
                 }}>
-                    {newsItem.content ? (
-                        <div dangerouslySetInnerHTML={{ __html: newsItem.content }} />
+                    {newsItem.details ? (
+                        <div dangerouslySetInnerHTML={{ __html: newsItem.details }} />
                     ) : (
                         <p>{newsItem.description || 'لا يوجد محتوى متاح لهذا الخبر.'}</p>
                     )}
