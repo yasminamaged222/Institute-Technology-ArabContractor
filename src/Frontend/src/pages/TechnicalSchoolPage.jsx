@@ -54,8 +54,11 @@ export default function TechnicalSchoolPage() {
             }}>
                 <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                     <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '20px' }}>
-                        مدرسة المقاولون العرب الثانوية الفنية للتعليم والتدريب المزدوج
+                        مدرسة المقاولون العرب الثانوية الفنية 
                     </h1>
+                    <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '20px' }}>
+                        للتعليم والتدريب المزدوج
+                    </h2>
                 </div>
             </div>
 

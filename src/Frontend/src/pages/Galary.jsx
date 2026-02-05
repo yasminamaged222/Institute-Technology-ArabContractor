@@ -383,7 +383,7 @@ const VideoGalleryPage = () => {
                     { id: '5f4Pb_agNR8', title: 'فيديو 2' },
                     { id: 'km_RuntColw', title: 'فيديو 3' },
                 ]}
-                color="#1565C0"
+                color="#f57c00"
             />
 
             {/* English Section */}
@@ -394,7 +394,7 @@ const VideoGalleryPage = () => {
                     { id: 'DK91iVe4DuQ', title: 'Video 2' },
                     { id: 'dR5LsCk4b2Y', title: 'Video 3' },
                 ]}
-                color="#2E7D32"
+                color="#D32F2F"
             />
 
             {/* French Section */}
@@ -405,7 +405,7 @@ const VideoGalleryPage = () => {
                     { id: '7CXLX7iCWcs', title: 'Vidéo 2' },
                     { id: 'Lb-f8lk_cCg', title: 'Vidéo 3' },
                 ]}
-                color="#D32F2F"
+                color="#0865a8"
             />
 
             {/* CEA Program Header */}
@@ -527,9 +527,7 @@ const AlbumDetailPage = ({ album, onBack }) => {
                         disabled={currentPhotoIndex >= photos.length - 1}
                         className="nav-button"
                     >
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
                         <span>التالي</span>
                     </button>
 
@@ -543,9 +541,7 @@ const AlbumDetailPage = ({ album, onBack }) => {
                         className="nav-button"
                     >
                         <span>السابق</span>
-                        <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
                     </button>
                 </div>
 

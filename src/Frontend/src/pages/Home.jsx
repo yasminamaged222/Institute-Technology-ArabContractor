@@ -24,6 +24,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/autoplay';
 import { Link } from 'react-router-dom';
+import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
 
 const slides = [
@@ -824,7 +825,6 @@ const Home = () => {
                                 }}
                             />
                         </Box>
-
                         {/* Text Side */}
                         <Box sx={{ flex: '1', textAlign: { xs: 'left', md: 'left' } }}>
                             <Typography
@@ -866,31 +866,35 @@ const Home = () => {
                                 للوصول إلى أعلى درجات التطوير والقدرة على الثبات وبالأخص في مجالات التسويق، إدارة الشركات، التخطيط المؤسسي، نظم المعلومات، الأشغال الكهروميكانيكية، وكذا التدريب المهني.
                             </Typography>
 
-                            <Button
-                                variant="contained"
-                                component={Link}
-                                to="/overview"
-                                sx={{
-                                    bgcolor: '#f57c00',
-                                    color: 'white',
-                                    borderRadius: '30px',
-                                    px: { xs: 4, md: 6 },
-                                    py: { xs: 1.5, md: 2 },
-                                    fontSize: { xs: '0.9rem', md: '1rem' },
-                                    fontWeight: 'bold',
-                                    fontFamily: '"Droid Arabic Kufi", serif',
-                                    boxShadow: '0 4px 14px rgba(245, 124, 0, 0.4)',
-                                    '&:hover': {
-                                        bgcolor: '#e65100',
-                                        transform: 'translateY(-2px)',
-                                        boxShadow: '0 6px 20px rgba(230, 81, 0, 0.5)'
-                                    },
-                                    transition: 'all 0.3s'
-                                }}
-                            >
-                                اقرأ المزيد
-                            </Button>
+                            {/* Button centered under text */}
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Button
+                                    variant="contained"
+                                    component={Link}
+                                    to="/overview"
+                                    sx={{
+                                        bgcolor: '#f57c00',
+                                        color: 'white',
+                                        borderRadius: '30px',
+                                        px: { xs: 4, md: 6 },
+                                        py: { xs: 1.5, md: 2 },
+                                        fontSize: { xs: '0.9rem', md: '1rem' },
+                                        fontWeight: 'bold',
+                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        boxShadow: '0 4px 14px rgba(245, 124, 0, 0.4)',
+                                        '&:hover': {
+                                            bgcolor: '#e65100',
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 6px 20px rgba(230, 81, 0, 0.5)'
+                                        },
+                                        transition: 'all 0.3s'
+                                    }}
+                                >
+                                    اقرأ المزيد
+                                </Button>
+                            </Box>
                         </Box>
+
                     </Box>
                 </Container>
             </Box>
@@ -998,418 +1002,10 @@ const Home = () => {
             </div>
 
             {/* Courses Slide Show */}
-            <Container
-                maxWidth="xl"
-                sx={{
-                    py: { xs: 4, sm: 6, md: 10 },
-                    bgcolor: '#fff',
-                    px: { xs: 2, sm: 3, md: 4 }
-                }}
-            >
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    mb: { xs: 3, md: 4 }
-                }}>
-                    <Typography
-                        variant="h4"
-                        fontWeight="bold"
-                        sx={{
-                            mb: 1,
-                            color: '#0865a8',
-                            fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.125rem' },
-                            textAlign: 'center',
-                            fontFamily: '"Droid Arabic Kufi", serif'
-                            // Remove className="section-title" or override it
-                        }}
-                    >
-                        البرامج التدريبية
-                    </Typography>
-                    <Box
-                        sx={{
-                            width: '100px',
-                            height: '4px',
-                            background: 'linear-gradient(90deg, #0865a8 0%, #f39c12 100%)',
-                            borderRadius: '2px'
-                        }}
-                    />
-                </Box>
-
-                <Box sx={{ position: 'relative' }}>
-                    <Swiper
-                        className="courses-swiper"
-                        modules={[Autoplay, Navigation]}
-                        autoplay={{ delay: 5000, disableOnInteraction: false }}
-                        navigation={{
-                            nextEl: '.custom-next',
-                            prevEl: '.custom-prev',
-                        }}
-                        spaceBetween={15}
-                        slidesPerView={1.2}
-                        centeredSlides={false}
-                        breakpoints={{
-                            320: { slidesPerView: 1.5, spaceBetween: 10 },
-                            480: { slidesPerView: 2, spaceBetween: 12 },
-                            600: { slidesPerView: 2.5, spaceBetween: 15 },
-                            768: { slidesPerView: 3, spaceBetween: 15 },
-                            992: { slidesPerView: 4, spaceBetween: 15 },
-                            1200: { slidesPerView: 4, spaceBetween: 20 },
-                            1440: { slidesPerView: 5, spaceBetween: 20 },
-                        }}
-                    >
-                        {courses.map((course, index) => (
-                            <SwiperSlide key={index} style={{ height: 'auto', display: 'flex' }}>
-                                <Card
-                                    onMouseEnter={(e) => handlePopoverOpen(e, course)}
-                                    onMouseLeave={handlePopoverClose}
-                                    sx={{
-                                        height: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        borderRadius: { xs: 2, sm: 3, md: 4 },
-                                        border: '0.5px solid #0865a8',
-                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        cursor: 'pointer',
-                                        willChange: 'transform, box-shadow, opacity',
-                                        '&:hover': {
-                                            transform: 'translateY(-6px)',
-                                            boxShadow: '0 8px 24px rgba(8, 101, 168, 0.2)',
-                                            borderColor: '#064a7a',
-                                            '& .course-card-image': {
-                                                transform: 'scale(1.05)',
-                                            },
-                                            '& .course-button': {
-                                                bgcolor: '#064a7a',
-                                                transform: 'scale(1.02)',
-                                            }
-                                        },
-                                    }}
-                                >
-                                    {/* Header: Course Icon */}
-                                    <Box
-                                        className="course-card-height"
-                                        sx={{
-                                            height: {
-                                                xs: '95px',
-                                                sm: '110px',
-                                                md: '120px',
-                                                lg: '130px',
-                                                xl: '140px'
-                                            },
-                                            overflow: 'hidden',
-                                            bgcolor: '#f7f9fa',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: { xs: '8px 8px 0 0', md: '16px 16px 0 0' }
-                                        }}
-                                    >
-                                        <Box
-                                            component="img"
-                                            className="course-card-image"
-                                            src={course.icon}
-                                            alt={course.title}
-                                            sx={{
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: 'cover',
-                                                transition: 'transform 0.3s ease'
-                                            }}
-                                        />
-                                    </Box>
-
-                                    <CardContent
-                                        sx={{
-                                            p: { xs: 1.2, sm: 1.5, md: 2 },
-                                            flexGrow: 1,
-                                            display: 'flex',
-                                            flexDirection: 'column'
-                                        }}
-                                    >
-                                        <Typography
-                                            variant="subtitle1"
-                                            fontWeight="bold"
-                                            className="course-title"
-                                            sx={{
-                                                lineHeight: 1.3,
-                                                mb: 0.5,
-                                                minHeight: { xs: '32px', sm: '36px', md: '40px' },
-                                                overflow: 'hidden',
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                fontSize: {
-                                                    xs: '0.8rem',
-                                                    sm: '0.88rem',
-                                                    md: '0.95rem',
-                                                    lg: '1rem'
-                                                },
-                                                color: '#000',
-                                                fontFamily: '"Droid Arabic Kufi", serif'
-                                            }}
-                                        >
-                                            {course.title}
-                                        </Typography>
-
-                                        <Typography
-                                            variant="caption"
-                                            color="text.secondary"
-                                            display="block"
-                                            className="course-subtitle"
-                                            sx={{
-                                                mb: 1,
-                                                fontSize: {
-                                                    xs: '0.65rem',
-                                                    sm: '0.7rem',
-                                                    md: '0.75rem'
-                                                },
-                                                fontFamily: '"Droid Arabic Kufi", serif'
-                                            }}
-                                        >
-                                            {course.subtitle}
-                                        </Typography>
-
-                                        <Typography
-                                            variant="h6"
-                                            fontWeight="bold"
-                                            className="course-price"
-                                            sx={{
-                                                fontSize: {
-                                                    xs: '0.85rem',
-                                                    sm: '0.95rem',
-                                                    md: '1rem',
-                                                    lg: '1.125rem'
-                                                },
-                                                color: '#000',
-                                                fontFamily: '"Droid Arabic Kufi", serif',
-                                                mt: 'auto'
-                                            }}
-                                        >
-                                            100ج.م
-                                        </Typography>
-                                    </CardContent>
-
-                                    <CardActions
-                                        sx={{
-                                            p: { xs: 1.2, sm: 1.5, md: 2 },
-                                            pt: 0
-                                        }}
-                                    >
-                                        <Button
-                                            fullWidth
-                                            variant="contained"
-                                            className="course-button"
-                                            sx={{
-                                                bgcolor: '#0865a8',
-                                                borderRadius: { xs: 2, sm: 3, md: 4 },
-                                                fontWeight: 'bold',
-                                                textTransform: 'none',
-                                                fontSize: {
-                                                    xs: '0.7rem',
-                                                    sm: '0.8rem',
-                                                    md: '0.9rem',
-                                                    lg: '0.95rem'
-                                                },
-                                                py: { xs: 0.7, sm: 0.9, md: 1 },
-                                                fontFamily: '"Droid Arabic Kufi", serif',
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    bgcolor: '#064a7a',
-                                                    transform: 'scale(1.02)'
-                                                },
-                                            }}
-                                        >
-                                            إضافة إلى السلة
-                                        </Button>
-                                    </CardActions>
-                                </Card>
-                            </SwiperSlide>
-                        ))}
-                    </Swiper>
-
-                    {/* Navigation Arrows */}
-                    <Box
-                        className="custom-prev"
-                        sx={{
-                            position: 'absolute',
-                            left: { xs: -10, sm: -15, md: -20, lg: -25 },
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 10,
-                            bgcolor: '#0865a8',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            height: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            display: { xs: 'none', sm: 'flex' },
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            border: '1px solid #064a7a',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                bgcolor: '#064a7a',
-                                transform: 'translateY(-50%) scale(1.1)'
-                            }
-                        }}
-                    >
-                        <Typography
-                            variant="h4"
-                            sx={{
-                                mt: -0.5,
-                                fontSize: { sm: '1.2rem', md: '1.8rem', lg: '2.125rem' }
-                            }}
-                        >
-                            ‹
-                        </Typography>
-                    </Box>
-
-                    <Box
-                        className="custom-next"
-                        sx={{
-                            position: 'absolute',
-                            right: { xs: -10, sm: -15, md: -20, lg: -25 },
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 10,
-                            bgcolor: '#0865a8',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            height: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            display: { xs: 'none', sm: 'flex' },
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            border: '1px solid #064a7a',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                bgcolor: '#064a7a',
-                                transform: 'translateY(-50%) scale(1.1)'
-                            }
-                        }}
-                    >
-                        <Typography
-                            variant="h4"
-                            sx={{
-                                mt: -0.5,
-                                fontSize: { sm: '1.2rem', md: '1.8rem', lg: '2.125rem' }
-                            }}
-                        >
-                            ›
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Popover Expansion (RTL Optimized) */}
-                <Popover
-                    sx={{
-                        pointerEvents: 'none',
-                        display: { xs: 'none', lg: 'block' }
-                    }}
-                    open={Boolean(popoverAnchor)}
-                    anchorEl={popoverAnchor}
-                    onClose={handlePopoverClose}
-                    anchorOrigin={{ vertical: 'center', horizontal: 'left' }}
-                    transformOrigin={{ vertical: 'center', horizontal: 'right' }}
-                    disableRestoreFocus
-                    PaperProps={{
-                        onMouseEnter: () => {
-                            if (closeTimer) clearTimeout(closeTimer);
-                        },
-                        onMouseLeave: handlePopoverClose,
-                        sx: {
-                            pointerEvents: 'auto',
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
-                        }
-                    }}
-                >
-                    <Box sx={{ p: 3, maxWidth: 350, bgcolor: '#fff', pointerEvents: 'auto' }}>
-                        <Typography
-                            variant="h6"
-                            fontWeight="bold"
-                            gutterBottom
-                            sx={{
-                                lineHeight: 1.3,
-                                color: '#000',
-                                fontFamily: '"Droid Arabic Kufi", serif'
-                            }}
-                        >
-                            {selectedCourse?.title}
-                        </Typography>
-
-                        <Typography
-                            variant="caption"
-                            color="success.main"
-                            fontWeight="bold"
-                            display="block"
-                            sx={{
-                                mb: 1,
-                                fontFamily: '"Droid Arabic Kufi", serif'
-                            }}
-                        >
-                            تم التحديث مؤخراً
-                        </Typography>
-
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                mb: 2,
-                                fontFamily: '"Droid Arabic Kufi", serif'
-                            }}
-                        >
-                            {selectedCourse?.description}
-                        </Typography>
-
-                        <Box sx={{ mb: 2 }}>
-                            {['شامل للمبتدئين', 'تطبيقات عملية', 'شهادة معتمدة'].map((text, i) => (
-                                <Typography
-                                    key={i}
-                                    variant="caption"
-                                    display="block"
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        mb: 0.5,
-                                        fontFamily: '"Droid Arabic Kufi", serif'
-                                    }}
-                                >
-                                    <span style={{ color: '#0865a8', fontWeight: 'bold' }}>✓</span> {text}
-                                </Typography>
-                            ))}
-                        </Box>
-
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            sx={{
-                                borderColor: '#0865a8',
-                                color: '#0865a8',
-                                fontWeight: 'bold',
-                                borderRadius: 4,
-                                py: 1,
-                                fontFamily: '"Droid Arabic Kufi", serif',
-                                transition: 'all 0.3s ease',
-                                '&:hover': {
-                                    borderColor: '#064a7a',
-                                    bgcolor: 'rgba(8, 101, 168, 0.08)',
-                                    transform: 'translateY(-2px)'
-                                }
-                            }}
-                        >
-                            إقرأ المزيد
-                        </Button>
-                    </Box>
-                </Popover>
-            </Container>
-
-            <Box sx={{ py: { xs: 4, md: 8 }, px: { xs: 2, md: 0 } }}>
-                <StatsSection />
+            <Box sx={{ m: 0, p: 0 }}>
+                <DynamicCoursesSection />
             </Box>
+
 
             {/* Technical Education Section */}
             <Box sx={{ py: 2 }}>
@@ -1602,10 +1198,10 @@ const Home = () => {
             </Container>
 
 
-            <Box>
+            {/* NEW CODE - No margin or padding */}
+            <Box sx={{ m: 0, p: 0 }}>
                 <CustomersSection />
             </Box>
-
         </Box>
     );
 };
