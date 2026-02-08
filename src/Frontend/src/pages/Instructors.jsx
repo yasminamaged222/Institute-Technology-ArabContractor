@@ -385,6 +385,10 @@ const Instructors = () => {
     const API_BASE_URL = 'https://acwebsite-icmet-test.azurewebsites.net/api';
     const IMAGE_BASE_URL = 'https://www.arabcont.com/icemt/assets/images/';
 
+    useEffect(() => {
+        document.title = '    محاضرينا - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+
     // Fetch lecturers list on component mount
     useEffect(() => {
         const fetchLecturers = async () => {

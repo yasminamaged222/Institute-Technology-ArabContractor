@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import './overview.css'
 import { FaHardHat, FaCalendarAlt, FaUsers  , FaLaptop , FaGraduationCap , FaCogs} from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
+
 function Overview() {
+
+    useEffect(() => {
+        document.title = '     نبذة عامة - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+
     return (
         <div>
             

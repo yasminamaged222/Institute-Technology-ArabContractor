@@ -1,6 +1,9 @@
 ﻿import React from 'react';
+import { useEffect } from 'react';
 
 export default function VocationalTraining() {
+
+   
     const handleNavigate = (path) => {
         window.location.href = path;
     };
@@ -21,6 +24,12 @@ export default function VocationalTraining() {
             gradient: 'linear-gradient(135deg, #0865a8, #1976d2)'
         }
     ];
+
+    useEffect(() => {
+        document.title = 'التدريب الحرفي - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+    
+    
 
     return (
         <>

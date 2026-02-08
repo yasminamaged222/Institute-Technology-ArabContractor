@@ -181,6 +181,10 @@ const Home = () => {
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
 
+    useEffect(() => {
+        document.title = 'المعهد التكنولوجي لهندسة التشييد والإدارة - الصفحة الرئيسية';
+    }, []);
+
     React.useEffect(() => {
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % slides.length);

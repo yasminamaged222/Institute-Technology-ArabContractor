@@ -441,6 +441,15 @@ const CoursesPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // ✅ Set dynamic page title based on program data
+    useEffect(() => {
+        if (programData && programData.programName) {
+            document.title = `${programData.programName} - المعهد التكنولوجي لهندسة التشييد والإدارة`;
+        } else {
+            document.title = 'الدورات التدريبية - المعهد التكنولوجي لهندسة التشييد والإدارة';
+        }
+    }, [programData]);
+
     useEffect(() => {
         const fetchCourses = async () => {
             try {

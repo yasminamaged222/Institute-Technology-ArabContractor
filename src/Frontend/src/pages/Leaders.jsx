@@ -5,6 +5,10 @@ import { ChevronDown, CheckCircle, Users, Target, Lightbulb, Award, TrendingUp, 
 const ResponsibilityCard = ({ title, items, isExpandable = false }) => {
     const [isExpanded, setIsExpanded] = useState(!isExpandable);
 
+    useEffect(() => {
+        document.title = '   مجلس قادة المستقبل - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+
     return (
         <div className="group relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white shadow-lg transition-all hover:border-gray-300 hover:shadow-2xl sm:rounded-2xl">
             <div

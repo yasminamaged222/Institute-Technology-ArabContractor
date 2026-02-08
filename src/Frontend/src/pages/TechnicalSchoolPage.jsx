@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function TechnicalSchoolPage() {
     const [openAccordion, setOpenAccordion] = useState(null);
@@ -34,6 +35,10 @@ export default function TechnicalSchoolPage() {
     ];
 
     const [currentImage, setCurrentImage] = useState(0);
+
+    useEffect(() => {
+        document.title = '         تطوير التعليم الفني - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
 

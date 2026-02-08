@@ -18,6 +18,10 @@ const News = () => {
 
     const years = ['2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
 
+    useEffect(() => {
+        document.title = '           الاخبار - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+
     // --- Fetch runs whenever year OR currentPage changes ---
     useEffect(() => {
         setLoading(true);
@@ -52,6 +56,8 @@ const News = () => {
             scrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
         }
     };
+
+    
 
     return (
         <div className="news-page-container" style={{ paddingTop: '70px', backgroundColor: '#fff', direction: 'rtl' }}>
