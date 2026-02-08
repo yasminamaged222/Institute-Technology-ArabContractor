@@ -26,6 +26,8 @@ import 'swiper/css/autoplay';
 import { Link } from 'react-router-dom';
 import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 const slides = [
     {
@@ -99,96 +101,21 @@ const downloadItems = [
     }
 ];
 
-const courses = [
-    {
-        title: 'برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة',
-        subtitle: 'برامج موجهة للمهندسين',
-        icon: 'https://media.istockphoto.com/id/1824047483/vector/civil-engineering-solid-icon-set.jpg?s=612x612&w=0&k=20&c=6Ee2eri1r54hsHX_Nfuy6n7xvdGUmXLzDjCPRqEnfvI=',
-        originalPrice: 1000,
-        discountedPrice: 750,
-        hours: 45,
-        level: 'متوسط',
-        description: 'برنامج شامل لتأهيل المهندسين الجدد في مجال المدني والعمارة مع تطبيقات عملية.',
-    },
-    {
-        title: 'برنامج إعداد وتأهيل مهندس حديث ميكانيكا وكهرباء',
-        subtitle: 'برامج موجهة للمهندسين',
-        icon: 'https://www.shutterstock.com/image-vector/mechanical-engineering-icon-blue-vector-260nw-2617424085.jpg',
-        originalPrice: 1200,
-        discountedPrice: 800,
-        hours: 50,
-        level: 'متوسط',
-        description: 'تدريب متخصص في الميكانيكا والكهرباء للمهندسين الحديثين.',
-    },
-    {
-        title: 'المحور الأول : المعلومات الهندسية الأساسية',
-        subtitle: 'برامج تأهيلية للمهندسين',
-        icon: 'https://media.istockphoto.com/id/1652170312/vector/project-management-solid-icon-set.jpg?s=612x612&w=0&k=20&c=k3LCjVKEjqEqkTPnOyqG_sQiP4Tj6umdV2GDyc-F6QY=',
-        originalPrice: 500,
-        discountedPrice: 350,
-        hours: 25,
-        level: 'مبتدئ',
-        description: 'الأساسيات الهندسية الضرورية لكل مهندس جديد.',
-    },
-    {
-        title: 'المحور الثانى : التطبيقات الهندسية المختلفة',
-        subtitle: 'برامج تأهيلية للمهندسين',
-        icon: 'https://media.istockphoto.com/id/2148250739/vector/quality-assurance-solid-icons-collection-guarantee-support-improvement-development-testing.jpg?s=612x612&w=0&k=20&c=ZEgQV0sszyPEgFynhTj5ypRPZotYfRaEd2VT0kjqdFU=',
-        originalPrice: 600,
-        discountedPrice: 450,
-        hours: 30,
-        level: 'متوسط',
-        description: 'تطبيقات عملية في مجالات الهندسة المختلفة.',
-    },
-    {
-        title: 'المحور الثالث : إدارة المشروعات والجودة',
-        subtitle: 'برامج الإدارة الطبية',
-        icon: 'https://media.istockphoto.com/id/1652170312/vector/project-management-solid-icon-set.jpg?s=612x612&w=0&k=20&c=k3LCjVKEjqEqkTPnOyqG_sQiP4Tj6umdV2GDyc-F6QY=',
-        originalPrice: 1200,
-        discountedPrice: 900,
-        hours: 60,
-        level: 'متقدم',
-        description: 'إدارة المشروعات باحترافية مع معايير الجودة العالمية.',
-    },
-    {
-        title: 'المحور الرابع : الطرق المختلفة لدعم اتخاذ القرار',
-        subtitle: 'تحليل الإحتياجات التدريبية',
-        icon: 'https://static.vecteezy.com/system/resources/thumbnails/029/457/921/small_2x/decision-making-icon-icon-of-people-at-a-crossroads-icon-suitable-for-web-site-design-app-user-interfaces-printable-etc-flat-line-icon-style-simple-design-editable-free-vector.jpg',
-        originalPrice: 700,
-        discountedPrice: 500,
-        hours: 35,
-        level: 'متوسط',
-        description: 'أدوات وطرق دعم اتخاذ القرار في المشاريع.',
-    },
-    {
-        title: 'المحور الخامس :العقود والعطاءات والمشتريات',
-        subtitle: 'برامج القطاع القانوني والعقارى',
-        icon: 'https://www.shutterstock.com/shutterstock/photos/2639061137/display_1500/stock-vector-the-procurement-management-blue-icon-set-captures-essential-concepts-like-sourcing-contracts-2639061137.jpg',
-        originalPrice: 900,
-        discountedPrice: 650,
-        hours: 40,
-        level: 'متقدم',
-        description: 'كل ما يخص العقود والمشتريات في المشاريع الكبرى.',
-    },
-];
-
-let closeTimer;
-
 const Home = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [popoverAnchor, setPopoverAnchor] = useState(null);
-    const [selectedCourse, setSelectedCourse] = useState(null);
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
 
-    React.useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % slides.length);
-        }, 5000);
-        return () => clearInterval(timer);
-    }, [slides.length]);
+    const handlePrevSlide = () => {
+        setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+    };
+
+    const handleNextSlide = () => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+    };
 
     const slide = slides[currentSlide];
+
 
     useEffect(() => {
         fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews')
@@ -206,21 +133,6 @@ const Home = () => {
             })
             .catch(() => setNewsLoading(false));
     }, []);
-
-
-    const handlePopoverOpen = (event, course) => {
-        if (closeTimer) clearTimeout(closeTimer);
-
-        setPopoverAnchor(event.currentTarget);
-        setSelectedCourse(course);
-    };
-
-    const handlePopoverClose = () => {
-        closeTimer = setTimeout(() => {
-            setPopoverAnchor(null);
-            setSelectedCourse(null);
-        }, 300);
-    };
 
     return (
         <Box sx={{ position: 'relative', overflowX: 'hidden' }}>
@@ -303,9 +215,6 @@ const Home = () => {
     .course-title { font-size: 0.8rem !important; min-height: 32px !important; }
     .course-subtitle { font-size: 0.65rem !important; }
     .course-price { font-size: 0.85rem !important; }
-    .course-button { font-size: 0.7rem !important; padding: 6px 12px !important; }
-    .news-card-title { font-size: 0.8rem !important; height: 50px !important; }
-    .news-date { font-size: 0.6rem !important; }
     .download-item-title { font-size: 0.8rem !important; }
     .download-icon { font-size: 1.1rem !important; }
     .search-bar-container { width: 95% !important; max-width: 300px !important; }
@@ -373,9 +282,9 @@ const Home = () => {
     .feature-icon { width: 38px !important; height: 38px !important; }
     .feature-title { font-size: 1rem !important; }
     .feature-subtitle { font-size: 0.78rem !important; }
-    .about-title { font-size: 1.5rem !important; }
-    .about-text { font-size: 0.92rem !important; }
-    .section-title { font-size: 1.65rem !important; margin-bottom: 2rem !important; }
+    .about-title { fontSize: 1.5rem !important; }
+    .about-text { fontSize: 0.92rem !important; }
+    .section-title { fontSize: 1.65rem !important; margin-bottom: 2rem !important; }
     .course-card-height { height: 115px !important; }
     .course-title { font-size: 0.88rem !important; min-height: 38px !important; }
     .course-subtitle { font-size: 0.7rem !important; }
@@ -449,7 +358,7 @@ const Home = () => {
     .hero-section { height: 75vh !important; }
     .hero-subtitle { font-size: 1.4rem !important; }
     .hero-title { font-size: 3.8rem !important; }
-    .hero-button { font-size: 1.15rem !important; padding: 18px 50px !important; }
+    .hero-button { fontSize: 1.15rem !important; padding: 18px 50px !important; }
     .feature-card { min-height: 250px !important; width: 350px !important; }
     .feature-icon { width: 48px !important; height: 48px !important; }
     .feature-title { font-size: 1.2rem !important; }
@@ -477,10 +386,10 @@ const Home = () => {
     .hero-subtitle { font-size: 1.55rem !important; }
     .hero-title { font-size: 4.3rem !important; }
     .hero-button { font-size: 1.25rem !important; padding: 20px 56px !important; }
-    .feature-card { min-height: 260px !important; width: 373px !important; }
+    .feature-card { min-height: 260px !important; width: 350px !important; }
     .feature-icon { width: 50px !important; height: 50px !important; }
     .feature-title { font-size: 1.25rem !important; }
-    .feature-subtitle { font-size: 0.90rem !important; }
+    .feature-subtitle { font-size: 0.9rem !important; }
     .about-title { font-size: 2rem !important; }
     .about-text { font-size: 1.1rem !important; }
     .section-title { font-size: 2.125rem !important; margin-bottom: 3rem !important; }
@@ -519,7 +428,7 @@ const Home = () => {
     .news-card-title { font-size: 1.15rem !important; height: 72px !important; }
     .news-date { font-size: 0.85rem !important; }
     .download-item-title { font-size: 1.05rem !important; }
-    .download-icon { font-size: 2.2rem !important; }
+    .download-icon { fontSize: 2.2rem !important; }
 }
 
 /* ===================================
@@ -587,7 +496,16 @@ const Home = () => {
 
 
             {/* Hero Slider */}
-            <Box className="hero-section" sx={{ position: 'relative', height: '600px', overflow: 'hidden', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+            <Box
+                className="hero-section"
+                sx={{
+                    position: 'relative',
+                    height: '600px',
+                    overflow: 'hidden',
+                    borderBottomLeftRadius: '24px',
+                    borderBottomRightRadius: '24px'
+                }}
+            >{/* Background Image */}
                 <Box
                     sx={{
                         position: 'absolute',
@@ -603,8 +521,16 @@ const Home = () => {
                         borderBottomRightRadius: '24px'
                     }}
                 />
-                <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0, 0, 0, 0.45)', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }} />
-
+                {/* Dark Overlay */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        bgcolor: 'rgba(0, 0, 0, 0.45)',
+                        borderBottomLeftRadius: '24px',
+                        borderBottomRightRadius: '24px'
+                    }}
+                />
                 {/* Hero Content */}
                 <Box
                     sx={{
@@ -632,6 +558,7 @@ const Home = () => {
                     >
                         {slide.subtitle}
                     </Typography>
+
                     <Typography
                         className="hero-title"
                         variant="h3"
@@ -646,6 +573,7 @@ const Home = () => {
                     >
                         {slide.title}
                     </Typography>
+
                     <Button
                         variant="contained"
                         href={slide.link}
@@ -666,41 +594,85 @@ const Home = () => {
                     >
                         اقرأ المزيد
                     </Button>
-                </Box>
 
-                {/* Vertical Circular Pagination - Right Side */}
+                </Box>
+                {/* Navigation Controls */}
                 <Box
                     sx={{
                         position: 'absolute',
-                        left: 30,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
+                        bottom: 30,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                         display: 'flex',
-                        flexDirection: 'column',
                         gap: 2,
-                        zIndex: 2
+                        alignItems: 'center',
+                        zIndex: 3,
                     }}
                 >
-                    {slides.map((_, index) => (
-                        <Box
-                            key={index}
-                            onClick={() => setCurrentSlide(index)}
-                            sx={{
-                                width: 14,
-                                height: 14,
-                                borderRadius: '50%',
-                                bgcolor: currentSlide === index ? '#f57c00' : 'rgba(255, 255, 255, 0.5)',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease',
-                                border: currentSlide === index ? '2px solid white' : 'none',
-                                '&:hover': {
-                                    bgcolor: currentSlide === index ? '#f57c00' : 'rgba(255, 255, 255, 0.8)',
-                                    transform: 'scale(1.3)'
-                                }
-                            }}
-                        />
-                    ))}
+                    {/* Previous Button */}
+                    <IconButton
+                        onClick={handlePrevSlide}
+                        sx={{
+                            bgcolor: 'rgba(255, 255, 255, 0.25)',
+                            color: 'white',
+                            backdropFilter: 'blur(10px)',
+                            border: '2px solid rgba(255, 255, 255, 0.4)',
+                            width: 45,
+                            height: 45,
+                            '&:hover': {
+                                bgcolor: '#f57c00',
+                                transform: 'scale(1.1)',
+                                border: '2px solid #f57c00',
+                            },
+                            transition: 'all 0.3s ease',
+                        }}
+                    >
+                        <ChevronRightIcon />
+                    </IconButton>
+
+                    {/* Dots */}
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        {slides.map((_, index) => (
+                            <Box
+                                key={index}
+                                onClick={() => setCurrentSlide(index)}
+                                sx={{
+                                    width: currentSlide === index ? 28 : 10,
+                                    height: 10,
+                                    borderRadius: '5px',
+                                    bgcolor:
+                                        currentSlide === index
+                                            ? '#f57c00'
+                                            : 'rgba(255,255,255,0.6)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                }}
+                            />
+                        ))}
+                    </Box>
+
+                    {/* Next Button */}
+                    <IconButton
+                        onClick={handleNextSlide}
+                        sx={{
+                            bgcolor: 'rgba(255, 255, 255, 0.25)',
+                            color: 'white',
+                            backdropFilter: 'blur(10px)',
+                            border: '2px solid rgba(255, 255, 255, 0.4)',
+                            width: 45,
+                            height: 45,
+                            '&:hover': {
+                                bgcolor: '#f57c00',
+                                transform: 'scale(1.1)',
+                                border: '2px solid #f57c00',
+                            },
+                            transition: 'all 0.3s ease',
+                        }}
+                    >
+                        <ChevronLeftIcon />
+                    </IconButton>
                 </Box>
+
             </Box>
 
             {/* 3 Small Cards */}
@@ -708,7 +680,7 @@ const Home = () => {
                 maxWidth="lg"
                 sx={{
                     position: 'relative',
-                    top: { xs: -30, sm: -40, md: -65 },
+                    top: { xs: -30, sm: -40, md: -25 },
                     zIndex: 2,
                     px: 2,
                     mb: { xs: 4, md: -5 }
