@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { ShoppingCart, Trash2, Tag, ArrowRight, Star, Minus, Plus } from 'lucide-react';
+import { ShoppingCart, Trash2, Tag, ArrowRight, Star, Minus, Plus, BookOpen } from 'lucide-react';
 import { Link } from "react-router-dom";
 
 const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
@@ -15,16 +15,13 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
     return (
         <div className="group relative mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-xl">
             <div className="flex flex-col md:flex-row">
-                {/* Image */}
-                <div className="relative md:w-64">
-                    <img
-                        src={item.image}
-                        alt={item.title}
-                        className="h-48 w-full object-cover md:h-full"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-l"></div>
+                {/* Icon instead of Image */}
+                <div className="relative flex items-center justify-center bg-gradient-to-br from-[#0865a8] to-[#f57c00] md:w-64">
+                    <div className="p-12">
+                        <BookOpen className="h-24 w-24 text-white" strokeWidth={1.5} />
+                    </div>
                     {item.badge && (
-                        <span className="absolute left-3 top-3 rounded-full bg-gradient-to-r from-[#0865a8] to-[#f57c00] px-3 py-1.5 text-xs font-bold text-white shadow-lg">
+                        <span className="absolute left-3 top-3 rounded-full bg-white/20 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-sm">
                             {item.badge}
                         </span>
                     )}
@@ -39,22 +36,22 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                     </div>
 
                     <p className="mb-3 text-sm text-gray-600">
-                        بواسطة <span className="font-semibold text-[#0865a8]">{item.instructor}</span>
+                        <span className="font-semibold text-[#0865a8]">{item.instructor || item.place || 'غير محدد'}</span>
                     </p>
 
                     {/* Rating */}
                     <div className="mb-3 flex items-center gap-2">
-                        <span className="text-base font-bold text-amber-600">{item.rating}</span>
+                        <span className="text-base font-bold text-amber-600">{item.rating || 0}</span>
                         <div className="flex gap-0.5">
                             {[...Array(5)].map((_, i) => (
                                 <Star
                                     key={i}
-                                    className={`h-4 w-4 ${i < Math.floor(item.rating) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`}
+                                    className={`h-4 w-4 ${i < Math.floor(item.rating || 0) ? 'fill-amber-400 text-amber-400' : 'fill-gray-200 text-gray-200'}`}
                                 />
                             ))}
                         </div>
                         <span className="text-xs text-gray-500">
-                            ({item.reviews.toLocaleString('ar-EG')} تقييم)
+                            ({(item.reviews || 0).toLocaleString('ar-EG')} تقييم)
                         </span>
                     </div>
 
@@ -64,18 +61,40 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                             <svg className="h-4 w-4 text-[#0865a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span className="font-semibold text-gray-900">{item.hours}</span> ساعة إجمالي
+                            <span className="font-semibold text-gray-900">{item.hours || 0}</span> ساعة إجمالي
                         </span>
                         <span className="flex items-center gap-1">
                             <svg className="h-4 w-4 text-[#0865a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                             </svg>
-                            <span className="font-semibold text-gray-900">{item.lectures}</span> محاضرة
+                            <span className="font-semibold text-gray-900">{item.lectures || 0}</span> محاضرة
                         </span>
                         <span className="rounded-full bg-blue-50 px-2.5 py-1 font-medium text-[#0865a8]">
-                            {item.level}
+                            {item.level || 'جميع المستويات'}
                         </span>
                     </div>
+
+                    {/* Additional Info */}
+                    {(item.place || item.date) && (
+                        <div className="mb-4 flex flex-wrap gap-3 text-xs text-gray-600">
+                            {item.place && (
+                                <span className="flex items-center gap-1">
+                                    <svg className="h-4 w-4 text-[#0865a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    <span>{item.place}</span>
+                                </span>
+                            )}
+                            {item.date && (
+                                <span className="flex items-center gap-1">
+                                    <svg className="h-4 w-4 text-[#0865a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <span>{item.date}</span>
+                                </span>
+                            )}
+                        </div>
+                    )}
 
                     {/* Footer Actions */}
                     <div className="mt-auto flex flex-col gap-4 border-t border-gray-100 pt-4 md:flex-row md:items-end md:justify-between">
@@ -110,15 +129,17 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                         <div className="text-left md:text-right">
                             <div className="mb-1 flex items-center gap-2">
                                 <span className="text-2xl font-bold text-[#f57c00]">
-                                    {(item.currentPrice * quantity).toFixed(2)} ج.م
+                                    {((item.currentPrice || 0) * quantity).toFixed(2)} ج.م
                                 </span>
                                 {item.coupon && (
                                     <Tag className="h-4 w-4 text-emerald-600" title={item.coupon} />
                                 )}
                             </div>
-                            <p className="text-sm font-medium text-gray-400 line-through">
-                                {(item.originalPrice * quantity).toFixed(2)} ج.م
-                            </p>
+                            {item.originalPrice && item.originalPrice > 0 && (
+                                <p className="text-sm font-medium text-gray-400 line-through">
+                                    {((item.originalPrice || 0) * quantity).toFixed(2)} ج.م
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -169,13 +190,13 @@ export default function ShoppingCartPage() {
         }
     };
 
-    const subtotal = items.reduce((sum, item) => sum + (item.currentPrice * (item.quantity || 1)), 0);
-    const totalOriginalPrice = items.reduce((sum, item) => sum + (item.originalPrice * (item.quantity || 1)), 0);
+    const subtotal = items.reduce((sum, item) => sum + ((item.currentPrice || 0) * (item.quantity || 1)), 0);
+    const totalOriginalPrice = items.reduce((sum, item) => sum + ((item.originalPrice || 0) * (item.quantity || 1)), 0);
     const baseDiscount = totalOriginalPrice - subtotal;
     const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
     const totalPrice = subtotal - couponDiscount;
     const totalSavings = totalOriginalPrice - totalPrice;
-    const discountPercent = Math.round((totalSavings / totalOriginalPrice) * 100);
+    const discountPercent = totalOriginalPrice > 0 ? Math.round((totalSavings / totalOriginalPrice) * 100) : 0;
 
     return (
         <>
@@ -221,7 +242,7 @@ export default function ShoppingCartPage() {
                                     <h3 className="mb-2 text-2xl font-bold text-gray-700">سلة التسوق فارغة</h3>
                                     <p className="mb-6 text-gray-500">لم تقم بإضافة أي دورات إلى السلة بعد</p>
                                     <Link
-                                        to="/courses"
+                                        to="/"
                                         className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] px-8 py-3 font-bold text-white shadow-lg transition-all hover:scale-105"
                                     >
                                         تصفح الدورات

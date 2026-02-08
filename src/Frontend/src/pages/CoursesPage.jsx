@@ -472,21 +472,28 @@ const CoursesPage = () => {
         const cartItems = existingCart ? JSON.parse(existingCart) : [];
 
         const isInCart = cartItems.some(item => item.id === course.id);
+
         if (!isInCart) {
+            // Calculate original price from current price (assuming 40% discount)
+            const originalPrice = course.cost ? course.cost / 0.6 : 0;
+
             const cartItem = {
                 id: course.id,
                 title: course.title,
-                instructor: course.instructor || 'غير محدد',
-                image: course.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                instructor: course.place || 'غير محدد',
+                image: 'book', // Icon identifier instead of image URL
                 rating: 4.6,
-                reviews: 5500,
-                hours: course.hours || 45,
-                lectures: course.lectures || 128,
-                level: course.level || 'متوسط',
-                currentPrice: course.price || 299.99,
-                originalPrice: course.originalPrice || 499.99,
+                reviews: 2547,
+                hours: 26,
+                lectures: 12,
+                level: 'متوسط',
+                currentPrice: course.cost || 0,
+                originalPrice: originalPrice,
                 badge: 'الأكثر مبيعاً',
-                coupon: 'DISCOUNT2025'
+                coupon: 'DISCOUNT2025',
+                quantity: 1,
+                date: course.date || '',
+                place: course.place || ''
             };
 
             cartItems.push(cartItem);
@@ -494,6 +501,9 @@ const CoursesPage = () => {
             setCart(cartItems);
             window.dispatchEvent(new Event('cartUpdated'));
 
+            navigate('/cart');
+        } else {
+            // If already in cart, just navigate
             navigate('/cart');
         }
     };
@@ -731,16 +741,7 @@ const CoursesPage = () => {
                                             {/* Buttons */}
                                             <div style={styles.buttonsContainer}>
                                                 <button
-                                                    onClick={() => addToCart({
-                                                        ...course,
-                                                        price: currentPrice || 0,
-                                                        originalPrice: originalPrice || 0,
-                                                        image: 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
-                                                        instructor: 'غير محدد',
-                                                        hours: 45,
-                                                        lectures: 128,
-                                                        level: 'متوسط'
-                                                    })}
+                                                    onClick={() => addToCart(course)}
                                                     style={{
                                                         ...styles.addToCartBtn,
                                                         ...(hoveredAddBtn === course.id ? styles.addToCartBtnHover : {}),

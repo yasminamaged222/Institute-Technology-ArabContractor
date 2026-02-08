@@ -121,13 +121,17 @@ const DynamicCoursesSection = () => {
     }, []);
 
     const transformCourseData = (apiCourse) => {
+        // Calculate original price (assuming 40% discount)
+        const originalPrice = apiCourse.cost ? apiCourse.cost / 0.6 : 0;
+
         return {
             id: apiCourse.id,
             title: apiCourse.title,
             subtitle: apiCourse.place || 'دورة تدريبية',
             description: apiCourse.description || 'دورة تدريبية شاملة ومتخصصة',
             icon: apiCourse.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
-            currentPrice: apiCourse.cost || null,
+            currentPrice: apiCourse.cost || 0,
+            originalPrice: originalPrice,
             date: apiCourse.date || '',
             place: apiCourse.place || '',
         };
@@ -136,16 +140,34 @@ const DynamicCoursesSection = () => {
     const addToCart = (course) => {
         const existingCart = localStorage.getItem('cartItems');
         const cartItems = existingCart ? JSON.parse(existingCart) : [];
+
+        // Check if course is already in cart
         if (!cartItems.some(item => item.id === course.id)) {
-            cartItems.push({
+            const cartItem = {
                 id: course.id,
                 title: course.title,
                 instructor: course.place || 'غير محدد',
-                image: course.icon,
-                currentPrice: course.currentPrice || 100,
-            });
+                image: course.icon || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                rating: 4.6,
+                reviews: 2547,
+                hours: 26,
+                lectures: 12,
+                level: 'متوسط',
+                currentPrice: course.currentPrice || 0,
+                originalPrice: course.originalPrice || (course.currentPrice * 1.6) || 0,
+                badge: 'الأكثر مبيعاً',
+                coupon: 'DISCOUNT2025',
+                quantity: 1
+            };
+
+            cartItems.push(cartItem);
             localStorage.setItem('cartItems', JSON.stringify(cartItems));
             window.dispatchEvent(new Event('cartUpdated'));
+
+            // Navigate to cart
+            navigate('/cart');
+        } else {
+            // If already in cart, just navigate to cart
             navigate('/cart');
         }
     };
@@ -274,8 +296,8 @@ const DynamicCoursesSection = () => {
                                     </Tooltip>
 
                                     <Box sx={{ mt: 'auto' }}>
-                                        {course.currentPrice && (
-                                            <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1.1rem' }}>
+                                        {course.currentPrice > 0 && (
+                                            <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1.1rem', color: '#f57c00' }}>
                                                 {course.currentPrice.toFixed(2)} ج.م
                                             </Typography>
                                         )}
@@ -300,11 +322,14 @@ const DynamicCoursesSection = () => {
                                     <Button
                                         fullWidth
                                         variant="outlined"
-                                        onClick={(e) => { e.stopPropagation(); addToCart(course); }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            addToCart(course);
+                                        }}
                                         sx={{
                                             borderColor: '#0865a8', color: '#0865a8', fontWeight: 600, borderRadius: 1.5,
                                             fontSize: '0.75rem', py: 0.5, fontFamily: '"Droid Arabic Kufi", serif',
-                                            '&:hover': { bgcolor: '#0865a8', color: '#fff' }
+                                            '&:hover': { bgcolor: '#0865a8', color: '#fff', borderColor: '#0865a8' }
                                         }}
                                     >
                                         إضافة إلى السلة
@@ -315,8 +340,8 @@ const DynamicCoursesSection = () => {
                     ))}
                 </Swiper>
 
-                <Box className="custom-prev" sx={{ position: 'absolute', left: -20, top: '50%', zIndex: 10, cursor: 'pointer', bgcolor: '#0865a8', color: '#fff', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>‹</Box>
-                <Box className="custom-next" sx={{ position: 'absolute', right: -20, top: '50%', zIndex: 10, cursor: 'pointer', bgcolor: '#0865a8', color: '#fff', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>›</Box>
+                <Box className="custom-prev" sx={{ position: 'absolute', left: -20, top: '50%', zIndex: 10, cursor: 'pointer', bgcolor: '#0865a8', color: '#fff', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'translateY(-50%)' }}>‹</Box>
+                <Box className="custom-next" sx={{ position: 'absolute', right: -20, top: '50%', zIndex: 10, cursor: 'pointer', bgcolor: '#0865a8', color: '#fff', borderRadius: '50%', width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'translateY(-50%)' }}>›</Box>
             </Box>
         </Container>
     );

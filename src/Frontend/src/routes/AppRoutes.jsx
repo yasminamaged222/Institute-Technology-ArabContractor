@@ -6,7 +6,6 @@ import Overview from "../pages/overview";
 import Vision_goals from "../pages/vision_and_goals/vision_goals";
 import News from '../pages/News';
 import CoursesPage from "../pages/CoursesPage";
-import CourseCategory from '../pages/CourseCategory';
 import Library from "../pages/Library";
 import CustomersPage from '../pages/CustomersPage'; // Adjust path accordingly
 import VocationalTraining from '../pages/VocationalTraining';
@@ -48,7 +47,6 @@ const AppRoutes = () => {
         <Route path="/mission" element={<Vision_goals />} />
         <Route path="/news" element={<News />} />
             <Route path="/courses/:id/:slug" element={<CoursesPage />} />
-            <Route path="/courses/:category" element={<CourseCategory />} />
             <Route path="/library" element={<Library />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/certifications" element={<Certifications />} />
