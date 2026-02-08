@@ -600,7 +600,7 @@ const Home = () => {
                 <Box
                     sx={{
                         position: 'absolute',
-                        bottom: 30,
+                        bottom: 70,
                         left: '50%',
                         transform: 'translateX(-50%)',
                         display: 'flex',
@@ -680,7 +680,7 @@ const Home = () => {
                 maxWidth="lg"
                 sx={{
                     position: 'relative',
-                    top: { xs: -30, sm: -40, md: -25 },
+                    top: { xs: -30, sm: -40, md: -65 },
                     zIndex: 2,
                     px: 2,
                     mb: { xs: 4, md: -5 }
