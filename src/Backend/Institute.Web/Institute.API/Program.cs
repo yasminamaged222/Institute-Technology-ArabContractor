@@ -54,6 +54,7 @@ builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
 builder.Services.AddScoped<BankMisrPaymentService>();
 #endregion
 #region(Authentication And Authorization)
+
 builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
@@ -62,16 +63,18 @@ builder.Services
 
     options.RequireHttpsMetadata = true;
 
+    // 🔥 مهم جدًا مع Clerk
+    options.MapInboundClaims = false;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = false,
         ValidateAudience = false,
         ValidateLifetime = true,
-        ValidateIssuerSigningKey = false,
+        ValidateIssuerSigningKey = true, // 🔥 لازم true
         NameClaimType = "sub"
     };
 
-    // 🔥🔥🔥 دي هتقولنا ليه 401
     options.Events = new JwtBearerEvents
     {
         OnAuthenticationFailed = context =>
@@ -91,6 +94,7 @@ builder.Services
 builder.Services.AddAuthorization();
 
 #endregion
+
 
 // ======= AutoMapper =======
 builder.Services.AddAutoMapper(cfg =>

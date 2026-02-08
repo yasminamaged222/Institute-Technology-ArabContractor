@@ -1,34 +1,19 @@
-﻿using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Institute.Application.Interfaces.IService;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-using Institute.Application.Interfaces.IService;
 
 namespace Institute.Application.Services
 {
     public class CurrentUserService : ICurrentUserService
     {
-        private readonly IHttpContextAccessor _httpContext;
+        private readonly IHttpContextAccessor _context;
 
-        public CurrentUserService(IHttpContextAccessor httpContext)
+        public CurrentUserService(IHttpContextAccessor context)
         {
-            _httpContext = httpContext;
+            _context = context;
         }
 
-        public string ClerkUserId =>
-         _httpContext.HttpContext?
-             .User
-             .Claims
-             .FirstOrDefault(x => x.Type == "sub")?
-             .Value!;
-
+        public string? UserId =>
+            _context.HttpContext?.User?.FindFirst("sub")?.Value;
     }
 }
-//< ItemGroup >
-
-//        < FrameworkReference Include = "Microsoft.AspNetCore.App" />
-
-//    </ ItemGroup >
