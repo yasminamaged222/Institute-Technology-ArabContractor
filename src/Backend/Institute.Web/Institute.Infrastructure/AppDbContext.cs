@@ -97,7 +97,9 @@ public partial class AppDbContext : DbContext
                   .IsRequired();
             entity.HasQueryFilter(u => !u.IsDeleted);
             entity.HasIndex(x => x.ClerkUserId)
-                  .IsUnique();
+                  .IsUnique()
+                  .HasFilter("[IsDeleted] = 0");
+
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
                 .IsRequired(false);  // optional
@@ -117,8 +119,13 @@ public partial class AppDbContext : DbContext
                   .WithOne(c => c.User)
                   .HasForeignKey(c => c.UserId);
             // Indexes
-            entity.HasIndex(e => e.Username).IsUnique();
-            entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => e.Username)
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
+            entity.HasIndex(e => e.Email)
+            .IsUnique()
+            .HasFilter("[IsDeleted] = 0");
+
 
             entity.HasMany(u => u.Orders)
                   .WithOne(o => o.User)

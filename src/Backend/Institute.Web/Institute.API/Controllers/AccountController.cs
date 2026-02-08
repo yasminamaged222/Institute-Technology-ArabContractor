@@ -1,70 +1,91 @@
-﻿using Institute.API.Helpers;
-using Institute.Application.Interfaces.IService;
+﻿using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Infrastructure;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http.Headers;
-using System.Security.Claims;
-using System.Text.Json;
 
 namespace Institute.API.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class AccountController : ControllerBase
     {
         private readonly AppDbContext _context;
         private readonly IClerkService _clerk;
+        private readonly ICurrentUserService _currentUser;
 
-        public AccountController(AppDbContext context, IClerkService clerk)
+        public AccountController(AppDbContext context, IClerkService clerk, ICurrentUserService currentUser)
         {
             _context = context;
             _clerk = clerk;
+            _currentUser = currentUser;
         }
 
         [HttpPost("sync")]
         public async Task<IActionResult> Sync()
         {
-            var authHeader = Request.Headers["Authorization"].ToString();
-
-            var clerkUserId = ClerkTokenReader.GetClerkUserId(authHeader);
-            if (clerkUserId == null)
-                return Unauthorized("Invalid token");
-
+            var clerkUserId = _currentUser.UserId;
+           
             var clerkUser = await _clerk.GetUserAsync(clerkUserId);
             if (clerkUser == null)
-                return Unauthorized("User not found in Clerk");
+                return BadRequest();
 
+            // 1️⃣ حاول تجيب المستخدم على أساس ClerkUserId أولاً
             var user = await _context.AppUsers
-                .IgnoreQueryFilters() // include deleted users
-                .FirstOrDefaultAsync(x => x.ClerkUserId == clerkUserId);
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.ClerkUserId == clerkUserId);
 
-            if (user != null && user.IsDeleted)
+            if (user != null)
             {
+                // لو موجود، فقط حدث بياناته وفعّل الحساب لو كان soft-deleted
+                user.FirstName = clerkUser.FirstName;
+                user.LastName = clerkUser.LastName;
+                user.Username = clerkUser.Username ?? clerkUser.Email.Split('@')[0];
                 user.IsDeleted = false;
-                return BadRequest("This account has been deleted.");
-            }
 
-            if (user == null)
-            {
-                user = new AppUser
-                {
-                    ClerkUserId = clerkUserId,
-                    Email = clerkUser.Email,
-                    FirstName = clerkUser.FirstName,
-                    LastName = clerkUser.LastName,
-                    Username = clerkUser.Username ?? clerkUser.Email.Split('@')[0],
-                    CreatedAt = DateTime.UtcNow
-                };
-
-                _context.AppUsers.Add(user);
                 await _context.SaveChangesAsync();
+                return Ok(user);
             }
 
-            return Ok(user);
+            // 2️⃣ لو مفيش مستخدم بنفس ClerkUserId، دور على Email موجود (حتى لو soft-deleted)
+            user = await _context.AppUsers
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => u.Email == clerkUser.Email);
+
+            if (user != null)
+            {
+                // اعمل Restore + حدّث الـ ClerkUserId الجديد
+                user.ClerkUserId = clerkUserId;
+                user.FirstName = clerkUser.FirstName;
+                user.LastName = clerkUser.LastName;
+                user.Username = clerkUser.Username ?? clerkUser.Email.Split('@')[0];
+                user.IsDeleted = false;
+
+                await _context.SaveChangesAsync();
+                return Ok(user);
+            }
+
+            // 3️⃣ لو مفيش أي حاجة، اعمل مستخدم جديد
+            var newUser = new AppUser
+            {
+                ClerkUserId = clerkUserId,
+                Email = clerkUser.Email,
+                FirstName = clerkUser.FirstName,
+                LastName = clerkUser.LastName,
+                Username = clerkUser.Username ?? clerkUser.Email.Split('@')[0],
+                IsDeleted = false
+            };
+
+            _context.AppUsers.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(newUser);
         }
+
+
+
+
     }
 }

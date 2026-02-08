@@ -8,6 +8,6 @@ namespace Institute.Application.Interfaces.IService
 {
     public interface ICurrentUserService
     {
-        string ClerkUserId { get; }
+        string? UserId { get; }
     }
 }
