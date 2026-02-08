@@ -24,7 +24,10 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/autoplay';
 import { Link } from 'react-router-dom';
+import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 const slides = [
     {
@@ -98,96 +101,21 @@ const downloadItems = [
     }
 ];
 
-const courses = [
-    {
-        title: 'برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة',
-        subtitle: 'برامج موجهة للمهندسين',
-        icon: 'https://media.istockphoto.com/id/1824047483/vector/civil-engineering-solid-icon-set.jpg?s=612x612&w=0&k=20&c=6Ee2eri1r54hsHX_Nfuy6n7xvdGUmXLzDjCPRqEnfvI=',
-        originalPrice: 1000,
-        discountedPrice: 750,
-        hours: 45,
-        level: 'متوسط',
-        description: 'برنامج شامل لتأهيل المهندسين الجدد في مجال المدني والعمارة مع تطبيقات عملية.',
-    },
-    {
-        title: 'برنامج إعداد وتأهيل مهندس حديث ميكانيكا وكهرباء',
-        subtitle: 'برامج موجهة للمهندسين',
-        icon: 'https://www.shutterstock.com/image-vector/mechanical-engineering-icon-blue-vector-260nw-2617424085.jpg',
-        originalPrice: 1200,
-        discountedPrice: 800,
-        hours: 50,
-        level: 'متوسط',
-        description: 'تدريب متخصص في الميكانيكا والكهرباء للمهندسين الحديثين.',
-    },
-    {
-        title: 'المحور الأول : المعلومات الهندسية الأساسية',
-        subtitle: 'برامج تأهيلية للمهندسين',
-        icon: 'https://media.istockphoto.com/id/1652170312/vector/project-management-solid-icon-set.jpg?s=612x612&w=0&k=20&c=k3LCjVKEjqEqkTPnOyqG_sQiP4Tj6umdV2GDyc-F6QY=',
-        originalPrice: 500,
-        discountedPrice: 350,
-        hours: 25,
-        level: 'مبتدئ',
-        description: 'الأساسيات الهندسية الضرورية لكل مهندس جديد.',
-    },
-    {
-        title: 'المحور الثانى : التطبيقات الهندسية المختلفة',
-        subtitle: 'برامج تأهيلية للمهندسين',
-        icon: 'https://media.istockphoto.com/id/2148250739/vector/quality-assurance-solid-icons-collection-guarantee-support-improvement-development-testing.jpg?s=612x612&w=0&k=20&c=ZEgQV0sszyPEgFynhTj5ypRPZotYfRaEd2VT0kjqdFU=',
-        originalPrice: 600,
-        discountedPrice: 450,
-        hours: 30,
-        level: 'متوسط',
-        description: 'تطبيقات عملية في مجالات الهندسة المختلفة.',
-    },
-    {
-        title: 'المحور الثالث : إدارة المشروعات والجودة',
-        subtitle: 'برامج الإدارة الطبية',
-        icon: 'https://media.istockphoto.com/id/1652170312/vector/project-management-solid-icon-set.jpg?s=612x612&w=0&k=20&c=k3LCjVKEjqEqkTPnOyqG_sQiP4Tj6umdV2GDyc-F6QY=',
-        originalPrice: 1200,
-        discountedPrice: 900,
-        hours: 60,
-        level: 'متقدم',
-        description: 'إدارة المشروعات باحترافية مع معايير الجودة العالمية.',
-    },
-    {
-        title: 'المحور الرابع : الطرق المختلفة لدعم اتخاذ القرار',
-        subtitle: 'تحليل الإحتياجات التدريبية',
-        icon: 'https://static.vecteezy.com/system/resources/thumbnails/029/457/921/small_2x/decision-making-icon-icon-of-people-at-a-crossroads-icon-suitable-for-web-site-design-app-user-interfaces-printable-etc-flat-line-icon-style-simple-design-editable-free-vector.jpg',
-        originalPrice: 700,
-        discountedPrice: 500,
-        hours: 35,
-        level: 'متوسط',
-        description: 'أدوات وطرق دعم اتخاذ القرار في المشاريع.',
-    },
-    {
-        title: 'المحور الخامس :العقود والعطاءات والمشتريات',
-        subtitle: 'برامج القطاع القانوني والعقارى',
-        icon: 'https://www.shutterstock.com/shutterstock/photos/2639061137/display_1500/stock-vector-the-procurement-management-blue-icon-set-captures-essential-concepts-like-sourcing-contracts-2639061137.jpg',
-        originalPrice: 900,
-        discountedPrice: 650,
-        hours: 40,
-        level: 'متقدم',
-        description: 'كل ما يخص العقود والمشتريات في المشاريع الكبرى.',
-    },
-];
-
-let closeTimer;
-
 const Home = () => {
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [popoverAnchor, setPopoverAnchor] = useState(null);
-    const [selectedCourse, setSelectedCourse] = useState(null);
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
 
-    React.useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % slides.length);
-        }, 5000);
-        return () => clearInterval(timer);
-    }, [slides.length]);
+    const handlePrevSlide = () => {
+        setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
+    };
+
+    const handleNextSlide = () => {
+        setCurrentSlide((prev) => (prev + 1) % slides.length);
+    };
 
     const slide = slides[currentSlide];
+
 
     useEffect(() => {
         fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews')
@@ -205,21 +133,6 @@ const Home = () => {
             })
             .catch(() => setNewsLoading(false));
     }, []);
-
-
-    const handlePopoverOpen = (event, course) => {
-        if (closeTimer) clearTimeout(closeTimer);
-
-        setPopoverAnchor(event.currentTarget);
-        setSelectedCourse(course);
-    };
-
-    const handlePopoverClose = () => {
-        closeTimer = setTimeout(() => {
-            setPopoverAnchor(null);
-            setSelectedCourse(null);
-        }, 300);
-    };
 
     return (
         <Box sx={{ position: 'relative', overflowX: 'hidden' }}>
@@ -302,9 +215,6 @@ const Home = () => {
     .course-title { font-size: 0.8rem !important; min-height: 32px !important; }
     .course-subtitle { font-size: 0.65rem !important; }
     .course-price { font-size: 0.85rem !important; }
-    .course-button { font-size: 0.7rem !important; padding: 6px 12px !important; }
-    .news-card-title { font-size: 0.8rem !important; height: 50px !important; }
-    .news-date { font-size: 0.6rem !important; }
     .download-item-title { font-size: 0.8rem !important; }
     .download-icon { font-size: 1.1rem !important; }
     .search-bar-container { width: 95% !important; max-width: 300px !important; }
@@ -372,9 +282,9 @@ const Home = () => {
     .feature-icon { width: 38px !important; height: 38px !important; }
     .feature-title { font-size: 1rem !important; }
     .feature-subtitle { font-size: 0.78rem !important; }
-    .about-title { font-size: 1.5rem !important; }
-    .about-text { font-size: 0.92rem !important; }
-    .section-title { font-size: 1.65rem !important; margin-bottom: 2rem !important; }
+    .about-title { fontSize: 1.5rem !important; }
+    .about-text { fontSize: 0.92rem !important; }
+    .section-title { fontSize: 1.65rem !important; margin-bottom: 2rem !important; }
     .course-card-height { height: 115px !important; }
     .course-title { font-size: 0.88rem !important; min-height: 38px !important; }
     .course-subtitle { font-size: 0.7rem !important; }
@@ -448,7 +358,7 @@ const Home = () => {
     .hero-section { height: 75vh !important; }
     .hero-subtitle { font-size: 1.4rem !important; }
     .hero-title { font-size: 3.8rem !important; }
-    .hero-button { font-size: 1.15rem !important; padding: 18px 50px !important; }
+    .hero-button { fontSize: 1.15rem !important; padding: 18px 50px !important; }
     .feature-card { min-height: 250px !important; width: 350px !important; }
     .feature-icon { width: 48px !important; height: 48px !important; }
     .feature-title { font-size: 1.2rem !important; }
@@ -476,10 +386,10 @@ const Home = () => {
     .hero-subtitle { font-size: 1.55rem !important; }
     .hero-title { font-size: 4.3rem !important; }
     .hero-button { font-size: 1.25rem !important; padding: 20px 56px !important; }
-    .feature-card { min-height: 260px !important; width: 373px !important; }
+    .feature-card { min-height: 260px !important; width: 350px !important; }
     .feature-icon { width: 50px !important; height: 50px !important; }
     .feature-title { font-size: 1.25rem !important; }
-    .feature-subtitle { font-size: 0.90rem !important; }
+    .feature-subtitle { font-size: 0.9rem !important; }
     .about-title { font-size: 2rem !important; }
     .about-text { font-size: 1.1rem !important; }
     .section-title { font-size: 2.125rem !important; margin-bottom: 3rem !important; }
@@ -518,7 +428,7 @@ const Home = () => {
     .news-card-title { font-size: 1.15rem !important; height: 72px !important; }
     .news-date { font-size: 0.85rem !important; }
     .download-item-title { font-size: 1.05rem !important; }
-    .download-icon { font-size: 2.2rem !important; }
+    .download-icon { fontSize: 2.2rem !important; }
 }
 
 /* ===================================
@@ -586,7 +496,16 @@ const Home = () => {
 
 
             {/* Hero Slider */}
-            <Box className="hero-section" sx={{ position: 'relative', height: '600px', overflow: 'hidden', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }}>
+            <Box
+                className="hero-section"
+                sx={{
+                    position: 'relative',
+                    height: '600px',
+                    overflow: 'hidden',
+                    borderBottomLeftRadius: '24px',
+                    borderBottomRightRadius: '24px'
+                }}
+            >{/* Background Image */}
                 <Box
                     sx={{
                         position: 'absolute',
@@ -602,8 +521,16 @@ const Home = () => {
                         borderBottomRightRadius: '24px'
                     }}
                 />
-                <Box sx={{ position: 'absolute', inset: 0, bgcolor: 'rgba(0, 0, 0, 0.45)', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' }} />
-
+                {/* Dark Overlay */}
+                <Box
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        bgcolor: 'rgba(0, 0, 0, 0.45)',
+                        borderBottomLeftRadius: '24px',
+                        borderBottomRightRadius: '24px'
+                    }}
+                />
                 {/* Hero Content */}
                 <Box
                     sx={{
@@ -631,6 +558,7 @@ const Home = () => {
                     >
                         {slide.subtitle}
                     </Typography>
+
                     <Typography
                         className="hero-title"
                         variant="h3"
@@ -645,6 +573,7 @@ const Home = () => {
                     >
                         {slide.title}
                     </Typography>
+
                     <Button
                         variant="contained"
                         href={slide.link}
@@ -665,41 +594,85 @@ const Home = () => {
                     >
                         اقرأ المزيد
                     </Button>
-                </Box>
 
-                {/* Vertical Circular Pagination - Right Side */}
+                </Box>
+                {/* Navigation Controls */}
                 <Box
                     sx={{
                         position: 'absolute',
-                        left: 30,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
+                        bottom: 30,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
                         display: 'flex',
-                        flexDirection: 'column',
                         gap: 2,
-                        zIndex: 2
+                        alignItems: 'center',
+                        zIndex: 3,
                     }}
                 >
-                    {slides.map((_, index) => (
-                        <Box
-                            key={index}
-                            onClick={() => setCurrentSlide(index)}
-                            sx={{
-                                width: 14,
-                                height: 14,
-                                borderRadius: '50%',
-                                bgcolor: currentSlide === index ? '#f57c00' : 'rgba(255, 255, 255, 0.5)',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease',
-                                border: currentSlide === index ? '2px solid white' : 'none',
-                                '&:hover': {
-                                    bgcolor: currentSlide === index ? '#f57c00' : 'rgba(255, 255, 255, 0.8)',
-                                    transform: 'scale(1.3)'
-                                }
-                            }}
-                        />
-                    ))}
+                    {/* Previous Button */}
+                    <IconButton
+                        onClick={handlePrevSlide}
+                        sx={{
+                            bgcolor: 'rgba(255, 255, 255, 0.25)',
+                            color: 'white',
+                            backdropFilter: 'blur(10px)',
+                            border: '2px solid rgba(255, 255, 255, 0.4)',
+                            width: 45,
+                            height: 45,
+                            '&:hover': {
+                                bgcolor: '#f57c00',
+                                transform: 'scale(1.1)',
+                                border: '2px solid #f57c00',
+                            },
+                            transition: 'all 0.3s ease',
+                        }}
+                    >
+                        <ChevronRightIcon />
+                    </IconButton>
+
+                    {/* Dots */}
+                    <Box sx={{ display: 'flex', gap: 1 }}>
+                        {slides.map((_, index) => (
+                            <Box
+                                key={index}
+                                onClick={() => setCurrentSlide(index)}
+                                sx={{
+                                    width: currentSlide === index ? 28 : 10,
+                                    height: 10,
+                                    borderRadius: '5px',
+                                    bgcolor:
+                                        currentSlide === index
+                                            ? '#f57c00'
+                                            : 'rgba(255,255,255,0.6)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease',
+                                }}
+                            />
+                        ))}
+                    </Box>
+
+                    {/* Next Button */}
+                    <IconButton
+                        onClick={handleNextSlide}
+                        sx={{
+                            bgcolor: 'rgba(255, 255, 255, 0.25)',
+                            color: 'white',
+                            backdropFilter: 'blur(10px)',
+                            border: '2px solid rgba(255, 255, 255, 0.4)',
+                            width: 45,
+                            height: 45,
+                            '&:hover': {
+                                bgcolor: '#f57c00',
+                                transform: 'scale(1.1)',
+                                border: '2px solid #f57c00',
+                            },
+                            transition: 'all 0.3s ease',
+                        }}
+                    >
+                        <ChevronLeftIcon />
+                    </IconButton>
                 </Box>
+
             </Box>
 
             {/* 3 Small Cards */}
@@ -707,7 +680,7 @@ const Home = () => {
                 maxWidth="lg"
                 sx={{
                     position: 'relative',
-                    top: { xs: -30, sm: -40, md: -65 },
+                    top: { xs: -30, sm: -40, md: -25 },
                     zIndex: 2,
                     px: 2,
                     mb: { xs: 4, md: -5 }
@@ -824,7 +797,6 @@ const Home = () => {
                                 }}
                             />
                         </Box>
-
                         {/* Text Side */}
                         <Box sx={{ flex: '1', textAlign: { xs: 'left', md: 'left' } }}>
                             <Typography
@@ -866,31 +838,35 @@ const Home = () => {
                                 للوصول إلى أعلى درجات التطوير والقدرة على الثبات وبالأخص في مجالات التسويق، إدارة الشركات، التخطيط المؤسسي، نظم المعلومات، الأشغال الكهروميكانيكية، وكذا التدريب المهني.
                             </Typography>
 
-                            <Button
-                                variant="contained"
-                                component={Link}
-                                to="/overview"
-                                sx={{
-                                    bgcolor: '#f57c00',
-                                    color: 'white',
-                                    borderRadius: '30px',
-                                    px: { xs: 4, md: 6 },
-                                    py: { xs: 1.5, md: 2 },
-                                    fontSize: { xs: '0.9rem', md: '1rem' },
-                                    fontWeight: 'bold',
-                                    fontFamily: '"Droid Arabic Kufi", serif',
-                                    boxShadow: '0 4px 14px rgba(245, 124, 0, 0.4)',
-                                    '&:hover': {
-                                        bgcolor: '#e65100',
-                                        transform: 'translateY(-2px)',
-                                        boxShadow: '0 6px 20px rgba(230, 81, 0, 0.5)'
-                                    },
-                                    transition: 'all 0.3s'
-                                }}
-                            >
-                                اقرأ المزيد
-                            </Button>
+                            {/* Button centered under text */}
+                            <Box sx={{ textAlign: 'center' }}>
+                                <Button
+                                    variant="contained"
+                                    component={Link}
+                                    to="/overview"
+                                    sx={{
+                                        bgcolor: '#f57c00',
+                                        color: 'white',
+                                        borderRadius: '30px',
+                                        px: { xs: 4, md: 6 },
+                                        py: { xs: 1.5, md: 2 },
+                                        fontSize: { xs: '0.9rem', md: '1rem' },
+                                        fontWeight: 'bold',
+                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        boxShadow: '0 4px 14px rgba(245, 124, 0, 0.4)',
+                                        '&:hover': {
+                                            bgcolor: '#e65100',
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 6px 20px rgba(230, 81, 0, 0.5)'
+                                        },
+                                        transition: 'all 0.3s'
+                                    }}
+                                >
+                                    اقرأ المزيد
+                                </Button>
+                            </Box>
                         </Box>
+
                     </Box>
                 </Container>
             </Box>
@@ -998,418 +974,10 @@ const Home = () => {
             </div>
 
             {/* Courses Slide Show */}
-            <Container
-                maxWidth="xl"
-                sx={{
-                    py: { xs: 4, sm: 6, md: 10 },
-                    bgcolor: '#fff',
-                    px: { xs: 2, sm: 3, md: 4 }
-                }}
-            >
-                <Box sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    mb: { xs: 3, md: 4 }
-                }}>
-                    <Typography
-                        variant="h4"
-                        fontWeight="bold"
-                        sx={{
-                            mb: 1,
-                            color: '#0865a8',
-                            fontSize: { xs: '1.3rem', sm: '1.6rem', md: '2.125rem' },
-                            textAlign: 'center',
-                            fontFamily: '"Droid Arabic Kufi", serif'
-                            // Remove className="section-title" or override it
-                        }}
-                    >
-                        البرامج التدريبية
-                    </Typography>
-                    <Box
-                        sx={{
-                            width: '100px',
-                            height: '4px',
-                            background: 'linear-gradient(90deg, #0865a8 0%, #f39c12 100%)',
-                            borderRadius: '2px'
-                        }}
-                    />
-                </Box>
-
-                <Box sx={{ position: 'relative' }}>
-                    <Swiper
-                        className="courses-swiper"
-                        modules={[Autoplay, Navigation]}
-                        autoplay={{ delay: 5000, disableOnInteraction: false }}
-                        navigation={{
-                            nextEl: '.custom-next',
-                            prevEl: '.custom-prev',
-                        }}
-                        spaceBetween={15}
-                        slidesPerView={1.2}
-                        centeredSlides={false}
-                        breakpoints={{
-                            320: { slidesPerView: 1.5, spaceBetween: 10 },
-                            480: { slidesPerView: 2, spaceBetween: 12 },
-                            600: { slidesPerView: 2.5, spaceBetween: 15 },
-                            768: { slidesPerView: 3, spaceBetween: 15 },
-                            992: { slidesPerView: 4, spaceBetween: 15 },
-                            1200: { slidesPerView: 4, spaceBetween: 20 },
-                            1440: { slidesPerView: 5, spaceBetween: 20 },
-                        }}
-                    >
-                        {courses.map((course, index) => (
-                            <SwiperSlide key={index} style={{ height: 'auto', display: 'flex' }}>
-                                <Card
-                                    onMouseEnter={(e) => handlePopoverOpen(e, course)}
-                                    onMouseLeave={handlePopoverClose}
-                                    sx={{
-                                        height: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        borderRadius: { xs: 2, sm: 3, md: 4 },
-                                        border: '0.5px solid #0865a8',
-                                        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        cursor: 'pointer',
-                                        willChange: 'transform, box-shadow, opacity',
-                                        '&:hover': {
-                                            transform: 'translateY(-6px)',
-                                            boxShadow: '0 8px 24px rgba(8, 101, 168, 0.2)',
-                                            borderColor: '#064a7a',
-                                            '& .course-card-image': {
-                                                transform: 'scale(1.05)',
-                                            },
-                                            '& .course-button': {
-                                                bgcolor: '#064a7a',
-                                                transform: 'scale(1.02)',
-                                            }
-                                        },
-                                    }}
-                                >
-                                    {/* Header: Course Icon */}
-                                    <Box
-                                        className="course-card-height"
-                                        sx={{
-                                            height: {
-                                                xs: '95px',
-                                                sm: '110px',
-                                                md: '120px',
-                                                lg: '130px',
-                                                xl: '140px'
-                                            },
-                                            overflow: 'hidden',
-                                            bgcolor: '#f7f9fa',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            borderRadius: { xs: '8px 8px 0 0', md: '16px 16px 0 0' }
-                                        }}
-                                    >
-                                        <Box
-                                            component="img"
-                                            className="course-card-image"
-                                            src={course.icon}
-                                            alt={course.title}
-                                            sx={{
-                                                width: '100%',
-                                                height: '100%',
-                                                objectFit: 'cover',
-                                                transition: 'transform 0.3s ease'
-                                            }}
-                                        />
-                                    </Box>
-
-                                    <CardContent
-                                        sx={{
-                                            p: { xs: 1.2, sm: 1.5, md: 2 },
-                                            flexGrow: 1,
-                                            display: 'flex',
-                                            flexDirection: 'column'
-                                        }}
-                                    >
-                                        <Typography
-                                            variant="subtitle1"
-                                            fontWeight="bold"
-                                            className="course-title"
-                                            sx={{
-                                                lineHeight: 1.3,
-                                                mb: 0.5,
-                                                minHeight: { xs: '32px', sm: '36px', md: '40px' },
-                                                overflow: 'hidden',
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                fontSize: {
-                                                    xs: '0.8rem',
-                                                    sm: '0.88rem',
-                                                    md: '0.95rem',
-                                                    lg: '1rem'
-                                                },
-                                                color: '#000',
-                                                fontFamily: '"Droid Arabic Kufi", serif'
-                                            }}
-                                        >
-                                            {course.title}
-                                        </Typography>
-
-                                        <Typography
-                                            variant="caption"
-                                            color="text.secondary"
-                                            display="block"
-                                            className="course-subtitle"
-                                            sx={{
-                                                mb: 1,
-                                                fontSize: {
-                                                    xs: '0.65rem',
-                                                    sm: '0.7rem',
-                                                    md: '0.75rem'
-                                                },
-                                                fontFamily: '"Droid Arabic Kufi", serif'
-                                            }}
-                                        >
-                                            {course.subtitle}
-                                        </Typography>
-
-                                        <Typography
-                                            variant="h6"
-                                            fontWeight="bold"
-                                            className="course-price"
-                                            sx={{
-                                                fontSize: {
-                                                    xs: '0.85rem',
-                                                    sm: '0.95rem',
-                                                    md: '1rem',
-                                                    lg: '1.125rem'
-                                                },
-                                                color: '#000',
-                                                fontFamily: '"Droid Arabic Kufi", serif',
-                                                mt: 'auto'
-                                            }}
-                                        >
-                                            100ج.م
-                                        </Typography>
-                                    </CardContent>
-
-                                    <CardActions
-                                        sx={{
-                                            p: { xs: 1.2, sm: 1.5, md: 2 },
-                                            pt: 0
-                                        }}
-                                    >
-                                        <Button
-                                            fullWidth
-                                            variant="contained"
-                                            className="course-button"
-                                            sx={{
-                                                bgcolor: '#0865a8',
-                                                borderRadius: { xs: 2, sm: 3, md: 4 },
-                                                fontWeight: 'bold',
-                                                textTransform: 'none',
-                                                fontSize: {
-                                                    xs: '0.7rem',
-                                                    sm: '0.8rem',
-                                                    md: '0.9rem',
-                                                    lg: '0.95rem'
-                                                },
-                                                py: { xs: 0.7, sm: 0.9, md: 1 },
-                                                fontFamily: '"Droid Arabic Kufi", serif',
-                                                transition: 'all 0.3s ease',
-                                                '&:hover': {
-                                                    bgcolor: '#064a7a',
-                                                    transform: 'scale(1.02)'
-                                                },
-                                            }}
-                                        >
-                                            إضافة إلى السلة
-                                        </Button>
-                                    </CardActions>
-                                </Card>
-                            </SwiperSlide>
-                        ))}
-                    </Swiper>
-
-                    {/* Navigation Arrows */}
-                    <Box
-                        className="custom-prev"
-                        sx={{
-                            position: 'absolute',
-                            left: { xs: -10, sm: -15, md: -20, lg: -25 },
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 10,
-                            bgcolor: '#0865a8',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            height: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            display: { xs: 'none', sm: 'flex' },
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            border: '1px solid #064a7a',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                bgcolor: '#064a7a',
-                                transform: 'translateY(-50%) scale(1.1)'
-                            }
-                        }}
-                    >
-                        <Typography
-                            variant="h4"
-                            sx={{
-                                mt: -0.5,
-                                fontSize: { sm: '1.2rem', md: '1.8rem', lg: '2.125rem' }
-                            }}
-                        >
-                            ‹
-                        </Typography>
-                    </Box>
-
-                    <Box
-                        className="custom-next"
-                        sx={{
-                            position: 'absolute',
-                            right: { xs: -10, sm: -15, md: -20, lg: -25 },
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            zIndex: 10,
-                            bgcolor: '#0865a8',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            height: { xs: 32, sm: 38, md: 44, lg: 48 },
-                            display: { xs: 'none', sm: 'flex' },
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            border: '1px solid #064a7a',
-                            transition: 'all 0.3s ease',
-                            '&:hover': {
-                                bgcolor: '#064a7a',
-                                transform: 'translateY(-50%) scale(1.1)'
-                            }
-                        }}
-                    >
-                        <Typography
-                            variant="h4"
-                            sx={{
-                                mt: -0.5,
-                                fontSize: { sm: '1.2rem', md: '1.8rem', lg: '2.125rem' }
-                            }}
-                        >
-                            ›
-                        </Typography>
-                    </Box>
-                </Box>
-
-                {/* Popover Expansion (RTL Optimized) */}
-                <Popover
-                    sx={{
-                        pointerEvents: 'none',
-                        display: { xs: 'none', lg: 'block' }
-                    }}
-                    open={Boolean(popoverAnchor)}
-                    anchorEl={popoverAnchor}
-                    onClose={handlePopoverClose}
-                    anchorOrigin={{ vertical: 'center', horizontal: 'left' }}
-                    transformOrigin={{ vertical: 'center', horizontal: 'right' }}
-                    disableRestoreFocus
-                    PaperProps={{
-                        onMouseEnter: () => {
-                            if (closeTimer) clearTimeout(closeTimer);
-                        },
-                        onMouseLeave: handlePopoverClose,
-                        sx: {
-                            pointerEvents: 'auto',
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
-                        }
-                    }}
-                >
-                    <Box sx={{ p: 3, maxWidth: 350, bgcolor: '#fff', pointerEvents: 'auto' }}>
-                        <Typography
-                            variant="h6"
-                            fontWeight="bold"
-                            gutterBottom
-                            sx={{
-                                lineHeight: 1.3,
-                                color: '#000',
-                                fontFamily: '"Droid Arabic Kufi", serif'
-                            }}
-                        >
-                            {selectedCourse?.title}
-                        </Typography>
-
-                        <Typography
-                            variant="caption"
-                            color="success.main"
-                            fontWeight="bold"
-                            display="block"
-                            sx={{
-                                mb: 1,
-                                fontFamily: '"Droid Arabic Kufi", serif'
-                            }}
-                        >
-                            تم التحديث مؤخراً
-                        </Typography>
-
-                        <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            sx={{
-                                mb: 2,
-                                fontFamily: '"Droid Arabic Kufi", serif'
-                            }}
-                        >
-                            {selectedCourse?.description}
-                        </Typography>
-
-                        <Box sx={{ mb: 2 }}>
-                            {['شامل للمبتدئين', 'تطبيقات عملية', 'شهادة معتمدة'].map((text, i) => (
-                                <Typography
-                                    key={i}
-                                    variant="caption"
-                                    display="block"
-                                    sx={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        mb: 0.5,
-                                        fontFamily: '"Droid Arabic Kufi", serif'
-                                    }}
-                                >
-                                    <span style={{ color: '#0865a8', fontWeight: 'bold' }}>✓</span> {text}
-                                </Typography>
-                            ))}
-                        </Box>
-
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            sx={{
-                                borderColor: '#0865a8',
-                                color: '#0865a8',
-                                fontWeight: 'bold',
-                                borderRadius: 4,
-                                py: 1,
-                                fontFamily: '"Droid Arabic Kufi", serif',
-                                transition: 'all 0.3s ease',
-                                '&:hover': {
-                                    borderColor: '#064a7a',
-                                    bgcolor: 'rgba(8, 101, 168, 0.08)',
-                                    transform: 'translateY(-2px)'
-                                }
-                            }}
-                        >
-                            إقرأ المزيد
-                        </Button>
-                    </Box>
-                </Popover>
-            </Container>
-
-            <Box sx={{ py: { xs: 4, md: 8 }, px: { xs: 2, md: 0 } }}>
-                <StatsSection />
+            <Box sx={{ m: 0, p: 0 }}>
+                <DynamicCoursesSection />
             </Box>
+
 
             {/* Technical Education Section */}
             <Box sx={{ py: 2 }}>
@@ -1602,10 +1170,10 @@ const Home = () => {
             </Container>
 
 
-            <Box>
+            {/* NEW CODE - No margin or padding */}
+            <Box sx={{ m: 0, p: 0 }}>
                 <CustomersSection />
             </Box>
-
         </Box>
     );
 };

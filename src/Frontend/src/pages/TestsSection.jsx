@@ -26,7 +26,7 @@ export default function ICMETTests() {
     ];
 
     const news = [
-        'في اطار التعاون مع وزارة الاسكان والمرافق والمجتمعات العمرانية ، ولخلق كوادر للقيادات الشابة من موظفي هيئة المجتمعات العمرانية الجديدة ، تم تتقييم عدد 226 موظف لشغل وظيفة معاون نائب رئيس الهيئة او معاون رئيس جهاز مدينة ، حيث تم التقييم لمهارات ( اللغة – الحاسب الآلي – القياسات الشخصية والذكاءات ).',
+        'في اطار التعاون مع وزارة الاسكان والمرافق والمجتمعات العمرانية ، ولخلق كوادر للقيادات الشابة من موظفي هيئة المجتمعات العمرانية الجديدة ، تم تتعيم عدد 226 موظف لشغل وظيفة معاون نائب رئيس الهيئة او معاون رئيس جهاز مدينة ، حيث تم التقييم لمهارات ( اللغة – الحاسب الآلي – القياسات الشخصية والذكاءات ).',
         'نظرا لاسناد مشروعات جديدة للشركة وحرصا من قيادات الشركة لاتاحة فرص عمل لشباب المهندسين ، يجري حاليا عمل التقييمات اللازمة لتعيين عدد من المهندسين حديثي التخرج للانضمام لاسرة الشركة ، فتم خلال العام 2019-2020 عمل التقييمات لعدد 663 مهندس في تخصصات ( مدني – عمارة – ميكانكيكا – كهرباء – مساحة ) وذلك في قدرات ومهارات استخدام الحاسب الآلي ، وتحديد درجة اجادة اللغة ، بالاضافة الى تقييم معلومات التخصص و القياسات الشخصية والذكاءات.',
         'حرصا من المعهد على توفير سبل الراحة للسادة الممتحنين ، فقد تم تطوير معمل الاختبارات وتزويده باحدث اجهزة الحاسب الآلي وزيادة عددها لاستيعاب اعداد الممتحنين ، وذلك تحديث الاثاث المستخدم من مكاتب وكراسي.',
         'ايماناً من الشركة بأهمية اتاحة الفرصة للقيادات الشابة ، يتم عمل التقييمات لقادة المستقبل على مستوى الافرع والادارات المختلفة ، حيث يتم تقييم السادة المرشحين للانضمام لمجلس قادة المستقبل في مهارات ( اللغة – الحاسب الآلي – القياسات الشخصية والذكاءات) وتجرى التقييمات بصفة دورية ، و فيما يلي عرض موجز لمشروع قادة المستقبل.'
@@ -300,19 +300,19 @@ export default function ICMETTests() {
           color: var(--primary);
         }
 
-        /* Large Stats Section */
+        /* Large Stats Section - UPDATED TO BE SMALLER */
         .large-stats-section {
           background: var(--primary);
-          padding: 3rem 2rem;
+          padding: 2rem 2rem; /* Reduced from 3rem */
           position: relative;
           margin: 5rem 0;
         }
 
         .large-stats-title {
           font-family: 'Droid Arabic Kufi', serif;
-          font-size: 2.8rem;
+          font-size: 1.8rem; /* Reduced from 2.8rem */
           color: white;
-          margin-bottom: 2rem;
+          margin-bottom: 1.5rem; /* Reduced from 2rem */
           font-weight: 700;
           text-align: center;
         }
@@ -321,19 +321,31 @@ export default function ICMETTests() {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 1rem;
+          gap: 0.5rem; /* Reduced from 1rem */
         }
 
-        .large-stat-icon { font-size: 3.5rem; color: var(--secondary); animation: bounce 2s ease-in-out infinite; }
+        .large-stat-icon { 
+          font-size: 2.5rem; /* Reduced from 3.5rem */
+          color: var(--secondary); 
+          animation: bounce 2s ease-in-out infinite; 
+        }
 
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
+          50% { transform: translateY(-15px); } /* Reduced from -20px */
         }
 
-        .large-stat-number { font-size: 6rem; font-weight: 900; color: white; }
+        .large-stat-number { 
+          font-size: 4rem; /* Reduced from 6rem */
+          font-weight: 900; 
+          color: white; 
+        }
 
-        .large-stat-label { font-size: 2rem; color: white; font-weight: 600; }
+        .large-stat-label { 
+          font-size: 1.5rem; /* Reduced from 2rem */
+          color: white; 
+          font-weight: 600; 
+        }
 
         /* News Section */
         .news-section {
@@ -419,6 +431,10 @@ export default function ICMETTests() {
         @media (max-width: 768px) {
           .image-grid { grid-template-columns: 1fr; }
           .hero-title { font-size: 2.5rem; }
+          .large-stats-title { font-size: 1.5rem; }
+          .large-stat-number { font-size: 3rem; }
+          .large-stat-label { font-size: 1.2rem; }
+          .large-stat-icon { font-size: 2rem; }
         }
       `}</style>
 
@@ -443,11 +459,10 @@ export default function ICMETTests() {
                     يعد معهد الإدارة والتكنولوجيا- المقاولون العرب واحد من أوائل المعاهد في جمهورية مصر العربية ، حيث يقوم هذا القسم  باجراء عدد كبير من الاختبارات المقننة الى العملاء الخارجيين طبقا للتعاقد وجميع الفروع والإدارات داخل الشركة
                 </p>
                 <p className="hero-description">
-كما يقوم القسم بعمل التقييمات اللازمة لتحديد مدى صلاحية الموظف لشغل الوظيفة ، معتمداً على خبرة السادة المحاضرين في عمل فنية تقييمات مناسبة لكافة الوظائف والمهن المختلفة ذات مرجعية لاختبارات الشهادات الدولية مثل ( ICDL & Toefl ) ، كذلك مستويات المهارات القومية ، واصدار النتيجة المعتمدة والمحددة لصلاحية شغل الوظيفة                </p>
+                    كما يقوم القسم بعمل التقييمات اللازمة لتحديد مدى صلاحية الموظف لشغل الوظيفة ، معتمداً على خبرة السادة المحاضرين في عمل فنية تقييمات مناسبة لكافة الوظائف والمهن المختلفة ذات مرجعية لاختبارات الشهادات الدولية مثل ( ICDL & Toefl ) ، كذلك مستويات المهارات القومية ، واصدار النتيجة المعتمدة والمحددة لصلاحية شغل الوظيفة                </p>
             </section>
-            <section className="hero-section">
-                <h1 className="hero-title">ولم يقتصر العمل في قسم الاختبارات على العاملين بالشركة فقط ، بل امتد عمل التقييمات ليشمل العملاء خارجيين ايضاً، مثال </h1>
-                            </section>
+            <h1 className="hero-title" style={{ fontSize: '2rem' }}>ولم يقتصر العمل في قسم الاختبارات على العاملين بالشركة فقط ، بل امتد عمل التقييمات ليشمل العملاء خارجيين ايضاً</h1>
+
             {/* External Clients Stats */}
             <div className="stats-grid" >
                 {externalClients.map((client, index) => (

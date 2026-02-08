@@ -1,9 +1,10 @@
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 const CourseDetails = () => {
     const [searchParams] = useSearchParams();
     const courseId = searchParams.get('id');
+    const navigate = useNavigate();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -163,7 +164,7 @@ const CourseDetails = () => {
             title: apiCourse.title,
             description: apiCourse.description,
             place: apiCourse.place,
-            price: apiCourse.cost || "-",
+            price: apiCourse.cost || 0,
             originalPrice: apiCourse.onSale || (apiCourse.cost ? apiCourse.cost * 1.6 : 3999),
             currency: "جنيه",
             discount: discount,
@@ -185,6 +186,7 @@ const CourseDetails = () => {
             programDates: programDates,
             startDate: startDate,
             endDate: endDate,
+            date: apiCourse.date,
             image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800",
             files: apiCourse.files || [],
             instructor: {
@@ -194,6 +196,46 @@ const CourseDetails = () => {
             },
             content: apiCourse.content
         };
+    };
+
+    // Add to Cart Function
+    const addToCart = (buyNow = false) => {
+        if (!course) return;
+
+        const existingCart = localStorage.getItem('cartItems');
+        const cartItems = existingCart ? JSON.parse(existingCart) : [];
+
+        const isInCart = cartItems.some(item => item.id === course.id);
+
+        if (!isInCart) {
+            const cartItem = {
+                id: course.id,
+                title: course.title,
+                instructor: course.place || 'غير محدد',
+                image: course.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                rating: course.rating || 4.6,
+                reviews: course.reviewsCount || 2547,
+                hours: course.duration || 26,
+                lectures: course.articlesCount || 12,
+                level: course.level || 'مبتدئ',
+                currentPrice: course.price || 0,
+                originalPrice: course.originalPrice || (course.price * 1.6) || 0,
+                badge: 'الأكثر مبيعاً',
+                coupon: 'DISCOUNT2025',
+                quantity: 1
+            };
+
+            cartItems.push(cartItem);
+            localStorage.setItem('cartItems', JSON.stringify(cartItems));
+            window.dispatchEvent(new Event('cartUpdated'));
+        }
+
+        // Navigate to cart or checkout
+        if (buyNow) {
+            navigate('/checkout');
+        } else {
+            navigate('/cart');
+        }
     };
 
     // Fetch Data
@@ -313,7 +355,7 @@ const CourseDetails = () => {
                                 onMouseLeave={e => e.target.style.color = '#0865a8'}
                             >
                                 الصفحة الرئيسية
-                            </a>                           
+                            </a>
                             <span style={styles.breadcrumbSeparator}>•</span>
                             <span style={styles.breadcrumbCurrent}>{course.title}</span>
                         </span>
@@ -469,15 +511,27 @@ const CourseDetails = () => {
 
                                 <div style={styles.priceContent}>
                                     <div style={styles.priceSection}>
-                                        <span style={styles.currentPrice}>{course.price.toLocaleString('ar-EG')} {course.currency}</span>
-                                        {course.originalPrice && (
+                                        <span style={styles.currentPrice}>
+                                            {course.price > 0 ? `${course.price.toLocaleString('ar-EG')} ${course.currency}` : 'مجاناً'}
+                                        </span>
+                                        {course.originalPrice && course.price > 0 && (
                                             <span style={styles.originalPrice}>{course.originalPrice.toLocaleString('ar-EG')} {course.currency}</span>
                                         )}
                                     </div>
 
                                     <div style={styles.actionButtons}>
-                                        <button style={styles.btnAddCart}>إضافة إلى السلة</button>
-                                        <button style={styles.btnBuyNow}>اشترِ الآن</button>
+                                        <button
+                                            style={styles.btnAddCart}
+                                            onClick={() => addToCart(false)}
+                                        >
+                                            إضافة إلى السلة
+                                        </button>
+                                        <button
+                                            style={styles.btnBuyNow}
+                                            onClick={() => addToCart(true)}
+                                        >
+                                            اشترِ الآن
+                                        </button>
                                     </div>
 
                                     <div style={styles.courseIncludes}>
@@ -530,7 +584,9 @@ const CourseDetails = () => {
                                                 <div style={styles.otherCourseContent}>
                                                     <h4 style={styles.otherCourseTitle}>{otherCourse.title}</h4>
                                                     <div style={styles.otherCoursePrice}>
-                                                        <span style={styles.otherCurrentPrice}>{otherCourse.price.toLocaleString('ar-EG')} {otherCourse.currency}</span>
+                                                        <span style={styles.otherCurrentPrice}>
+                                                            {otherCourse.price > 0 ? `${otherCourse.price.toLocaleString('ar-EG')} ${otherCourse.currency}` : 'مجاناً'}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </Link>
