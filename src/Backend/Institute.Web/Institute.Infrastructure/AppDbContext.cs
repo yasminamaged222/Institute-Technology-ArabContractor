@@ -97,7 +97,9 @@ public partial class AppDbContext : DbContext
                   .IsRequired();
             entity.HasQueryFilter(u => !u.IsDeleted);
             entity.HasIndex(x => x.ClerkUserId)
-                  .IsUnique();
+                  .IsUnique()
+                  .HasFilter("[IsDeleted] = 0");
+
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
                 .IsRequired(false);  // optional
