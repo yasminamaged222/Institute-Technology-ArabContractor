@@ -49,7 +49,7 @@ const slides = [
         image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2131&auto=format&fit=crop',
     },
     {
-        title: 'Commercial Engineering Apprenticeship Program (CEA)',
+        title: 'Commercial Engineering Apprenticeship (CEA)',
         subtitle: 'يقدم المعهد خدمات مميزة',
         link: '/cea-program',
         image: 'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?q=80&w=2070&auto=format&fit=crop',
