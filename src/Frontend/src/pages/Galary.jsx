@@ -602,13 +602,14 @@ const PhotoGallery = () => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    useEffect(() => {
+        document.title = 'مكتبة الصور والفيديوهات - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+
     if (selectedAlbum) {
         return <AlbumDetailPage album={selectedAlbum} onBack={() => setSelectedAlbum(null)} />;
     }
 
-     useEffect(() => {
-            document.title = '    مكتبة الصور والفيديوهات - المعهد التكنولوجي لهندسة التشييد والإدارة';
-        }, []);
 
     return (
         <div dir="rtl" className="photo-gallery">

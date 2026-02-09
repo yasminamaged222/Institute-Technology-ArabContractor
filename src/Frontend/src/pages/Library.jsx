@@ -112,7 +112,7 @@ export default function ModernLibrary() {
                         <BookOpen style={styles.heroIconSvg} />
                     </div>
                     <h1 style={{ ...styles.heroTitle, fontSize: isMobile ? '36px' : isTablet ? '48px' : '64px' }}>
-                        المكتبة الرقمية
+                        المكتبة 
                     </h1>
                     <div style={styles.heroUnderline}>
                         <div style={styles.underlineAnimate}></div>

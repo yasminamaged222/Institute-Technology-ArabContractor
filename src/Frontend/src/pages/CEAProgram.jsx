@@ -1,30 +1,14 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Accordion, AccordionSummary, AccordionDetails, Grid, Card, CardMedia, IconButton } from '@mui/material';
-import { ExpandMore, CheckCircle, PlayArrow } from '@mui/icons-material';
+import { Box, Container, Typography, Accordion, AccordionSummary, AccordionDetails, Grid, Card, CardMedia, IconButton, Dialog, DialogContent } from '@mui/material';
+import { ExpandMore, CheckCircle, PlayArrow, Close, ChevronLeft, ChevronRight } from '@mui/icons-material';
 
 const NAV_HEIGHT = 70; // Adjust this if your navbar height is different
 
 const CEAProgram = () => {
-    const [currentSlide, setCurrentSlide] = useState(0);
     const [openVideo, setOpenVideo] = useState(null);
-
-    const slides = [
-        {
-            image: '/images/cea-slide1.jpg',
-            subtitle: 'برنامج متميز',
-            title: 'برنامج اعداد مهندس مكتب فني'
-        },
-        {
-            image: '/images/cea-slide2.jpg',
-            subtitle: 'تدريب احترافي',
-            title: 'تطوير المهارات الهندسية'
-        },
-        {
-            image: '/images/cea-slide3.jpg',
-            subtitle: 'خبرات عملية',
-            title: 'التدريب العملي في المشروعات'
-        }
-    ];
+    const [openImageModal, setOpenImageModal] = useState(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [currentGallerySlide, setCurrentGallerySlide] = useState(0);
 
     const galleryImages = [
         { src: '/images/Cea1.jpg', description: 'اختبار الطلبة' },
@@ -52,13 +36,6 @@ const CEAProgram = () => {
         }
     ];
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentSlide((prev) => (prev + 1) % slides.length);
-        }, 5000);
-        return () => clearInterval(timer);
-    }, [slides.length]);
-
     const stages = [
         {
             title: 'المرحلة الاولي',
@@ -82,6 +59,41 @@ const CEAProgram = () => {
     useEffect(() => {
         document.title = ' ICEMT Webinar - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
+
+    const handleImageClick = (index) => {
+        setSelectedImageIndex(index);
+        setOpenImageModal(true);
+    };
+
+    const handleCloseImageModal = () => {
+        setOpenImageModal(false);
+    };
+
+    const handlePrevImage = () => {
+        setSelectedImageIndex((prev) => (prev === 0 ? galleryImages.length - 1 : prev - 1));
+    };
+
+    const handleNextImage = () => {
+        setSelectedImageIndex((prev) => (prev === galleryImages.length - 1 ? 0 : prev + 1));
+    };
+
+    const handlePrevGallerySlide = () => {
+        setCurrentGallerySlide((prev) => Math.max(0, prev - 1));
+    };
+
+    const handleNextGallerySlide = () => {
+        const maxSlide = Math.ceil(galleryImages.length / 4) - 1;
+        setCurrentGallerySlide((prev) => Math.min(maxSlide, prev + 1));
+    };
+
+    // Auto-advance gallery slider
+    useEffect(() => {
+        const maxSlide = Math.ceil(galleryImages.length / 4) - 1;
+        const timer = setInterval(() => {
+            setCurrentGallerySlide((prev) => (prev >= maxSlide ? 0 : prev + 1));
+        }, 4000);
+        return () => clearInterval(timer);
+    }, [galleryImages.length]);
 
     return (
         <Box
@@ -132,12 +144,14 @@ const CEAProgram = () => {
                     </Typography>
                 </Box>
             </Box>
+
             {/* Main Content */}
             <Container
                 maxWidth="lg"
                 sx={{
                     py: { xs: 6, md: 8 },
-                    px: { xs: 2, sm: 3, md: 4 }
+                    px: { xs: 2, sm: 3, md: 4 },
+                    mt: `${NAV_HEIGHT + 60}px`,
                 }}
             >
                 {/* Header */}
@@ -172,7 +186,8 @@ const CEAProgram = () => {
                             lineHeight: 1.9,
                             mb: 3,
                             color: '#000000',
-                            fontSize: { xs: "0.95rem", md: "1.05rem" }
+                            fontSize: { xs: "0.95rem", md: "1.05rem" },
+                            textAlign: 'left'
                         }}
                     >
                         هو برنامج متميز يعتمد علي فكرة التدريب قبل التعيين ،وحيث أن المكتب الفني يُعتبر العمود الفقري للمشروع فإن هذا البرنامج يهدف إلي إعداد مهندس مكتب فني ويعمل علي تزويد المهندسين الجدد بالمعارف والمهارات اللازمة لتجعل المهندس قادر علي القيام بواجباته ومسئولياته علي الوجه الذي يساهم في إنجاح المشروع ليتم بعد ذلك توزيعهم علي المكاتب الفنية للمشروعات علي مستوي الشركة
@@ -184,7 +199,8 @@ const CEAProgram = () => {
                             lineHeight: 1.9,
                             mb: 3,
                             color: '#000000',
-                            fontSize: { xs: "0.95rem", md: "1.05rem" }
+                            fontSize: { xs: "0.95rem", md: "1.05rem" },
+                            textAlign: 'left'
                         }}
                     >
                         وقد تم تصميم البرنامج ليشمل تدريب المهندسين وتنقسم مراحل التدريب كالاتي :
@@ -285,7 +301,7 @@ const CEAProgram = () => {
                                 <Typography
                                     sx={{
                                         fontFamily: '"Droid Arabic Kufi", serif',
-                                        textAlign: 'right',
+                                        textAlign: 'left',
                                         lineHeight: 1.9,
                                         color: '#000000',
                                         fontSize: { xs: "0.95rem", md: "1.05rem" }
@@ -298,7 +314,7 @@ const CEAProgram = () => {
                     ))}
                 </Box>
 
-                {/* Gallery Section */}
+                {/* Gallery Slider Section */}
                 <Box sx={{ mb: { xs: 6, md: 8 } }}>
                     <Typography
                         variant="h4"
@@ -313,73 +329,179 @@ const CEAProgram = () => {
                     >
                         معرض الصور
                     </Typography>
-                    <Grid container spacing={{ xs: 2, md: 3 }}>
-                        {galleryImages.map((image, index) => (
-                            <Grid item xs={6} sm={4} md={3} key={index}>
-                                <Card
+
+                    <Box sx={{ position: 'relative', overflow: 'hidden', px: { xs: 0, md: 6 } }}>
+                        {/* Slider Container */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                transition: 'transform 0.5s ease-in-out',
+                                transform: `translateX(${currentGallerySlide * -100}%)`,
+                            }}
+                        >
+                            {Array.from({ length: Math.ceil(galleryImages.length / 2) }).map((_, slideIndex) => (
+                                <Box
+                                    key={slideIndex}
                                     sx={{
-                                        position: 'relative',
-                                        height: { xs: 150, sm: 200, md: 220 },
-                                        overflow: 'hidden',
-                                        borderRadius: '12px',
-                                        transition: 'all 0.4s ease',
-                                        '&:hover': {
-                                            transform: 'translateY(-8px)',
-                                            boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
-                                        },
-                                        '&:hover .overlay': {
-                                            opacity: 1
-                                        },
-                                        '&:hover .image': {
-                                            transform: 'scale(1.1)',
-                                        }
+                                        minWidth: '100%',
+                                        display: 'flex',
+                                        px: 1,
                                     }}
                                 >
-                                    <CardMedia
-                                        component="img"
-                                        height="100%"
-                                        image={image.src}
-                                        alt={image.description}
-                                        className="image"
-                                        sx={{
-                                            height: '100%',
-                                            objectFit: 'cover',
-                                            transition: 'transform 0.4s ease',
-                                        }}
-                                    />
-                                    <Box
-                                        className="overlay"
-                                        sx={{
-                                            position: 'absolute',
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            background: 'linear-gradient(to top, rgba(245, 124, 0, 0.9) 0%, transparent 100%)',
-                                            color: 'white',
-                                            p: 2,
-                                            opacity: 0,
-                                            transition: 'opacity 0.4s ease',
-                                            display: 'flex',
-                                            alignItems: 'flex-end',
-                                        }}
-                                    >
-                                        <Typography
-                                            variant="body2"
-                                            sx={{
-                                                fontFamily: '"Droid Arabic Kufi", serif',
-                                                textAlign: 'center',
-                                                fontWeight: 'bold',
-                                                width: '100%',
-                                                fontSize: { xs: "0.75rem", md: "0.875rem" }
-                                            }}
-                                        >
-                                            {image.description}
-                                        </Typography>
-                                    </Box>
-                                </Card>
-                            </Grid>
-                        ))}
-                    </Grid>
+                                    <Grid container spacing={{ xs: 2, md: 3 }}>
+                                        {galleryImages.slice(slideIndex * 4, slideIndex * 4 + 4).map((image, index) => {
+                                            const actualIndex = slideIndex * 4 + index;
+                                            return (
+                                                <Grid item xs={6} sm={6} md={3} key={actualIndex}>
+                                                    <Card
+                                                        onClick={() => handleImageClick(actualIndex)}
+                                                        sx={{
+                                                            position: 'relative',
+                                                            height: { xs: 180, sm: 220, md: 260 },
+                                                            overflow: 'hidden',
+                                                            borderRadius: '12px',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.4s ease',
+                                                            '&:hover': {
+                                                                transform: 'translateY(-8px)',
+                                                                boxShadow: '0 12px 24px rgba(0, 0, 0, 0.15)',
+                                                            },
+                                                            '&:hover .overlay': {
+                                                                opacity: 1
+                                                            },
+                                                            '&:hover .image': {
+                                                                transform: 'scale(1.1)',
+                                                            }
+                                                        }}
+                                                    >
+                                                        <CardMedia
+                                                            component="img"
+                                                            height="100%"
+                                                            image={image.src}
+                                                            alt={image.description}
+                                                            className="image"
+                                                            sx={{
+                                                                height: '100%',
+                                                                objectFit: 'cover',
+                                                                transition: 'transform 0.4s ease',
+                                                            }}
+                                                        />
+                                                        <Box
+                                                            className="overlay"
+                                                            sx={{
+                                                                position: 'absolute',
+                                                                bottom: 0,
+                                                                left: 0,
+                                                                right: 0,
+                                                                background: 'linear-gradient(to top, rgba(245, 124, 0, 0.9) 0%, transparent 100%)',
+                                                                color: 'white',
+                                                                p: 2,
+                                                                opacity: 0,
+                                                                transition: 'opacity 0.4s ease',
+                                                                display: 'flex',
+                                                                alignItems: 'flex-end',
+                                                            }}
+                                                        >
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                                                    textAlign: 'center',
+                                                                    fontWeight: 'bold',
+                                                                    width: '100%',
+                                                                    fontSize: { xs: "0.75rem", md: "0.875rem" }
+                                                                }}
+                                                            >
+                                                                {image.description}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Card>
+                                                </Grid>
+                                            );
+                                        })}
+                                    </Grid>
+                                </Box>
+                            ))}
+                        </Box>
+
+                        {/* Navigation Arrows */}
+                        <IconButton
+                            onClick={handlePrevGallerySlide}
+                            disabled={currentGallerySlide === 0}
+                            sx={{
+                                position: 'absolute',
+                                right: { xs: -10, md: 0 },
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                bgcolor: 'rgba(255, 255, 255, 0.95)',
+                                color: '#0865a8',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                '&:hover': {
+                                    bgcolor: '#f57c00',
+                                    color: 'white',
+                                },
+                                '&.Mui-disabled': {
+                                    bgcolor: 'rgba(200, 200, 200, 0.5)',
+                                    color: '#999',
+                                },
+                                zIndex: 2,
+                            }}
+                        >
+                            <ChevronLeft sx={{ fontSize: { xs: 28, md: 36 } }} />
+                        </IconButton>
+                        <IconButton
+                            onClick={handleNextGallerySlide}
+                            disabled={currentGallerySlide >= Math.ceil(galleryImages.length / 4) - 1}
+                            sx={{
+                                position: 'absolute',
+                                left: { xs: -10, md: 0 },
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                bgcolor: 'rgba(255, 255, 255, 0.95)',
+                                color: '#0865a8',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                '&:hover': {
+                                    bgcolor: '#f57c00',
+                                    color: 'white',
+                                },
+                                '&.Mui-disabled': {
+                                    bgcolor: 'rgba(200, 200, 200, 0.5)',
+                                    color: '#999',
+                                },
+                                zIndex: 2,
+                            }}
+                        >
+                            <ChevronRight sx={{ fontSize: { xs: 28, md: 36 } }} />
+                        </IconButton>
+
+                        {/* Slider Dots */}
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                gap: 1,
+                                mt: 3,
+                            }}
+                        >
+                            {Array.from({ length: Math.ceil(galleryImages.length / 4) }).map((_, index) => (
+                                <Box
+                                    key={index}
+                                    onClick={() => setCurrentGallerySlide(index)}
+                                    sx={{
+                                        width: currentGallerySlide === index ? 30 : 10,
+                                        height: 10,
+                                        borderRadius: 5,
+                                        bgcolor: currentGallerySlide === index ? '#f57c00' : '#d1d5db',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': {
+                                            bgcolor: currentGallerySlide === index ? '#f57c00' : '#9ca3af',
+                                        }
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    </Box>
                 </Box>
 
                 {/* Videos Section */}
@@ -485,7 +607,7 @@ const CEAProgram = () => {
                                                     variant="body1"
                                                     sx={{
                                                         fontFamily: '"Droid Arabic Kufi", serif',
-                                                        textAlign: 'right',
+                                                        textAlign: 'center',
                                                         fontSize: { xs: "0.875rem", md: "1rem" }
                                                     }}
                                                 >
@@ -500,6 +622,137 @@ const CEAProgram = () => {
                     </Grid>
                 </Box>
             </Container>
+
+            {/* Image Modal with Gallery Navigation */}
+            <Dialog
+                open={openImageModal}
+                onClose={handleCloseImageModal}
+                maxWidth="lg"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        bgcolor: 'rgba(0, 0, 0, 0.95)',
+                        boxShadow: 'none',
+                    }
+                }}
+            >
+                <DialogContent sx={{ p: 0, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh' }}>
+                    {/* Close Button */}
+                    <IconButton
+                        onClick={handleCloseImageModal}
+                        sx={{
+                            position: 'absolute',
+                            top: 10,
+                            right: 10,
+                            color: 'white',
+                            bgcolor: 'rgba(0, 0, 0, 0.5)',
+                            '&:hover': {
+                                bgcolor: '#f57c00',
+                            },
+                            zIndex: 2,
+                        }}
+                    >
+                        <Close />
+                    </IconButton>
+
+                    {/* Previous Button */}
+                    <IconButton
+                        onClick={handlePrevImage}
+                        sx={{
+                            position: 'absolute',
+                            right: 20,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'white',
+                            bgcolor: 'rgba(0, 0, 0, 0.5)',
+                            '&:hover': {
+                                bgcolor: '#f57c00',
+                            },
+                            zIndex: 2,
+                        }}
+                    >
+                        <ChevronLeft sx={{ fontSize: 40 }} />
+                    </IconButton>
+
+                    {/* Next Button */}
+                    <IconButton
+                        onClick={handleNextImage}
+                        sx={{
+                            position: 'absolute',
+                            left: 20,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'white',
+                            bgcolor: 'rgba(0, 0, 0, 0.5)',
+                            '&:hover': {
+                                bgcolor: '#f57c00',
+                            },
+                            zIndex: 2,
+                        }}
+                    >
+                        <ChevronRight sx={{ fontSize: 40 }} />
+                    </IconButton>
+
+                    {/* Image */}
+                    <Box
+                        component="img"
+                        src={galleryImages[selectedImageIndex].src}
+                        alt={galleryImages[selectedImageIndex].description}
+                        sx={{
+                            maxWidth: '90%',
+                            maxHeight: '85vh',
+                            objectFit: 'contain',
+                        }}
+                    />
+
+                    {/* Image Description */}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            bottom: 20,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            bgcolor: 'rgba(0, 0, 0, 0.7)',
+                            color: 'white',
+                            px: 3,
+                            py: 1.5,
+                            borderRadius: 2,
+                        }}
+                    >
+                        <Typography
+                            sx={{
+                                fontFamily: '"Droid Arabic Kufi", serif',
+                                textAlign: 'center',
+                            }}
+                        >
+                            {galleryImages[selectedImageIndex].description}
+                        </Typography>
+                    </Box>
+
+                    {/* Image Counter */}
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 20,
+                            left: 20,
+                            bgcolor: 'rgba(0, 0, 0, 0.7)',
+                            color: 'white',
+                            px: 2,
+                            py: 1,
+                            borderRadius: 1,
+                        }}
+                    >
+                        <Typography
+                            sx={{
+                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontSize: '0.9rem',
+                            }}
+                        >
+                            {selectedImageIndex + 1} / {galleryImages.length}
+                        </Typography>
+                    </Box>
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 };

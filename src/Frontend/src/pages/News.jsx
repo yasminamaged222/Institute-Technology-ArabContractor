@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useRef } from 'react';
 import './news.css';
 
@@ -19,7 +17,7 @@ const News = () => {
     const years = ['2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
 
     useEffect(() => {
-        document.title = '           الاخبار - المعهد التكنولوجي لهندسة التشييد والإدارة';
+        document.title = ' الاخبار - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
     // --- Fetch runs whenever year OR currentPage changes ---
@@ -52,12 +50,10 @@ const News = () => {
 
     const handleScroll = (direction) => {
         if (scrollRef.current) {
-            const scrollAmount = scrollRef.current.clientWidth;
+            const scrollAmount = scrollRef.current.clientWidth / 2;
             scrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
         }
     };
-
-    
 
     return (
         <div className="news-page-container" style={{ paddingTop: '70px', backgroundColor: '#fff', direction: 'rtl' }}>
@@ -93,32 +89,91 @@ const News = () => {
           margin: 0 5px;
           cursor: pointer;
           transition: 0.3s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         .pagination-dot-active {
           background: #f57c00 !important;
           color: #fff !important;
           border-color: #f57c00 !important;
         }
+
+        /* Grid System */
+        .news-cards-grid {
+            display: grid;
+            gap: 24px;
+            width: 100%;
+        }
+
+        /* Responsive Breakpoints */
+        @media (min-width: 300px) {
+            .news-cards-grid { grid-template-columns: 1fr; }
+            .news-content-wrapper { padding: 0 15px 70px; }
+            .breadcrumb-bar { top: 70px; }
+        }
+
+        @media (min-width: 640px) {
+            .news-cards-grid { grid-template-columns: repeat(2, 1fr); }
+            .news-content-wrapper { padding: 0 30px 70px; }
+        }
+
+        @media (min-width: 1024px) {
+            .news-cards-grid { grid-template-columns: repeat(3, 1fr); }
+            .news-content-wrapper { padding: 0 5% 70px; }
+        }
+
+        @media (min-width: 1440px) {
+            .news-cards-grid { grid-template-columns: repeat(4, 1fr); }
+            .news-content-wrapper { padding: 0 8% 70px; }
+        }
+
+        @media (min-width: 1920px) {
+            .news-cards-grid { grid-template-columns: repeat(5, 1fr); }
+            .news-page-container { max-width: 1800px; margin: 0 auto; }
+        }
+
+        /* Breadcrumb Responsive */
+        .breadcrumb-bar {
+            position: fixed;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+            padding: 8px 15px;
+            border-bottom: 2px solid #eee;
+            background: #F5F7E1;
+        }
+
+        .year-slider-container {
+            padding: 20px 5%;
+            display: flex;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .year-slider-box {
+            background: #f5f5f5;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            display: flex;
+            align-items: center;
+            height: 45px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 800px;
+        }
       `}</style>
 
             {/* Breadcrumb */}
-            <div className="overview_intro" style={{ position: 'relative', bottom: '65px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee' }}>
-                <span className="overview"><a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار</span>
+            <div className="breadcrumb-bar">
+                <span className="overview">
+                    <a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار
+                </span>
             </div>
 
-            {/* 4-Year Slider */}
-            <div style={{ padding: '30px 5%', display: 'flex', justifyContent: 'center' }}>
-                <div style={{
-                    background: '#f5f5f5',
-                    borderRadius: '10px',
-                    border: '2px solid #ddd',
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '45px',
-                    overflow: 'hidden',
-                    maxWidth: '4000px',
-                    width: '90%'
-                }}>
+            {/* Year Slider */}
+            <div className="year-slider-container">
+                <div className="year-slider-box">
                     <div onClick={() => handleScroll('right')} style={arrowStyle}>«</div>
                     <div ref={scrollRef} className="timeline-scroller" style={{
                         display: 'flex',
@@ -172,7 +227,7 @@ const News = () => {
             </div>
 
             {/* News Grid */}
-            <div className="news-content-wrapper" style={{ padding: '1 8% 70px' }}>
+            <div className="news-content-wrapper">
                 <div className={`news-cards-grid ${animate ? 'active' : ''} news-fade-in`}>
 
                     {loading && <p style={{ textAlign: 'center', width: '100%', padding: '50px', color: '#f57c00' }}>جارٍ تحميل الأخبار...</p>}
@@ -202,7 +257,7 @@ const News = () => {
             {/* Dynamic Pagination Bar */}
             {!loading && totalPages > 1 && (
                 <div className="pagination-wrapper" style={{ display: 'flex', justifyContent: 'center', paddingBottom: '50px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: '5px' }}>
                         <button
                             className="pagination-dot"
                             disabled={currentPage === 1}

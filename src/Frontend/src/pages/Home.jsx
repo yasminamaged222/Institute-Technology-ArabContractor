@@ -26,39 +26,40 @@ import 'swiper/css/autoplay';
 import { Link } from 'react-router-dom';
 import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+
 
 const slides = [
     {
         title: 'خدمات تدريبية مميزة',
         subtitle: 'يقدم المعهد خدمات مميزة',
         link: '/training-methods',
-        image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=2070&auto=format&fit=crop',
+        image: '/images/banner6.jpg',
     },
     {
         title: 'ورش فى مجال تدريب الميكانيكا والكهرباء',
         subtitle: 'يقدم المعهد خدمات مميزة',
         link: '/shobra',
-        image: 'https://images.unsplash.com/photo-1621905251918-48416bd8575a?q=80&w=2069&auto=format&fit=crop',
+        image: '/images/banner3.jpg',
     },
     {
         title: 'التدريب فى موقع العمل',
         subtitle: 'يقدم المعهد خدمات مميزة',
         link: '/onsite-training',
-        image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=2131&auto=format&fit=crop',
+        image: '/images/banner4.jpg',
     },
     {
         title: 'Commercial Engineering Apprenticeship (CEA)',
         subtitle: 'يقدم المعهد خدمات مميزة',
         link: '/cea-program',
-        image: 'https://images.unsplash.com/photo-1590856029826-c7a73142bbf1?q=80&w=2070&auto=format&fit=crop',
+        image: '/images/banner8.jpg',
     },
     {
         title: 'مدرسة المقاولون العرب الثانوية الفنية',
         subtitle: 'يقدم المعهد خدمات مميزة',
         link: '/Technical_Schools',
-        image: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=2070&auto=format&fit=crop',
+        image: '/images/banner7.jpg',
     },
 ];
 
@@ -606,10 +607,11 @@ const Home = () => {
                 <Box
                     sx={{
                         position: 'absolute',
-                        bottom: 70,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
+                        top: '50%',
+                        left: 10,
+                        transform: 'translateY(-50%)',
                         display: 'flex',
+                        flexDirection: 'column',
                         gap: 2,
                         alignItems: 'center',
                         zIndex: 3,
@@ -633,18 +635,18 @@ const Home = () => {
                             transition: 'all 0.3s ease',
                         }}
                     >
-                        <ChevronRightIcon />
+                        <KeyboardArrowUpIcon />
                     </IconButton>
 
                     {/* Dots */}
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         {slides.map((_, index) => (
                             <Box
                                 key={index}
                                 onClick={() => setCurrentSlide(index)}
                                 sx={{
-                                    width: currentSlide === index ? 28 : 10,
-                                    height: 10,
+                                    width: 10,
+                                    height: currentSlide === index ? 28 : 10,
                                     borderRadius: '5px',
                                     bgcolor:
                                         currentSlide === index
@@ -675,11 +677,12 @@ const Home = () => {
                             transition: 'all 0.3s ease',
                         }}
                     >
-                        <ChevronLeftIcon />
+                        <KeyboardArrowDownIcon />
                     </IconButton>
                 </Box>
 
             </Box>
+
 
             {/* 3 Small Cards */}
             <Container
@@ -885,8 +888,8 @@ const Home = () => {
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 backgroundAttachment: 'fixed',
-                textAlign: 'center',
-                color: 'white'
+                color: 'white',
+                direction: 'rtl'
             }}>
                 <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
                     <Typography
@@ -899,6 +902,8 @@ const Home = () => {
                             fontFamily: '"Droid Arabic Kufi", serif',
                             position: 'relative',
                             display: 'inline-block',
+                            textAlign: 'center',
+                            width: '100%',
                             '&::after': {
                                 content: '""',
                                 position: 'absolute',
@@ -915,7 +920,7 @@ const Home = () => {
 
                     <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center" alignItems="stretch">
                         {downloadItems.map((item, index) => (
-                            <Grid item xs={12} sm={6} md={4} key={index} sx={{ display: 'flex' }}>
+                            <Grid item xs={12} sm={6} md={4} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
                                 <Paper
                                     elevation={2}
                                     component="a"
@@ -925,6 +930,7 @@ const Home = () => {
                                     sx={{
                                         p: { xs: 2, sm: 2.5, md: 4 },
                                         display: 'flex',
+                                        flexDirection: 'row-reverse',
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
                                         borderRadius: '10px',
@@ -932,46 +938,44 @@ const Home = () => {
                                         bgcolor: 'white',
                                         cursor: 'pointer',
                                         textDecoration: 'none',
-                                        // FIXED SIZING START
-                                        width: '270px',      // Fixed width: all boxes will be exactly this wide
-                                        minHeight: '100px',   // Fixed height: all boxes will be exactly this tall
-                                        // FIXED SIZING END
+                                        width: '270px',
+                                        minHeight: '100px',
                                         '&:hover': {
                                             transform: { xs: 'translateY(-3px)', md: 'translateY(-8px)' },
                                             boxShadow: '0 12px 25px rgba(0,0,0,0.2)'
                                         },
                                     }}
                                 >
-                                    <Box sx={{
-                                        bgcolor: '#f57c00',
-                                        p: { xs: 0.8, sm: 1, md: 1.5 },
-                                        borderRadius: '15px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        ml: 1
-                                    }}>
-                                        <item.Icon
-                                            className="download-icon"
-                                            sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}
-                                        />
-                                    </Box>
-
                                     <Typography
                                         variant="h6"
                                         className="download-item-title"
                                         sx={{
                                             color: '#000',
                                             fontWeight: 'bold',
-                                            textAlign: 'right',
-                                            flex: 1,
+                                            textAlign: 'left',
+                                            flex: 2,
                                             fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
                                             lineHeight: 1.4,
-                                            fontFamily: '"Droid Arabic Kufi", serif'
+                                            fontFamily: '"Droid Arabic Kufi", serif',
+                                            pr: 2
                                         }}
                                     >
                                         {item.title}
                                     </Typography>
+
+                                    <Box sx={{
+                                        bgcolor: '#f57c00',
+                                        p: { xs: 0.8, sm: 1, md: 1.5 },
+                                        borderRadius: '15px',
+                                        display: 'flex',
+                                        alignItems: 'left',
+                                        justifyContent: 'left'
+                                    }}>
+                                        <item.Icon
+                                            className="download-icon"
+                                            sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}
+                                        />
+                                    </Box>
                                 </Paper>
                             </Grid>
                         ))}

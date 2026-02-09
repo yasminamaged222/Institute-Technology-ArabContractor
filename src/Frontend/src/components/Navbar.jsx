@@ -981,21 +981,6 @@ const Navbar = () => {
                                                 lineHeight: 1.4
                                             }}
                                         />
-                                        {cat.link && (
-                                            <Box
-                                                sx={{
-                                                    fontSize: 10,
-                                                    bgcolor: '#0865a8',
-                                                    color: 'white',
-                                                    px: 1,
-                                                    py: 0.3,
-                                                    borderRadius: 0.5,
-                                                    fontFamily: '"Droid Arabic Kufi", serif'
-                                                }}
-                                            >
-                                                مباشر
-                                            </Box>
-                                        )}
                                     </Box>
                                 </ListItemButton>
                             ))}

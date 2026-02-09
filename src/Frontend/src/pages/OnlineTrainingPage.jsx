@@ -25,35 +25,71 @@ export default function OnlineTrainingPage() {
         }
     ];
 
-     useEffect(() => {
-            document.title = '      التدريب عن بعد ( اونلاين ) - المعهد التكنولوجي لهندسة التشييد والإدارة';
-        }, []);
+    useEffect(() => {
+        document.title = '      التدريب عن بعد ( اونلاين ) - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
-        <div className="min-h-screen bg-white" dir="rtl" style={{ paddingTop: '1px' }}>
+        <div className="min-h-screen bg-white" dir="rtl" style={{ margin: 0, padding: 0 }}>
             {/* Header */}
-            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' }}>
-
-                <span className="overview" style={{ position: 'relative', bottom: '5px' }}><a href="/" className="btn_go_home">الصفحة الرئيسية</a> -التدريب عن بعد ( اونلاين )</span>
-
+            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1', margin: 0, padding: '10px 0' }}>
+                <span className="overview" style={{ position: 'relative', bottom: '5px', margin: 0 }}><a href="/" className="btn_go_home">الصفحة الرئيسية</a> -التدريب عن بعد ( اونلاين )</span>
             </div>
 
             {/* Main Content */}
-            <div>
+            <div style={{ margin: 0, padding: 0, paddingTop: '60px' }}>
                 {/* Online Training Section */}
-                <section className="bg-white pt-5">
-                    <div className="container mx-auto px-4 py-5 md:py-12">
-                        <div className="grid items-start gap-8 text-right md:grid-cols-2">
-                            <div>
-                                <h3 className="mb-4 text-2xl font-bold">التدريب عن بعد ( اونلاين )</h3>
-                                <p className="leading-relaxed text-gray-700">
+                <section className="bg-white" style={{ margin: 0, padding: 0 }}>
+                    <div style={{
+                        margin: 0,
+                        padding: '40px 20px',
+                        maxWidth: '100%'
+                    }}>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: window.innerWidth >= 768 ? '1fr 1fr' : '1fr',
+                            gap: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '60px' : window.innerWidth >= 768 ? '40px' : '0',
+                            alignItems: 'start',
+                            textAlign: 'right',
+                            margin: 0,
+                            padding: 0
+                        }}>
+                            <div style={{ margin: 0, padding: 0 }}>
+                                <h3 style={{
+                                    marginBottom: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '24px' : '16px',
+                                    marginTop: 0,
+                                    fontSize: window.innerWidth >= 1920 ? '28px' : window.innerWidth >= 1360 ? '24px' : window.innerWidth >= 768 ? '22px' : '20px',
+                                    fontWeight: 'bold',
+                                    padding: 0
+                                }}>
+                                    التدريب عن بعد ( اونلاين )
+                                </h3>
+                                <p style={{
+                                    lineHeight: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '1.9' : '1.7',
+                                    color: '#374151',
+                                    margin: 0,
+                                    padding: 0,
+                                    fontSize: window.innerWidth >= 1920 ? '25px' : window.innerWidth >= 1360 ? '16px' : window.innerWidth >= 768 ? '20px' : '14px'
+                                }}>
                                     فى ظل حرص الشركة على رفع كفاءة العاملين و تزويدهم بالمعارف الجديدة من خلال حضورهم برامج تدريبية متنوعة فى مجال عملهم وفى ظل الظروف التى يمر بها العالم من تبعات جائحة كورونا مما ترتب عليه ضرورة التباعد الاجتماعى مما ادى الى ضرورة الاتجاه الي تنفيذ عملية التدريب عن بعد ، وهي عملية تدريبية تعتمد على تحديد الاحتياجات التدريبية وتصميم البرامج وتخطيط وادارة العملية التدريبية ، الا أنه يعتمد على تكنولوجيا المعلومات باستخدام آليات الاتصال الحديثة من حاسب وشبكاته ووسائطه المتعددة من صوت وصورة في التواصل بين المدرب والمتدربين والطاقم الاداري بهدف كسر الحدود الجغرافية والزمنية التي تعيق عمليات التدريب، و استخدام التقنية الالكترونية بجميع أنواعها في إيصال المعلومة للمتعلم بأقصر وقت وأقل جهد وأكبر فائدة
                                 </p>
                             </div>
-                            <div className="mt-5 pl-0 md:mt-0 md:pl-12">
+                            <div style={{
+                                marginTop: window.innerWidth >= 768 ? 0 : '20px',
+                                paddingLeft: 0,
+                                margin: 0
+                            }}>
                                 <img
                                     src="https://www.arabcont.com/icemt/assets/images/online-training.jpg"
-                                    className="h-auto w-full rounded-lg shadow-lg"
+                                    style={{
+                                        height: 'auto',
+                                        width: '100%',
+                                        borderRadius: '8px',
+                                        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                                        margin: 0,
+                                        padding: 0,
+                                        display: 'block'
+                                    }}
                                     alt="التدريب عن بعد"
                                 />
                             </div>
@@ -62,30 +98,89 @@ export default function OnlineTrainingPage() {
                 </section>
 
                 {/* Programs Section */}
-                <section className="bg-white">
-                    <div className="container mx-auto px-4 py-8 text-right">
-                        <h3 className="mb-8 text-xl font-bold md:text-2xl">
+                <section className="bg-white" style={{ margin: 0, padding: 0 }}>
+                    <div style={{
+                        margin: 0,
+                        padding: '40px 20px',
+                        textAlign: 'right'
+                    }}>
+                        <h3 style={{
+                            marginBottom: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '32px' : '24px',
+                            marginTop: 0,
+                            fontSize: window.innerWidth >= 1920 ? '26px' : window.innerWidth >= 1360 ? '22px' : window.innerWidth >= 768 ? '20px' : '18px',
+                            fontWeight: 'bold',
+                            padding: 0
+                        }}>
                             ومن الامثلة الفعلية التى قام المعهد التكنولوجى لهندسة التشييد والادارة التابع لشركة المقاولون العرب بتنظيم برامج تدريبية باستخدام التدريب عن بعد كالتالى :
                         </h3>
 
-                        <div className="space-y-6">
+                        <div style={{ margin: 0, padding: 0 }}>
                             {programs.map((program, index) => (
-                                <div key={index} className="border-b border-gray-200 pb-6 last:border-b-0">
-                                    <div className="flex gap-4">
-                                        <div className="flex-shrink-0 pt-1">
-                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-600">
-                                                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                <div
+                                    key={index}
+                                    style={{
+                                        borderBottom: index !== programs.length - 1 ? '1px solid #e5e7eb' : 'none',
+                                        paddingBottom: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '28px' : '20px',
+                                        marginBottom: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '28px' : '20px',
+                                        margin: 0,
+                                        marginBottom: index !== programs.length - 1 ? (window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '28px' : '20px') : 0
+                                    }}
+                                >
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '20px' : '16px',
+                                        margin: 0,
+                                        padding: 0
+                                    }}>
+                                        <div style={{
+                                            flexShrink: 0,
+                                            paddingTop: '4px',
+                                            margin: 0
+                                        }}>
+                                            <span style={{
+                                                display: 'flex',
+                                                height: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '28px' : '24px',
+                                                width: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '28px' : '24px',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                borderRadius: '50%',
+                                                backgroundColor: '#dcfce7',
+                                                color: '#16a34a',
+                                                margin: 0,
+                                                padding: 0
+                                            }}>
+                                                <svg style={{
+                                                    height: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '18px' : '16px',
+                                                    width: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '18px' : '16px'
+                                                }} fill="currentColor" viewBox="0 0 20 20">
                                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                 </svg>
                                             </span>
                                         </div>
-                                        <div className="flex-1">
-                                            <h5 className="mb-2 text-lg font-bold">
-                                                <a href="#" className="text-blue-700 hover:text-blue-900">
+                                        <div style={{ flex: 1, margin: 0, padding: 0 }}>
+                                            <h5 style={{
+                                                marginBottom: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '12px' : '8px',
+                                                marginTop: 0,
+                                                fontSize: window.innerWidth >= 1920 ? '20px' : window.innerWidth >= 1360 ? '18px' : window.innerWidth >= 768 ? '17px' : '16px',
+                                                fontWeight: 'bold',
+                                                padding: 0
+                                            }}>
+                                                <a href="#" style={{
+                                                    color: '#1d4ed8',
+                                                    textDecoration: 'none'
+                                                }}
+                                                    onMouseEnter={(e) => e.target.style.color = '#1e3a8a'}
+                                                    onMouseLeave={(e) => e.target.style.color = '#1d4ed8'}>
                                                     {program.title}
                                                 </a>
                                             </h5>
-                                            <p className="leading-relaxed text-gray-700">
+                                            <p style={{
+                                                lineHeight: window.innerWidth >= 1360 && window.innerWidth <= 1920 ? '1.9' : '1.7',
+                                                color: '#374151',
+                                                margin: 0,
+                                                padding: 0,
+                                                fontSize: window.innerWidth >= 1920 ? '17px' : window.innerWidth >= 1360 ? '15px' : window.innerWidth >= 768 ? '14px' : '13px'
+                                            }}>
                                                 {program.description}
                                             </p>
                                         </div>
