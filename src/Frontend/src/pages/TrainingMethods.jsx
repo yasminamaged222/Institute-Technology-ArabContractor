@@ -13,6 +13,7 @@ import {
     LocationOn,
     Chair,
 } from "@mui/icons-material";
+import { useEffect } from "react";
 
 const NAV_HEIGHT = 70; // Adjust this if your navbar height is different
 
@@ -49,6 +50,10 @@ const TrainingMethods = () => {
                 "نمتلك قاعات تدريب مجهزة بأحدث وسائل العرض والمساعدات التدريبية",
         },
     ];
+
+    useEffect(() => {
+        document.title = '       خدمات تدريبية مميزة - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
         <Box

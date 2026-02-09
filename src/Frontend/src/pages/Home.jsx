@@ -106,6 +106,12 @@ const Home = () => {
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
 
+    useEffect(() => {
+        document.title = 'المعهد التكنولوجي لهندسة التشييد والإدارة - الصفحة الرئيسية';
+    }, []);
+
+    
+
     const handlePrevSlide = () => {
         setCurrentSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
     };

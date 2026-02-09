@@ -3,8 +3,12 @@ import './vision_goals.css'
 import { FaHardHat, FaCalendarAlt, FaUsers, FaLaptop, FaGraduationCap, FaCogs } from 'react-icons/fa';
 import img2 from '/images/vision.jfif';
 import img1 from '../../assets/img1.jpg';
+import { useEffect } from "react";
 
 function Vision_goals() {
+    useEffect(() => {
+        document.title = '      الرؤية والأهداف - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
     return (
         <div>
             {/* Fixed Overview Bar */}

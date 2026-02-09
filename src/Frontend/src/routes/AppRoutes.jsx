@@ -24,19 +24,23 @@ import Galery from '../pages/Galary';
 import FutureLeadersCouncil from '../pages/Leaders';
 import Instructors from '../pages/Instructors';
 import CheckoutPage from "../pages/CheckoutPage";
-import NewsDetails from '../pages/NewsDetails';
+import NewsDetails from '../pages/newsDetails.jsx';
 import CourseDetails from '../pages/CourseDetails';
 import TrainingMethods from '../pages/TrainingMethods';
 import OnsiteTraining from '../pages/OnsiteTraining_fixed';
 import CEAProgram from '../pages/CEAProgram';
+import ScrollToTop from '../components/ScrollToTop'
 
 
 
 
 const AppRoutes = () => {
     return (
-
+    <>
+   
+    <ScrollToTop />
     <Routes>
+
       {/* <Route element={<PublicLayout />}> */}
             <Route index element={<Home />} />
             <Route path="/vocational-training" element={<VocationalTraining />} />
@@ -78,6 +82,7 @@ const AppRoutes = () => {
 
             
     </Routes>
+    </>
   );
 };
 

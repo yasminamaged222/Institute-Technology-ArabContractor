@@ -1,4 +1,5 @@
 ﻿import React from "react";
+import { useEffect } from "react";
 
 export default function Protocols() {
     const isMobile = window.innerWidth < 700;
@@ -26,6 +27,10 @@ export default function Protocols() {
         if (w > 600) return 2;
         return 1;
     };
+
+    useEffect(() => {
+        document.title = '      البروتوكولات والاتفاقيات - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
         <div

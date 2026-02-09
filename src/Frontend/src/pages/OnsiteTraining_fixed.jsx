@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Modal, IconButton } from '@mui/material';
 import { CheckCircle, Close, ChevronLeft, ChevronRight } from '@mui/icons-material';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -7,6 +7,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-coverflow';
+
 
 const NAV_HEIGHT = 70;
 
@@ -70,6 +71,10 @@ const OnsiteTraining = () => {
             handleCloseModal();
         }
     };
+
+    useEffect(() => {
+        document.title = '      التدريب في الموقع - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
         <Box
@@ -513,7 +518,7 @@ const OnsiteTraining = () => {
                                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
                             }}
                         />
-                        
+
                         <Box
                             sx={{
                                 mt: 2,

@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import { useEffect } from 'react';
 
 const GesrElSuezPage = () => {
     const [activeWorkshop, setActiveWorkshop] = useState(null);
@@ -80,6 +81,10 @@ const GesrElSuezPage = () => {
         setModalImage(null);
         document.body.style.overflow = 'auto'; // Restore scrolling
     };
+
+    useEffect(() => {
+        document.title = ' مركز التدريب جسر السويس - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
         <>

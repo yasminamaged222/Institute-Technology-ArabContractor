@@ -9,6 +9,10 @@ export default function ModernLibrary() {
     const [scrollProgress, setScrollProgress] = useState(0);
 
     useEffect(() => {
+        document.title = 'المكتبة - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+
+    useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
         const handleScroll = () => {
             setScrollY(window.scrollY);

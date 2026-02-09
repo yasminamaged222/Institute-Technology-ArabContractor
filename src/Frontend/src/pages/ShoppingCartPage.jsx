@@ -3,6 +3,8 @@ import { ShoppingCart, Trash2, Tag, ArrowRight, Star, Minus, Plus, BookOpen } fr
 import { Link } from "react-router-dom";
 
 const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
+
+    
     const [quantity, setQuantity] = useState(item.quantity || 1);
 
     const handleQuantityChange = (newQuantity) => {
@@ -11,6 +13,8 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
             onUpdateQuantity(item.id, newQuantity);
         }
     };
+
+    
 
     return (
         <div className="group relative mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-xl">
@@ -162,6 +166,11 @@ export default function ShoppingCartPage() {
 
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+    useEffect(() => {
+        document.title = ' سلة التسوق - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+    
 
     useEffect(() => {
         localStorage.setItem('cartItems', JSON.stringify(items));

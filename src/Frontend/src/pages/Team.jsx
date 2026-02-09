@@ -1,5 +1,6 @@
 ﻿import React from "react";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 const Team = () => {
     const primaryColor = "#0865a8";
@@ -99,6 +100,10 @@ const Team = () => {
             </div>
         </motion.div>
     );
+
+    useEffect(() => {
+        document.title = '   فريق العمل - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
         <div style={{ direction: "rtl", fontFamily: globalFont }}>

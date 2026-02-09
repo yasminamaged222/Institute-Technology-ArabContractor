@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './galary.css';
+import { useEffect } from 'react';
 
 const albums = [
     {
@@ -139,7 +140,10 @@ const VideoGalleryPage = () => {
 
     // Video card component
     const VideoCard = ({ videoId, title, color }) => {
-        const [imageError, setImageError] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+       
+    
 
         return (
             <div
@@ -601,6 +605,10 @@ const PhotoGallery = () => {
     if (selectedAlbum) {
         return <AlbumDetailPage album={selectedAlbum} onBack={() => setSelectedAlbum(null)} />;
     }
+
+     useEffect(() => {
+            document.title = '    مكتبة الصور والفيديوهات - المعهد التكنولوجي لهندسة التشييد والإدارة';
+        }, []);
 
     return (
         <div dir="rtl" className="photo-gallery">

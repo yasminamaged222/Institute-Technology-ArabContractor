@@ -2,6 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import { useEffect } from "react";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -68,6 +69,10 @@ const Certifications = () => {
     const toggleImage = (index) => {
         setVisibleImages((prev) => ({ ...prev, [index]: !prev[index] }));
     };
+
+    useEffect(() => {
+        document.title = ' الشهادات وخطابات الشكر - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
         <div style={{ direction: "rtl", fontFamily: globalFont }}>
