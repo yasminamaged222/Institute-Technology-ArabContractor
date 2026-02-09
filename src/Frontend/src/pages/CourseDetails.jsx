@@ -272,6 +272,15 @@ const CourseDetails = () => {
         if (courseId) loadCourse();
     }, [courseId]);
 
+    // ADD THE NEW useEffect HERE - right after the previous one
+    useEffect(() => {
+        if (course && course.title) {
+            document.title = `${course.title} - المعهد التكنولوجي لهندسة التشييد والإدارة`;
+        } else {
+            document.title = 'التدريب عن بعد ( اونلاين ) - المعهد التكنولوجي لهندسة التشييد والإدارة';
+        }
+    }, [course]);
+
     if (loading) {
         return (
             <>

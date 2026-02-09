@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import './overview.css'
-import { FaHardHat, FaCalendarAlt, FaUsers  , FaLaptop , FaGraduationCap , FaCogs} from 'react-icons/fa';
+import { FaHardHat, FaCalendarAlt, FaUsers, FaLaptop, FaGraduationCap, FaCogs } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 
@@ -10,9 +10,10 @@ function Overview() {
         document.title = '     نبذة عامة - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
+
     return (
         <div>
-            
+
             <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' }}>
                 <span className="overview" style={{ position: 'relative', bottom: '5px' }}><a href="/" className="btn_go_home">الصفحة الرئيسية</a> - نبذة عامة</span>
             </div>
@@ -32,7 +33,7 @@ function Overview() {
 
             <div className="section_2">
                 <div className="section_2_inside">
-                    <h1 style={{ textAlign: 'center' , fontSize:'30px' , fontWeight:"bold"}}>لدينا القدرة على عمل برامج تدريبة متنوعة منها</h1>
+                    <h1 style={{ textAlign: 'center', fontSize: '30px', fontWeight: "bold" }}>لدينا القدرة على عمل برامج تدريبة متنوعة منها</h1>
                     <div className="section_2_cards">
                         <div className="section_2_card">
                             <h3 className="txt_card_sec_2">برامج للتدريب التحويلى</h3>
@@ -84,7 +85,7 @@ function Overview() {
                 <div className="content_sec_4">
                     <div className="cards_sec_4">
                         <div className="card_sec_4">
-                            <div className="icon_sec_4">            
+                            <div className="icon_sec_4">
                                 <FaUsers size={40} color="white" style={{ marginTop: '50px' }} />
                             </div>
 
@@ -96,7 +97,7 @@ function Overview() {
                         </div>
 
                         <div className="card_sec_4">
-                            <div className="icon_sec_4">            
+                            <div className="icon_sec_4">
                                 <FaUsers size={40} color="white" style={{ marginTop: '50px' }} />
                             </div>
 
@@ -129,7 +130,7 @@ function Overview() {
                             <div className="content_icon_sec_4">
                                 <h3 className="txt_content_icon_sec_4">دورة برامج الهندسة المدنية </h3>
                             </div>
-                           
+
                         </div>
 
                     </div>
@@ -141,74 +142,74 @@ function Overview() {
             <div className="section_5">
                 <div className="content_sec_5">
                     <div className="h1_sec_5">
-                        <h1 style={{fontFamily:"-apple-system" , fontSize:"50px" , textAlign:"center"}}>لماذا تشترك بمعهد التدريب</h1>
+                        <h1 style={{ fontFamily: "-apple-system", fontSize: "50px", textAlign: "center" }}>لماذا تشترك بمعهد التدريب</h1>
                     </div>
 
                     <div className="cards_sec_5">
-                        <div className="card_sec_5"> 
+                        <div className="card_sec_5">
                             <div className="div_icon">
                                 <FaCogs className="my-custom-class" style={{ fontSize: '50px', color: '#ECB22F' }} />
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{fontFamily:"-apple-system" , fontSize:"25px"}}>خدمات متميزة</h2>
+                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>خدمات متميزة</h2>
                             </div>
 
                             <div className="div_dis">
                                 <p className="div_dis_txt">نقدم مجموعة من الخدمات منها البرامج التدريبية ومدارس التعليم الفنى والتدريب للشركات والجهات الحكومية</p>
                             </div>
-                        </div>  
+                        </div>
 
 
 
 
-                        <div className="card_sec_5">  
+                        <div className="card_sec_5">
                             <div className="div_icon">
                                 <FaUsers className="my-custom-class" style={{ fontSize: '50px', color: '#ECB22F' }} />
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{fontFamily:"-apple-system" , fontSize:"25px"}}>مجموعة متميزة من المدربين</h2>
+                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>مجموعة متميزة من المدربين</h2>
                             </div>
 
                             <div className="div_dis">
                                 <p className="div_dis_txt">نعتمد على الخبرات والكفاءات البشرية الفريدة التي تتسم بقدر عالي من المهارات والقدرات</p>
                             </div>
-                        </div>  
+                        </div>
 
 
 
 
-                        <div className="card_sec_5">  
+                        <div className="card_sec_5">
                             <div className="div_icon">
                                 <FaGraduationCap className="my-custom-class" style={{ fontSize: '50px', color: '#ECB22F' }} />
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{fontFamily:"-apple-system", fontSize:"25px"}}>مجموعة من الشهادات المعتمدة</h2>
+                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>مجموعة من الشهادات المعتمدة</h2>
                             </div>
 
                             <div className="div_dis">
                                 <p className="div_dis_txt">حاصلين على شهادة الجودة منذ عام 2000 في مجال تصميم وإدارة وتنفيذ الخدمات التدريبية والتقييم والاختبارات مع تحديثها سنويا وحتي أخر إصدار لها (ISO9001:2015) كما تم إعتماد المعهد التكنولوجي لهندسة التشييد والإدارة من معهد إدارة الأعمال (PMI)</p>
                             </div>
-                        </div>  
+                        </div>
 
 
 
 
-                        <div className="card_sec_5">  
+                        <div className="card_sec_5">
                             <div className="div_icon">
                                 <FaLaptop className="my-custom-class" style={{ fontSize: '50px', color: '#ECB22F' }} />
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{fontFamily:"-apple-system", fontSize:"25px"}}>جودة الخدمات التدريبية</h2>
+                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>جودة الخدمات التدريبية</h2>
                             </div>
 
                             <div className="div_dis">
                                 <p className="div_dis_txt">الجودة تعني التميز في تقديم الخدمات المطلوبة بفاعلية بحيث تكون خالية من الأخطاء والعيوب، وتقدم بأقل تكلفة، وترقى لمستوى توقعات ورغبات المستفيدين، وتحقق رضاهم التام حاضراً ومستقبلاً</p>
                             </div>
-                        </div>  
+                        </div>
                     </div>
                 </div>
 

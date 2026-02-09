@@ -1,4 +1,5 @@
 ﻿import React, { useState } from 'react';
+import { useEffect } from 'react';
 
 const ShobraTrainingPage = () => {
     const [openSection, setOpenSection] = useState(null);
@@ -84,6 +85,10 @@ const ShobraTrainingPage = () => {
         "التمديدات ولوحات التوزيع الكهربائية",
         "دوائر التحكم الآلي"
     ];
+
+    useEffect(() => {
+            document.title = '    مركز تدريب شبرا - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
 
     return (
         <>
