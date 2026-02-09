@@ -20,7 +20,7 @@ if (!PUBLISHABLE_KEY) {
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-    <React.StrictMode>
+  //  <React.StrictMode>
         <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
             <CacheProvider value={cacheRtl}>
                 <ThemeProvider theme={theme}>
@@ -33,5 +33,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 </ThemeProvider>
             </CacheProvider>
         </ClerkProvider>
-    </React.StrictMode>
+   // </React.StrictMode>
 );
