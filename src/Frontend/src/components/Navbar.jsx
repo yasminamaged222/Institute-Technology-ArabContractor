@@ -1033,22 +1033,64 @@ const Navbar = () => {
                             </Badge>
                         </IconButton>
 
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <SignedOut>
                                 <SignInButton
                                     mode="modal"
                                     appearance={{
                                         variables: {
                                             colorPrimary: '#0865a8',
+                                            colorText: '#000000',
+                                            colorBackground: '#ffffff',
                                             fontFamily: '"Droid Arabic Kufi", serif',
-                                            borderRadius: '0.75rem',
+                                            borderRadius: '12px',
                                         },
                                         elements: {
+                                            card: {
+                                                direction: 'ltr',
+                                                textAlign: 'left',
+                                                backgroundColor: '#ffffff',
+                                                border: '1px solid #0865a8',
+                                                boxShadow: '0 15px 40px rgba(0,0,0,0.08)',
+
+                                                // ✅ REMOVE INTERNAL SCROLL
+                                                maxHeight: 'none',
+                                                overflow: 'visible',
+                                            },
+                                            headerTitle: {
+                                                textAlign: 'center',
+                                                color: '#0865a8',
+                                                fontWeight: '700',
+                                            },
+                                            headerSubtitle: {
+                                                textAlign: 'center',
+                                                color: '#000000',
+                                            },
+                                            formFieldLabel: {
+                                                textAlign: 'left',
+                                                color: '#000000',
+                                                fontWeight: '600',
+                                            },
+                                            formFieldInput: {
+                                                textAlign: 'left',
+                                                borderRadius: '8px',
+                                                border: '1px solid #0865a8',
+                                            },
                                             formButtonPrimary: {
                                                 backgroundColor: '#0865a8',
+                                                color: '#ffffff',
+                                                fontWeight: '600',
+                                                textAlign: 'center',
                                                 '&:hover': {
                                                     backgroundColor: '#f57c00',
-                                                }
+                                                },
+                                            },
+                                            footerAction: {
+                                                textAlign: 'left',
+                                            },
+                                            footerActionLink: {
+                                                color: '#f57c00',
+                                                fontWeight: '600',
                                             }
                                         }
                                     }}
@@ -1058,18 +1100,19 @@ const Navbar = () => {
                                         size="small"
                                         sx={{
                                             fontFamily: '"Droid Arabic Kufi", serif',
-                                            fontSize: '0.75rem',
+                                            fontSize: '0.8rem',
                                             bgcolor: '#0865a8',
-                                            color: 'white',
-                                            px: 2,
+                                            color: '#ffffff',
+                                            px: 1,
                                             py: 0.5,
-                                            borderRadius: 1.5,
+                                            borderRadius: 5,
                                             textTransform: 'none',
-                                            boxShadow: 'none',
+                                            fontWeight: 600,
+                                            boxShadow: '0 4px 12px rgba(8,101,168,0.25)',
                                             minWidth: 'auto',
                                             '&:hover': {
                                                 bgcolor: '#f57c00',
-                                                boxShadow: '0 2px 8px rgba(245, 124, 0, 0.3)'
+                                                boxShadow: '0 6px 18px rgba(245,124,0,0.35)'
                                             }
                                         }}
                                     >
@@ -1084,7 +1127,27 @@ const Navbar = () => {
                                     appearance={{
                                         variables: {
                                             colorPrimary: '#0865a8',
+                                            colorText: '#000000',
                                             fontFamily: '"Droid Arabic Kufi", serif',
+                                        },
+                                        elements: {
+                                            userButtonAvatarBox: {
+                                                border: '2px solid #0865a8',
+                                            },
+                                            userButtonPopoverCard: {
+                                                direction: 'ltr',
+                                                textAlign: 'left',
+                                                borderRadius: '12px',
+                                                border: '1px solid #0865a8',
+                                            },
+                                            userButtonPopoverActionButton: {
+                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                textAlign: 'left',
+                                                '&:hover': {
+                                                    backgroundColor: '#f57c00',
+                                                    color: '#ffffff',
+                                                },
+                                            },
                                         }
                                     }}
                                 />
