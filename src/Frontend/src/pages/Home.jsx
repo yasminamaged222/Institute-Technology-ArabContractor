@@ -918,7 +918,7 @@ const Home = () => {
                         تحميـلات
                     </Typography>
 
-                    <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center" alignItems="stretch">
+                  <Grid container spacing={3} justifyContent="center">
                         {downloadItems.map((item, index) => (
                             <Grid item xs={12} sm={6} md={4} key={index} sx={{ display: 'flex', justifyContent: 'center' }}>
                                 <Paper
@@ -928,58 +928,70 @@ const Home = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     sx={{
-                                        p: { xs: 2, sm: 2.5, md: 4 },
+                                        p: 2.5,
                                         display: 'flex',
-                                        flexDirection: 'row-reverse',
+                                        flexDirection: 'row', 
                                         alignItems: 'center',
                                         justifyContent: 'space-between',
-                                        borderRadius: '10px',
-                                        transition: 'all 0.3s ease-in-out',
+                                        borderRadius: '12px',
+                                        transition: 'all 0.3s ease',
                                         bgcolor: 'white',
                                         cursor: 'pointer',
                                         textDecoration: 'none',
-                                        width: '270px',
-                                        minHeight: '100px',
+                                        // --- THE FIX FOR UNIFORM SIZE ---
+                                        width: '300px',      // Fixed width
+                                        height: '110px',     // Fixed height ensures all boxes match
+                                        boxSizing: 'border-box', 
+                                        // --------------------------------
+                                        border: '1px solid #f0f0f0',
                                         '&:hover': {
-                                            transform: { xs: 'translateY(-3px)', md: 'translateY(-8px)' },
-                                            boxShadow: '0 12px 25px rgba(0,0,0,0.2)'
+                                            transform: 'translateY(-5px)',
+                                            boxShadow: '0 12px 20px rgba(0,0,0,0.1)',
+                                            borderColor: '#f57c00'
                                         },
                                     }}
                                 >
+                                    {/* Icon on the Right */}
+                                    <Box sx={{
+                                        bgcolor: '#f57c00',
+                                        width: 50,
+                                        height: 50,
+                                        borderRadius: '10px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        flexShrink: 0, // Prevents icon from squishing if text is long
+                                    }}>
+                                        <item.Icon sx={{ color: 'white', fontSize: '1.8rem' }} />
+                                    </Box>
+
+                                    {/* Text on the Left */}
                                     <Typography
-                                        variant="h6"
-                                        className="download-item-title"
+                                        variant="body1"
                                         sx={{
-                                            color: '#000',
-                                            fontWeight: 'bold',
+                                            color: '#333',
+                                            fontWeight: '700',
                                             textAlign: 'left',
-                                            flex: 2,
-                                            fontSize: { xs: '0.85rem', sm: '0.9rem', md: '1rem' },
-                                            lineHeight: 1.4,
+                                            flex: 1,
+                                            pr: 2, 
                                             fontFamily: '"Droid Arabic Kufi", serif',
-                                            pr: 2
+                                            fontSize: '0.918rem',
+                                            lineHeight: 1.3,
+                                            // --- PREVENTS TEXT FROM STRETCHING BOX ---
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2, // Limits text to 2 lines
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                            // ----------------------------------------
                                         }}
                                     >
                                         {item.title}
                                     </Typography>
-
-                                    <Box sx={{
-                                        bgcolor: '#f57c00',
-                                        p: { xs: 0.8, sm: 1, md: 1.5 },
-                                        borderRadius: '15px',
-                                        display: 'flex',
-                                        alignItems: 'left',
-                                        justifyContent: 'left'
-                                    }}>
-                                        <item.Icon
-                                            className="download-icon"
-                                            sx={{ color: 'white', fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2rem' } }}
-                                        />
-                                    </Box>
                                 </Paper>
                             </Grid>
                         ))}
                     </Grid>
+
                 </Container>
             </div>
 
