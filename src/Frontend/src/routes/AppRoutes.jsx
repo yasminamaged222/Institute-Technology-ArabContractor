@@ -30,7 +30,9 @@ import TrainingMethods from '../pages/TrainingMethods';
 import OnsiteTraining from '../pages/OnsiteTraining_fixed';
 import CEAProgram from '../pages/CEAProgram';
 import ScrollToTop from '../components/ScrollToTop'
+import SearchPage from '../pages/SearchPage';
 
+   
 
 
 
@@ -72,8 +74,7 @@ const AppRoutes = () => {
             <Route path="/training-methods" element={<TrainingMethods />} />
             <Route path="/cea-program" element={<CEAProgram />} />
             <Route path="/onsite-training" element={<OnsiteTraining />} />
-
-
+    <Route path="/search" element={<SearchPage />} />
             
 
 

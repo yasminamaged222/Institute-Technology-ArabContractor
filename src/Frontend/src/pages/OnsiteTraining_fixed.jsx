@@ -156,7 +156,7 @@ const OnsiteTraining = () => {
                                 display: 'flex',
                                 alignItems: 'flex-start',
                                 mb: 3,
-                                textAlign: 'right',
+                                textAlign: 'left',
                                 bgcolor: '#ffffff',
                                 p: { xs: 2, md: 2.5 },
                                 borderRadius: '12px',
