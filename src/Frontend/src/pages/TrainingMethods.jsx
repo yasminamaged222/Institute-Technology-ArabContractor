@@ -57,7 +57,7 @@ const TrainingMethods = () => {
 
     return (
         <Box
-            dir="rtl"
+            dir="ltr"
             lang="ar"
             sx={{
                 minHeight: "100vh",
@@ -221,7 +221,7 @@ const TrainingMethods = () => {
                                     variant="body2"
                                     sx={{
                                         color: "#000000",
-                                        textAlign: "right",
+                                        textAlign: "left",
                                         lineHeight: 1.8,
                                         fontFamily: '"Droid Arabic Kufi", serif',
                                         fontSize: { xs: "0.85rem", md: "0.9rem" },

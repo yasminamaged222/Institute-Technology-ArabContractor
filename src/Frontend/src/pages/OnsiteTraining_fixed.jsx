@@ -25,23 +25,23 @@ const OnsiteTraining = () => {
     const projects = [
         {
             title: 'التدريب بمشروع محور روض الفرج',
-            image: '/images/grid-bg1.jpg'
+            image: '/images/on-site-01.jpg'
         },
         {
             title: 'التدريب بمشروع محور روض الفرج',
-            image: '/images/grid-bg2.jpg'
+            image: '/images/on-site-02.jpg'
         },
         {
             title: 'التدريب بمشروع العاصمة الإدارية الجديدة',
-            image: '/images/grid-bg3.jpg'
+            image: '/images/on-site-03.jpg'
         },
         {
             title: 'التدريب بمشروع العاصمة الإدارية الجديدة',
-            image: '/images/grid-bg4.jpg'
+            image: '/images/on-site-04.jpg'
         },
         {
             title: 'التدريب بمشروع العاصمة الإدارية الجديدة',
-            image: '/images/grid-bg5.jpg'
+            image: '/images/on-site-05.jpg'
         }
     ];
 
@@ -156,7 +156,7 @@ const OnsiteTraining = () => {
                                 display: 'flex',
                                 alignItems: 'flex-start',
                                 mb: 3,
-                                textAlign: 'right',
+                                textAlign: 'left',
                                 bgcolor: '#ffffff',
                                 p: { xs: 2, md: 2.5 },
                                 borderRadius: '12px',
@@ -357,7 +357,7 @@ const OnsiteTraining = () => {
                             }
                         }}
                     >
-                        <ChevronRight sx={{ fontSize: { xs: 28, md: 36 }, color: '#0865a8' }} />
+                        <ChevronLeft sx={{ fontSize: { xs: 28, md: 36 }, color: '#0865a8' }} />
                     </Box>
 
                     <Box
@@ -386,7 +386,7 @@ const OnsiteTraining = () => {
                             }
                         }}
                     >
-                        <ChevronLeft sx={{ fontSize: { xs: 28, md: 36 }, color: '#0865a8' }} />
+                        <ChevronRight sx={{ fontSize: { xs: 28, md: 36 }, color: '#0865a8' }} />
                     </Box>
                 </Box>
 
@@ -471,7 +471,7 @@ const OnsiteTraining = () => {
                             height: { xs: 40, md: 50 },
                         }}
                     >
-                        <ChevronRight sx={{ fontSize: { xs: 28, md: 36 } }} />
+                        <ChevronLeft sx={{ fontSize: { xs: 28, md: 36 } }} />
                     </IconButton>
 
                     <IconButton
@@ -493,7 +493,7 @@ const OnsiteTraining = () => {
                             height: { xs: 40, md: 50 },
                         }}
                     >
-                        <ChevronLeft sx={{ fontSize: { xs: 28, md: 36 } }} />
+                        <ChevronRight sx={{ fontSize: { xs: 28, md: 36 } }} />
                     </IconButton>
 
                     <Box

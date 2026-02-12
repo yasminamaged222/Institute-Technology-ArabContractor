@@ -234,7 +234,6 @@ namespace Institute.API.Helpers
                 Days = c.CourseDays,
                 Content = c.CourseContent,
                 Cost = c.PlanCost,
-                OnSale = c.PlanSale,
                 Files = files
                     .Where(f => f.PlanId == c.ChildId)
                     .OrderBy(f => f.FilePeriorty)

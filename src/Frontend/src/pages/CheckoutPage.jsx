@@ -1,11 +1,13 @@
 ﻿import { useState, useEffect } from "react";
-import { ArrowRight, CreditCard, ShieldCheck, Lock, CheckCircle } from "lucide-react";
+import { ArrowRight, ShieldCheck, Lock, CheckCircle, Tag, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function CheckoutPage() {
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [showCoupon, setShowCoupon] = useState(false);
+    const [couponCode, setCouponCode] = useState('');
 
     // Form state
     const [formData, setFormData] = useState({
@@ -33,45 +35,6 @@ export default function CheckoutPage() {
     );
     const totalDiscount = totalOriginalPrice - subtotal;
 
-    const validateForm = () => {
-        const newErrors = {};
-
-        if (!formData.fullName.trim()) {
-            newErrors.fullName = 'الاسم الكامل مطلوب';
-        }
-
-        if (!formData.email.trim()) {
-            newErrors.email = 'البريد الإلكتروني مطلوب';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-            newErrors.email = 'البريد الإلكتروني غير صالح';
-        }
-
-        if (!formData.phone.trim()) {
-            newErrors.phone = 'رقم الهاتف مطلوب';
-        } else if (!/^01[0-2,5]{1}[0-9]{8}$/.test(formData.phone)) {
-            newErrors.phone = 'رقم الهاتف غير صالح';
-        }
-
-        if (!formData.acceptTerms) {
-            newErrors.acceptTerms = 'يجب الموافقة على الشروط والأحكام';
-        }
-
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
-
-    const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-        // Clear error when user starts typing
-        if (errors[name]) {
-            setErrors(prev => ({ ...prev, [name]: '' }));
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -87,8 +50,6 @@ export default function CheckoutPage() {
         setLoading(true);
 
         try {
-            // Prepare order data for backend
-            // eslint-disable-next-line no-unused-vars
             const orderData = {
                 fullName: formData.fullName,
                 email: formData.email,
@@ -104,33 +65,12 @@ export default function CheckoutPage() {
                 discount: totalDiscount
             };
 
-            // TODO: Replace with your actual backend API endpoint
-            // Example: POST to /api/checkout or /api/payment/initiate
-            // const response = await fetch('YOUR_BACKEND_API_URL/checkout', {
-            //     method: 'POST',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     body: JSON.stringify(orderData)
-            // });
-
-            // Simulate API call for now
+            // Simulate API call
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Mock response - in production, you'll receive a payment URL from Banque Misr gateway
-            // const data = await response.json();
-
-            // Simulate success
             setPaymentSuccess(true);
-
-            // Clear cart after successful order
             localStorage.removeItem('cartItems');
             window.dispatchEvent(new Event('cartUpdated'));
-
-            // Redirect to payment gateway (uncomment in production)
-            // setTimeout(() => {
-            //     window.location.href = mockPaymentUrl;
-            // }, 2000);
 
         } catch (error) {
             console.error('Payment error:', error);
@@ -144,37 +84,35 @@ export default function CheckoutPage() {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-                <style>{`* { font-family: "Droid Arabic Kufi", serif !important; }`}</style>
+                <style>{`
+                    * { 
+                        font-family: "Droid Arabic Kufi", serif !important; 
+                    }
+                `}</style>
 
-                <div dir="rtl" className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-orange-50/20 px-4 py-16">
+                <div dir="rtl" className="min-h-screen bg-white px-4 py-16">
                     <div className="mx-auto max-w-2xl">
-                        <div className="rounded-2xl bg-white p-12 text-center shadow-xl">
-                            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-r from-emerald-100 to-green-100">
-                                <CheckCircle className="h-16 w-16 text-emerald-600" />
+                        <div className="rounded-3xl bg-white p-8 text-center shadow-lg md:p-12">
+                            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50 md:h-24 md:w-24">
+                                <CheckCircle className="h-12 w-12 text-green-600 md:h-16 md:w-16" />
                             </div>
-                            <h1 className="mb-4 text-3xl font-bold text-gray-900">
+                            <h1 className="mb-4 text-2xl font-bold text-black md:text-3xl">
                                 تم استلام طلبك بنجاح!
                             </h1>
-                            <p className="mb-8 text-lg text-gray-600">
+                            <p className="mb-8 text-base text-black opacity-70 md:text-lg">
                                 سيتم تحويلك إلى بوابة الدفع الآمنة لإتمام عملية الشراء
                             </p>
-                            <div className="mb-8 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 p-6">
-                                <p className="mb-2 text-sm font-semibold text-gray-700">ملخص الطلب</p>
-                                <p className="text-3xl font-bold text-[#f57c00]">{subtotal.toFixed(2)} ج.م</p>
-                                <p className="mt-2 text-sm text-gray-500">
+                            <div className="mb-8 rounded-2xl border border-gray-200 bg-gray-50 p-6">
+                                <p className="mb-2 text-sm font-medium text-black opacity-60">ملخص الطلب</p>
+                                <p className="text-3xl font-bold text-[#f57c00] md:text-4xl">{subtotal.toFixed(2)} جنيه</p>
+                                <p className="mt-2 text-sm text-black opacity-50">
                                     {cartItems.length} {cartItems.length === 1 ? 'دورة' : 'دورات'}
                                 </p>
                             </div>
                             <div className="space-y-3">
-                                <button
-                                    onClick={() => window.location.href = '/courses'}
-                                    className="w-full rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-4 font-bold text-white shadow-lg transition-all hover:scale-105"
-                                >
-                                    العودة للدورات
-                                </button>
                                 <Link
                                     to="/"
-                                    className="block w-full rounded-xl border-2 border-gray-300 py-4 font-semibold text-gray-700 transition-colors hover:bg-gray-100"
+                                    className="block w-full rounded-xl border-2 border-gray-200 py-3 font-semibold text-black transition-colors hover:bg-gray-50 md:py-4"
                                 >
                                     الصفحة الرئيسية
                                 </Link>
@@ -189,14 +127,31 @@ export default function CheckoutPage() {
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-
             <style>{`
                 * {
                     font-family: "Droid Arabic Kufi", serif !important;
                 }
+                
+                @media (max-width: 640px) {
+                    .checkout-main {
+                        padding-top: 100px !important;
+                    }
+                }
+                
+                @media (min-width: 641px) and (max-width: 1024px) {
+                    .checkout-main {
+                        padding-top: 120px !important;
+                    }
+                }
+                
+                @media (min-width: 1025px) {
+                    .checkout-main {
+                        padding-top: 130px !important;
+                    }
+                }
             `}</style>
 
-            {/* Fixed Overview Bar */}
+            {/* Fixed Overview Bar - Exactly as requested */}
             <div className="fixed left-0 top-16 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20">
                 <div className="text-center">
                     <span className="text-sm md:text-base">
@@ -209,134 +164,76 @@ export default function CheckoutPage() {
                 </div>
             </div>
 
-            <div
-                dir="rtl"
-                className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-orange-50/20 px-4 pb-16 pt-28 md:pt-32"
-            >
-                <div className="mx-auto max-w-6xl">
-                    {/* Page Title */}
-                    <div className="mb-8 text-center">
-                        <h1 className="mb-2 bg-gradient-to-r from-[#0865a8] to-[#f57c00] bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-                            إتمام الدفع
+            <div dir="rtl" className="checkout-main min-h-screen bg-white px-3 pb-16 sm:px-4 md:px-6">
+                <div className="mx-auto max-w-7xl">
+                    {/* Page Header */}
+                    <div className="mb-6 text-center md:mb-10">
+                        <h1 className="mb-2 text-3xl font-bold text-black sm:text-4xl md:mb-3 md:text-5xl">
+                            اشترك في دوراتنا
                         </h1>
-                        <p className="text-lg text-gray-600">
-                            خطوة واحدة لبدء رحلتك التعليمية
-                        </p>
                     </div>
-
-                    <div className="grid gap-8 lg:grid-cols-3">
-                        {/* Main Form */}
+                    <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+                        {/* Main Content - Left Side */}
                         <div className="lg:col-span-2">
-                            <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-8 shadow-xl">
-                                <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-gray-900">
-                                    <CreditCard className="h-6 w-6 text-[#0865a8]" />
-                                    معلومات الدفع
-                                </h2>
-
-                                {/* Form Fields */}
-                                <div className="space-y-5">
-                                    {/* Full Name */}
-                                    <div>
-                                        <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                            الاسم الكامل <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="fullName"
-                                            value={formData.fullName}
-                                            onChange={handleInputChange}
-                                            className={`w-full rounded-xl border-2 ${errors.fullName ? 'border-red-500' : 'border-gray-300'} px-4 py-3 focus:border-[#0865a8] focus:outline-none focus:ring-2 focus:ring-[#0865a8]/20`}
-                                            placeholder="محمد أحمد عبد الرحمن"
-                                        />
-                                        {errors.fullName && (
-                                            <p className="mt-1 text-sm text-red-500">{errors.fullName}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Email */}
-                                    <div>
-                                        <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                            البريد الإلكتروني <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
-                                            className={`w-full rounded-xl border-2 ${errors.email ? 'border-red-500' : 'border-gray-300'} px-4 py-3 focus:border-[#0865a8] focus:outline-none focus:ring-2 focus:ring-[#0865a8]/20`}
-                                            placeholder="example@email.com"
-                                        />
-                                        {errors.email && (
-                                            <p className="mt-1 text-sm text-red-500">{errors.email}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Phone */}
-                                    <div>
-                                        <label className="mb-2 block text-sm font-semibold text-gray-700">
-                                            رقم الهاتف <span className="text-red-500">*</span>
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            className={`w-full rounded-xl border-2 ${errors.phone ? 'border-red-500' : 'border-gray-300'} px-4 py-3 focus:border-[#0865a8] focus:outline-none focus:ring-2 focus:ring-[#0865a8]/20`}
-                                            placeholder="01012345678"
-                                        />
-                                        {errors.phone && (
-                                            <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
-                                        )}
-                                    </div>
-
-                                    {/* Terms and Conditions */}
-                                    <div className="rounded-xl border-2 border-gray-200 bg-gray-50 p-4">
-                                        <label className="flex cursor-pointer items-start gap-3">
-                                            <input
-                                                type="checkbox"
-                                                name="acceptTerms"
-                                                checked={formData.acceptTerms}
-                                                onChange={handleInputChange}
-                                                className="mt-1 h-5 w-5 rounded border-gray-300 text-[#0865a8] focus:ring-[#0865a8]"
-                                            />
-                                            <span className="text-sm text-gray-700">
-                                                أوافق على <a href="/terms" className="font-semibold text-[#0865a8] hover:underline">الشروط والأحكام</a> و<a href="/privacy" className="font-semibold text-[#0865a8] hover:underline">سياسة الخصوصية</a>
-                                            </span>
-                                        </label>
-                                        {errors.acceptTerms && (
-                                            <p className="mt-2 text-sm text-red-500">{errors.acceptTerms}</p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Payment Info */}
-                                <div className="mt-8 space-y-4">
-                                    <div className="border-[#0865a8]/20 flex items-center gap-3 rounded-xl border-2 bg-blue-50/50 p-4">
-                                        <Lock className="h-6 w-6 flex-shrink-0 text-[#0865a8]" />
-                                        <div className="flex-1">
-                                            <p className="font-semibold text-gray-900">الدفع عبر بنك مصر</p>
-                                            <p className="text-sm text-gray-600">Banque Misr Payment Gateway - Mastercard</p>
+                            {/* Payment Method */}
+                            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:p-6 md:p-8">
+                                <h2 className="mb-4 text-lg font-bold text-black md:mb-6 md:text-xl">تفاصيل الدفع</h2>
+                                
+                                <div className="space-y-3 md:space-y-4">
+                                    {/* Selected Payment Method */}
+                                    <div className="rounded-lg border-2 border-[#0865a8] bg-blue-50/30 p-4 md:p-5">
+                                        <div className="flex items-center gap-3 md:gap-4">
+                                            <div className="flex h-5 w-5 items-center justify-center md:h-6 md:w-6">
+                                                <div className="h-4 w-4 rounded-full border-2 border-[#0865a8] bg-[#0865a8] md:h-5 md:w-5">
+                                                    <div className="flex h-full w-full items-center justify-center">
+                                                        <div className="h-1.5 w-1.5 rounded-full bg-white md:h-2 md:w-2"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex-1">
+                                                <p className="text-sm font-bold text-black md:text-base">بطاقة ائتمان/خصم مباشر</p>
+                                                <p className="text-xs text-black opacity-60 md:text-sm">Visa, Mastercard</p>
+                                            </div>
+                                            <div className="flex gap-1.5 md:gap-2">
+                                                <img 
+                                                    src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" 
+                                                    alt="Visa" 
+                                                    className="h-6 md:h-8"
+                                                />
+                                                <img 
+                                                    src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
+                                                    alt="Mastercard" 
+                                                    className="h-6 md:h-8"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 rounded-xl border-2 border-emerald-200 bg-emerald-50/50 p-4">
-                                        <ShieldCheck className="h-6 w-6 flex-shrink-0 text-emerald-600" />
-                                        <div className="flex-1">
-                                            <p className="font-semibold text-gray-900">عملية دفع آمنة 100%</p>
-                                            <p className="text-sm text-gray-600">معلوماتك محمية بأعلى معايير الأمان</p>
+                                    {/* Security Info */}
+                                    <div className="flex items-start gap-2 rounded-lg bg-green-50 p-3 md:gap-3 md:p-4">
+                                        <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 md:h-5 md:w-5" />
+                                        <div>
+                                            <p className="text-xs font-semibold text-black md:text-sm">
+                                                معاملة آمنة ومشفرة بالكامل
+                                            </p>
+                                            <p className="mt-1 text-xs text-black opacity-60">
+                                                معلوماتك محمية بأعلى معايير الأمان العالمية
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Submit Button */}
+                            {/* Mobile Submit Button */}
+                            <div className="mt-4 md:mt-6 lg:hidden">
                                 <button
-                                    type="submit"
+                                    onClick={handleSubmit}
                                     disabled={loading}
-                                    className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-4 font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:scale-100"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-bold text-white shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 md:py-4"
                                 >
                                     {loading ? (
                                         <>
-                                            <svg className="h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <svg className="h-4 w-4 animate-spin md:h-5 md:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
@@ -344,83 +241,136 @@ export default function CheckoutPage() {
                                         </>
                                     ) : (
                                         <>
-                                            تأكيد والانتقال للدفع
+                                            المتابعة إلى الدفع
+                                            <ArrowRight className="h-4 w-4 rotate-180 md:h-5 md:w-5" />
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Order Summary - Right Sidebar */}
+                        <div className="lg:col-span-1">
+                            <div className="sticky top-28 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 md:top-32 md:p-6">
+                                {/* Cart Items Preview */}
+                                <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3 md:mb-6 md:pb-4">
+                                    <span className="text-base font-bold text-black md:text-lg">
+                                        {cartItems.length === 1 ? 'دورة واحدة' : `${cartItems.length} دورات`}
+                                    </span>
+                                    <Link 
+                                        to="/cart" 
+                                        className="text-xs font-semibold text-[#0865a8] hover:underline md:text-sm"
+                                    >
+                                        تغيير
+                                    </Link>
+                                </div>
+
+                                {/* Order Details */}
+                                <div className="mb-4 md:mb-6">
+                                    <p className="mb-3 text-sm font-bold text-black md:mb-4">ملخص الطلب</p>
+                                    
+                                    {/* Courses List */}
+                                    <div className="mb-3 max-h-48 space-y-2.5 overflow-y-auto md:mb-4 md:space-y-3">
+                                        {cartItems.map((item) => (
+                                            <div key={item.id} className="flex items-start gap-2.5 text-sm md:gap-3">
+                                                {/* Course Icon */}
+                                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#0865a8] to-[#f57c00] md:h-12 md:w-12">
+                                                    <BookOpen className="h-5 w-5 text-white md:h-6 md:w-6" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="line-clamp-2 text-xs font-medium text-black md:text-sm">
+                                                        {item.title}
+                                                    </p>
+                                                    <p className="mt-1 text-xs font-bold text-[#f57c00]">
+                                                        {(item.currentPrice * (item.quantity || 1)).toFixed(2)} جنيه
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {/* Price Breakdown */}
+                                    <div className="space-y-1.5 text-sm md:space-y-2">
+                                        <div className="flex justify-between text-black opacity-70">
+                                            <span className="text-xs md:text-sm">المجموع الفرعي</span>
+                                            <span className="text-xs md:text-sm">{totalOriginalPrice.toFixed(2)} جنيه</span>
+                                        </div>
+                                        {totalDiscount > 0 && (
+                                            <div className="flex justify-between text-green-600">
+                                                <span className="text-xs md:text-sm">الخصم</span>
+                                                <span className="text-xs md:text-sm">-{totalDiscount.toFixed(2)} جنيه</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Coupon */}
+                                {!showCoupon ? (
+                                    <button
+                                        onClick={() => setShowCoupon(true)}
+                                        className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 py-2.5 text-xs font-semibold text-black transition-colors hover:bg-gray-50 md:mb-6 md:py-3 md:text-sm"
+                                    >
+                                        <Tag className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                                        استخدم كود الخصم
+                                    </button>
+                                ) : (
+                                    <div className="mb-4 md:mb-6">
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={couponCode}
+                                                onChange={(e) => setCouponCode(e.target.value)}
+                                                placeholder="أدخل كود الخصم"
+                                                className="flex-1 rounded-lg border border-gray-300 px-2.5 py-2 text-xs text-black focus:border-[#0865a8] focus:outline-none focus:ring-2 focus:ring-[#0865a8]/20 md:px-3 md:text-sm"
+                                            />
+                                            <button className="rounded-lg bg-[#0865a8] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0865a8]/90 md:px-4 md:text-sm">
+                                                تطبيق
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Divider */}
+                                <div className="mb-4 border-t border-gray-200 md:mb-6"></div>
+
+                                {/* Total */}
+                                <div className="mb-4 flex items-center justify-between md:mb-6">
+                                    <span className="text-sm font-bold text-black md:text-base">إجمالي المستحق</span>
+                                    <span className="text-xl font-bold text-[#f57c00] md:text-2xl">
+                                        {subtotal.toFixed(2)} جنيه
+                                    </span>
+                                </div>
+
+                                {/* Desktop Submit Button */}
+                                <button
+                                    onClick={handleSubmit}
+                                    disabled={loading}
+                                    className="mb-3 hidden w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-bold text-white shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 md:mb-4 md:py-4 lg:flex"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            جاري المعالجة...
+                                        </>
+                                    ) : (
+                                        <>
+                                            المتابعة إلى الدفع
                                             <ArrowRight className="h-5 w-5 rotate-180" />
                                         </>
                                     )}
                                 </button>
 
-                                <Link
-                                    to="/cart"
-                                    className="mt-4 flex items-center justify-center gap-2 rounded-xl border-2 border-gray-300 py-3 font-semibold text-gray-700 transition-colors hover:bg-gray-100"
-                                >
-                                    <ArrowRight className="h-5 w-5" />
-                                    الرجوع إلى سلة التسوق
-                                </Link>
-                            </form>
-                        </div>
-
-                        {/* Order Summary Sidebar */}
-                        <div className="lg:col-span-1">
-                            <div className="sticky top-32 rounded-2xl bg-white p-6 shadow-xl">
-                                <h2 className="mb-6 text-xl font-bold text-gray-900">ملخص الطلب</h2>
-
-                                {/* Cart Items */}
-                                <div className="mb-6 max-h-64 space-y-4 overflow-y-auto border-b border-gray-200 pb-6">
-                                    {cartItems.map((item) => (
-                                        <div key={item.id} className="flex gap-3">
-                                            <img
-                                                src={item.image}
-                                                alt={item.title}
-                                                className="h-16 w-16 rounded-lg object-cover"
-                                            />
-                                            <div className="flex-1">
-                                                <p className="line-clamp-2 text-sm font-semibold text-gray-900">
-                                                    {item.title}
-                                                </p>
-                                                <p className="text-xs text-gray-500">
-                                                    الكمية: {item.quantity || 1}
-                                                </p>
-                                                <p className="text-sm font-bold text-[#f57c00]">
-                                                    {(item.currentPrice * (item.quantity || 1)).toFixed(2)} ج.م
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Price Summary */}
-                                <div className="mb-6 space-y-3 border-b border-gray-200 pb-6">
-                                    <div className="flex justify-between text-gray-600">
-                                        <span>المجموع الفرعي</span>
-                                        <span className="font-semibold">{totalOriginalPrice.toFixed(2)} ج.م</span>
-                                    </div>
-                                    {totalDiscount > 0 && (
-                                        <div className="flex justify-between text-emerald-600">
-                                            <span className="font-medium">الخصم</span>
-                                            <span className="font-semibold">-{totalDiscount.toFixed(2)} ج.م</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Total */}
-                                <div className="mb-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-lg font-bold text-gray-900">الإجمالي</span>
-                                        <span className="text-3xl font-bold text-[#f57c00]">
-                                            {subtotal.toFixed(2)} ج.م
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Security Note */}
-                                <div className="rounded-xl bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 text-center">
-                                    <Lock className="mx-auto mb-2 h-8 w-8 text-[#0865a8]" />
-                                    <p className="text-xs font-semibold text-gray-700">
-                                        معاملة آمنة ومشفرة
+                                {/* Security Notice */}
+                                <div className="rounded-lg bg-gray-50 p-3 text-center md:p-4">
+                                    <Lock className="mx-auto mb-1.5 h-5 w-5 text-black opacity-60 md:mb-2 md:h-6 md:w-6" />
+                                    <p className="text-xs text-black opacity-60">
+                                        الدفع عبر بوابة بنك مصر الآمنة
                                     </p>
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        نستخدم تقنية التشفير SSL لحماية بياناتك
+                                    <p className="mt-1 text-xs font-semibold text-black">
+                                        معاملة مشفرة بتقنية SSL
                                     </p>
                                 </div>
                             </div>
@@ -430,4 +380,4 @@ export default function CheckoutPage() {
             </div>
         </>
     );
-}
+} 

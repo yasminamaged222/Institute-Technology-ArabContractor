@@ -24,18 +24,18 @@ namespace Institute.API.Controllers
         }
 
         
-        [HttpGet("programs/{programId}/courses")]
-        public async Task<IActionResult> GetProgramCourses(int programId)
+        [HttpGet("programs/{slug}/courses")]
+        public async Task<IActionResult> GetProgramCourses(string slug)
         {
             // ✅ هات كل الداتا مرة واحدة
             var planworks = (await _planRepo.GetAllAsync()).ToList();
             var files = (await _fileRepo.GetAllAsync()).ToList();
 
             // ✅ تأكد إن الـ Program / Axis موجود
-            var program = planworks.FirstOrDefault(x => x.ChildId == programId);
+            var program = planworks.FirstOrDefault(x => x.Slug == slug);
             if (program == null)
-                return NotFound($"Program or Axis with id {programId} not found");
-
+                return NotFound();
+            var programId = program.ChildId;
             // ✅ جمع الكورسات Recursive (نفس Logic الـ Builder)
             var courses = GetCoursesRecursive(planworks, files, programId);
 
@@ -43,6 +43,7 @@ namespace Institute.API.Controllers
             return Ok(new ProgramCoursesDto
             {
                 ProgramId = program.ChildId,
+                Slug = program.Slug,
                 ProgramName = program.ServiceTitle,
                 Courses = courses
                     .OrderBy(c => c.Id) // أو Priority لو حابب
@@ -92,6 +93,7 @@ namespace Institute.API.Controllers
                 .Select(c => new CourseCardDto
                 {
                     Id = c.ChildId,
+                    Slug = c.Slug,
                     Title = c.ServiceTitle,
                     Place = c.CoursePlace,
                     Date = c.CourseDate,
@@ -123,8 +125,8 @@ namespace Institute.API.Controllers
 
         }
 
-        [HttpGet("{courseId}")]
-        public async Task<IActionResult> GetCourseById(int courseId)
+        [HttpGet("{slug}")]
+        public async Task<IActionResult> GetCourseById(string slug)
         {
             var planworks = (await _planRepo.GetAllAsync()).ToList();
             var files = (await _fileRepo.GetAllAsync()).ToList();
@@ -133,19 +135,19 @@ namespace Institute.API.Controllers
             // find course
             // =========================
             var course = planworks.FirstOrDefault(x =>
-                x.ChildId == courseId &&
+                x.Slug == slug &&
                 x.DetailsFlag == false &&
                 x.CourseDate != null
             );
 
             if (course == null)
-                return NotFound($"Course with id {courseId} not found");
+                return NotFound();
 
             // =========================
             // files mapping (from PlanFile)
             // =========================
             var courseFiles = files
-                .Where(f => f.PlanId == courseId)
+                .Where(f => f.PlanId == course.ChildId)
                 .OrderBy(f => f.FilePeriorty)
                 .Select(f => new CourseFileDto
                 {
@@ -160,6 +162,7 @@ namespace Institute.API.Controllers
             var dto = new CourseDto
             {
                 Id = course.ChildId,
+                Slug = course.Slug,
                 Title = course.ServiceTitle,
                 Description = course.CourseDesc,
                 Place = course.CoursePlace,

@@ -35,7 +35,9 @@ public partial class Planwork
 
     public decimal? PlanCost { get; set; }
 
-    public bool? PlanSale { get; set; }
+    public string? Slug { get; set; }
+    public string? SKU { get; set; }
+
 
     // 🔹 Navigation
     public Planwork? Parent { get; set; }

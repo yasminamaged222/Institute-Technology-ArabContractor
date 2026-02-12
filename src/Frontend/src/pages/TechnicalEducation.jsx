@@ -1,18 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 
 export default function TechnicalEducationAlt() {
-    const [isMobile, setIsMobile] = useState(false);
     const [modalImage, setModalImage] = useState(null);
-
-    useEffect(() => {
-        const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
-        };
-
-        handleResize();
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
 
     const openModal = (imageSrc, title) => {
         setModalImage({ src: imageSrc, title });
@@ -29,473 +18,430 @@ export default function TechnicalEducationAlt() {
     }, []);
 
     return (
-        <>
+        <div className="tech-page-wrapper">
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap');
 
-                .tech-container * {
+                :root {
+                    --primary-color: #0865a8;
+                    --secondary-color: #f57c00;
+                    --bg-light: #F5F7E1;
+                    --text-dark: #333333;
+                    --border-color: #e8e8e8;
+                    --transition-speed: 0.3s;
+                }
+
+                .tech-page-wrapper {
+                    direction: rtl;
+                    background: #ffffff;
+                    min-height: 100vh;
                     font-family: 'Droid Arabic Kufi', serif;
+                    color: var(--text-dark);
                 }
 
-                .tech-image {
-                    object-fit: contain;
-                    background-color: #f5f5f5;
+                .tech-page-wrapper * {
+                    font-family: 'Droid Arabic Kufi', serif;
+                    box-sizing: border-box;
+                }
+
+                /* Fixed Navigation Bar */
+                .tech-fixed-bar {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    z-index: 1000;
+                    background-color: var(--bg-light);
+                    border-bottom: 2px solid #e0e0e0;
+                    padding: 0.75rem 1rem;
+                    text-align: center;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                }
+
+                .tech-fixed-bar-content {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    gap: 0.5rem;
+                    font-size: 0.95rem;
+                    flex-wrap: wrap;
+                }
+
+                .tech-nav-link {
+                    color: #000;
+                    text-decoration: none;
+                    font-weight: bold;
+                    transition: color var(--transition-speed);
+                }
+
+                .tech-nav-link:hover {
+                    color: var(--secondary-color);
+                }
+
+                .tech-nav-sep {
+                    color: #666;
+                }
+
+                /* Main Content Container */
+                .tech-main-container {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    padding: 120px 5% 60px; /* Top padding accounts for fixed bar */
+                }
+
+                /* Cards General Styling */
+                .tech-card {
+                    background: #fff;
+                    border-radius: 18px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+                    border: 1px solid var(--border-color);
+                    margin-bottom: 30px;
+                    overflow: hidden;
+                    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+                }
+
+                /* Header Card */
+                .tech-header-card {
+                    padding: 40px 30px;
+                    text-align: center;
+                }
+
+                .tech-title {
+                    font-size: clamp(1.5rem, 4vw, 2.2rem);
+                    color: var(--primary-color);
+                    font-weight: bold;
+                    margin-bottom: 15px;
+                }
+
+                .tech-title-underline {
+                    width: 70px;
+                    height: 4px;
+                    background: var(--secondary-color);
+                    border-radius: 6px;
+                    margin: 0 auto 25px;
+                }
+
+                .tech-subtitle {
+                    font-size: clamp(1rem, 2vw, 1.1rem);
+                    font-weight: 600;
+                    margin-bottom: 20px;
+                }
+
+                .tech-description {
+                    line-height: 1.9;
+                    font-size: clamp(0.9rem, 1.8vw, 1rem);
+                    max-width: 900px;
+                    margin: 0 auto;
+                }
+
+                /* Axis/Role Card */
+                .tech-role-card {
+                    padding: 30px;
+                }
+
+                .tech-role-title {
+                    color: var(--primary-color);
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                    font-size: clamp(1.2rem, 3vw, 1.5rem);
+                }
+
+                .tech-role-list {
+                    list-style: none;
+                    padding: 0;
+                    margin: 0;
+                }
+
+                .tech-role-item {
+                    display: flex;
+                    align-items: flex-start;
+                    gap: 12px;
+                    margin-bottom: 15px;
+                    line-height: 1.8;
+                    font-size: clamp(0.9rem, 1.8vw, 1rem);
+                }
+
+                .tech-check-icon {
+                    color: var(--secondary-color);
+                    font-weight: bold;
+                    flex-shrink: 0;
+                    margin-top: 4px;
+                }
+
+                /* Grid Layouts */
+                .tech-grid {
+                    display: grid;
+                    gap: 25px;
+                    margin-bottom: 40px;
+                }
+
+                .tech-grid-2 {
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                }
+
+                /* School Cards */
+                .school-card {
+                    padding: 25px;
+                    border-top: 4px solid var(--primary-color);
+                    height: 100%;
+                }
+
+                .school-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 24px rgba(8, 101, 168, 0.15);
+                }
+
+                .school-card-title {
+                    color: var(--primary-color);
+                    font-weight: bold;
+                    margin-bottom: 12px;
+                    font-size: clamp(1rem, 2vw, 1.1rem);
+                    line-height: 1.5;
+                }
+
+                .school-card-text {
+                    font-size: clamp(0.85rem, 1.6vw, 0.95rem);
+                    line-height: 1.8;
+                    margin: 0;
+                }
+
+                /* Image Cards */
+                .image-card {
+                    height: clamp(250px, 40vh, 450px);
                     cursor: pointer;
-                    transition: all 0.3s ease;
                 }
 
-                .tech-image:hover {
-                    transform: scale(1.02);
-                    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+                .image-card img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    transition: transform 0.5s ease;
+                }
+
+                .image-card:hover img {
+                    transform: scale(1.05);
                 }
 
                 /* Modal Styles */
                 .tech-modal-overlay {
                     position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background-color: rgba(0, 0, 0, 0.85);
+                    inset: 0;
+                    background-color: rgba(0, 0, 0, 0.9);
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    z-index: 9999;
-                    padding: 1rem;
+                    z-index: 2000;
+                    padding: 20px;
                     animation: fadeIn 0.3s ease;
                 }
 
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
+                @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
                 .tech-modal-content {
                     position: relative;
-                    max-width: 90vw;
-                    max-height: 90vh;
-                    animation: scaleIn 0.3s ease;
-                }
-
-                @keyframes scaleIn {
-                    from {
-                        transform: scale(0.9);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: scale(1);
-                        opacity: 1;
-                    }
+                    max-width: 95%;
+                    max-height: 85vh;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
                 }
 
                 .tech-modal-image {
                     max-width: 100%;
-                    max-height: 85vh;
-                    width: auto;
-                    height: auto;
+                    max-height: 80vh;
                     border-radius: 8px;
-                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
                     object-fit: contain;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
                 }
 
                 .tech-modal-close {
                     position: absolute;
-                    top: -40px;
+                    top: -50px;
                     right: 0;
-                    background-color: #f57c00;
+                    background: var(--secondary-color);
                     color: white;
                     border: none;
                     width: 40px;
                     height: 40px;
                     border-radius: 50%;
-                    font-size: 1.5rem;
                     cursor: pointer;
+                    font-size: 20px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    transition: all 0.3s ease;
-                    font-weight: bold;
+                    transition: background var(--transition-speed);
                 }
 
                 .tech-modal-close:hover {
-                    background-color: #0865a8;
-                    transform: rotate(90deg);
+                    background: var(--primary-color);
                 }
 
                 .tech-modal-title {
-                    position: absolute;
-                    bottom: -50px;
-                    left: 0;
-                    right: 0;
-                    text-align: center;
                     color: white;
+                    margin-top: 15px;
                     font-size: 1.1rem;
-                    padding: 0.5rem;
+                    text-align: center;
                 }
 
-                /* Responsive Styles */
+                /* Media Queries for Specific Adjustments */
+                
+                /* Large Screens (1920px+) */
+                @media (min-width: 1920px) {
+                    .tech-main-container {
+                        max-width: 1600px;
+                    }
+                    .tech-grid-2 {
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 40px;
+                    }
+                }
+
+                /* Tablets and below (768px) */
                 @media (max-width: 768px) {
-                    .tech-fixed-bar {
-                        top: 60px !important;
-                        padding: 0.4rem 1rem !important;
+                    .tech-main-container {
+                        padding-top: 100px;
                     }
-
-                    .tech-container {
-                        padding-top: calc(60px + 45px + 1.5rem) !important;
+                    .tech-header-card {
+                        padding: 30px 20px;
                     }
-
-                    .tech-modal-close {
-                        top: 10px;
-                        right: 10px;
-                    }
-
-                    .tech-modal-title {
-                        position: relative;
-                        bottom: auto;
-                        margin-top: 1rem;
+                    .tech-grid-2 {
+                        grid-template-columns: 1fr;
                     }
                 }
 
+                /* Small Phones (300px - 480px) */
                 @media (max-width: 480px) {
-                    .tech-fixed-bar-text {
-                        font-size: 0.875rem !important;
+                    .tech-main-container {
+                        padding: 90px 15px 40px;
                     }
-
+                    .tech-fixed-bar {
+                        padding: 0.5rem;
+                    }
+                    .tech-fixed-bar-content {
+                        font-size: 0.8rem;
+                    }
                     .tech-modal-close {
-                        width: 32px;
-                        height: 32px;
-                        font-size: 1.2rem;
+                        top: -45px;
+                        width: 35px;
+                        height: 35px;
                     }
+                    .image-card {
+                        height: 220px;
+                    }
+                }
 
-                    .tech-modal-title {
-                        font-size: 0.9rem;
+                /* Ultra Small Screens (300px) */
+                @media (max-width: 320px) {
+                    .tech-title {
+                        font-size: 1.3rem;
+                    }
+                    .tech-nav-link {
+                        font-size: 0.75rem;
                     }
                 }
             `}</style>
 
-            <div
-                className="tech-container"
-                style={{
-                    direction: "rtl",
-                    background: "#ffffff",
-                    minHeight: "100vh",
-                    padding: isMobile ? "20px 14px" : "60px 0",
-                }}
-            >
-                {/* Fixed Overview Bar */}
-                <div
-                    className="tech-fixed-bar"
-                    style={{
-                        position: 'fixed',
-                        top: '70px',
-                        left: 0,
-                        zIndex: 40,
-                        width: '100%',
-                        borderBottom: '2px solid #e0e0e0',
-                        backgroundColor: '#F5F7E1',
-                        padding: '0.5rem 1.25rem'
-                    }}
-                >
-                    <div style={{ textAlign: 'center' }}>
-                        <span
-                            className="tech-fixed-bar-text"
-                            style={{ fontSize: '15px' }}
-                        >
-                            <a
-                                href="/"
-                                style={{
-                                    marginLeft: '0.75rem',
-                                    color: '#000000',
-                                    textDecoration: 'none',
-                                    fontWeight: 'bold',
-                                    transition: 'color 0.3s'
-                                }}
-                                onMouseEnter={(e) => e.target.style.color = '#f57c00'}
-                                onMouseLeave={(e) => e.target.style.color = '#000000'}
-                            >
-                                الصفحة الرئيسية
-                            </a>
-                            <span style={{ color: '#666666', margin: '0 0.5rem' }}>-</span>
-                            <span style={{ marginRight: '0.75rem', color: '#000000' }}>
-                                تطوير التعليم الفني
-                            </span>
-                        </span>
+            <nav className="tech-fixed-bar">
+                <div className="tech-fixed-bar-content">
+                    <a href="/" className="tech-nav-link">الصفحة الرئيسية</a>
+                    <span className="tech-nav-sep">-</span>
+                    <span className="tech-nav-current">تطوير التعليم الفني</span>
+                </div>
+            </nav>
+
+            <main className="tech-main-container">
+                {/* Header Section */}
+                <section className="tech-card tech-header-card">
+                    <h1 className="tech-title">تطوير التعليم الفني</h1>
+                    <div className="tech-title-underline"></div>
+                    <p className="tech-subtitle">بروتوكول التعاون بين وزارة التربية والتعليم وشركة المقاولون العرب</p>
+                    <p className="tech-description">
+                        الهدف من هذا البروتوكول إنشاء جيل جديد من خريجي المدارس الثانوية الصناعية يتميز بالجدية في العمل وقادر على تحمل المسئولية والتعامل مع التكنولوجيا الحديثة بمواقع العمل المختلفة للشركة من خلال توفير العمالة الفنية المدربة.
+                    </p>
+                </section>
+
+                {/* Strategy Section */}
+                <section className="tech-card tech-role-card">
+                    <h3 className="tech-role-title">دور الشركة في ثلاثة محاور</h3>
+                    <ul className="tech-role-list">
+                        <li className="tech-role-item">
+                            <span className="tech-check-icon">✔</span>
+                            <span>المحور الأول يتضمن إختيار أفضل العناصر المتقدمة لهذه المدارس ورعايتهم عملياً وصحياً وأخلاقياً وفي نهاية المرحلة يتم إعطاءه شهادات خبرة للخريجين معتمدة من الشركة.</span>
+                        </li>
+                        <li className="tech-role-item">
+                            <span className="tech-check-icon">✔</span>
+                            <span>المحور الثاني هو رفع كفاءة الكوادر البشرية بالمدارس بعمل دورات تدريبية للمدرسين في التخصصات المختلفة وفي النواحي الإدارية.</span>
+                        </li>
+                        <li className="tech-role-item">
+                            <span className="tech-check-icon">✔</span>
+                            <span>المحور الثالث هو قيام الشركة بتطوير الورش بهذه المدارس وإمدادها بالمعدات والأدوات المطلوبة وصيانتها.</span>
+                        </li>
+                    </ul>
+                </section>
+
+                {/* Schools Grid */}
+                <section className="tech-grid tech-grid-2">
+                    <SchoolCard
+                        title="مدرسة المعدات الثقيلة الصناعية بالإسماعيلية"
+                        text="يتم التدريب الطلاب على ميكانيكا المعدات بورش فرع سيناء يوم السبت من كل أسبوع مع توفير أتوبيس لنقلهم من المدرسة إلى موقع التدريب و العودة بعد انتهاء اليوم التدريبي مع منسق الأمن بالشركة لعدد (20) طالب."
+                    />
+                    <SchoolCard
+                        title="مدرسة أبو رواش الثانوية الصناعية المشتركة"
+                        text="يتم تدريب الطلاب على ميكانيكا المعدات بواقع يومان (الأربعاء و الخميس) من كل أسبوع بالمعهد التكنولوجى - مركز تدريب شبرا من بدء العام الدراسي لعدد (18) طالب."
+                    />
+                    <SchoolCard
+                        title="مدرسة الشاطبي الثانوية الصناعية"
+                        text="يتم تدريب الطلاب بورش العامرية المركزية بالإسكندرية قسم اللحام لعدد (19) طالب."
+                    />
+                    <SchoolCard
+                        title="مدرسة مدينة نصر الثانوية الصناعية"
+                        text="التدريب يوم السبت من كل أسبوع بمركز تدريب شبرا / قسم الكهرباء لعدد (20) طالب."
+                    />
+                </section>
+
+                {/* Images Grid */}
+                <section className="tech-grid tech-grid-2">
+                    <ImageCard
+                        src="/images/tech-02.jpg"
+                        alt="صورة تعليم فني 1"
+                        onClick={() => openModal("/images/tech-02.jpg", "صورة تعليم فني 1")}
+                    />
+                    <ImageCard
+                        src="/images/tech-03.jpg"
+                        alt="صورة تعليم فني 2"
+                        onClick={() => openModal("/images/tech-03.jpg", "صورة تعليم فني 2")}
+                    />
+                </section>
+            </main>
+
+            {/* Modal */}
+            {modalImage && (
+                <div className="tech-modal-overlay" onClick={closeModal}>
+                    <div className="tech-modal-content" onClick={e => e.stopPropagation()}>
+                        <button className="tech-modal-close" onClick={closeModal}>✕</button>
+                        <img src={modalImage.src} alt={modalImage.title} className="tech-modal-image" />
+                        <div className="tech-modal-title">{modalImage.title}</div>
                     </div>
                 </div>
-
-                <div
-                    style={{
-                        maxWidth: 1200,
-                        margin: "0 auto",
-                        padding: isMobile ? "0" : "0 20px",
-                        paddingTop: 'calc(70px + 50px + 2rem)'
-                    }}
-                >
-                    {/* Header Card */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: 18,
-                            padding: isMobile ? 18 : 28,
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                            marginBottom: 30,
-                            textAlign: "center",
-                            border: '1px solid #e8e8e8'
-                        }}
-                    >
-                        <h1
-                            style={{
-                                fontSize: isMobile ? 22 : 34,
-                                fontWeight: "bold",
-                                color: "#0865a8",
-                                marginBottom: 10,
-                            }}
-                        >
-                            تطوير التعليم الفني
-                        </h1>
-                        <div
-                            style={{
-                                width: 70,
-                                height: 4,
-                                background: "#f57c00",
-                                borderRadius: 6,
-                                marginBottom: 20,
-                                margin: '0 auto 20px'
-                            }}
-                        />
-                        <p
-                            style={{
-                                fontSize: isMobile ? 14 : 16,
-                                color: "#333333",
-                                marginBottom: 20,
-                                fontWeight: '600'
-                            }}
-                        >
-                            بروتوكول التعاون بين وزارة التربية والتعليم وشركة المقاولون العرب
-                        </p>
-                        <p
-                            style={{
-                                lineHeight: 1.9,
-                                fontSize: isMobile ? 14 : 15.5,
-                                color: "#333",
-                            }}
-                        >
-                            الهدف من هذا البروتوكول إنشاء جيل جديد من خريجي المدارس الثانوية
-                            الصناعية يتميز بالجدية في العمل وقادر على تحمل المسئولية والتعامل مع
-                            كل جديد في صناعة البناء والتشييد مما يتيح له فرصاً عديدة للعمل
-                            بالداخل والخارج ويسهم في توفير إحتياجات السوق المتعطش لهذه العمالة
-                            الفنية المدربة.
-                        </p>
-                    </div>
-
-                    {/* Company Role Card */}
-                    <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: 18,
-                            padding: isMobile ? 18 : 28,
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                            marginBottom: 30,
-                            border: '1px solid #e8e8e8'
-                        }}
-                    >
-                        <h3
-                            style={{
-                                color: "#0865a8",
-                                fontWeight: "bold",
-                                marginBottom: 15,
-                                fontSize: isMobile ? 18 : 22,
-                            }}
-                        >
-                            دور الشركة في ثلاثة محاور
-                        </h3>
-                        <ul style={{ paddingRight: 18, margin: 0 }}>
-                            <li
-                                style={{
-                                    lineHeight: 1.9,
-                                    fontSize: isMobile ? 14 : 15.5,
-                                    color: "#333",
-                                    marginBottom: 12,
-                                }}
-                            >
-                                <span style={{ color: '#f57c00', fontWeight: 'bold', marginLeft: 8 }}>✔</span>
-المحور الأول يتضمن إختيار أفضل العناصر المتقدمة لهذه المدارس ورعايتهم عملياً وصحياً وأخلاقياً وفي نهاية المرحلة يتم إعطاءه شهادات خبرة للخريجين معتمدة من الشركة.                            </li>
-                            <li
-                                style={{
-                                    lineHeight: 1.9,
-                                    fontSize: isMobile ? 14 : 15.5,
-                                    color: "#333",
-                                    marginBottom: 12,
-                                }}
-                            >
-                                <span style={{ color: '#f57c00', fontWeight: 'bold', marginLeft: 8 }}>✔</span>
-المحور الثاني هو رفع كفاءة الكوادر البشرية بالمدارس بعمل دورات تدريبية للمدرسين في التخصصات المختلفة وفي النواحي الإدارية .                            </li>
-                            <li
-                                style={{
-                                    lineHeight: 1.9,
-                                    fontSize: isMobile ? 14 : 15.5,
-                                    color: "#333",
-                                }}
-                            >
-                                <span style={{ color: '#f57c00', fontWeight: 'bold', marginLeft: 8 }}>✔</span>
-المحور الثالث هو قيام الشركة بتطوير الورش بهذه المدارس وإمدادها بالمعدات والأدوات المطلوبة وصيانتها .                            </li>
-                        </ul>
-                    </div>
-
-                    {/* Schools Grid */}
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                            gap: 24,
-                            marginBottom: 40,
-                        }}
-                    >
-                        <SchoolCard
-                            title="مدرسة المعدات الثقيلة الصناعية بالإسماعيلية"
-                            text="يتم التدريب الطلاب على ميكانيكا المعدات بورش فرع سيناء يوم السبت من كل أسبوع مع توفير أتوبيس لنقلهم من المدرسة إلى موقع التدريب و العودة بعد انتهاء اليوم التدريبي مع منسق الأمن بالشركة لعدد (20) طالب ."
-                            isMobile={isMobile}
-                        />
-                        <SchoolCard
-                            title="مدرسة أبو رواش الثانوية الصناعية المشتركة"
-                            text="يتم تدريب الطلاب على ميكانيكا المعدات بواقع يومان (الأربعاء و الخميس) من كل أسبوع بالمعهد التكنولوجى - مركز تدريب شبرا من بدء العام الدراسي لعدد (18) طالب ."
-                            isMobile={isMobile}
-                        />
-                        <SchoolCard
-                            title="مدرسة الشاطبي الثانوية الصناعية"
-                            text="يتم تدريب الطلاب بورش العامرية المركزية بالإسكندرية قسم اللحام لعدد (19) طالب ."
-                            isMobile={isMobile}
-                        />
-                        <SchoolCard
-                            title="مدرسة مدينة نصر الثانوية الصناعية"
-                            text="التدريب يوم السبت من كل أسبوع بمركز تدريب شبرا / قسم الكهرباء لعدد (20) طالب ."
-                            isMobile={isMobile}
-                        />
-                    </div>
-
-                    {/* Images Grid */}
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-                            gap: 24,
-                        }}
-                    >
-                        <ImageCard
-                            src="/images/tech-02.jpg"
-                            alt="صورة تعليم فني 1"
-                            openModal={openModal}
-                            isMobile={isMobile}
-                        />
-                        <ImageCard
-                            src="/images/tech-03.jpg"
-                            alt="صورة تعليم فني 2"
-                            openModal={openModal}
-                            isMobile={isMobile}
-                        />
-                    </div>
-                </div>
-
-                {/* Image Modal */}
-                {modalImage && (
-                    <div
-                        className="tech-modal-overlay"
-                        onClick={closeModal}
-                    >
-                        <div
-                            className="tech-modal-content"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <button
-                                className="tech-modal-close"
-                                onClick={closeModal}
-                                aria-label="إغلاق"
-                            >
-                                ✕
-                            </button>
-                            <img
-                                src={modalImage.src}
-                                alt={modalImage.title}
-                                className="tech-modal-image"
-                            />
-                            <div className="tech-modal-title">
-                                {modalImage.title}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </>
-    );
-}
-
-function SchoolCard({ title, text, isMobile }) {
-    return (
-        <div
-            style={{
-                background: "#fff",
-                borderRadius: 16,
-                padding: isMobile ? 16 : 20,
-                boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
-                border: '1px solid #e8e8e8',
-                borderTop: '4px solid #0865a8',
-                transition: 'all 0.3s ease',
-            }}
-            onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 8px 20px rgba(8, 101, 168, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)';
-            }}
-        >
-            <h4
-                style={{
-                    marginBottom: 10,
-                    color: "#0865a8",
-                    fontWeight: 'bold',
-                    fontSize: isMobile ? 15 : 17,
-                    lineHeight: 1.5,
-                }}
-            >
-                {title}
-            </h4>
-            <p
-                style={{
-                    lineHeight: 1.8,
-                    fontSize: isMobile ? 13 : 14,
-                    color: '#333333',
-                    margin: 0,
-                }}
-            >
-                {text}
-            </p>
+            )}
         </div>
     );
 }
 
-function ImageCard({ src, alt, openModal, isMobile }) {
+function SchoolCard({ title, text }) {
     return (
-        <div
-            style={{
-                borderRadius: 20,
-                overflow: "hidden",
-                boxShadow: "0 6px 16px rgba(0,0,0,0.1)",
-                border: '1px solid #e8e8e8',
-                height: isMobile ? 250 : 350,
-            }}
-        >
-            <img
-                src={src}
-                alt={alt}
-                className="tech-image"
-                onClick={() => openModal(src, alt)}
-                style={{
-                    width: "100%",
-                    height: "100%",
-                }}
-            />
+        <div className="tech-card school-card">
+            <h4 className="school-card-title">{title}</h4>
+            <p className="school-card-text">{text}</p>
+        </div>
+    );
+}
+
+function ImageCard({ src, alt, onClick }) {
+    return (
+        <div className="tech-card image-card" onClick={onClick}>
+            <img src={src} alt={alt} />
         </div>
     );
 }
