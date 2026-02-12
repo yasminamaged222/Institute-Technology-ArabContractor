@@ -42,6 +42,7 @@ namespace Institute.Application.Services
                     .Select(x => new CategoryTreeDto
                     {
                         Id = x.ChildId,
+                        Slug = x.Slug,
                         Title = x.ServiceTitle,
                         Children = Build(x.ChildId)
                     })
