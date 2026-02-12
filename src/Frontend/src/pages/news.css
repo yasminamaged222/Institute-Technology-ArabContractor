@@ -1,69 +1,77 @@
 ﻿/* Import Droid Arabic Kufi Font */
 @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap');
 
+/* ==============================================
+   BASE STYLES
+   ============================================== */
+
+* {
+    box-sizing: border-box;
+}
+
 /* News Page Container */
 .news-page-container {
     min-height: 100vh;
     background-color: #ffffff;
+    padding-top: 70px;
     padding-bottom: 60px;
     direction: rtl;
     font-family: 'Droid Arabic Kufi', serif;
-}
-
-/* Fixed Overview Bar */
-.fixed-overview-bar {
-    position: fixed;
-    top: 70px; /* Positioned under navbar */
-    left: 0;
-    z-index: 40;
     width: 100%;
-    border-bottom: 2px solid #e0e0e0;
-    background-color: #F5F7E1;
-    padding: 8px 20px;
 }
 
-.fixed-overview-content {
-    text-align: center;
+/* ==============================================
+   BREADCRUMB BAR
+   ============================================== */
+
+.breadcrumb-bar {
+    position: fixed;
+    top: 70px;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    padding: 8px 15px;
+    border-bottom: 2px solid #eee;
+    background: #F5F7E1;
 }
 
-    .fixed-overview-content span {
+    .breadcrumb-bar .overview {
         font-size: 15px;
+        color: #000;
     }
 
-.fixed-overview-home-link {
-    margin-left: 12px;
-    color: #000000;
-    text-decoration: none;
-    font-weight: bold;
-    transition: color 0.3s;
-}
-
-    .fixed-overview-home-link:hover {
-        color: #f57c00;
+    .breadcrumb-bar .btn_go_home {
+        color: #000;
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.3s;
     }
 
-.fixed-overview-separator {
-    color: #666666;
-    margin: 0 8px;
-}
+        .breadcrumb-bar .btn_go_home:hover {
+            color: #f57c00;
+        }
 
-.fixed-overview-current {
-    margin-right: 12px;
-    color: #000000;
-}
+/* ==============================================
+   YEAR SLIDER
+   ============================================== */
 
-/* Year Filter Container */
-.year-filter-container {
-    background-color: #f5f5f5;
-    padding: 5px;
-    margin: 14px auto 40px; /* Adjusted top margin for fixed bar */
-    max-width: 73%;
-    border-radius: 10px;
-    border: 2px solid #dddddd;
+.year-slider-container {
+    padding: 20px 5%;
     display: flex;
     justify-content: center;
+    margin-top: 40px;
+}
+
+.year-slider-box {
+    background: #f5f5f5;
+    border-radius: 10px;
+    border: 2px solid #ddd;
+    display: flex;
     align-items: center;
+    height: 45px;
     overflow: hidden;
+    width: 100%;
+    max-width: 800px;
 }
 
 .year-scroll-arrow {
@@ -76,38 +84,36 @@
     user-select: none;
     background: #f5f5f5;
     transition: color 0.3s;
+    flex-shrink: 0;
 }
 
     .year-scroll-arrow:hover {
         color: #0865a8;
     }
 
-.year-scroller {
+.timeline-scroller {
     display: flex;
     align-items: center;
     overflow-x: auto;
     flex-grow: 1;
-    height: 45px;
+    height: 100%;
     scroll-behavior: smooth;
-}
-
-    .year-scroller::-webkit-scrollbar {
-        display: none;
-    }
-
-.year-scroller {
     -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
-.year-items-container {
+    .timeline-scroller::-webkit-scrollbar {
+        display: none;
+    }
+
+.year-items-wrapper {
     display: flex;
     width: max-content;
 }
 
 .year-item {
-    min-width: 60px;
-    height: 20px;
+    min-width: 80px;
+    height: 42px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -125,7 +131,7 @@
 .year-text {
     font-size: 0.85rem;
     font-weight: normal;
-    color: #333333;
+    color: #333;
     transition: all 0.3s ease;
 }
 
@@ -145,17 +151,20 @@
     pointer-events: none;
 }
 
-/* News Content */
+/* ==============================================
+   NEWS CONTENT
+   ============================================== */
+
 .news-content-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 8% 70px;
+    padding: 0 15px 70px;
+    width: 100%;
 }
 
 .news-cards-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* Fade In Animation */
@@ -170,19 +179,26 @@
         transform: translateY(0);
     }
 
-/* News Card */
+/* ==============================================
+   NEWS CARD
+   ============================================== */
+
 .news-card-item {
     background: #ffffff;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
     border: 1px solid #e8e8e8;
+    height: 100%;
 }
 
-    .news-card-item:hover {
-        box-shadow: 0 10px 20px rgba(8, 101, 168, 0.15);
+.news-card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+    .news-card-hover:hover {
         transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 10px 20px rgba(8, 101, 168, 0.15);
     }
 
 .news-card-inner {
@@ -248,41 +264,56 @@
         color: #0865a8;
     }
 
-/* Loading and Error Messages */
+/* ==============================================
+   LOADING, ERROR, EMPTY MESSAGES
+   ============================================== */
+
 .news-loading-message,
+.news-error-message,
 .news-empty-message {
     text-align: center;
     width: 100%;
-    padding: 50px;
-    color: #f57c00;
+    padding: 50px 20px;
     font-size: 18px;
     font-family: 'Droid Arabic Kufi', serif;
+    grid-column: 1 / -1;
+}
+
+.news-loading-message {
+    color: #f57c00;
+}
+
+.news-error-message {
+    color: #d32f2f;
 }
 
 .news-empty-message {
     color: #999999;
 }
 
-/* Pagination */
+/* ==============================================
+   PAGINATION
+   ============================================== */
+
 .pagination-wrapper {
-    max-width: 1200px;
-    margin: 50px auto 0;
-    padding: 0 20px;
     display: flex;
     justify-content: center;
-    padding-bottom: 50px;
+    padding: 0 15px 50px;
+    margin-top: 30px;
 }
 
 .pagination-container {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .pagination-dot,
 .pagination-arrow {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: 1px solid #dddddd;
     background-color: #ffffff;
@@ -325,82 +356,129 @@
         border-color: #dddddd;
     }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-    .news-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 25px;
+/* ==============================================
+   RESPONSIVE BREAKPOINTS
+   ============================================== */
+
+/* 300px - 479px: Extra Small Phones */
+@media (min-width: 300px) and (max-width: 479px) {
+    .news-page-container {
+        padding-top: 60px;
     }
 
-    .news-content-wrapper {
-        padding: 0 5% 70px;
-    }
-}
-
-@media (max-width: 768px) {
-    .fixed-overview-bar {
-        top: 60px; /* Adjust for smaller navbar if needed */
-        padding: 6px 15px;
+    .breadcrumb-bar {
+        top: 60px;
+        padding: 6px 10px;
     }
 
-    .fixed-overview-content span {
-        font-size: 14px;
+        .breadcrumb-bar .overview {
+            font-size: 12px;
+        }
+
+    .year-slider-container {
+        padding: 15px 3%;
+        margin-top: 30px;
     }
 
-    .year-filter-container {
-        margin: 120px auto 30px;
-        padding: 15px;
+    .year-slider-box {
+        height: 40px;
+        max-width: 100%;
+    }
+
+    .year-scroll-arrow {
+        padding: 0 8px;
+        font-size: 1.2rem;
     }
 
     .year-item {
-        min-width: 70px;
+        min-width: 60px;
+        height: 38px;
+    }
+
+    .year-text {
+        font-size: 0.75rem;
+    }
+
+    .year-text-active {
+        font-size: 0.9rem;
+    }
+
+    .news-content-wrapper {
+        padding: 0 10px 50px;
     }
 
     .news-cards-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 16px;
     }
 
-    .news-content-wrapper {
-        padding: 0 4% 50px;
+    .news-image-wrapper {
+        height: 180px;
+    }
+
+    .news-date-badge {
+        font-size: 11px;
+        padding: 8px 12px;
+    }
+
+    .news-title-wrapper {
+        padding: 14px;
+    }
+
+    .news-title-link {
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .pagination-wrapper {
-        padding: 0 15px;
-        padding-bottom: 40px;
+        padding: 0 10px 40px;
+        margin-top: 20px;
     }
 
     .pagination-dot,
     .pagination-arrow {
-        width: 35px;
-        height: 35px;
-        font-size: 13px;
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+    }
+
+    .pagination-container {
+        gap: 5px;
     }
 }
 
-@media (max-width: 480px) {
-    .fixed-overview-bar {
-        padding: 5px 10px;
+/* 480px - 639px: Small Phones */
+@media (min-width: 480px) and (max-width: 639px) {
+    .news-page-container {
+        padding-top: 65px;
     }
 
-    .fixed-overview-content span {
-        font-size: 13px;
+    .breadcrumb-bar {
+        top: 65px;
+        padding: 7px 12px;
     }
 
-    .fixed-overview-home-link,
-    .fixed-overview-current {
-        margin-left: 8px;
-        margin-right: 8px;
+        .breadcrumb-bar .overview {
+            font-size: 13px;
+        }
+
+    .year-slider-container {
+        padding: 18px 4%;
+        margin-top: 35px;
     }
 
-    .year-filter-container {
-        margin: 110px 15px 25px;
-        padding: 12px;
-        max-width: calc(100% - 30px);
+    .year-slider-box {
+        height: 42px;
+    }
+
+    .year-scroll-arrow {
+        padding: 0 10px;
+        font-size: 1.3rem;
     }
 
     .year-item {
         min-width: 65px;
+        height: 40px;
     }
 
     .year-text {
@@ -411,8 +489,22 @@
         font-size: 0.95rem;
     }
 
+    .news-content-wrapper {
+        padding: 0 12px 55px;
+    }
+
+    .news-cards-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+
     .news-image-wrapper {
         height: 200px;
+    }
+
+    .news-date-badge {
+        font-size: 12px;
+        padding: 9px 14px;
     }
 
     .news-title-wrapper {
@@ -421,43 +513,245 @@
 
     .news-title-link {
         font-size: 14px;
+        line-height: 1.55;
     }
 
-    .news-date-badge {
-        font-size: 12px;
-        padding: 8px 14px;
+    .pagination-wrapper {
+        padding: 0 12px 45px;
+        margin-top: 25px;
     }
 
     .pagination-dot,
     .pagination-arrow {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-    }
-
-    .news-content-wrapper {
-        padding: 0 3% 40px;
-    }
-}
-
-/* Extra Small Devices */
-@media (max-width: 360px) {
-    .year-item {
-        min-width: 60px;
-    }
-
-    .year-scroll-arrow {
-        padding: 0 10px;
-        font-size: 1.3rem;
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
     }
 
     .pagination-container {
-        gap: 5px;
+        gap: 6px;
+    }
+}
+
+/* 640px - 767px: Large Phones */
+@media (min-width: 640px) and (max-width: 767px) {
+    .breadcrumb-bar {
+        padding: 8px 15px;
+    }
+
+        .breadcrumb-bar .overview {
+            font-size: 14px;
+        }
+
+    .year-slider-container {
+        padding: 20px 5%;
+        margin-top: 38px;
+    }
+
+    .year-slider-box {
+        height: 44px;
+    }
+
+    .year-scroll-arrow {
+        padding: 0 12px;
+        font-size: 1.4rem;
+    }
+
+    .year-item {
+        min-width: 70px;
+        height: 41px;
+    }
+
+    .news-content-wrapper {
+        padding: 0 15px 60px;
+    }
+
+    .news-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .news-image-wrapper {
+        height: 200px;
+    }
+
+    .news-title-wrapper {
+        padding: 16px;
+    }
+
+    .news-title-link {
+        font-size: 14px;
+    }
+
+    .pagination-wrapper {
+        padding: 0 15px 45px;
     }
 
     .pagination-dot,
     .pagination-arrow {
-        width: 30px;
-        height: 30px;
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* 768px - 1023px: Tablets */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .breadcrumb-bar {
+        padding: 8px 20px;
+    }
+
+        .breadcrumb-bar .overview {
+            font-size: 15px;
+        }
+
+    .year-slider-container {
+        padding: 20px 5%;
+        margin-top: 40px;
+    }
+
+    .news-content-wrapper {
+        padding: 0 20px 65px;
+    }
+
+    .news-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 22px;
+    }
+
+    .news-image-wrapper {
+        height: 210px;
+    }
+
+    .news-title-wrapper {
+        padding: 17px;
+    }
+
+    .news-title-link {
+        font-size: 15px;
+    }
+
+    .pagination-wrapper {
+        padding: 0 20px 50px;
+    }
+}
+
+/* 1024px - 1279px: Small Desktops */
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .news-content-wrapper {
+        padding: 0 5% 70px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .news-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+    }
+
+    .news-image-wrapper {
+        height: 220px;
+    }
+
+    .news-title-wrapper {
+        padding: 18px;
+    }
+}
+
+/* 1280px - 1439px: Medium Desktops */
+@media (min-width: 1280px) and (max-width: 1439px) {
+    .news-content-wrapper {
+        padding: 0 6% 70px;
+        max-width: 1300px;
+        margin: 0 auto;
+    }
+
+    .news-cards-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 26px;
+    }
+
+    .news-image-wrapper {
+        height: 230px;
+    }
+}
+
+/* 1440px - 1919px: Large Desktops */
+@media (min-width: 1440px) and (max-width: 1919px) {
+    .news-content-wrapper {
+        padding: 0 8% 70px;
+        max-width: 1500px;
+        margin: 0 auto;
+    }
+
+    .news-cards-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 28px;
+    }
+
+    .news-image-wrapper {
+        height: 240px;
+    }
+
+    .year-slider-box {
+        max-width: 900px;
+    }
+}
+
+/* 1920px and above: Extra Large Desktops */
+@media (min-width: 1920px) {
+    .news-page-container {
+        max-width: 2000px;
+        margin: 0 auto;
+    }
+
+    .news-content-wrapper {
+        padding: 0 10% 80px;
+        max-width: 1800px;
+        margin: 0 auto;
+    }
+
+    .news-cards-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 30px;
+    }
+
+    .news-image-wrapper {
+        height: 250px;
+    }
+
+    .news-title-link {
+        font-size: 16px;
+    }
+
+    .year-slider-box {
+        max-width: 1000px;
+    }
+
+    .pagination-dot,
+    .pagination-arrow {
+        width: 40px;
+        height: 40px;
+        font-size: 15px;
+    }
+}
+
+/* ==============================================
+   PRINT STYLES
+   ============================================== */
+
+@media print {
+    .breadcrumb-bar,
+    .year-slider-container,
+    .pagination-wrapper {
+        display: none;
+    }
+
+    .news-page-container {
+        padding-top: 0;
+    }
+
+    .news-card-hover:hover {
+        transform: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
     }
 }

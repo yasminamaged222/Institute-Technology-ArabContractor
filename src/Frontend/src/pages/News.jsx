@@ -33,7 +33,7 @@ const News = () => {
             })
             .then(data => {
                 setNews(data.data || []);
-                setTotalPages(data.totalPages || 0); // grab totalPages from the API response
+                setTotalPages(data.totalPages || 0);
                 setLoading(false);
                 setTimeout(() => setAnimate(true), 50);
             })
@@ -41,7 +41,7 @@ const News = () => {
                 setError(err.message);
                 setLoading(false);
             });
-    }, [selectedYear, currentPage]); // <-- currentPage added to dependency array
+    }, [selectedYear, currentPage]);
 
     // --- Reset page to 1 whenever the year changes ---
     useEffect(() => {
@@ -51,178 +51,44 @@ const News = () => {
     const handleScroll = (direction) => {
         if (scrollRef.current) {
             const scrollAmount = scrollRef.current.clientWidth / 2;
-            scrollRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+            scrollRef.current.scrollBy({ 
+                left: direction === 'left' ? -scrollAmount : scrollAmount, 
+                behavior: 'smooth' 
+            });
         }
     };
 
     return (
-        <div className="news-page-container" style={{ paddingTop: '70px', backgroundColor: '#fff', direction: 'rtl' }}>
-
-            <style>{`
-        .timeline-scroller::-webkit-scrollbar { display: none; }
-        .timeline-scroller { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        .news-fade-in {
-          opacity: 0;
-          transform: translateY(20px);
-          transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-        .news-fade-in.active {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
-        .news-card-hover {
-          transition: transform 0.3s ease, box-shadow 0.3s ease !important;
-        }
-        .news-card-hover:hover {
-          transform: translateY(-5px) scale(1.02);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-        }
-
-        .pagination-dot {
-          width: 35px;
-          height: 35px;
-          border-radius: 50%;
-          border: 1px solid #ddd;
-          background: #fff;
-          margin: 0 5px;
-          cursor: pointer;
-          transition: 0.3s;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .pagination-dot-active {
-          background: #f57c00 !important;
-          color: #fff !important;
-          border-color: #f57c00 !important;
-        }
-
-        /* Grid System */
-        .news-cards-grid {
-            display: grid;
-            gap: 24px;
-            width: 100%;
-        }
-
-        /* Responsive Breakpoints */
-        @media (min-width: 300px) {
-            .news-cards-grid { grid-template-columns: 1fr; }
-            .news-content-wrapper { padding: 0 15px 70px; }
-            .breadcrumb-bar { top: 70px; }
-        }
-
-        @media (min-width: 640px) {
-            .news-cards-grid { grid-template-columns: repeat(2, 1fr); }
-            .news-content-wrapper { padding: 0 30px 70px; }
-        }
-
-        @media (min-width: 1024px) {
-            .news-cards-grid { grid-template-columns: repeat(3, 1fr); }
-            .news-content-wrapper { padding: 0 5% 70px; }
-        }
-
-        @media (min-width: 1440px) {
-            .news-cards-grid { grid-template-columns: repeat(4, 1fr); }
-            .news-content-wrapper { padding: 0 8% 70px; }
-        }
-
-        @media (min-width: 1920px) {
-            .news-cards-grid { grid-template-columns: repeat(5, 1fr); }
-            .news-page-container { max-width: 1800px; margin: 0 auto; }
-        }
-
-        /* Breadcrumb Responsive */
-        .breadcrumb-bar {
-            position: fixed;
-            left: 0;
-            width: 100%;
-            z-index: 10;
-            padding: 8px 15px;
-            border-bottom: 2px solid #eee;
-            background: #F5F7E1;
-        }
-
-        .year-slider-container {
-            padding: 20px 5%;
-            display: flex;
-            justify-content: center;
-            margin-top: 40px;
-        }
-
-        .year-slider-box {
-            background: #f5f5f5;
-            border-radius: 10px;
-            border: 2px solid #ddd;
-            display: flex;
-            align-items: center;
-            height: 45px;
-            overflow: hidden;
-            width: 100%;
-            max-width: 800px;
-        }
-      `}</style>
+        <div className="news-page-container">
 
             {/* Breadcrumb */}
             <div className="breadcrumb-bar">
                 <span className="overview">
-                    <a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار
+                    <a href="/" className="btn_go_home">الصفحة الرئيسية</a> - الأخبار
                 </span>
             </div>
 
             {/* Year Slider */}
             <div className="year-slider-container">
                 <div className="year-slider-box">
-                    <div onClick={() => handleScroll('right')} style={arrowStyle}>«</div>
-                    <div ref={scrollRef} className="timeline-scroller" style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        overflowX: 'auto',
-                        flexGrow: 1,
-                        height: '100%',
-                        scrollBehavior: 'smooth'
-                    }}>
-                        <div style={{ display: 'flex', width: 'max-content' }}>
+                    <div onClick={() => handleScroll('right')} className="year-scroll-arrow">«</div>
+                    <div ref={scrollRef} className="timeline-scroller">
+                        <div className="year-items-wrapper">
                             {years.map((year) => (
                                 <div
                                     key={year}
                                     onClick={() => setSelectedYear(year)}
-                                    style={{
-                                        minWidth: '80px',
-                                        height: '42px',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        cursor: 'pointer',
-                                        position: 'relative',
-                                        flexShrink: 0,
-                                        borderLeft: '1px solid rgba(0,0,0,0.05)'
-                                    }}
+                                    className="year-item"
                                 >
-                                    <span style={{
-                                        fontSize: selectedYear === year ? '1rem' : '0.85rem',
-                                        fontWeight: selectedYear === year ? 'bold' : 'normal',
-                                        color: selectedYear === year ? '#f57c00' : '#333'
-                                    }}>
+                                    <span className={selectedYear === year ? 'year-text year-text-active' : 'year-text'}>
                                         {year}
                                     </span>
-                                    {selectedYear === year && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            height: '100%',
-                                            width: '100%',
-                                            borderLeft: '2.5px solid #f57c00',
-                                            borderRight: '2.5px solid #f57c00',
-                                            backgroundColor: 'rgba(245, 124, 0, 0.05)',
-                                            pointerEvents: 'none'
-                                        }} />
-                                    )}
+                                    {selectedYear === year && <div className="year-item-highlight" />}
                                 </div>
                             ))}
                         </div>
                     </div>
-                    <div onClick={() => handleScroll('left')} style={arrowStyle}>»</div>
+                    <div onClick={() => handleScroll('left')} className="year-scroll-arrow">»</div>
                 </div>
             </div>
 
@@ -230,39 +96,58 @@ const News = () => {
             <div className="news-content-wrapper">
                 <div className={`news-cards-grid ${animate ? 'active' : ''} news-fade-in`}>
 
-                    {loading && <p style={{ textAlign: 'center', width: '100%', padding: '50px', color: '#f57c00' }}>جارٍ تحميل الأخبار...</p>}
+                    {loading && (
+                        <div className="news-loading-message">
+                            جارٍ تحميل الأخبار...
+                        </div>
+                    )}
+
+                    {!loading && error && (
+                        <div className="news-error-message">
+                            حدث خطأ في تحميل الأخبار
+                        </div>
+                    )}
 
                     {!loading && !error && news.length > 0 ? (
                         news.map(item => (
                             <div key={item.id} className="news-card-item news-card-hover">
                                 <div className="news-card-inner">
                                     <div className="news-date-badge">
-                                        {new Date(item.publishedAt).toLocaleDateString('ar-EG', { day: '2-digit', month: 'long', year: 'numeric' })}
+                                        {new Date(item.publishedAt).toLocaleDateString('ar-EG', { 
+                                            day: '2-digit', 
+                                            month: 'long', 
+                                            year: 'numeric' 
+                                        })}
                                     </div>
                                     <a href={`/news/${item.id}`} className="news-image-wrapper">
                                         <img src={item.imageUrl} alt={item.title} className="news-image" />
                                     </a>
                                     <div className="news-title-wrapper">
-                                        <a href={`/news/${item.id}`} className="news-title-link">{item.title}</a>
+                                        <a href={`/news/${item.id}`} className="news-title-link">
+                                            {item.title}
+                                        </a>
                                     </div>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        !loading && !error && <div style={{ textAlign: 'center', width: '100%', padding: '50px' }}>لا توجد أخبار لعام {selectedYear}</div>
+                        !loading && !error && (
+                            <div className="news-empty-message">
+                                لا توجد أخبار لعام {selectedYear}
+                            </div>
+                        )
                     )}
                 </div>
             </div>
 
             {/* Dynamic Pagination Bar */}
             {!loading && totalPages > 1 && (
-                <div className="pagination-wrapper" style={{ display: 'flex', justifyContent: 'center', paddingBottom: '50px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', gap: '5px' }}>
+                <div className="pagination-wrapper">
+                    <div className="pagination-container">
                         <button
-                            className="pagination-dot"
+                            className={`pagination-arrow ${currentPage === 1 ? 'pagination-arrow-disabled' : ''}`}
                             disabled={currentPage === 1}
                             onClick={() => setCurrentPage(prev => prev - 1)}
-                            style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
                         >
                             ‹
                         </button>
@@ -281,10 +166,9 @@ const News = () => {
                         ))}
 
                         <button
-                            className="pagination-dot"
+                            className={`pagination-arrow ${currentPage === totalPages ? 'pagination-arrow-disabled' : ''}`}
                             disabled={currentPage === totalPages}
                             onClick={() => setCurrentPage(prev => prev + 1)}
-                            style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
                         >
                             ›
                         </button>
@@ -293,11 +177,6 @@ const News = () => {
             )}
         </div>
     );
-};
-
-const arrowStyle = {
-    padding: '0 15px', color: '#f57c00', fontWeight: 'bold', cursor: 'pointer',
-    zIndex: 10, fontSize: '1.5rem', userSelect: 'none', background: '#f5f5f5'
 };
 
 export default News;
