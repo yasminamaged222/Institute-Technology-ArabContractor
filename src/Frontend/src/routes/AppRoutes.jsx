@@ -52,7 +52,7 @@ const AppRoutes = () => {
         <Route path="/overview" element={<Overview />} />
         <Route path="/mission" element={<Vision_goals />} />
         <Route path="/news" element={<News />} />
-            <Route path="/courses/:id/:slug" element={<CoursesPage />} />
+            <Route path="/courses/:slug" element={<CoursesPage />} />
             <Route path="/library" element={<Library />} />
             <Route path="/customers" element={<CustomersPage />} />
             <Route path="/certifications" element={<Certifications />} />
