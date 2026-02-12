@@ -79,7 +79,7 @@ const TrainingMethods = () => {
                     zIndex: 40,
                 }}
             >
-                <Box sx={{ textAlign: "center" }}>
+                <Box sx={{ textAlign: "center" }} style={{top:70}}>
                     <Typography
                         variant="body1"
                         sx={{

@@ -1,10 +1,15 @@
 ﻿import React from 'react';
+import { useEffect } from 'react';
 
 export default function ContactPage() {
+
+    useEffect(() => {
+        document.title = ' اتصل بنا - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
     return (
         <div className="bg-white-50 min-h-screen" dir="rtl">
             {/* Fixed Overview Bar */}
-            <div className="top-100 fixed left-0 z-50 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2">
+            <div className="top-100 fixed left-0 z-50 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{top:70}}>
                 <div className="text-center">
                     <span className="text-base">
                         <a href="/" className="ml-3 text-gray-700 hover:text-gray-900">الصفحة الرئيسية</a>

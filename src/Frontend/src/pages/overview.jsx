@@ -12,9 +12,11 @@ function Overview() {
 
 
     return (
-        <div>
+        <div style={{fontFamily:'-apple-system'}}>
 
-            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' }}>
+           
+
+            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' , top:70}}>
                 <span className="overview" style={{ position: 'relative', bottom: '5px' }}><a href="/" className="btn_go_home">الصفحة الرئيسية</a> - نبذة عامة</span>
             </div>
 
@@ -142,7 +144,7 @@ function Overview() {
             <div className="section_5">
                 <div className="content_sec_5">
                     <div className="h1_sec_5">
-                        <h1 style={{ fontFamily: "-apple-system", fontSize: "50px", textAlign: "center" }}>لماذا تشترك بمعهد التدريب</h1>
+                        <h1 style={{ fontSize: "50px", textAlign: "center" }}>لماذا تشترك بمعهد التدريب</h1>
                     </div>
 
                     <div className="cards_sec_5">
@@ -152,7 +154,7 @@ function Overview() {
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>خدمات متميزة</h2>
+                                <h2 style={{  fontSize: "25px" }}>خدمات متميزة</h2>
                             </div>
 
                             <div className="div_dis">
@@ -169,7 +171,7 @@ function Overview() {
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>مجموعة متميزة من المدربين</h2>
+                                <h2 style={{ fontSize: "25px" }}>مجموعة متميزة من المدربين</h2>
                             </div>
 
                             <div className="div_dis">
@@ -186,7 +188,7 @@ function Overview() {
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>مجموعة من الشهادات المعتمدة</h2>
+                                <h2 style={{  fontSize: "25px" }}>مجموعة من الشهادات المعتمدة</h2>
                             </div>
 
                             <div className="div_dis">
@@ -203,7 +205,7 @@ function Overview() {
                             </div>
 
                             <div className="div_title">
-                                <h2 style={{ fontFamily: "-apple-system", fontSize: "25px" }}>جودة الخدمات التدريبية</h2>
+                                <h2 style={{  fontSize: "25px" }}>جودة الخدمات التدريبية</h2>
                             </div>
 
                             <div className="div_dis">

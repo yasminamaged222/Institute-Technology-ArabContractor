@@ -95,7 +95,7 @@ export default function ModernLibrary() {
             </div>
 
             {/* Fixed Overview Bar */}
-            <div className="fixed left-0 z-30 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: '80px' }}>
+            <div className="fixed left-0 z-30 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: '70px' }}>
                 <div className="text-center">
                     <span className="text-base">
                         <a href="/" className="ml-3 text-gray-700 hover:text-gray-900">الصفحة الرئيسية</a>
@@ -112,7 +112,7 @@ export default function ModernLibrary() {
                         <BookOpen style={styles.heroIconSvg} />
                     </div>
                     <h1 style={{ ...styles.heroTitle, fontSize: isMobile ? '36px' : isTablet ? '48px' : '64px' }}>
-                        المكتبة الرقمية
+                        المكتبة 
                     </h1>
                     <div style={styles.heroUnderline}>
                         <div style={styles.underlineAnimate}></div>
@@ -407,12 +407,13 @@ function LibrarySearchSection({ isMobile, isTablet }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const booksPerPage = 10;
+    const booksPerPage = 12;
 
     useEffect(() => {
         let cancelled = false;
 
         const fetchAllPages = async () => {
+            
             try {
                 setLoading(true);
 
@@ -459,7 +460,16 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                 ];
 
                 const transformedBooks = allItems.map((book, index) => {
-                    const year = book.bookDate ? book.bookDate.substring(0, 4) : 'N/A';
+                    // Extract year from the unusual format: "0001-01-01T00:00:00.0001997"
+                    // The actual year is after the decimal point
+                    let year = 'N/A';
+                    if (book.bookDate) {
+                        const match = book.bookDate.match(/\.000(\d{4})$/);
+                        if (match && match[1]) {
+                            year = match[1];
+                        }
+                    }
+                    
                     return {
                         id: index + 1,
                         category: book.typeName || 'غير مصنف',
@@ -513,19 +523,21 @@ function LibrarySearchSection({ isMobile, isTablet }) {
         setCurrentPage(1);
     }, [selectedCategory, selectedYear, searchText]);
 
+    // FIXED: Calculate available years based on whether a category is selected
     const availableYears = React.useMemo(() => {
-        return getYearsForCategory(selectedCategory);
-    }, [selectedCategory, booksDatabase]);
-
-    function getYearsForCategory(categoryId) {
-        if (!categoryId) return [];
+        if (!selectedCategory) {
+            // If no category selected, show all available years
+            const years = [...new Set(booksDatabase.map(book => book.year))];
+            return years.sort((a, b) => b.localeCompare(a));
+        }
+        // If category selected, show years for that category
         const years = [...new Set(
             booksDatabase
-                .filter(book => book.category === categoryId)
+                .filter(book => book.category === selectedCategory)
                 .map(book => book.year)
         )];
         return years.sort((a, b) => b.localeCompare(a));
-    }
+    }, [selectedCategory, booksDatabase]);
 
     const isFiltering = selectedCategory || selectedYear || searchText.trim();
     const resultMessage = isFiltering
@@ -577,7 +589,7 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                                 value={selectedCategory}
                                 onChange={(e) => {
                                     setSelectedCategory(e.target.value);
-                                    setSelectedYear('');
+                                    // Don't reset selectedYear - allow independent filtering
                                 }}
                                 style={styles.modernSelect}
                                 disabled={loading}
@@ -597,7 +609,7 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(e.target.value)}
                                 style={styles.modernSelect}
-                                disabled={!selectedCategory || loading}
+                                disabled={loading}
                             >
                                 <option value="">السنة</option>
                                 {availableYears.map(year => (
@@ -824,20 +836,7 @@ function SearchResultCard({ book, index }) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <div style={styles.resultImageWrapper}>
-                <img
-                    src={book.image}
-                    alt={book.title}
-                    style={{
-                        ...styles.resultImage,
-                        transform: isHovered ? 'scale(1.1)' : 'scale(1)'
-                    }}
-                />
-                <div style={{
-                    ...styles.resultOverlay,
-                    opacity: isHovered ? 1 : 0
-                }}></div>
-            </div>
+            
             <div style={styles.resultContent}>
                 <div style={{ ...styles.resultCategory, background: categoryInfo.color }}>
                     {categoryInfo.name}

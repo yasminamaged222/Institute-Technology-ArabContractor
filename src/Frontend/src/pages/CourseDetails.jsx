@@ -291,7 +291,7 @@ const CourseDetails = () => {
           }
           ${mediaQueryStyles}
         `}</style>
-                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
+                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' , top:80}}>
                     <div style={styles.overviewBar} className="overview-bar">
                         <div style={styles.overviewBarText} className="breadcrumb-text">
                             <span>
@@ -319,7 +319,7 @@ const CourseDetails = () => {
           }
           ${mediaQueryStyles}
         `}</style>
-                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
+                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh', top:80 }}>
                     <div style={styles.overviewBar} className="overview-bar">
                         <div style={styles.overviewBarText} className="breadcrumb-text">
                             <span>
@@ -354,7 +354,7 @@ const CourseDetails = () => {
 
             <div dir="rtl" style={styles.pageWrapper}>
                 {/* Fixed Overview Bar */}
-                <div style={styles.overviewBar} className="overview-bar">
+                <div style={{...styles.overviewBar, top: 70}} className="overview-bar">
                     <div style={styles.overviewBarText} className="breadcrumb-text">
                         <span>
                             <a

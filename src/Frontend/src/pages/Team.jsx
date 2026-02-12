@@ -109,7 +109,7 @@ const Team = () => {
         <div style={{ direction: "rtl", fontFamily: globalFont }}>
 
             {/* Fixed Overview Bar — SAME STYLE & COLORS */}
-            <div className="fixed left-0 top-[64px] z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 font-['Droid_Arabic_Kufi']">
+            <div className="fixed left-0 top-[70px] z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 font-['Droid_Arabic_Kufi']">
                 <div className="text-center">
                     <span className="text-base">
                         <a

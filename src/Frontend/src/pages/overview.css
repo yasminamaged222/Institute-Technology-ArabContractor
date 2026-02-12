@@ -1,13 +1,17 @@
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    
+
 }
 
+/* Or apply to body */
 body {
-    font-family: Droid Arabic Kufi, serif;
-    
+    font-family: 'Droid Arabic Kufi', sans-serif;
 }
+
 
 /* General overview intro */
 .overview_intro {
@@ -109,6 +113,7 @@ body {
 
 .section_2_card:hover .txt_card_sec_2 {
     color: #ffffff;
+    
 }
 
     
@@ -231,13 +236,15 @@ body {
 
 .div_dis {
     margin-top: 20px;
+    
 }
 
 .div_dis_txt {
     text-align: center;
     color: gray;
     line-height: 1.6;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: bold;
 }
 
 /* Media Queries for smaller screens */

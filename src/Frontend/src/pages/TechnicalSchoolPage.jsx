@@ -44,7 +44,7 @@ export default function TechnicalSchoolPage() {
 
         <div style={{ fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' }}>
             {/* ======== ADDED PART (NO CHANGE) ======== */}
-            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' }}>
+            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' , top:70}}>
                 <span className="overview" style={{ position: 'relative', bottom: '5px' }}>
                     <a href="/" className="btn_go_home">الصفحة الرئيسية</a> -تطوير التعليم الفني
                 </span>

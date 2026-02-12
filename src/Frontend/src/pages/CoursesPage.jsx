@@ -335,6 +335,12 @@ const styles = {
 
 // Media query styles
 const mediaQueryStyles = `
+    .grid {
+        margin-left: auto !important;
+        margin-right: auto !important;
+        justify-items: center !important;
+    }
+
     @media (max-width: 768px) {
         .main-container {
             margin-top: 100px !important;
@@ -358,6 +364,9 @@ const mediaQueryStyles = `
             grid-template-columns: 1fr !important;
             gap: 20px !important;
             padding: 10px 0 !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            justify-items: center !important;
         }
         
         .overview-bar {
@@ -394,6 +403,9 @@ const mediaQueryStyles = `
         .grid {
             grid-template-columns: repeat(2, 1fr) !important;
             gap: 22px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            justify-items: center !important;
         }
         
         .main-container {
@@ -409,23 +421,164 @@ const mediaQueryStyles = `
         }
     }
     
-    @media (min-width: 1025px) and (max-width: 1400px) {
+    @media (min-width: 1025px) and (max-width: 1365px) {
         .grid {
             grid-template-columns: repeat(3, 1fr) !important;
+            gap: 22px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            justify-items: center !important;
+        }
+        
+        .main-container {
+            max-width: 1200px !important;
+            padding: 28px 20px 48px !important;
+        }
+        
+        .page-title {
+            font-size: 34px !important;
+        }
+        
+        .card-header {
+            height: 155px !important;
         }
     }
     
-    @media (min-width: 1401px) {
+    @media (min-width: 1366px) and (max-width: 1600px) {
+        .grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 24px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            justify-items: center !important;
+        }
+        
+        .main-container {
+            max-width: 1280px !important;
+            padding: 30px 24px 50px !important;
+        }
+        
+        .page-header {
+            padding: 32px 20px !important;
+            margin-bottom: 42px !important;
+        }
+        
+        .page-title {
+            font-size: 36px !important;
+        }
+        
+        .page-subtitle {
+            font-size: 18px !important;
+        }
+        
+        .card-header {
+            height: 160px !important;
+        }
+        
+        .card-body {
+            padding: 20px !important;
+        }
+        
+        .course-title {
+            font-size: 17px !important;
+        }
+    }
+    
+    @media (min-width: 1601px) and (max-width: 1920px) {
+        .grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 26px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            justify-items: center !important;
+        }
+        
+        .main-container {
+            max-width: 1500px !important;
+            padding: 32px 28px 52px !important;
+        }
+        
+        .page-header {
+            padding: 34px 24px !important;
+            margin-bottom: 44px !important;
+        }
+        
+        .page-title {
+            font-size: 38px !important;
+        }
+        
+        .page-subtitle {
+            font-size: 19px !important;
+        }
+        
+        .card-header {
+            height: 165px !important;
+        }
+        
+        .card-body {
+            padding: 22px !important;
+        }
+        
+        .course-title {
+            font-size: 18px !important;
+            min-height: 54px !important;
+        }
+        
+        .current-price {
+            font-size: 26px !important;
+        }
+    }
+    
+    @media (min-width: 1921px) {
         .grid {
             grid-template-columns: repeat(4, 1fr) !important;
-            gap: 24px !important;
+            gap: 28px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            justify-items: center !important;
+        }
+        
+        .main-container {
+            max-width: 1600px !important;
+            padding: 35px 30px 55px !important;
+        }
+        
+        .page-header {
+            padding: 36px 24px !important;
+            margin-bottom: 46px !important;
+        }
+        
+        .page-title {
+            font-size: 40px !important;
+        }
+        
+        .page-subtitle {
+            font-size: 20px !important;
+        }
+        
+        .card-header {
+            height: 170px !important;
+        }
+        
+        .card-body {
+            padding: 24px !important;
+        }
+        
+        .course-title {
+            font-size: 18px !important;
+            min-height: 56px !important;
+        }
+        
+        .current-price {
+            font-size: 28px !important;
         }
     }
 `;
 
+
 const CoursesPage = () => {
     const navigate = useNavigate();
-    const { id, slug } = useParams();
+    const { slug } = useParams();
 
     const [cart, setCart] = useState(() => {
         const savedCart = localStorage.getItem('cartItems');
@@ -454,9 +607,8 @@ const CoursesPage = () => {
         const fetchCourses = async () => {
             try {
                 setLoading(true);
-                const programId = id || 15;
 
-                const response = await fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/course/programs/${programId}/courses`);
+                const response = await fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/course/programs/${slug}/courses`);
 
                 if (!response.ok) {
                     throw new Error('فشل في تحميل البيانات');
@@ -474,7 +626,7 @@ const CoursesPage = () => {
         };
 
         fetchCourses();
-    }, [id]);
+    }, [slug]);
 
     const addToCart = (course) => {
         const existingCart = localStorage.getItem('cartItems');
@@ -615,7 +767,7 @@ const CoursesPage = () => {
 
             <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
                 {/* Fixed Overview Bar */}
-                <div style={styles.overviewBar} className="overview-bar">
+                <div style={{...styles.overviewBar, top: 70}} className="overview-bar">
                     <div style={styles.overviewBarText} className="breadcrumb-text">
                         <span>
                             <a
@@ -767,7 +919,7 @@ const CoursesPage = () => {
                                                     }}
                                                     onMouseEnter={() => setHoveredDetailsBtn(course.id)}
                                                     onMouseLeave={() => setHoveredDetailsBtn(null)}
-                                                    onClick={() => navigate(`/course?id=${course.id}`)}
+                                                    onClick={() => navigate(`/courses/${course.slug}`)}
                                                 >
                                                     عرض التفاصيل
                                                 </button>

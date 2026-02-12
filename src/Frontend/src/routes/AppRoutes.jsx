@@ -64,11 +64,12 @@ const AppRoutes = () => {
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
 
+
             <Route path="/gallery" element={<Galery />} />
             <Route path="/future-leaders" element={<FutureLeadersCouncil />} />
             <Route path="/instructors" element={<Instructors />} />
             <Route path="/news/:id" element={<NewsDetails />} />
-            <Route path="/course" element={<CourseDetails />} />
+            <Route path="/course/:slug" element={<CourseDetails />} />
             <Route path="/training-methods" element={<TrainingMethods />} />
             <Route path="/cea-program" element={<CEAProgram />} />
             <Route path="/onsite-training" element={<OnsiteTraining />} />

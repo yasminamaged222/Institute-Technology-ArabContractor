@@ -32,7 +32,7 @@ export default function OnlineTrainingPage() {
     return (
         <div className="min-h-screen bg-white" dir="rtl" style={{ paddingTop: '1px' }}>
             {/* Header */}
-            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1' }}>
+            <div className="overview_intro" style={{ position: 'fixed', background: '#F5F7E1', width: '100%', zIndex: '1', top:70 }}>
 
                 <span className="overview" style={{ position: 'relative', bottom: '5px' }}><a href="/" className="btn_go_home">الصفحة الرئيسية</a> -التدريب عن بعد ( اونلاين )</span>
 

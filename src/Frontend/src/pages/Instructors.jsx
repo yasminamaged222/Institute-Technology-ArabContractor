@@ -665,7 +665,7 @@ const Instructors = () => {
     return (
         <div dir="rtl" className="min-h-screen bg-yellow-50">
             {/* Breadcrumb */}
-            <div className="border-b border-gray-300 bg-yellow-50 px-5 py-3">
+            <div className="border-b border-gray-300 bg-yellow-50 px-5 py-3" style={{top:70}}>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                     <Link to="/" className="text-gray-700 transition-colors hover:text-blue-700">
                         الصفحة الرئيسية

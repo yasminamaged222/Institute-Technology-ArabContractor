@@ -613,7 +613,7 @@ const PhotoGallery = () => {
     return (
         <div dir="rtl" className="photo-gallery">
             {/* Fixed Breadcrumb Bar */}
-            <div className="breadcrumb-bar">
+            <div className="breadcrumb-bar" style={{top:70}}>
                 <div className="breadcrumb-content">
                     <span className="breadcrumb-text">
                         <a href="/" className="breadcrumb-link">الصفحة الرئيسية</a>
@@ -622,6 +622,9 @@ const PhotoGallery = () => {
                     </span>
                 </div>
             </div>
+
+            <br />
+            <br />
 
             <div className="gallery-header">
                 <div className="tab-buttons">

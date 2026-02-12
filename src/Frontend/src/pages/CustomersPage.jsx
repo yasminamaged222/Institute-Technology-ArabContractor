@@ -14,7 +14,7 @@ const CustomersPage = () => {
             className="min-h-screen bg-white font-['Droid_Arabic_Kufi']"
         >
             {/* Fixed Overview Bar — SAME STYLE & COLORS */}
-            <div className="fixed left-0 top-[64px] z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2">
+            <div className="fixed left-0 top-[70px] z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2">
                 <div className="text-center">
                     <span className="text-base">
                         <Link
