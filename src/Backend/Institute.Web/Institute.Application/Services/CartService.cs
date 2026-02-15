@@ -53,6 +53,7 @@ namespace Institute.Application.Services
                 };
 
                 await _cartRepository.AddAsync(cart);
+                await _cartRepository.SaveChangesAsync();   
             }
 
             return cart;
