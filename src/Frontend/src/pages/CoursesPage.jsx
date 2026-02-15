@@ -292,6 +292,26 @@ const styles = {
         transform: 'translateY(-2px)',
         boxShadow: '0 6px 16px rgba(8,101,168,0.35)',
     },
+    enrollBtn: {
+        width: '100%',
+        borderRadius: '10px',
+        background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)',
+        padding: '12px 20px',
+        fontWeight: 'bold',
+        color: '#ffffff',
+        border: 'none',
+        boxShadow: '0 3px 10px rgba(26,122,60,0.25)',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+        fontSize: '15px',
+        fontFamily: '"Droid Arabic Kufi", serif',
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    enrollBtnHover: {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 16px rgba(26,122,60,0.35)',
+    },
     detailsBtn: {
         width: '100%',
         borderRadius: '10px',
@@ -333,7 +353,6 @@ const styles = {
     },
 };
 
-// Media query styles
 const mediaQueryStyles = `
     .grid {
         margin-left: auto !important;
@@ -342,236 +361,62 @@ const mediaQueryStyles = `
     }
 
     @media (max-width: 768px) {
-        .main-container {
-            margin-top: 100px !important;
-            padding: 20px 16px 40px !important;
-        }
-        
-        .page-header {
-            padding: 24px 16px !important;
-            margin-bottom: 30px !important;
-        }
-        
-        .page-title {
-            font-size: 28px !important;
-        }
-        
-        .page-subtitle {
-            font-size: 16px !important;
-        }
-        
-        .grid {
-            grid-template-columns: 1fr !important;
-            gap: 20px !important;
-            padding: 10px 0 !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            justify-items: center !important;
-        }
-        
-        .overview-bar {
-            padding: 10px 16px !important;
-        }
-        
-        .breadcrumb-text {
-            font-size: 12px !important;
-        }
-        
-        .card {
-            border-radius: 14px !important;
-        }
-        
-        .card-header {
-            height: 140px !important;
-        }
-        
-        .card-body {
-            padding: 16px !important;
-        }
-        
-        .course-title {
-            font-size: 16px !important;
-            min-height: 48px !important;
-        }
-        
-        .current-price {
-            font-size: 22px !important;
-        }
+        .main-container { margin-top: 100px !important; padding: 20px 16px 40px !important; }
+        .page-header { padding: 24px 16px !important; margin-bottom: 30px !important; }
+        .page-title { font-size: 28px !important; }
+        .page-subtitle { font-size: 16px !important; }
+        .grid { grid-template-columns: 1fr !important; gap: 20px !important; padding: 10px 0 !important; margin-left: auto !important; margin-right: auto !important; justify-items: center !important; }
+        .overview-bar { padding: 10px 16px !important; }
+        .breadcrumb-text { font-size: 12px !important; }
+        .card { border-radius: 14px !important; }
+        .card-header { height: 140px !important; }
+        .card-body { padding: 16px !important; }
+        .course-title { font-size: 16px !important; min-height: 48px !important; }
+        .current-price { font-size: 22px !important; }
     }
-    
     @media (min-width: 769px) and (max-width: 1024px) {
-        .grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-            gap: 22px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            justify-items: center !important;
-        }
-        
-        .main-container {
-            padding: 25px 20px 45px !important;
-        }
-        
-        .page-title {
-            font-size: 32px !important;
-        }
-        
-        .card-header {
-            height: 150px !important;
-        }
+        .grid { grid-template-columns: repeat(2, 1fr) !important; gap: 22px !important; margin-left: auto !important; margin-right: auto !important; justify-items: center !important; }
+        .main-container { padding: 25px 20px 45px !important; }
+        .page-title { font-size: 32px !important; }
+        .card-header { height: 150px !important; }
     }
-    
     @media (min-width: 1025px) and (max-width: 1365px) {
-        .grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 22px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            justify-items: center !important;
-        }
-        
-        .main-container {
-            max-width: 1200px !important;
-            padding: 28px 20px 48px !important;
-        }
-        
-        .page-title {
-            font-size: 34px !important;
-        }
-        
-        .card-header {
-            height: 155px !important;
-        }
+        .grid { grid-template-columns: repeat(3, 1fr) !important; gap: 22px !important; margin-left: auto !important; margin-right: auto !important; justify-items: center !important; }
+        .main-container { max-width: 1200px !important; padding: 28px 20px 48px !important; }
+        .page-title { font-size: 34px !important; }
+        .card-header { height: 155px !important; }
     }
-    
     @media (min-width: 1366px) and (max-width: 1600px) {
-        .grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 24px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            justify-items: center !important;
-        }
-        
-        .main-container {
-            max-width: 1280px !important;
-            padding: 30px 24px 50px !important;
-        }
-        
-        .page-header {
-            padding: 32px 20px !important;
-            margin-bottom: 42px !important;
-        }
-        
-        .page-title {
-            font-size: 36px !important;
-        }
-        
-        .page-subtitle {
-            font-size: 18px !important;
-        }
-        
-        .card-header {
-            height: 160px !important;
-        }
-        
-        .card-body {
-            padding: 20px !important;
-        }
-        
-        .course-title {
-            font-size: 17px !important;
-        }
+        .grid { grid-template-columns: repeat(3, 1fr) !important; gap: 24px !important; margin-left: auto !important; margin-right: auto !important; justify-items: center !important; }
+        .main-container { max-width: 1280px !important; padding: 30px 24px 50px !important; }
+        .page-header { padding: 32px 20px !important; margin-bottom: 42px !important; }
+        .page-title { font-size: 36px !important; }
+        .page-subtitle { font-size: 18px !important; }
+        .card-header { height: 160px !important; }
+        .card-body { padding: 20px !important; }
+        .course-title { font-size: 17px !important; }
     }
-    
     @media (min-width: 1601px) and (max-width: 1920px) {
-        .grid {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 26px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            justify-items: center !important;
-        }
-        
-        .main-container {
-            max-width: 1500px !important;
-            padding: 32px 28px 52px !important;
-        }
-        
-        .page-header {
-            padding: 34px 24px !important;
-            margin-bottom: 44px !important;
-        }
-        
-        .page-title {
-            font-size: 38px !important;
-        }
-        
-        .page-subtitle {
-            font-size: 19px !important;
-        }
-        
-        .card-header {
-            height: 165px !important;
-        }
-        
-        .card-body {
-            padding: 22px !important;
-        }
-        
-        .course-title {
-            font-size: 18px !important;
-            min-height: 54px !important;
-        }
-        
-        .current-price {
-            font-size: 26px !important;
-        }
+        .grid { grid-template-columns: repeat(3, 1fr) !important; gap: 26px !important; margin-left: auto !important; margin-right: auto !important; justify-items: center !important; }
+        .main-container { max-width: 1500px !important; padding: 32px 28px 52px !important; }
+        .page-header { padding: 34px 24px !important; margin-bottom: 44px !important; }
+        .page-title { font-size: 38px !important; }
+        .page-subtitle { font-size: 19px !important; }
+        .card-header { height: 165px !important; }
+        .card-body { padding: 22px !important; }
+        .course-title { font-size: 18px !important; min-height: 54px !important; }
+        .current-price { font-size: 26px !important; }
     }
-    
     @media (min-width: 1921px) {
-        .grid {
-            grid-template-columns: repeat(4, 1fr) !important;
-            gap: 28px !important;
-            margin-left: auto !important;
-            margin-right: auto !important;
-            justify-items: center !important;
-        }
-        
-        .main-container {
-            max-width: 1600px !important;
-            padding: 35px 30px 55px !important;
-        }
-        
-        .page-header {
-            padding: 36px 24px !important;
-            margin-bottom: 46px !important;
-        }
-        
-        .page-title {
-            font-size: 40px !important;
-        }
-        
-        .page-subtitle {
-            font-size: 20px !important;
-        }
-        
-        .card-header {
-            height: 170px !important;
-        }
-        
-        .card-body {
-            padding: 24px !important;
-        }
-        
-        .course-title {
-            font-size: 18px !important;
-            min-height: 56px !important;
-        }
-        
-        .current-price {
-            font-size: 28px !important;
-        }
+        .grid { grid-template-columns: repeat(4, 1fr) !important; gap: 28px !important; margin-left: auto !important; margin-right: auto !important; justify-items: center !important; }
+        .main-container { max-width: 1600px !important; padding: 35px 30px 55px !important; }
+        .page-header { padding: 36px 24px !important; margin-bottom: 46px !important; }
+        .page-title { font-size: 40px !important; }
+        .page-subtitle { font-size: 20px !important; }
+        .card-header { height: 170px !important; }
+        .card-body { padding: 24px !important; }
+        .course-title { font-size: 18px !important; min-height: 56px !important; }
+        .current-price { font-size: 28px !important; }
     }
 `;
 
@@ -594,7 +439,6 @@ const CoursesPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // ✅ Set dynamic page title based on program data
     useEffect(() => {
         if (programData && programData.programName) {
             document.title = `${programData.programName} - المعهد التكنولوجي لهندسة التشييد والإدارة`;
@@ -607,13 +451,8 @@ const CoursesPage = () => {
         const fetchCourses = async () => {
             try {
                 setLoading(true);
-
                 const response = await fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/course/programs/${slug}/courses`);
-
-                if (!response.ok) {
-                    throw new Error('فشل في تحميل البيانات');
-                }
-
+                if (!response.ok) throw new Error('فشل في تحميل البيانات');
                 const data = await response.json();
                 setProgramData(data);
                 setError(null);
@@ -624,25 +463,22 @@ const CoursesPage = () => {
                 setLoading(false);
             }
         };
-
         fetchCourses();
     }, [slug]);
 
     const addToCart = (course) => {
         const existingCart = localStorage.getItem('cartItems');
         const cartItems = existingCart ? JSON.parse(existingCart) : [];
-
         const isInCart = cartItems.some(item => item.id === course.id);
 
         if (!isInCart) {
-            // Calculate original price from current price (assuming 40% discount)
             const originalPrice = course.cost ? course.cost / 0.6 : 0;
-
             const cartItem = {
                 id: course.id,
+                slug: course.slug,
                 title: course.title,
                 instructor: course.place || 'غير محدد',
-                image: 'book', // Icon identifier instead of image URL
+                image: 'book',
                 rating: 4.6,
                 reviews: 2547,
                 hours: 26,
@@ -656,49 +492,57 @@ const CoursesPage = () => {
                 date: course.date || '',
                 place: course.place || ''
             };
-
             cartItems.push(cartItem);
             localStorage.setItem('cartItems', JSON.stringify(cartItems));
             setCart(cartItems);
             window.dispatchEvent(new Event('cartUpdated'));
-
             navigate('/cart');
         } else {
-            // If already in cart, just navigate
             navigate('/cart');
         }
+    };
+
+    // ✅ UPDATED: saves to enrolledCourses localStorage then navigates to /my-courses
+    const handleEnroll = (course) => {
+        const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+        const alreadyEnrolled = existing.some(e => e.id === course.id);
+
+        if (!alreadyEnrolled) {
+            const enrollItem = {
+                id: course.id,
+                slug: course.slug,
+                title: course.title,
+                place: course.place || '',
+                instructor: course.place || 'غير محدد',
+                date: course.date || '',
+                image: 'book',
+                currentPrice: 0,
+                progress: 0,
+            };
+            existing.push(enrollItem);
+            localStorage.setItem('enrolledCourses', JSON.stringify(existing));
+            window.dispatchEvent(new Event('enrollUpdated'));
+        }
+
+        navigate('/my-courses');
     };
 
     if (loading) {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-                <style>{`
-                    * {
-                        font-family: "Droid Arabic Kufi", serif !important;
-                    }
-                    ${mediaQueryStyles}
-                `}</style>
+                <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } ${mediaQueryStyles}`}</style>
                 <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
                     <div style={styles.overviewBar} className="overview-bar">
                         <div style={styles.overviewBarText} className="breadcrumb-text">
                             <span>
-                                <a
-                                    href="/"
-                                    style={styles.breadcrumbLink}
-                                    onMouseEnter={e => e.target.style.color = '#f57c00'}
-                                    onMouseLeave={e => e.target.style.color = '#0865a8'}
-                                >
-                                    الصفحة الرئيسية
-                                </a>
+                                <a href="/" style={styles.breadcrumbLink} onMouseEnter={e => e.target.style.color = '#f57c00'} onMouseLeave={e => e.target.style.color = '#0865a8'}>الصفحة الرئيسية</a>
                                 <span style={styles.breadcrumbSeparator}>•</span>
                                 <span style={styles.breadcrumbCurrent}>جاري التحميل...</span>
                             </span>
                         </div>
                     </div>
-                    <div style={styles.loadingContainer}>
-                        <div>جاري تحميل الدورات...</div>
-                    </div>
+                    <div style={styles.loadingContainer}><div>جاري تحميل الدورات...</div></div>
                 </div>
             </>
         );
@@ -708,24 +552,12 @@ const CoursesPage = () => {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-                <style>{`
-                    * {
-                        font-family: "Droid Arabic Kufi", serif !important;
-                    }
-                    ${mediaQueryStyles}
-                `}</style>
+                <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } ${mediaQueryStyles}`}</style>
                 <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
                     <div style={styles.overviewBar} className="overview-bar">
                         <div style={styles.overviewBarText} className="breadcrumb-text">
                             <span>
-                                <a
-                                    href="/"
-                                    style={styles.breadcrumbLink}
-                                    onMouseEnter={e => e.target.style.color = '#f57c00'}
-                                    onMouseLeave={e => e.target.style.color = '#0865a8'}
-                                >
-                                    الصفحة الرئيسية
-                                </a>
+                                <a href="/" style={styles.breadcrumbLink} onMouseEnter={e => e.target.style.color = '#f57c00'} onMouseLeave={e => e.target.style.color = '#0865a8'}>الصفحة الرئيسية</a>
                                 <span style={styles.breadcrumbSeparator}>•</span>
                                 <span style={styles.breadcrumbCurrent}>خطأ</span>
                             </span>
@@ -736,16 +568,7 @@ const CoursesPage = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                         <div>{error}</div>
-                        <button
-                            onClick={() => window.location.reload()}
-                            style={{
-                                ...styles.addToCartBtn,
-                                width: 'auto',
-                                minWidth: '200px'
-                            }}
-                        >
-                            إعادة المحاولة
-                        </button>
+                        <button onClick={() => window.location.reload()} style={{ ...styles.addToCartBtn, width: 'auto', minWidth: '200px' }}>إعادة المحاولة</button>
                     </div>
                 </div>
             </>
@@ -757,47 +580,26 @@ const CoursesPage = () => {
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-
-            <style>{`
-                * {
-                    font-family: "Droid Arabic Kufi", serif !important;
-                }
-                ${mediaQueryStyles}
-            `}</style>
+            <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } ${mediaQueryStyles}`}</style>
 
             <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
-                {/* Fixed Overview Bar */}
-                <div style={{...styles.overviewBar, top: 70}} className="overview-bar">
+                <div style={{ ...styles.overviewBar, top: 70 }} className="overview-bar">
                     <div style={styles.overviewBarText} className="breadcrumb-text">
                         <span>
-                            <a
-                                href="/"
-                                style={styles.breadcrumbLink}
-                                onMouseEnter={e => e.target.style.color = '#f57c00'}
-                                onMouseLeave={e => e.target.style.color = '#0865a8'}
-                            >
-                                الصفحة الرئيسية
-                            </a>
+                            <a href="/" style={styles.breadcrumbLink} onMouseEnter={e => e.target.style.color = '#f57c00'} onMouseLeave={e => e.target.style.color = '#0865a8'}>الصفحة الرئيسية</a>
                             <span style={styles.breadcrumbSeparator}>•</span>
-                            <span style={styles.breadcrumbCurrent}>
-                                {programData?.programName || 'برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة'}
-                            </span>
+                            <span style={styles.breadcrumbCurrent}>{programData?.programName || 'برنامج إعداد وتأهيل مهندس حديث مدنى وعمارة'}</span>
                         </span>
                     </div>
                 </div>
 
-                {/* Main Content */}
                 <div style={styles.mainContainer} className="main-container">
                     <div style={styles.pageHeader} className="page-header">
                         <div style={{ position: 'relative', display: 'inline-block' }}>
-                            <h1 style={styles.h1} className="page-title">
-                                {programData?.programName || 'دورات إعداد وتأهيل المهندسين'}
-                            </h1>
+                            <h1 style={styles.h1} className="page-title">{programData?.programName || 'دورات إعداد وتأهيل المهندسين'}</h1>
                             <div style={styles.h1Underline}></div>
                         </div>
-                        <p style={styles.subtitle} className="page-subtitle">
-                            اختر الدورة المناسبة لك وابدأ رحلتك التعليمية
-                        </p>
+                        <p style={styles.subtitle} className="page-subtitle">اختر الدورة المناسبة لك وابدأ رحلتك التعليمية</p>
                     </div>
 
                     {courses.length === 0 ? (
@@ -805,18 +607,17 @@ const CoursesPage = () => {
                             <svg style={styles.emptyStateIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                             </svg>
-                            <div style={styles.emptyStateText}>
-                                لا توجد دورات متاحة حالياً
-                            </div>
+                            <div style={styles.emptyStateText}>لا توجد دورات متاحة حالياً</div>
                         </div>
                     ) : (
                         <div style={styles.grid} className="grid">
                             {courses.map((course) => {
+                                const hasCost = course.cost !== null && course.cost !== undefined && course.cost > 0;
                                 let originalPrice = null;
                                 let currentPrice = null;
-                                let discountPercent = 40;
+                                const discountPercent = 40;
 
-                                if (course.cost !== null && course.cost !== undefined) {
+                                if (hasCost) {
                                     currentPrice = course.cost;
                                     originalPrice = course.cost / 0.6;
                                 }
@@ -824,55 +625,30 @@ const CoursesPage = () => {
                                 return (
                                     <div
                                         key={course.id}
-                                        style={{
-                                            ...styles.card,
-                                            ...(hoveredCard === course.id ? styles.cardHover : {}),
-                                        }}
+                                        style={{ ...styles.card, ...(hoveredCard === course.id ? styles.cardHover : {}) }}
                                         onMouseEnter={() => setHoveredCard(course.id)}
                                         onMouseLeave={() => setHoveredCard(null)}
                                     >
-                                        {/* Course Header */}
-                                        <div
-                                            style={styles.cardHeader}
-                                            className="card-header"
-                                            onMouseEnter={() => setHoveredHeaderCard(course.id)}
-                                            onMouseLeave={() => setHoveredHeaderCard(null)}
-                                        >
-                                            <div
-                                                style={{
-                                                    ...styles.cardHeaderOverlay,
-                                                    ...(hoveredHeaderCard === course.id ? styles.cardHeaderOverlayHover : {})
-                                                }}
-                                            />
+                                        <div style={styles.cardHeader} className="card-header" onMouseEnter={() => setHoveredHeaderCard(course.id)} onMouseLeave={() => setHoveredHeaderCard(null)}>
+                                            <div style={{ ...styles.cardHeaderOverlay, ...(hoveredHeaderCard === course.id ? styles.cardHeaderOverlayHover : {}) }} />
                                             <div style={styles.iconWrapper}>
                                                 <svg style={styles.icon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                                 </svg>
                                             </div>
-                                            {currentPrice !== null && (
-                                                <div style={styles.discountBadge}>
-                                                    خصم {discountPercent}%
-                                                </div>
-                                            )}
+                                            {hasCost && <div style={styles.discountBadge}>خصم {discountPercent}%</div>}
                                         </div>
 
                                         <div style={styles.cardBody} className="card-body">
-                                            {/* Title */}
-                                            <h3 style={styles.courseTitle} className="course-title">
-                                                {course.title}
-                                            </h3>
+                                            <h3 style={styles.courseTitle} className="course-title">{course.title}</h3>
 
-                                            {/* Info Section */}
                                             <div style={styles.infoSection}>
-                                                {/* Institute */}
                                                 <div style={styles.infoRow}>
                                                     <svg style={styles.infoIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                                     </svg>
                                                     <span style={styles.clampText}>{course.place}</span>
                                                 </div>
-
-                                                {/* Date */}
                                                 <div style={styles.infoRow}>
                                                     <svg style={styles.infoIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -881,45 +657,43 @@ const CoursesPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Description */}
                                             <p style={styles.description}>{course.description}</p>
 
-                                            {/* Price */}
-                                            {currentPrice !== null && (
+                                            {hasCost && (
                                                 <div style={styles.priceSection}>
                                                     <div style={styles.priceContainer}>
-                                                        <span style={styles.originalPrice}>
-                                                            {originalPrice.toFixed(2)} ج.م
-                                                        </span>
-                                                        <span style={styles.currentPrice} className="current-price">
-                                                            {currentPrice.toFixed(2)} ج.م
-                                                        </span>
+                                                        <span style={styles.originalPrice}>{originalPrice.toFixed(2)} ج.م</span>
+                                                        <span style={styles.currentPrice} className="current-price">{currentPrice.toFixed(2)} ج.م</span>
                                                         <span style={styles.priceLabel}>السعر الشامل</span>
                                                     </div>
                                                 </div>
                                             )}
 
-                                            {/* Buttons */}
                                             <div style={styles.buttonsContainer}>
+                                                {hasCost ? (
+                                                    <button
+                                                        onClick={() => addToCart(course)}
+                                                        style={{ ...styles.addToCartBtn, ...(hoveredAddBtn === course.id ? styles.addToCartBtnHover : {}) }}
+                                                        onMouseEnter={() => setHoveredAddBtn(course.id)}
+                                                        onMouseLeave={() => setHoveredAddBtn(null)}
+                                                    >
+                                                        أضف إلى السلة
+                                                    </button>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => handleEnroll(course)}
+                                                        style={{ ...styles.enrollBtn, ...(hoveredAddBtn === course.id ? styles.enrollBtnHover : {}) }}
+                                                        onMouseEnter={() => setHoveredAddBtn(course.id)}
+                                                        onMouseLeave={() => setHoveredAddBtn(null)}
+                                                    >
+                                                        اشترك الآن
+                                                    </button>
+                                                )}
                                                 <button
-                                                    onClick={() => addToCart(course)}
-                                                    style={{
-                                                        ...styles.addToCartBtn,
-                                                        ...(hoveredAddBtn === course.id ? styles.addToCartBtnHover : {}),
-                                                    }}
-                                                    onMouseEnter={() => setHoveredAddBtn(course.id)}
-                                                    onMouseLeave={() => setHoveredAddBtn(null)}
-                                                >
-                                                    أضف إلى السلة
-                                                </button>
-                                                <button
-                                                    style={{
-                                                        ...styles.detailsBtn,
-                                                        ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}),
-                                                    }}
+                                                    style={{ ...styles.detailsBtn, ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}) }}
                                                     onMouseEnter={() => setHoveredDetailsBtn(course.id)}
                                                     onMouseLeave={() => setHoveredDetailsBtn(null)}
-                                                    onClick={() => navigate(`/courses/${course.slug}`)}
+                                                    onClick={() => navigate(`/course/${course.slug}`)}
                                                 >
                                                     عرض التفاصيل
                                                 </button>

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-
 import {
     AppBar, Toolbar, Box, IconButton, InputBase,
     Badge, Button, Divider, Typography, Stack,
@@ -8,6 +7,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -21,6 +21,7 @@ import AuthSync from '../components/AuthSync.jsx';
 
 const RECENT_SEARCHES_KEY = 'recentSearches';
 const MAX_RECENT_SEARCHES = 5;
+const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
 const Navbar = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -35,10 +36,10 @@ const Navbar = () => {
     const [searchFocused, setSearchFocused] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [allCourses, setAllCourses] = useState([]);
-    const [coursesPreloaded, setCoursesPreloaded] = useState(false);
+    const [coursesLoading, setCoursesLoading] = useState(false);
+    const [coursesLoaded, setCoursesLoaded] = useState(false);
     const [recentSearches, setRecentSearches] = useState([]);
     const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
-    const [suggestionLoading, setSuggestionLoading] = useState(false);
     const searchInputRef = useRef(null);
     const searchBoxRef = useRef(null);
     const suggestionDebounce = useRef(null);
@@ -55,85 +56,170 @@ const Navbar = () => {
     const aboutLinkPaths = { 'نبذة عامة': '/overview', 'الرؤية والأهداف': '/mission', 'الشهادات والاعتمادات': '/certifications', 'فريق العمل': '/team', 'قائمة المحاضرين': '/instructors', 'الخطة التدريبية': '/pdf/ICEMT_Plan_Training.pdf', 'التقرير الشهرى': '/pdf/ICEMT_Monthly_Activity.pdf', 'مكتبة الصور والفيديوهات': '/gallery', 'البروتوكولات والإتفاقيات': '/protocols', 'عملاؤنا': '/customers' };
     const serviceLinks = [{ title: 'التدريب الحرفى', path: '/vocational-training' }, { title: 'التعليم الفنى', path: '/technical-education' }, { title: 'الإختبارات', path: '/tests' }, { title: 'مجلس قادة المستقبل', path: '/future-leaders' }];
 
-    const updateCartCount = () => { try { const s = localStorage.getItem('cartItems'); setCartCount(s ? JSON.parse(s).length : 0); } catch { setCartCount(0); } };
-    useEffect(() => { updateCartCount(); window.addEventListener('cartUpdated', updateCartCount); return () => window.removeEventListener('cartUpdated', updateCartCount); }, []);
+    const updateCartCount = () => {
+        try {
+            const s = localStorage.getItem('cartItems');
+            setCartCount(s ? JSON.parse(s).length : 0);
+        } catch {
+            setCartCount(0);
+        }
+    };
 
-    useEffect(() => { try { const s = localStorage.getItem(RECENT_SEARCHES_KEY); if (s) setRecentSearches(JSON.parse(s)); } catch { setRecentSearches([]); } }, []);
+    useEffect(() => {
+        updateCartCount();
+        window.addEventListener('cartUpdated', updateCartCount);
+        return () => window.removeEventListener('cartUpdated', updateCartCount);
+    }, []);
+
+    useEffect(() => {
+        try {
+            const s = localStorage.getItem(RECENT_SEARCHES_KEY);
+            if (s) setRecentSearches(JSON.parse(s));
+        } catch {
+            setRecentSearches([]);
+        }
+    }, []);
 
     const saveRecentSearch = useCallback((term) => {
         if (!term.trim()) return;
-        setRecentSearches(prev => { const u = [term, ...prev.filter(s => s.toLowerCase() !== term.toLowerCase())].slice(0, MAX_RECENT_SEARCHES); try { localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(u)); } catch { } return u; });
+        setRecentSearches(prev => {
+            const u = [term, ...prev.filter(s => s.toLowerCase() !== term.toLowerCase())].slice(0, MAX_RECENT_SEARCHES);
+            try { localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(u)); } catch { }
+            return u;
+        });
     }, []);
 
     const removeRecentSearch = useCallback((term, e) => {
         e.stopPropagation();
-        setRecentSearches(prev => { const u = prev.filter(s => s !== term); try { localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(u)); } catch { } return u; });
+        setRecentSearches(prev => {
+            const u = prev.filter(s => s !== term);
+            try { localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(u)); } catch { }
+            return u;
+        });
     }, []);
 
-    const generateSlug = (title = '') => title.trim().replace(/\s+/g, '-').replace(/[^\w\u0600-\u06FF\u0660-\u0669-]/g, '').toLowerCase();
+    const generateSlug = (title = '') =>
+        title.trim().replace(/\s+/g, '-').replace(/[^\w\u0600-\u06FF\u0660-\u0669-]/g, '').toLowerCase();
 
     useEffect(() => {
         const fetchCategories = async () => {
-            try { setLoading(true); const res = await fetch('https://acwebsite-icmet-test.azurewebsites.net/api/Categories/tree'); if (!res.ok) throw new Error('Failed'); const data = await res.json(); const t = transformCategories(data); setMainCourses(t); if (t.length > 0) setSelectedCatId(t[0].id); setError(null); }
-            catch (err) { setError(err.message); setMainCourses([]); } finally { setLoading(false); }
-        }; fetchCategories();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+            try {
+                setLoading(true);
+                const res = await fetch(`${API_BASE}/Categories/tree`);
+                if (!res.ok) throw new Error('Failed to load categories');
+                const data = await res.json();
+                const t = transformCategories(data);
+                setMainCourses(t);
+                if (t.length > 0) setSelectedCatId(t[0].id);
+                setError(null);
+            } catch (err) {
+                console.error('Categories error:', err);
+                setError(err.message);
+                setMainCourses([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchCategories();
     }, []);
 
     const transformCategories = (apiData) => {
         if (!Array.isArray(apiData) || !apiData.length) return [];
-        const root = apiData[0]; if (!root?.children) return [];
+        const root = apiData[0];
+        if (!root?.children) return [];
         return root.children.map(cat => {
-            const t = { id: cat.id, title: cat.title };
+            const t = { id: cat.id, title: cat.title, slug: cat.slug };
             if (cat.children?.length) {
                 const hasGrand = cat.children.some(c => c.children?.length);
-                if (!hasGrand) { t.sub = [{ id: cat.id + 1000, title: cat.title, topics: cat.children.map(c => ({ id: c.id, name: c.title, link: `/courses/${c.slug}` })) }]; }
-                else { t.sub = cat.children.map(sub => { const s = { id: sub.id, title: sub.title }; if (sub.children?.length) { s.topics = sub.children.map(tp => { const r = { id: tp.id, name: tp.title, link: `/courses/${tp.slug}` }; if (tp.children?.length) r.subTopics = tp.children.map(st => { const st2 = { id: st.id, name: st.title, link: `/courses/${st.slug}` }; if (st.children?.length) st2.subSubTopics = st.children.map(sst => ({ id: sst.id, name: sst.title, link: `/courses/${sst.slug}` })); return st2; }); return r; }); } return s; }); }
-            } else { t.link = `/courses/${cat.slug}`; }
+                if (!hasGrand) {
+                    t.sub = [{ id: cat.id + 1000, title: cat.title, topics: cat.children.map(c => ({ id: c.id, name: c.title, link: `/courses/${c.slug}` })) }];
+                } else {
+                    t.sub = cat.children.map(sub => {
+                        const s = { id: sub.id, title: sub.title };
+                        if (sub.children?.length) {
+                            s.topics = sub.children.map(tp => {
+                                const r = { id: tp.id, name: tp.title, link: `/courses/${tp.slug}` };
+                                if (tp.children?.length) {
+                                    r.subTopics = tp.children.map(st => {
+                                        const st2 = { id: st.id, name: st.title, link: `/courses/${st.slug}` };
+                                        if (st.children?.length) st2.subSubTopics = st.children.map(sst => ({ id: sst.id, name: sst.title, link: `/courses/${sst.slug}` }));
+                                        return st2;
+                                    });
+                                }
+                                return r;
+                            });
+                        }
+                        return s;
+                    });
+                }
+            } else {
+                t.link = `/courses/${cat.slug}`;
+            }
             return t;
         });
     };
 
     useEffect(() => {
-        if (!mainCourses.length || coursesPreloaded) return;
-        const collectIds = (nodes) => { const ids = new Set(); const walk = (list) => list.forEach(n => { if (n.link) { const m = n.link.match(/\/courses\/(\d+)\//); if (m) ids.add(Number(m[1])); } if (n.sub) walk(n.sub); if (n.topics) n.topics.forEach(t => { const m = (t.link || '').match(/\/courses\/(\d+)\//); if (m) ids.add(Number(m[1])); }); }); walk(nodes); return [...ids]; };
-        const allIds = [...new Set([...mainCourses.map(c => c.id), ...collectIds(mainCourses)])];
-        const fetchAll = async () => {
-            setSuggestionLoading(true);
+        if (!mainCourses.length || coursesLoaded) return;
+        const loadAllCourses = async () => {
+            setCoursesLoading(true);
             try {
-                const results = await Promise.allSettled(allIds.map(pid => fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/course/programs/${pid}/courses`).then(r => r.ok ? r.json() : null).catch(() => null)));
-                const flat = []; const seen = new Set();
-                results.forEach(r => { if (r.status !== 'fulfilled' || !r.value) return; const list = Array.isArray(r.value) ? r.value : r.value.courses || r.value.data || []; list.forEach(c => { const cid = c.id ?? c.courseId; if (cid == null || seen.has(cid)) return; seen.add(cid); const title = c.title || c.name || c.courseName || ''; flat.push({ id: cid, title, category: c.categoryName || c.category || '', instructor: c.instructorName || c.instructor || '', image: c.imageUrl || c.image || c.thumbnail || null, link: `/courses/${cid}/${generateSlug(title || String(cid))}` }); }); });
-                setAllCourses(flat); setCoursesPreloaded(true);
-            } catch { } finally { setSuggestionLoading(false); }
-        }; fetchAll();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [mainCourses]);
+                const allSlugs = new Set();
+                const collectSlugs = (categories) => { categories.forEach(cat => { if (cat.slug) allSlugs.add(cat.slug); if (cat.children) collectSlugs(cat.children); }); };
+                const treeRes = await fetch(`${API_BASE}/Categories/tree`);
+                if (treeRes.ok) { const treeData = await treeRes.json(); if (treeData[0]?.children) collectSlugs(treeData[0].children); }
+                const coursePromises = Array.from(allSlugs).map(async (slug) => {
+                    try {
+                        const res = await fetch(`${API_BASE}/course/programs/${slug}/courses`);
+                        if (!res.ok) return [];
+                        const data = await res.json();
+                        const coursesList = Array.isArray(data) ? data : (data.courses || data.data || []);
+                        return coursesList.map(c => ({ id: c.id || c.courseId, title: c.title || c.name || c.courseName || '', slug: c.slug || generateSlug(c.title || c.name || String(c.id)), description: c.description || '', category: c.categoryName || c.category || '', place: c.place || '', date: c.date || '', cost: c.cost, instructor: c.instructorName || c.instructor || '', image: c.imageUrl || c.image || c.thumbnail || null }));
+                    } catch (err) { return []; }
+                });
+                const results = await Promise.all(coursePromises);
+                const allCoursesFlat = results.flat();
+                const uniqueCourses = Array.from(new Map(allCoursesFlat.map(c => [c.id, c])).values());
+                setAllCourses(uniqueCourses);
+                setCoursesLoaded(true);
+            } catch (err) { console.error('Error loading courses:', err); } finally { setCoursesLoading(false); }
+        };
+        loadAllCourses();
+    }, [mainCourses, coursesLoaded]);
 
     useEffect(() => {
         if (suggestionDebounce.current) clearTimeout(suggestionDebounce.current);
         if (!searchValue.trim()) { setSuggestions([]); return; }
-        suggestionDebounce.current = setTimeout(() => { const q = searchValue.trim().toLowerCase(); setSuggestions(allCourses.filter(c => c.title.toLowerCase().includes(q)).slice(0, 10)); }, 200);
+        suggestionDebounce.current = setTimeout(() => {
+            const q = searchValue.trim().toLowerCase();
+            const filtered = allCourses.filter(c => c.title.toLowerCase().includes(q) || c.description.toLowerCase().includes(q) || c.category.toLowerCase().includes(q) || c.place.toLowerCase().includes(q)).slice(0, 10);
+            setSuggestions(filtered);
+        }, 200);
         return () => { if (suggestionDebounce.current) clearTimeout(suggestionDebounce.current); };
     }, [searchValue, allCourses]);
 
     const activeCategory = mainCourses.find(c => c.id === selectedCatId) || mainCourses[0];
     const toggleDrawer = (open) => () => setMobileOpen(open);
-
-    const dropdownVisible = searchFocused && (suggestions.length > 0 || (recentSearches.length > 0 && !searchValue.trim()) || (suggestionLoading && !coursesPreloaded));
+    const dropdownVisible = searchFocused && (suggestions.length > 0 || (recentSearches.length > 0 && !searchValue.trim()) || (coursesLoading && !coursesLoaded));
     const dropdownItems = searchValue.trim() ? suggestions : recentSearches;
 
     const executeSearch = useCallback((term) => {
-        const q = (typeof term === 'string' ? term : term?.title || '').trim(); if (!q) return;
-        saveRecentSearch(q); setSearchValue(q); setSearchFocused(false); setActiveSuggestionIndex(-1); navigate(`/search?q=${encodeURIComponent(q)}`);
-    }, [navigate, saveRecentSearch]);
+        const q = (typeof term === 'string' ? term : term?.title || '').trim();
+        if (!q) return;
+        saveRecentSearch(q);
+        setSearchValue(q);
+        setSearchFocused(false);
+        setActiveSuggestionIndex(-1);
+        const matched = allCourses.filter(c => c.title.toLowerCase().includes(q.toLowerCase()) || c.description.toLowerCase().includes(q.toLowerCase()) || c.category.toLowerCase().includes(q.toLowerCase()) || c.place.toLowerCase().includes(q.toLowerCase()));
+        navigate(`/search?q=${encodeURIComponent(q)}`, { state: { results: matched, query: q } });
+    }, [navigate, saveRecentSearch, allCourses]);
 
     const handleSearchSubmit = (e) => {
         if (e?.preventDefault) e.preventDefault();
         if (activeSuggestionIndex >= 0 && dropdownItems[activeSuggestionIndex]) {
             const item = dropdownItems[activeSuggestionIndex];
             if (typeof item === 'string') { executeSearch(item); }
-            else { saveRecentSearch(item.title); setSearchValue(''); setSuggestions([]); setSearchFocused(false); setActiveSuggestionIndex(-1); navigate(`/course?id=${item.id}`); }
+            else { saveRecentSearch(item.title); setSearchValue(''); setSuggestions([]); setSearchFocused(false); setActiveSuggestionIndex(-1); navigate(`/course/${item.slug}`); }
         } else { executeSearch(searchValue); }
     };
 
@@ -154,18 +240,17 @@ const Navbar = () => {
                 .about-dropdown-wrapper:hover .about-dropdown-menu,.services-dropdown-wrapper:hover .services-dropdown-menu{opacity:1;visibility:visible;transform:translateY(0);}
                 .dropdown-menu-item{padding:10px 16px;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#000;display:block;font-family:"Droid Arabic Kufi",serif;font-size:0.85rem;}
                 .dropdown-menu-item:hover{background-color:rgba(245,124,0,0.08);color:#f57c00;padding-right:24px;}
+                .my-courses-nav-btn:hover { background-color: rgba(8,101,168,0.08) !important; transform: scale(1.05); }
             `}</style>
 
             <AppBar position="fixed" elevation={4} sx={{ bgcolor: 'white', color: '#000', py: 0.5, top: 0, zIndex: 1100 }}>
                 <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
 
                     {/* Logo */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {isMobile && (<IconButton onClick={toggleDrawer(true)} sx={{ color: '#0865a8', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)' } }}>
-                            <MenuIcon />
-                        </IconButton>)}
-                        <Stack direction="row" alignItems="center" component={Link} to="/" sx={{ textDecoration: 'none', color: 'inherit' }}>
-                            <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: { xs: 40, md: 55 }, width: 'auto' }} />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                        {isMobile && (<IconButton onClick={toggleDrawer(true)} sx={{ color: '#0865a8', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)' } }}><MenuIcon /></IconButton>)}
+                        <Stack direction="row" alignItems="center" component={Link} to="/" sx={{ textDecoration: 'none', color: 'inherit', flexShrink: 0 }}>
+                            <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: 50, width: 'auto', minWidth: 50, flexShrink: 0 }} />
                             {!isSmallMobile && (<Box sx={{ mr: 1, textAlign: 'left' }}>
                                 <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#0865a8', fontSize: '0.8rem', whiteSpace: 'nowrap', fontFamily: '"Droid Arabic Kufi",serif' }}>المقاولون العرب</Typography>
                                 <Typography variant="caption" sx={{ color: '#000', display: { xs: 'none', md: 'block' }, fontFamily: '"Droid Arabic Kufi",serif' }}>المعهد التكنولوجى لهندسة التشييد والإدارة</Typography>
@@ -231,30 +316,24 @@ const Navbar = () => {
                         </div>
                     )}
 
-                    {/* ═══ Udemy-style Search Bar ═══ */}
+                    {/* Search Bar */}
                     <ClickAwayListener onClickAway={() => { setSearchFocused(false); setActiveSuggestionIndex(-1); }}>
-                        <Box ref={searchBoxRef} sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, justifyContent: 'center', maxWidth: { xs: '70%', sm: '500px', md: '800px' }, mx: { xs: 1, md: 4 }, position: 'relative' }}>
+                        <Box ref={searchBoxRef} sx={{ display: 'flex', alignItems: 'center', flexGrow: 0, flexShrink: 1, justifyContent: 'center', width: { xs: 'auto', sm: '350px', md: '450px', lg: '550px' }, maxWidth: { xs: 'calc(100% - 200px)', sm: '350px', md: '450px', lg: '550px' }, mx: { xs: 0.5, sm: 1, md: 2 }, position: 'relative', minWidth: { xs: '120px', sm: '250px' } }}>
                             <Box component="form" onSubmit={handleSearchSubmit} role="search" sx={{ bgcolor: searchFocused ? '#ffffff' : '#f1f3f4', borderRadius: searchFocused && dropdownVisible ? '24px 24px 0 0' : 9, display: 'flex', alignItems: 'center', px: 2, py: 0.8, width: '100%', transition: 'all 0.2s', border: searchFocused ? '1px solid #0865a8' : '1px solid transparent', boxShadow: searchFocused ? '0 0 0 2px rgba(8,101,168,0.1)' : 'none', borderBottom: searchFocused && dropdownVisible ? '1px solid #e0e0e0' : undefined }}>
-                                <InputBase inputRef={searchInputRef} name="q" value={searchValue} onChange={e => { setSearchValue(e.target.value); setActiveSuggestionIndex(-1); }} onFocus={() => setSearchFocused(true)} onKeyDown={handleSearchKeyDown}
-                                    placeholder="بحث عن الدورات..." autoComplete="off"
-                                    inputProps={{ 'aria-label': 'بحث عن الدورات', 'aria-autocomplete': 'both', 'aria-haspopup': 'true', 'aria-expanded': dropdownVisible, role: 'combobox' }}
-                                    sx={{ color: '#000', flexGrow: 1, textAlign: 'right', fontFamily: '"Droid Arabic Kufi",serif', fontSize: { xs: '0.8rem', md: '0.95rem' }, pr: 1 }} />
+                                <InputBase inputRef={searchInputRef} name="q" value={searchValue} onChange={e => { setSearchValue(e.target.value); setActiveSuggestionIndex(-1); }} onFocus={() => setSearchFocused(true)} onKeyDown={handleSearchKeyDown} placeholder="بحث عن الدورات..." autoComplete="off" inputProps={{ 'aria-label': 'بحث عن الدورات', 'aria-autocomplete': 'both', 'aria-haspopup': 'true', 'aria-expanded': dropdownVisible, role: 'combobox' }} sx={{ color: '#000', flexGrow: 1, textAlign: 'right', fontFamily: '"Droid Arabic Kufi",serif', fontSize: { xs: '0.8rem', md: '0.95rem' }, pr: 1 }} />
                                 {searchValue && (<IconButton size="small" onClick={() => { setSearchValue(''); setSuggestions([]); setActiveSuggestionIndex(-1); searchInputRef.current?.focus(); }} sx={{ p: 0.5, mr: 0.5 }} aria-label="مسح البحث"><CloseIcon sx={{ fontSize: 16, color: '#888' }} /></IconButton>)}
                                 <IconButton type="submit" disabled={!searchValue.trim()} sx={{ p: 0.5, '&:hover': { bgcolor: 'transparent' }, '&.Mui-disabled': { opacity: 0.4 } }} aria-label="تنفيذ البحث"><SearchIcon sx={{ color: '#0865a8', fontSize: { xs: 18, md: 22 } }} /></IconButton>
                             </Box>
 
                             {dropdownVisible && (
                                 <Paper elevation={6} sx={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1300, borderRadius: '0 0 12px 12px', border: '1px solid #0865a8', borderTop: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.14)', overflow: 'hidden', bgcolor: 'white', maxHeight: '420px', overflowY: 'auto', '&::-webkit-scrollbar': { width: '5px' }, '&::-webkit-scrollbar-thumb': { bgcolor: '#d0d0d0', borderRadius: '3px' } }}>
-
-                                    {/* Recent searches */}
                                     {suggestions.length === 0 && !searchValue.trim() && recentSearches.length > 0 && (<>
                                         <Box sx={{ px: 2, pt: 1.5, pb: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                                             <HistoryIcon sx={{ fontSize: 13, color: '#aaa' }} />
                                             <Typography sx={{ fontSize: '0.7rem', color: '#aaa', fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', letterSpacing: 0.6 }}>عمليات البحث الأخيرة</Typography>
                                         </Box>
                                         {recentSearches.map((term, i) => (
-                                            <Box key={term} onMouseDown={() => { saveRecentSearch(term); setSearchValue(term); setSearchFocused(false); navigate(`/search?q=${encodeURIComponent(term)}`); }} onMouseEnter={() => setActiveSuggestionIndex(i)}
-                                                sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 0.9, cursor: 'pointer', bgcolor: activeSuggestionIndex === i ? 'rgba(8,101,168,0.06)' : 'transparent', '&:hover': { bgcolor: 'rgba(8,101,168,0.06)' }, transition: 'background 0.15s' }}>
+                                            <Box key={term} onMouseDown={() => { saveRecentSearch(term); setSearchValue(term); setSearchFocused(false); const matched = allCourses.filter(c => c.title.toLowerCase().includes(term.toLowerCase()) || c.description.toLowerCase().includes(term.toLowerCase())); navigate(`/search?q=${encodeURIComponent(term)}`, { state: { results: matched, query: term } }); }} onMouseEnter={() => setActiveSuggestionIndex(i)} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, py: 0.9, cursor: 'pointer', bgcolor: activeSuggestionIndex === i ? 'rgba(8,101,168,0.06)' : 'transparent', '&:hover': { bgcolor: 'rgba(8,101,168,0.06)' }, transition: 'background 0.15s' }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                                     <HistoryIcon sx={{ fontSize: 16, color: '#bbb', flexShrink: 0 }} />
                                                     <Typography sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.87rem', color: '#333', direction: 'rtl' }}>{term}</Typography>
@@ -264,27 +343,20 @@ const Navbar = () => {
                                         ))}
                                         <Box sx={{ height: '1px', bgcolor: '#f5f5f5', mx: 2 }} />
                                     </>)}
-
-                                    {/* Course suggestions */}
+                                    {coursesLoading && !coursesLoaded && searchValue.trim() && (<Box sx={{ px: 2, py: 2, textAlign: 'center' }}><Typography sx={{ color: '#aaa', fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.82rem' }}>جاري تحميل الدورات...</Typography></Box>)}
                                     {suggestions.length > 0 && (<>
                                         <Box sx={{ px: 2, pt: 1.5, pb: 0.8, display: 'flex', alignItems: 'center', gap: 0.8, borderBottom: '1px solid #f5f5f5' }}>
                                             <Box sx={{ width: 18, height: 18, borderRadius: '50%', background: 'linear-gradient(135deg,#0865a8 0%,#f57c00 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><SearchIcon sx={{ fontSize: 10, color: 'white' }} /></Box>
                                             <Typography sx={{ fontSize: '0.7rem', color: '#999', fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', letterSpacing: 0.5 }}>الدورات المطابقة ({suggestions.length})</Typography>
                                         </Box>
                                         {suggestions.map((course, i) => {
-                                            const title = course.title || ''; const q = searchValue.toLowerCase(); const matchIdx = title.toLowerCase().indexOf(q);
+                                            const title = course.title || '';
+                                            const q = searchValue.toLowerCase();
+                                            const matchIdx = title.toLowerCase().indexOf(q);
                                             return (
-                                                <Box key={course.id} onMouseDown={e => { e.preventDefault(); saveRecentSearch(title); setSearchValue(''); setSuggestions([]); setSearchFocused(false); setActiveSuggestionIndex(-1); navigate(`/course?id=${course.id}`); }}
-                                                    onMouseEnter={() => setActiveSuggestionIndex(i)}
-                                                    sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, cursor: 'pointer', bgcolor: activeSuggestionIndex === i ? 'rgba(8,101,168,0.05)' : 'transparent', '&:hover': { bgcolor: 'rgba(8,101,168,0.05)' }, transition: 'background 0.15s', borderBottom: i < suggestions.length - 1 ? '1px solid #fafafa' : 'none' }}>
+                                                <Box key={course.id} onMouseDown={e => { e.preventDefault(); saveRecentSearch(title); setSearchValue(''); setSuggestions([]); setSearchFocused(false); setActiveSuggestionIndex(-1); navigate(`/course/${course.slug}`); }} onMouseEnter={() => setActiveSuggestionIndex(i)} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, px: 1.5, py: 1, cursor: 'pointer', bgcolor: activeSuggestionIndex === i ? 'rgba(8,101,168,0.05)' : 'transparent', '&:hover': { bgcolor: 'rgba(8,101,168,0.05)' }, transition: 'background 0.15s', borderBottom: i < suggestions.length - 1 ? '1px solid #fafafa' : 'none' }}>
                                                     <Box sx={{ width: 52, height: 52, flexShrink: 0, borderRadius: '10px', overflow: 'hidden', background: 'linear-gradient(135deg,#0865a8 0%,#f57c00 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 3px 8px rgba(8,101,168,0.25)', position: 'relative' }}>
-                                                        {course.image ? (<Box component="img" src={course.image} alt={title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (
-                                                            <Box sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '50%', p: '7px', backdropFilter: 'blur(4px)', border: '1.5px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                <svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }}>
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                                                                </svg>
-                                                            </Box>
-                                                        )}
+                                                        {course.image ? (<Box component="img" src={course.image} alt={title} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />) : (<Box sx={{ bgcolor: 'rgba(255,255,255,0.15)', borderRadius: '50%', p: '7px', backdropFilter: 'blur(4px)', border: '1.5px solid rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg width="20" height="20" fill="none" stroke="white" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.2))' }}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg></Box>)}
                                                     </Box>
                                                     <Box sx={{ flexGrow: 1, minWidth: 0, direction: 'rtl' }}>
                                                         <Typography sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.88rem', fontWeight: '600', color: '#1a1a1a', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -292,54 +364,72 @@ const Navbar = () => {
                                                         </Typography>
                                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.6, mt: 0.4 }}>
                                                             <Box sx={{ display: 'inline-flex', alignItems: 'center', bgcolor: 'rgba(8,101,168,0.09)', px: 0.8, py: 0.2, borderRadius: '4px', flexShrink: 0 }}><Typography sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.68rem', color: '#0865a8', fontWeight: 'bold' }}>دورة</Typography></Box>
-                                                            {(course.category || course.instructor) && (<Typography sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.72rem', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{course.category || course.instructor}</Typography>)}
+                                                            {(course.category || course.place) && (<Typography sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.72rem', color: '#888', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{course.category || course.place}</Typography>)}
                                                         </Box>
                                                     </Box>
-                                                    <Box sx={{ opacity: activeSuggestionIndex === i ? 1 : 0, transition: 'opacity 0.15s', color: '#0865a8', flexShrink: 0 }}>
-                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-                                                    </Box>
+                                                    <Box sx={{ opacity: activeSuggestionIndex === i ? 1 : 0, transition: 'opacity 0.15s', color: '#0865a8', flexShrink: 0 }}><svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg></Box>
                                                 </Box>
                                             );
                                         })}
                                     </>)}
-
-                                    {suggestionLoading && !coursesPreloaded && searchValue.trim() && (<Box sx={{ px: 2, py: 2, textAlign: 'center' }}><Typography sx={{ color: '#aaa', fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.82rem' }}>جاري تحميل الدورات...</Typography></Box>)}
-                                    {!suggestionLoading && coursesPreloaded && searchValue.trim() && suggestions.length === 0 && (<Box sx={{ px: 2, py: 2, textAlign: 'center' }}><Typography sx={{ color: '#aaa', fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.82rem' }}>لا توجد نتائج لـ &quot;{searchValue}&quot;</Typography></Box>)}
-
-                                    {searchValue.trim() && (
-                                        <Box onMouseDown={handleSearchSubmit} sx={{ px: 2, py: 1, borderTop: '1px solid #f0f0f0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(8,101,168,0.02)', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)' }, transition: 'background 0.15s' }}>
-                                            <SearchIcon sx={{ fontSize: 15, color: '#0865a8' }} />
-                                            <Typography sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.82rem', color: '#0865a8', fontWeight: 'bold', direction: 'rtl' }}>عرض جميع النتائج لـ &quot;{searchValue}&quot;</Typography>
-                                        </Box>
-                                    )}
+                                    {!coursesLoading && coursesLoaded && searchValue.trim() && suggestions.length === 0 && (<Box sx={{ px: 2, py: 2, textAlign: 'center' }}><Typography sx={{ color: '#aaa', fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.82rem' }}>لا توجد نتائج لـ &quot;{searchValue}&quot;</Typography></Box>)}
+                                    {searchValue.trim() && (<Box onMouseDown={e => { e.preventDefault(); executeSearch(searchValue); }} sx={{ px: 2, py: 1, borderTop: '1px solid #f0f0f0', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 1, bgcolor: 'rgba(8,101,168,0.02)', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)' }, transition: 'background 0.15s' }}><SearchIcon sx={{ fontSize: 15, color: '#0865a8' }} /><Typography sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.82rem', color: '#0865a8', fontWeight: 'bold', direction: 'rtl' }}>عرض جميع النتائج لـ &quot;{searchValue}&quot;</Typography></Box>)}
                                 </Paper>
                             )}
                         </Box>
                     </ClickAwayListener>
 
                     {/* Right side */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, md: 2 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1.5 }, flexShrink: 0 }}>
                         {!isMobile && (
-                            <Stack direction="row" spacing={1}>
+                            <Stack direction="row" spacing={0.5}>
                                 <div className="about-dropdown-wrapper">
-                                    <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} sx={{ fontFamily: '"Droid Arabic Kufi",serif', color: '#000', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>عن المعهد</Button>
+                                    <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} sx={{ px: 1.5, fontFamily: '"Droid Arabic Kufi",serif', color: '#000', fontSize: '0.9rem', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>عن المعهد</Button>
                                     <div className="about-dropdown-menu">
-                                        {aboutLinks.map(link => { const path = aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`; const isPdf = path.endsWith('.pdf'); return (<Link key={link} to={!isPdf ? path : '#'} onClick={isPdf ? e => { e.preventDefault(); window.open(path, '_blank'); } : undefined} className="dropdown-menu-item">{link}</Link>); })}
+                                        {aboutLinks.map(link => {
+                                            const path = aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`;
+                                            const isPdf = path.endsWith('.pdf');
+                                            return (<Link key={link} to={!isPdf ? path : '#'} onClick={isPdf ? e => { e.preventDefault(); window.open(path, '_blank'); } : undefined} className="dropdown-menu-item">{link}</Link>);
+                                        })}
                                     </div>
                                 </div>
-                                <Button color="inherit" component={Link} to="/news" sx={{ fontFamily: '"Droid Arabic Kufi",serif', color: '#000', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>الأخبار</Button>
-                                <Button color="inherit" component={Link} to="/library" sx={{ fontFamily: '"Droid Arabic Kufi",serif', color: '#000', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>المكتبة</Button>
+                                <Button color="inherit" component={Link} to="/news" sx={{ px: 1.5, fontFamily: '"Droid Arabic Kufi",serif', color: '#000', fontSize: '0.9rem', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>الأخبار</Button>
+                                <Button color="inherit" component={Link} to="/library" sx={{ px: 1.5, fontFamily: '"Droid Arabic Kufi",serif', color: '#000', fontSize: '0.9rem', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>المكتبة</Button>
                                 <div className="services-dropdown-wrapper">
-                                    <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} sx={{ fontFamily: '"Droid Arabic Kufi",serif', color: '#000', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>الخدمات</Button>
+                                    <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} sx={{ px: 1.5, fontFamily: '"Droid Arabic Kufi",serif', color: '#000', fontSize: '0.9rem', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>الخدمات</Button>
                                     <div className="services-dropdown-menu">
                                         {serviceLinks.map((item, idx) => (<Link key={idx} to={item.path} className="dropdown-menu-item">{item.title}</Link>))}
                                     </div>
                                 </div>
                             </Stack>
                         )}
+
+                        {/* ✅ My Courses icon — shown only when signed in, next to cart */}
+                        <SignedIn>
+                            <IconButton
+                                className="my-courses-nav-btn"
+                                component={Link}
+                                to="/my-courses"
+                                size="small"
+                                title="دوراتي"
+                                sx={{
+                                    position: 'relative',
+                                    transition: 'all 0.2s',
+                                    color: '#0865a8',
+                                    '&:hover': { backgroundColor: 'rgba(8,101,168,0.08)', transform: 'scale(1.05)' }
+                                }}
+                            >
+                                <MenuBookIcon sx={{ fontSize: 22 }} />
+                            </IconButton>
+                        </SignedIn>
+
+                        {/* Cart icon */}
                         <IconButton color="inherit" size="small" component={Link} to="/cart" sx={{ position: 'relative', transition: 'all 0.2s', color: '#0865a8', '&:hover': { backgroundColor: 'rgba(8,101,168,0.08)', transform: 'scale(1.05)' } }}>
-                            <Badge badgeContent={cartCount} sx={{ '& .MuiBadge-badge': { bgcolor: '#f57c00', color: 'white', fontSize: '0.7rem', height: '18px', minWidth: '18px', padding: '0 4px', fontFamily: '"Droid Arabic Kufi",serif' } }}><ShoppingCartIcon sx={{ fontSize: 22 }} /></Badge>
+                            <Badge badgeContent={cartCount} sx={{ '& .MuiBadge-badge': { bgcolor: '#f57c00', color: 'white', fontSize: '0.7rem', height: '18px', minWidth: '18px', padding: '0 4px', fontFamily: '"Droid Arabic Kufi",serif' } }}>
+                                <ShoppingCartIcon sx={{ fontSize: 22 }} />
+                            </Badge>
                         </IconButton>
+
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <SignedOut>
                                 <SignInButton mode="modal" appearance={{ variables: { colorPrimary: '#0865a8', colorText: '#000000', colorBackground: '#ffffff', fontFamily: '"Droid Arabic Kufi",serif', borderRadius: '12px' }, elements: { card: { direction: 'ltr', textAlign: 'left', backgroundColor: '#ffffff', border: '1px solid #0865a8', boxShadow: '0 15px 40px rgba(0,0,0,0.08)' }, headerTitle: { textAlign: 'center', color: '#0865a8', fontWeight: '700' }, headerSubtitle: { textAlign: 'center', color: '#000000' }, formFieldLabel: { textAlign: 'left', color: '#000000', fontWeight: '600' }, formFieldInput: { textAlign: 'left', borderRadius: '8px', border: '1px solid #0865a8' }, formButtonPrimary: { backgroundColor: '#0865a8', color: '#ffffff', fontWeight: '600', '&:hover': { backgroundColor: '#f57c00' } }, footerAction: { textAlign: 'left' }, footerActionLink: { color: '#f57c00', fontWeight: '600' } } }}>
@@ -364,7 +454,7 @@ const Navbar = () => {
                     </Box>
                     <List>
                         <ListItemButton onClick={() => setMobileCoursesOpen(!mobileCoursesOpen)} sx={{ bgcolor: mobileCoursesOpen ? 'rgba(8,101,168,0.08)' : 'transparent', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(8,101,168,0.12)' } }}>
-                            <ListItemText primary="الدورات التدريبية" sx={{ textAlign: 'right', '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' } }} />
+                            <ListItemText primary="الدورات التدريبية" sx={{ textAlign: 'left', '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' } }} />
                             {mobileCoursesOpen ? <ExpandMoreIcon sx={{ color: '#0865a8' }} /> : <ChevronLeftIcon sx={{ color: '#0865a8' }} />}
                         </ListItemButton>
                         <Collapse in={mobileCoursesOpen} timeout="auto" unmountOnExit>
@@ -373,44 +463,66 @@ const Navbar = () => {
                                     : error ? (<ListItemButton><ListItemText primary="حدث خطأ في التحميل" sx={{ '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.9rem', color: '#f44336' } }} /></ListItemButton>)
                                         : mainCourses.map(course => (
                                             <React.Fragment key={course.id}>
-                                                <ListItemButton onClick={() => { if (course.link) { navigate(course.link); toggleDrawer(false)(); } else if (course.sub) setOpenSub(openSub === course.id ? null : course.id); }} sx={{ bgcolor: 'rgba(0,0,0,0.02)', mb: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'rgba(245,124,0,0.08)' } }}>
+                                                <ListItemButton onClick={() => { if (course.link) { navigate(course.link); toggleDrawer(false)(); } else if (course.sub) { setOpenSub(openSub === course.id ? null : course.id); } }} sx={{ bgcolor: 'rgba(0,0,0,0.02)', mb: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'rgba(245,124,0,0.08)' } }}>
                                                     <ListItemText primary={course.title} sx={{ '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.9rem' } }} />
                                                     {course.sub && (openSub === course.id ? <ExpandMoreIcon fontSize="small" sx={{ color: '#f57c00' }} /> : <ChevronLeftIcon fontSize="small" sx={{ color: '#0865a8' }} />)}
                                                 </ListItemButton>
-                                                {course.sub && (<Collapse in={openSub === course.id} timeout="auto" unmountOnExit>
-                                                    <List component="div" disablePadding sx={{ pr: 2 }}>
-                                                        {course.sub.map(subItem => (<React.Fragment key={subItem.id}>
-                                                            <ListItemButton onClick={() => subItem.topics && setOpenTopic(openTopic === subItem.id ? null : subItem.id)} sx={{ borderRight: '3px solid #0865a8', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)' } }}>
-                                                                <ListItemText primary={subItem.title} sx={{ '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.85rem', color: '#0865a8', fontWeight: 'bold' } }} />
-                                                                {subItem.topics && (openTopic === subItem.id ? <ExpandMoreIcon fontSize="small" sx={{ color: '#f57c00' }} /> : <ChevronLeftIcon fontSize="small" sx={{ color: '#0865a8' }} />)}
-                                                            </ListItemButton>
-                                                            {subItem.topics && (<Collapse in={openTopic === subItem.id} timeout="auto" unmountOnExit>
-                                                                <List component="div" disablePadding sx={{ pr: 2 }}>
-                                                                    {subItem.topics.map(topic => (<ListItemButton key={topic.id} component={Link} to={topic.link || '#'} onClick={toggleDrawer(false)} sx={{ '&:hover': { bgcolor: 'rgba(245,124,0,0.08)' } }}>
-                                                                        <ListItemText primary={topic.name} primaryTypographyProps={{ fontSize: '0.8rem', color: '#000', fontFamily: '"Droid Arabic Kufi",serif' }} />
-                                                                    </ListItemButton>))}
-                                                                </List>
-                                                            </Collapse>)}
-                                                        </React.Fragment>))}
-                                                    </List>
-                                                </Collapse>)}
+                                                {course.sub && (
+                                                    <Collapse in={openSub === course.id} timeout="auto" unmountOnExit>
+                                                        <List component="div" disablePadding sx={{ pr: 2 }}>
+                                                            {course.sub.map(subItem => (
+                                                                <React.Fragment key={subItem.id}>
+                                                                    <ListItemButton onClick={() => subItem.topics && setOpenTopic(openTopic === subItem.id ? null : subItem.id)} sx={{ borderRight: '3px solid #0865a8', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)' } }}>
+                                                                        <ListItemText primary={subItem.title} sx={{ '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.85rem', color: '#0865a8', fontWeight: 'bold' } }} />
+                                                                        {subItem.topics && (openTopic === subItem.id ? <ExpandMoreIcon fontSize="small" sx={{ color: '#f57c00' }} /> : <ChevronLeftIcon fontSize="small" sx={{ color: '#0865a8' }} />)}
+                                                                    </ListItemButton>
+                                                                    {subItem.topics && (
+                                                                        <Collapse in={openTopic === subItem.id} timeout="auto" unmountOnExit>
+                                                                            <List component="div" disablePadding sx={{ pr: 2 }}>
+                                                                                {subItem.topics.map(topic => (
+                                                                                    <ListItemButton key={topic.id} component={Link} to={topic.link || '#'} onClick={toggleDrawer(false)} sx={{ '&:hover': { bgcolor: 'rgba(245,124,0,0.08)' } }}>
+                                                                                        <ListItemText primary={topic.name} primaryTypographyProps={{ fontSize: '0.8rem', color: '#000', fontFamily: '"Droid Arabic Kufi",serif' }} />
+                                                                                    </ListItemButton>
+                                                                                ))}
+                                                                            </List>
+                                                                        </Collapse>
+                                                                    )}
+                                                                </React.Fragment>
+                                                            ))}
+                                                        </List>
+                                                    </Collapse>
+                                                )}
                                             </React.Fragment>
                                         ))}
                             </List>
                         </Collapse>
                         <Divider sx={{ my: 2, bgcolor: '#0865a8', height: 2 }} />
+
+                        {/* ✅ My Courses in mobile drawer — only shown when signed in */}
+                        <SignedIn>
+                            <ListItemButton component={Link} to="/my-courses" onClick={toggleDrawer(false)} sx={{ borderRadius: 1, mb: 0.5, bgcolor: 'rgba(8,101,168,0.05)', '&:hover': { bgcolor: 'rgba(8,101,168,0.12)' } }}>
+                                <MenuBookIcon sx={{ color: '#0865a8', mr: 1, fontSize: 20 }} />
+                                <ListItemText primary="دوراتي" primaryTypographyProps={{ fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' }} />
+                            </ListItemButton>
+                            <Divider sx={{ my: 2, bgcolor: '#0865a8', height: 2 }} />
+                        </SignedIn>
+
                         <ListItemButton onClick={() => setMobileAboutOpen(!mobileAboutOpen)} sx={{ bgcolor: mobileAboutOpen ? 'rgba(8,101,168,0.08)' : 'transparent', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(8,101,168,0.12)' } }}>
-                            <ListItemText primary="عن المعهد" sx={{ textAlign: 'right', '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' } }} />
+                            <ListItemText primary="عن المعهد" sx={{ textAlign: 'left', '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' } }} />
                             {mobileAboutOpen ? <ExpandMoreIcon sx={{ color: '#0865a8' }} /> : <ChevronLeftIcon sx={{ color: '#0865a8' }} />}
                         </ListItemButton>
                         <Collapse in={mobileAboutOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding sx={{ pr: 2 }}>
-                                {aboutLinks.map(link => { const path = aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`; const isPdf = path.endsWith('.pdf'); return (<ListItemButton key={link} component={isPdf ? 'a' : Link} to={!isPdf ? path : undefined} href={isPdf ? path : undefined} target={isPdf ? '_blank' : undefined} rel={isPdf ? 'noopener noreferrer' : undefined} onClick={!isPdf ? toggleDrawer(false) : undefined} sx={{ '&:hover': { bgcolor: 'rgba(245,124,0,0.08)' } }}><ListItemText primary={link} primaryTypographyProps={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.85rem' }} /></ListItemButton>); })}
+                                {aboutLinks.map(link => {
+                                    const path = aboutLinkPaths[link] || `/about/${link.replace(/\s+/g, '-')}`;
+                                    const isPdf = path.endsWith('.pdf');
+                                    return (<ListItemButton key={link} component={isPdf ? 'a' : Link} to={!isPdf ? path : undefined} href={isPdf ? path : undefined} target={isPdf ? '_blank' : undefined} rel={isPdf ? 'noopener noreferrer' : undefined} onClick={!isPdf ? toggleDrawer(false) : undefined} sx={{ '&:hover': { bgcolor: 'rgba(245,124,0,0.08)' } }}><ListItemText primary={link} primaryTypographyProps={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.85rem' }} /></ListItemButton>);
+                                })}
                             </List>
                         </Collapse>
                         <Divider sx={{ my: 2, bgcolor: '#0865a8', height: 2 }} />
                         <ListItemButton onClick={() => setMobileServicesOpen(!mobileServicesOpen)} sx={{ bgcolor: mobileServicesOpen ? 'rgba(8,101,168,0.08)' : 'transparent', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(8,101,168,0.12)' } }}>
-                            <ListItemText primary="الخدمات" sx={{ textAlign: 'right', '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' } }} />
+                            <ListItemText primary="الخدمات" sx={{ textAlign: 'left', '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' } }} />
                             {mobileServicesOpen ? <ExpandMoreIcon sx={{ color: '#0865a8' }} /> : <ChevronLeftIcon sx={{ color: '#0865a8' }} />}
                         </ListItemButton>
                         <Collapse in={mobileServicesOpen} timeout="auto" unmountOnExit>

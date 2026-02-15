@@ -31,11 +31,9 @@ import OnsiteTraining from '../pages/OnsiteTraining_fixed';
 import CEAProgram from '../pages/CEAProgram';
 import ScrollToTop from '../components/ScrollToTop'
 import SearchPage from '../pages/SearchPage';
+import Mycourses from '../pages/Mycourses';
 
    
-
-
-
 const AppRoutes = () => {
     return (
     <>
@@ -46,7 +44,6 @@ const AppRoutes = () => {
       {/* <Route element={<PublicLayout />}> */}
             <Route index element={<Home />} />
             <Route path="/vocational-training" element={<VocationalTraining />} />
-
                 <Route path="gesr-el-suez" element={<GesrElSuezPage />} />
                 <Route path="shobra" element={<ShobraTrainingPage />} />
         <Route path="/overview" element={<Overview />} />
@@ -65,8 +62,6 @@ const AppRoutes = () => {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/cart" element={<ShoppingCartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
-
-
             <Route path="/gallery" element={<Galery />} />
             <Route path="/future-leaders" element={<FutureLeadersCouncil />} />
             <Route path="/instructors" element={<Instructors />} />
@@ -75,7 +70,8 @@ const AppRoutes = () => {
             <Route path="/training-methods" element={<TrainingMethods />} />
             <Route path="/cea-program" element={<CEAProgram />} />
             <Route path="/onsite-training" element={<OnsiteTraining />} />
-    <Route path="/search" element={<SearchPage />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/my-courses" element={<Mycourses />} />    
             
 
 
