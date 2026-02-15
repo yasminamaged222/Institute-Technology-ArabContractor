@@ -63,6 +63,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Order> Orders { get; set; }
     public virtual DbSet<OrderItem> OrderItems { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
+    public virtual DbSet<Enrollment> Enrollments { get; set; }
+
 
 
     //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -152,6 +154,10 @@ public partial class AppDbContext : DbContext
         modelBuilder.Entity<Order>(entity =>
         {
             entity.HasKey(o => o.Id);
+
+            entity.HasIndex(o => o.OrderNumber)
+                  .IsUnique();
+
             entity.HasMany(o => o.Items)
                   .WithOne(oi => oi.Order)
                   .HasForeignKey(oi => oi.OrderId);
@@ -159,21 +165,55 @@ public partial class AppDbContext : DbContext
             entity.HasMany(o => o.Payments)
                   .WithOne(p => p.Order)
                   .HasForeignKey(p => p.OrderId);
+            entity.Property(o => o.TotalAmount)
+                .HasColumnType("decimal(18,2)");
+
         });
+
 
         // OrderItem
         modelBuilder.Entity<OrderItem>(entity =>
         {
             entity.HasKey(oi => oi.Id);
             entity.HasIndex(oi => new { oi.OrderId, oi.PlanworkId }).IsUnique();
+            entity.Property(oi => oi.Price)
+                .HasColumnType("decimal(18,2)");
+
         });
 
         // Payment
         modelBuilder.Entity<Payment>(entity =>
         {
             entity.HasKey(p => p.Id);
+            entity.Property(p => p.Amount)
+                .HasColumnType("decimal(18,2)");
+            entity.HasIndex(p => p.TransactionRef);
+
+
         });
 
+        // Enrollment
+        modelBuilder.Entity<Enrollment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasIndex(e => new { e.UserId, e.PlanworkId })
+                  .IsUnique(); // يمنع تكرار الاشتراك
+
+            entity.HasOne(e => e.User)
+                  .WithMany()
+                  .HasForeignKey(e => e.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Planwork)
+                  .WithMany()
+                  .HasForeignKey(e => e.PlanworkId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne<Order>()
+                  .WithMany()
+                  .HasForeignKey(e => e.OrderId);
+        });
 
 
         modelBuilder.Entity<Action>(entity =>
@@ -363,7 +403,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.DetailsFlag).HasColumnName("details_flag");
             entity.Property(e => e.SpecialFlag).HasColumnName("special_flag");
 
-            entity.Property(e => e.PlanCost).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.PlanCost).HasColumnType("decimal(18, 2)");
 
             // 🔥 Relationships
             entity.HasOne(e => e.Parent)

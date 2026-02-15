@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,17 +42,35 @@ builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>)
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsListDto>>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsDetailsDto>>();
-builder.Services.Configure<BankMisrOptions>(
+builder.Services.Configure<PaymentSettings>(
     builder.Configuration.GetSection("BankMisr"));
 
-builder.Services.AddHttpClient<BankMisrPaymentService>();
+builder.Services.AddHttpClient<BankPaymentService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddHttpClient<ClerkService>();
 builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 
-builder.Services.AddScoped<BankMisrPaymentService>();
+builder.Services.AddScoped<BankPaymentService>();
+
+builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
+builder.Services.AddHttpClient(); // <-- ضروري علشان IHttpClientFactory يتسجل
+builder.Services.AddHttpClient("BankClient", client =>
+{
+    var paymentSettings = builder.Configuration.GetSection("PaymentSettings").Get<PaymentSettings>();
+    client.BaseAddress = new Uri(paymentSettings.BaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+    var authValue = Convert.ToBase64String(
+        Encoding.ASCII.GetBytes($"{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}")
+    );
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authValue);
+});
+
+
 #endregion
 #region(Authentication And Authorization)
 

@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace Institute.Application.Interfaces.IService
 {
-    internal interface IUserService
+    internal interface IBankPaymentService
     {
+        Task<string> InitiateCheckoutAsync(int orderId, decimal amount);
+        Task<bool> VerifyPaymentAsync(string orderId);
     }
 }
