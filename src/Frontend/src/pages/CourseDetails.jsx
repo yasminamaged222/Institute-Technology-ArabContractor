@@ -1,19 +1,16 @@
-import { useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
 const CourseDetails = () => {
-    const [searchParams] = useSearchParams();
-    const courseId = searchParams.get('id');
+    const { slug } = useParams();
     const navigate = useNavigate();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [otherCourses, setOtherCourses] = useState([]);
 
-    // API Configuration
     const API_BASE_URL = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
-    // Helper Functions
     const parseContent = (htmlContent) => {
         const parser = new DOMParser();
         return parser.parseFromString(htmlContent, 'text/html');
@@ -21,21 +18,15 @@ const CourseDetails = () => {
 
     const extractTopics = (htmlContent) => {
         if (!htmlContent) return [];
-
         const doc = parseContent(htmlContent);
         const topics = [];
         const headings = Array.from(doc.querySelectorAll('h6'));
         const contentHeading = headings.find(h => h.textContent.includes('محتويات البرنامج'));
-
         if (contentHeading) {
             let currentElement = contentHeading.nextElementSibling;
             while (currentElement && currentElement.tagName !== 'H6') {
                 if (currentElement.tagName === 'UL') {
-                    const items = currentElement.querySelectorAll('li');
-                    items.forEach(li => {
-                        const text = li.textContent.trim();
-                        if (text) topics.push(text);
-                    });
+                    currentElement.querySelectorAll('li').forEach(li => { const text = li.textContent.trim(); if (text) topics.push(text); });
                 }
                 currentElement = currentElement.nextElementSibling;
             }
@@ -45,21 +36,15 @@ const CourseDetails = () => {
 
     const extractObjectives = (htmlContent) => {
         if (!htmlContent) return [];
-
         const doc = parseContent(htmlContent);
         const objectives = [];
         const headings = Array.from(doc.querySelectorAll('h6'));
         const objectivesHeading = headings.find(h => h.textContent.includes('فائدة حضور البرنامج'));
-
         if (objectivesHeading) {
             let currentElement = objectivesHeading.nextElementSibling;
             while (currentElement && currentElement.tagName !== 'H6') {
                 if (currentElement.tagName === 'UL') {
-                    const items = currentElement.querySelectorAll('li');
-                    items.forEach(li => {
-                        const text = li.textContent.trim();
-                        if (text) objectives.push(text);
-                    });
+                    currentElement.querySelectorAll('li').forEach(li => { const text = li.textContent.trim(); if (text) objectives.push(text); });
                 }
                 currentElement = currentElement.nextElementSibling;
             }
@@ -69,21 +54,15 @@ const CourseDetails = () => {
 
     const extractPrerequisites = (htmlContent) => {
         if (!htmlContent) return [];
-
         const doc = parseContent(htmlContent);
         const prerequisites = [];
         const headings = Array.from(doc.querySelectorAll('h6'));
         const prereqHeading = headings.find(h => h.textContent.includes('لمن يعقد البرنامج'));
-
         if (prereqHeading) {
             let currentElement = prereqHeading.nextElementSibling;
             while (currentElement && currentElement.tagName !== 'H6') {
                 if (currentElement.tagName === 'UL') {
-                    const items = currentElement.querySelectorAll('li');
-                    items.forEach(li => {
-                        const text = li.textContent.trim();
-                        if (text) prerequisites.push(text);
-                    });
+                    currentElement.querySelectorAll('li').forEach(li => { const text = li.textContent.trim(); if (text) prerequisites.push(text); });
                 }
                 currentElement = currentElement.nextElementSibling;
             }
@@ -93,21 +72,15 @@ const CourseDetails = () => {
 
     const extractImplementationMethods = (htmlContent) => {
         if (!htmlContent) return [];
-
         const doc = parseContent(htmlContent);
         const methods = [];
         const headings = Array.from(doc.querySelectorAll('h6'));
         const methodHeading = headings.find(h => h.textContent.includes('طريقة تنفيذ البرنامج'));
-
         if (methodHeading) {
             let currentElement = methodHeading.nextElementSibling;
             while (currentElement && currentElement.tagName !== 'H6') {
                 if (currentElement.tagName === 'UL') {
-                    const items = currentElement.querySelectorAll('li');
-                    items.forEach(li => {
-                        const text = li.textContent.trim();
-                        if (text) methods.push(text);
-                    });
+                    currentElement.querySelectorAll('li').forEach(li => { const text = li.textContent.trim(); if (text) methods.push(text); });
                 }
                 currentElement = currentElement.nextElementSibling;
             }
@@ -117,21 +90,15 @@ const CourseDetails = () => {
 
     const extractProgramDates = (htmlContent) => {
         if (!htmlContent) return [];
-
         const doc = parseContent(htmlContent);
         const dates = [];
         const headings = Array.from(doc.querySelectorAll('h6'));
         const dateHeading = headings.find(h => h.textContent.includes('تاريخ انعقاد البرنامج'));
-
         if (dateHeading) {
             let currentElement = dateHeading.nextElementSibling;
             while (currentElement && currentElement.tagName !== 'H6') {
                 if (currentElement.tagName === 'UL') {
-                    const items = currentElement.querySelectorAll('li');
-                    items.forEach(li => {
-                        const text = li.textContent.trim();
-                        if (text) dates.push(text);
-                    });
+                    currentElement.querySelectorAll('li').forEach(li => { const text = li.textContent.trim(); if (text) dates.push(text); });
                 }
                 currentElement = currentElement.nextElementSibling;
             }
@@ -142,10 +109,7 @@ const CourseDetails = () => {
     const extractDates = (dateString) => {
         if (!dateString) return { startDate: '', endDate: '' };
         const dates = dateString.split(' - ');
-        return {
-            startDate: dates[0]?.trim() || '',
-            endDate: dates[1]?.trim() || dates[0]?.trim() || ''
-        };
+        return { startDate: dates[0]?.trim() || '', endDate: dates[1]?.trim() || dates[0]?.trim() || '' };
     };
 
     const transformCourseData = (apiCourse) => {
@@ -155,12 +119,11 @@ const CourseDetails = () => {
         const implementationMethods = extractImplementationMethods(apiCourse.content);
         const programDates = extractProgramDates(apiCourse.content);
         const { startDate, endDate } = extractDates(apiCourse.date);
-        const discount = apiCourse.cost && apiCourse.onSale
-            ? Math.round(((apiCourse.onSale - apiCourse.cost) / apiCourse.onSale) * 100)
-            : 38;
+        const discount = apiCourse.cost && apiCourse.onSale ? Math.round(((apiCourse.onSale - apiCourse.cost) / apiCourse.onSale) * 100) : 38;
 
         return {
             id: apiCourse.id,
+            slug: apiCourse.slug,
             title: apiCourse.title,
             description: apiCourse.description,
             place: apiCourse.place,
@@ -179,13 +142,13 @@ const CourseDetails = () => {
             hasMoneyBackGuarantee: true,
             language: "العربية",
             level: "مبتدئ",
-            topics: topics,
-            objectives: objectives,
-            prerequisites: prerequisites,
-            implementationMethods: implementationMethods,
-            programDates: programDates,
-            startDate: startDate,
-            endDate: endDate,
+            topics,
+            objectives,
+            prerequisites,
+            implementationMethods,
+            programDates,
+            startDate,
+            endDate,
             date: apiCourse.date,
             image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800",
             files: apiCourse.files || [],
@@ -198,18 +161,16 @@ const CourseDetails = () => {
         };
     };
 
-    // Add to Cart Function
     const addToCart = (buyNow = false) => {
         if (!course) return;
-
         const existingCart = localStorage.getItem('cartItems');
         const cartItems = existingCart ? JSON.parse(existingCart) : [];
-
         const isInCart = cartItems.some(item => item.id === course.id);
 
         if (!isInCart) {
             const cartItem = {
                 id: course.id,
+                slug: course.slug,
                 title: course.title,
                 instructor: course.place || 'غير محدد',
                 image: course.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
@@ -224,13 +185,11 @@ const CourseDetails = () => {
                 coupon: 'DISCOUNT2025',
                 quantity: 1
             };
-
             cartItems.push(cartItem);
             localStorage.setItem('cartItems', JSON.stringify(cartItems));
             window.dispatchEvent(new Event('cartUpdated'));
         }
 
-        // Navigate to cart or checkout
         if (buyNow) {
             navigate('/checkout');
         } else {
@@ -238,41 +197,64 @@ const CourseDetails = () => {
         }
     };
 
-    // Fetch Data
+    // ✅ UPDATED: saves to enrolledCourses localStorage then navigates to /my-courses
+    const handleEnroll = () => {
+        if (!course) return;
+
+        const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+        const alreadyEnrolled = existing.some(e => e.id === course.id);
+
+        if (!alreadyEnrolled) {
+            const enrollItem = {
+                id: course.id,
+                slug: course.slug,
+                title: course.title,
+                place: course.place || '',
+                instructor: course.place || 'غير محدد',
+                date: course.date || course.startDate || '',
+                image: course.image || 'book',
+                currentPrice: 0,
+                progress: 0,
+            };
+            existing.push(enrollItem);
+            localStorage.setItem('enrolledCourses', JSON.stringify(existing));
+            window.dispatchEvent(new Event('enrollUpdated'));
+        }
+
+        navigate('/my-courses');
+    };
+
     useEffect(() => {
         const loadCourse = async () => {
             try {
                 setLoading(true);
                 setError(null);
-
-                const response = await fetch(`${API_BASE_URL}/course/${courseId}`);
+                const response = await fetch(`${API_BASE_URL}/Course/${slug}`);
                 if (!response.ok) throw new Error('Course not found');
                 const apiCourse = await response.json();
                 const transformedCourse = transformCourseData(apiCourse);
                 setCourse(transformedCourse);
 
-                const recommendedIds = [116, 17, 23, 45].filter(id => id !== parseInt(courseId));
-                const promises = recommendedIds.slice(0, 3).map(id =>
-                    fetch(`${API_BASE_URL}/course/${id}`)
-                        .then(res => res.ok ? res.json() : null)
-                        .catch(() => null)
+                const relatedSlugs = [
+                    'solid-liquid-waste-management',
+                    'construction-project-management',
+                    'architectural-engineering',
+                ].filter(s => s !== slug);
+
+                const promises = relatedSlugs.slice(0, 3).map(s =>
+                    fetch(`${API_BASE_URL}/Course/${s}`).then(res => res.ok ? res.json() : null).catch(() => null)
                 );
-
                 const results = await Promise.all(promises);
-                const validCourses = results.filter(c => c !== null).map(transformCourseData);
-                setOtherCourses(validCourses);
-
+                setOtherCourses(results.filter(c => c !== null).map(transformCourseData));
             } catch (err) {
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
+        if (slug) loadCourse();
+    }, [slug]);
 
-        if (courseId) loadCourse();
-    }, [courseId]);
-
-    // ADD THE NEW useEffect HERE - right after the previous one
     useEffect(() => {
         if (course && course.title) {
             document.title = `${course.title} - المعهد التكنولوجي لهندسة التشييد والإدارة`;
@@ -285,13 +267,8 @@ const CourseDetails = () => {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-                <style>{`
-          * {
-            font-family: "Droid Arabic Kufi", serif !important;
-          }
-          ${mediaQueryStyles}
-        `}</style>
-                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' , top:80}}>
+                <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } ${mediaQueryStyles}`}</style>
+                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh', top: 80 }}>
                     <div style={styles.overviewBar} className="overview-bar">
                         <div style={styles.overviewBarText} className="breadcrumb-text">
                             <span>
@@ -301,9 +278,7 @@ const CourseDetails = () => {
                             </span>
                         </div>
                     </div>
-                    <div style={styles.loadingContainer}>
-                        <div>جاري تحميل الدورة...</div>
-                    </div>
+                    <div style={styles.loadingContainer}><div>جاري تحميل الدورة...</div></div>
                 </div>
             </>
         );
@@ -313,13 +288,8 @@ const CourseDetails = () => {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-                <style>{`
-          * {
-            font-family: "Droid Arabic Kufi", serif !important;
-          }
-          ${mediaQueryStyles}
-        `}</style>
-                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh', top:80 }}>
+                <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } ${mediaQueryStyles}`}</style>
+                <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh', top: 80 }}>
                     <div style={styles.overviewBar} className="overview-bar">
                         <div style={styles.overviewBarText} className="breadcrumb-text">
                             <span>
@@ -342,42 +312,29 @@ const CourseDetails = () => {
         );
     }
 
+    const hasCost = course.price !== null && course.price !== undefined && course.price > 0;
+
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-            <style>{`
-        * {
-          font-family: "Droid Arabic Kufi", serif !important;
-        }
-        ${mediaQueryStyles}
-      `}</style>
+            <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } ${mediaQueryStyles}`}</style>
 
             <div dir="rtl" style={styles.pageWrapper}>
-                {/* Fixed Overview Bar */}
-                <div style={{...styles.overviewBar, top: 70}} className="overview-bar">
+                <div style={{ ...styles.overviewBar, top: 70 }} className="overview-bar">
                     <div style={styles.overviewBarText} className="breadcrumb-text">
                         <span>
-                            <a
-                                href="/"
-                                style={styles.breadcrumbLink}
-                                onMouseEnter={e => e.target.style.color = '#f57c00'}
-                                onMouseLeave={e => e.target.style.color = '#0865a8'}
-                            >
-                                الصفحة الرئيسية
-                            </a>
+                            <a href="/" style={styles.breadcrumbLink} onMouseEnter={e => e.target.style.color = '#f57c00'} onMouseLeave={e => e.target.style.color = '#0865a8'}>الصفحة الرئيسية</a>
                             <span style={styles.breadcrumbSeparator}>•</span>
                             <span style={styles.breadcrumbCurrent}>{course.title}</span>
                         </span>
                     </div>
                 </div>
 
-                {/* Hero Section */}
                 <div style={styles.heroSection}>
                     <div style={styles.heroContainer}>
                         <div style={styles.heroContent}>
                             <h1 style={styles.heroTitle}>{course.title}</h1>
                             <p style={styles.heroDescription}>{course.description}</p>
-
                             <div style={styles.heroInfo}>
                                 <span style={styles.infoItem}>
                                     <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" style={{ marginLeft: '8px' }}>
@@ -403,12 +360,9 @@ const CourseDetails = () => {
                     </div>
                 </div>
 
-                {/* Main Content */}
                 <div style={styles.mainContainer} className="main-container">
                     <div style={styles.contentWrapper} className="content-wrapper">
-                        {/* Left Content */}
                         <div style={styles.leftContent}>
-                            {/* محتويات البرنامج */}
                             {course.topics.length > 0 && (
                                 <div style={styles.contentSection}>
                                     <h2 style={styles.sectionHeading}>محتويات البرنامج</h2>
@@ -420,16 +374,13 @@ const CourseDetails = () => {
                                                         <path d="M9.293 0H4a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4.707A1 1 0 0013.707 4L10 .293A1 1 0 009.293 0zM9.5 3.5v-2l3 3h-2a1 1 0 01-1-1zM4.5 9a.5.5 0 010-1h7a.5.5 0 010 1h-7zM4 10.5a.5.5 0 01.5-.5h7a.5.5 0 010 1h-7a.5.5 0 01-.5-.5zm.5 2.5a.5.5 0 010-1h4a.5.5 0 010 1h-4z" />
                                                     </svg>
                                                 </div>
-                                                <div style={styles.topicContent}>
-                                                    <p style={styles.topicText}>{topic}</p>
-                                                </div>
+                                                <div style={styles.topicContent}><p style={styles.topicText}>{topic}</p></div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
 
-                            {/* فائدة حضور البرنامج */}
                             {course.objectives.length > 0 && (
                                 <div style={styles.contentSection}>
                                     <h2 style={styles.sectionHeading}>فائدة حضور البرنامج</h2>
@@ -446,19 +397,15 @@ const CourseDetails = () => {
                                 </div>
                             )}
 
-                            {/* لمن يعقد البرنامج */}
                             {course.prerequisites.length > 0 && (
                                 <div style={styles.contentSection}>
                                     <h2 style={styles.sectionHeading}>لمن يعقد البرنامج</h2>
                                     <ul style={styles.requirementsList}>
-                                        {course.prerequisites.map((pre, index) => (
-                                            <li key={index}>{pre}</li>
-                                        ))}
+                                        {course.prerequisites.map((pre, index) => <li key={index}>{pre}</li>)}
                                     </ul>
                                 </div>
                             )}
 
-                            {/* طريقة تنفيذ البرنامج */}
                             {course.implementationMethods.length > 0 && (
                                 <div style={styles.contentSection}>
                                     <h2 style={styles.sectionHeading}>طريقة تنفيذ البرنامج</h2>
@@ -477,7 +424,6 @@ const CourseDetails = () => {
                                 </div>
                             )}
 
-                            {/* تاريخ انعقاد البرنامج */}
                             {course.programDates.length > 0 && (
                                 <div style={styles.contentSection}>
                                     <h2 style={styles.sectionHeading}>تاريخ انعقاد البرنامج</h2>
@@ -492,7 +438,6 @@ const CourseDetails = () => {
                                 </div>
                             )}
 
-                            {/* الملفات المرفقة */}
                             {course.files && course.files.length > 0 && (
                                 <div style={styles.contentSection}>
                                     <h2 style={styles.sectionHeading}>الملفات المرفقة</h2>
@@ -510,37 +455,30 @@ const CourseDetails = () => {
                             )}
                         </div>
 
-                        {/* Right Sidebar */}
                         <div style={styles.rightSidebar} className="right-sidebar">
-                            {/* Price Card */}
                             <div style={styles.priceCard}>
                                 <div style={styles.pricePreview}>
                                     <img src={course.image} alt={course.title} style={styles.previewImage} />
                                 </div>
-
                                 <div style={styles.priceContent}>
-                                    <div style={styles.priceSection}>
-                                        <span style={styles.currentPrice}>
-                                            {course.price > 0 ? `${course.price.toLocaleString('ar-EG')} ${course.currency}` : 'مجاناً'}
-                                        </span>
-                                        {course.originalPrice && course.price > 0 && (
-                                            <span style={styles.originalPrice}>{course.originalPrice.toLocaleString('ar-EG')} {course.currency}</span>
-                                        )}
-                                    </div>
+                                    {hasCost && (
+                                        <div style={styles.priceSection}>
+                                            <span style={styles.currentPrice}>{course.price.toLocaleString('ar-EG')} {course.currency}</span>
+                                            {course.originalPrice && (
+                                                <span style={styles.originalPrice}>{course.originalPrice.toLocaleString('ar-EG')} {course.currency}</span>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div style={styles.actionButtons}>
-                                        <button
-                                            style={styles.btnAddCart}
-                                            onClick={() => addToCart(false)}
-                                        >
-                                            إضافة إلى السلة
-                                        </button>
-                                        <button
-                                            style={styles.btnBuyNow}
-                                            onClick={() => addToCart(true)}
-                                        >
-                                            اشترِ الآن
-                                        </button>
+                                        {hasCost ? (
+                                            <>
+                                                <button style={styles.btnAddCart} onClick={() => addToCart(false)}>إضافة إلى السلة</button>
+                                                <button style={styles.btnBuyNow} onClick={() => addToCart(true)}>اشترِ الآن</button>
+                                            </>
+                                        ) : (
+                                            <button style={styles.btnEnrollNow} onClick={handleEnroll}>اشترك الآن</button>
+                                        )}
                                     </div>
 
                                     <div style={styles.courseIncludes}>
@@ -578,17 +516,12 @@ const CourseDetails = () => {
                                 </div>
                             </div>
 
-                            {/* دورات أخرى */}
                             {otherCourses.length > 0 && (
                                 <div style={styles.programsCard}>
                                     <h3 style={styles.programsTitle}>دورات أخرى قد تهمك</h3>
                                     <div style={styles.otherCoursesList}>
                                         {otherCourses.map((otherCourse) => (
-                                            <Link
-                                                key={otherCourse.id}
-                                                to={`/course?id=${otherCourse.id}`}
-                                                style={styles.otherCourseCard}
-                                            >
+                                            <Link key={otherCourse.id} to={`/course/${otherCourse.slug}`} style={styles.otherCourseCard}>
                                                 <img src={otherCourse.image} alt={otherCourse.title} style={styles.otherCourseImg} />
                                                 <div style={styles.otherCourseContent}>
                                                     <h4 style={styles.otherCourseTitle}>{otherCourse.title}</h4>
@@ -611,518 +544,92 @@ const CourseDetails = () => {
     );
 };
 
-// Styles
 const styles = {
-    overviewBar: {
-        position: 'fixed',
-        left: 0,
-        top: '64px',
-        zIndex: 40,
-        width: '100%',
-        backgroundColor: '#f5f5f5',
-        padding: '12px 24px',
-        boxSizing: 'border-box',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
-        borderBottom: '1px solid #e0e0e0',
-    },
-    overviewBarText: {
-        textAlign: 'center',
-        fontSize: '14px',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        color: '#000000',
-    },
-    breadcrumbLink: {
-        marginLeft: '12px',
-        color: '#0865a8',
-        textDecoration: 'none',
-        transition: 'color 0.2s',
-        cursor: 'pointer',
-        fontWeight: '500',
-    },
-    breadcrumbSeparator: {
-        color: '#000000',
-        margin: '0 8px',
-        opacity: 0.4,
-    },
-    breadcrumbCurrent: {
-        marginRight: '12px',
-        color: '#000000',
-        fontWeight: '600',
-    },
-    pageWrapper: {
-        minHeight: '100vh',
-        backgroundColor: '#ffffff',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        direction: 'rtl',
-    },
-    heroSection: {
-        background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
-        color: '#ffffff',
-        padding: '100px 24px 48px',
-        marginTop: '52px',
-    },
-    heroContainer: {
-        maxWidth: '1200px',
-        margin: '0 auto',
-    },
-    heroContent: {
-        maxWidth: '900px',
-    },
-    heroTitle: {
-        fontSize: '36px',
-        fontWeight: 'bold',
-        marginBottom: '16px',
-        lineHeight: '1.4',
-        color: '#ffffff',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    heroDescription: {
-        fontSize: '18px',
-        marginBottom: '24px',
-        lineHeight: '1.6',
-        color: '#ffffff',
-        opacity: 0.95,
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    heroInfo: {
-        display: 'flex',
-        gap: '24px',
-        flexWrap: 'wrap',
-    },
-    infoItem: {
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: '15px',
-        color: '#ffffff',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    loadingContainer: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '500px',
-        fontSize: '20px',
-        color: '#0865a8',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        marginTop: '100px',
-    },
-    mainContainer: {
-        maxWidth: '1200px',
-        margin: '0 auto',
-        padding: '40px 24px',
-    },
-    contentWrapper: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 380px',
-        gap: '32px',
-    },
-    leftContent: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px',
-    },
-    contentSection: {
-        backgroundColor: '#ffffff',
-        padding: '28px',
-        borderRadius: '12px',
-        border: '2px solid #f0f0f0',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-    },
-    sectionHeading: {
-        fontSize: '22px',
-        fontWeight: 'bold',
-        marginBottom: '20px',
-        color: '#000000',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        borderRight: '4px solid #0865a8',
-        paddingRight: '16px',
-    },
-    topicsGrid: {
-        display: 'grid',
-        gap: '14px',
-    },
-    topicCard: {
-        display: 'flex',
-        gap: '14px',
-        padding: '14px',
-        backgroundColor: '#f9f9f9',
-        borderRadius: '8px',
-        borderRight: '3px solid #f57c00',
-        transition: 'all 0.2s',
-    },
-    topicIcon: {
-        color: '#0865a8',
-        flexShrink: 0,
-        marginTop: '2px',
-    },
-    topicContent: {
-        flex: 1,
-    },
-    topicText: {
-        fontSize: '15px',
-        color: '#000000',
-        lineHeight: '1.6',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    learningObjectives: {
-        display: 'grid',
-        gap: '14px',
-    },
-    objectiveItem: {
-        display: 'flex',
-        gap: '12px',
-        alignItems: 'flex-start',
-        fontSize: '15px',
-        color: '#000000',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        lineHeight: '1.6',
-    },
-    checkIcon: {
-        color: '#f57c00',
-        marginTop: '4px',
-        flexShrink: 0,
-    },
-    requirementsList: {
-        listStyle: 'disc',
-        paddingRight: '24px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        color: '#000000',
-        fontSize: '15px',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        lineHeight: '1.6',
-    },
-    methodItems: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '14px',
-    },
-    methodItem: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '14px',
-        backgroundColor: '#f9f9f9',
-        borderRadius: '8px',
-        color: '#000000',
-        fontSize: '15px',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    dateBox: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '14px',
-    },
-    dateItem: {
-        padding: '16px',
-        backgroundColor: '#f9f9f9',
-        borderRadius: '8px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        borderRight: '3px solid #0865a8',
-    },
-    dateLabel: {
-        fontSize: '14px',
-        color: '#000000',
-        fontWeight: 'bold',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        opacity: 0.7,
-    },
-    dateValue: {
-        fontSize: '15px',
-        color: '#000000',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    filesList: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-    },
-    fileItem: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
-        padding: '12px 16px',
-        backgroundColor: '#f9f9f9',
-        borderRadius: '8px',
-        transition: 'all 0.2s',
-        cursor: 'pointer',
-        color: '#000000',
-        fontSize: '15px',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        borderRight: '3px solid #f57c00',
-    },
-    rightSidebar: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px',
-        alignSelf: 'flex-start',
-        position: 'sticky',
-        top: '100px',
-    },
-    priceCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
-        border: '2px solid #f0f0f0',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        overflow: 'hidden',
-    },
-    pricePreview: {
-        width: '100%',
-        height: '200px',
-        overflow: 'hidden',
-        background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
-    },
-    previewImage: {
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-    },
-    priceContent: {
-        padding: '24px',
-    },
-    priceSection: {
-        marginBottom: '20px',
-    },
-    currentPrice: {
-        fontSize: '32px',
-        fontWeight: 'bold',
-        color: '#f57c00',
-        display: 'block',
-        marginBottom: '8px',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    originalPrice: {
-        fontSize: '16px',
-        color: '#000000',
-        textDecoration: 'line-through',
-        opacity: 0.5,
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    actionButtons: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        marginBottom: '20px',
-    },
-    btnAddCart: {
-        width: '100%',
-        padding: '14px 24px',
-        backgroundColor: '#ffffff',
-        color: '#0865a8',
-        border: '2px solid #0865a8',
-        borderRadius: '10px',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-        transition: 'all 0.3s',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    btnBuyNow: {
-        width: '100%',
-        padding: '14px 24px',
-        background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
-        color: '#ffffff',
-        border: 'none',
-        borderRadius: '10px',
-        fontSize: '16px',
-        fontWeight: 'bold',
-        cursor: 'pointer',
-        transition: 'all 0.3s',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        boxShadow: '0 4px 12px rgba(8,101,168,0.3)',
-    },
-    courseIncludes: {
-        borderTop: '2px solid #f0f0f0',
-        paddingTop: '20px',
-    },
-    includesTitle: {
-        fontSize: '18px',
-        fontWeight: 'bold',
-        marginBottom: '16px',
-        color: '#000000',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    includesList: {
-        listStyle: 'none',
-        padding: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-    },
-    includesItem: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '10px',
-        fontSize: '14px',
-        color: '#000000',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    programsCard: {
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
-        border: '2px solid #f0f0f0',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        padding: '24px',
-    },
-    programsTitle: {
-        fontSize: '18px',
-        fontWeight: 'bold',
-        marginBottom: '16px',
-        color: '#000000',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    otherCoursesList: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-    },
-    otherCourseCard: {
-        display: 'flex',
-        gap: '12px',
-        padding: '12px',
-        borderRadius: '8px',
-        textDecoration: 'none',
-        color: 'inherit',
-        transition: 'all 0.2s',
-        backgroundColor: '#f9f9f9',
-        border: '2px solid transparent',
-    },
-    otherCourseImg: {
-        width: '80px',
-        height: '80px',
-        objectFit: 'cover',
-        borderRadius: '8px',
-        flexShrink: 0,
-    },
-    otherCourseContent: {
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-    },
-    otherCourseTitle: {
-        fontSize: '14px',
-        fontWeight: 'bold',
-        color: '#000000',
-        lineHeight: '1.4',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-        display: '-webkit-box',
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: 'vertical',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    otherCoursePrice: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-    },
-    otherCurrentPrice: {
-        fontSize: '16px',
-        fontWeight: 'bold',
-        color: '#f57c00',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-    notFoundContainer: {
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#ffffff',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        direction: 'rtl',
-        marginTop: '100px',
-    },
-    notFoundCard: {
-        backgroundColor: '#ffffff',
-        padding: '48px',
-        borderRadius: '12px',
-        border: '2px solid #f0f0f0',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        textAlign: 'center',
-        maxWidth: '500px',
-    },
-    notFoundIcon: {
-        fontSize: '64px',
-        marginBottom: '16px',
-    },
-    btnPrimary: {
-        display: 'inline-block',
-        padding: '14px 32px',
-        background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
-        color: '#ffffff',
-        textDecoration: 'none',
-        borderRadius: '10px',
-        marginTop: '24px',
-        fontWeight: 'bold',
-        transition: 'all 0.3s',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
+    overviewBar: { position: 'fixed', left: 0, top: '64px', zIndex: 40, width: '100%', backgroundColor: '#f5f5f5', padding: '12px 24px', boxSizing: 'border-box', boxShadow: '0 2px 4px rgba(0,0,0,0.08)', borderBottom: '1px solid #e0e0e0' },
+    overviewBarText: { textAlign: 'center', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', color: '#000000' },
+    breadcrumbLink: { marginLeft: '12px', color: '#0865a8', textDecoration: 'none', transition: 'color 0.2s', cursor: 'pointer', fontWeight: '500' },
+    breadcrumbSeparator: { color: '#000000', margin: '0 8px', opacity: 0.4 },
+    breadcrumbCurrent: { marginRight: '12px', color: '#000000', fontWeight: '600' },
+    pageWrapper: { minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' },
+    heroSection: { background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#ffffff', padding: '100px 24px 48px', marginTop: '52px' },
+    heroContainer: { maxWidth: '1200px', margin: '0 auto' },
+    heroContent: { maxWidth: '900px' },
+    heroTitle: { fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.4', color: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif' },
+    heroDescription: { fontSize: '18px', marginBottom: '24px', lineHeight: '1.6', color: '#ffffff', opacity: 0.95, fontFamily: '"Droid Arabic Kufi", serif' },
+    heroInfo: { display: 'flex', gap: '24px', flexWrap: 'wrap' },
+    infoItem: { display: 'flex', alignItems: 'center', fontSize: '15px', color: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif' },
+    loadingContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '500px', fontSize: '20px', color: '#0865a8', fontFamily: '"Droid Arabic Kufi", serif', marginTop: '100px' },
+    mainContainer: { maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' },
+    contentWrapper: { display: 'grid', gridTemplateColumns: '1fr 380px', gap: '32px' },
+    leftContent: { display: 'flex', flexDirection: 'column', gap: '24px' },
+    contentSection: { backgroundColor: '#ffffff', padding: '28px', borderRadius: '12px', border: '2px solid #f0f0f0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' },
+    sectionHeading: { fontSize: '22px', fontWeight: 'bold', marginBottom: '20px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif', borderRight: '4px solid #0865a8', paddingRight: '16px' },
+    topicsGrid: { display: 'grid', gap: '14px' },
+    topicCard: { display: 'flex', gap: '14px', padding: '14px', backgroundColor: '#f9f9f9', borderRadius: '8px', borderRight: '3px solid #f57c00', transition: 'all 0.2s' },
+    topicIcon: { color: '#0865a8', flexShrink: 0, marginTop: '2px' },
+    topicContent: { flex: 1 },
+    topicText: { fontSize: '15px', color: '#000000', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif' },
+    learningObjectives: { display: 'grid', gap: '14px' },
+    objectiveItem: { display: 'flex', gap: '12px', alignItems: 'flex-start', fontSize: '15px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.6' },
+    checkIcon: { color: '#f57c00', marginTop: '4px', flexShrink: 0 },
+    requirementsList: { listStyle: 'disc', paddingRight: '24px', display: 'flex', flexDirection: 'column', gap: '12px', color: '#000000', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.6' },
+    methodItems: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' },
+    methodItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', backgroundColor: '#f9f9f9', borderRadius: '8px', color: '#000000', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif' },
+    dateBox: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' },
+    dateItem: { padding: '16px', backgroundColor: '#f9f9f9', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px', borderRight: '3px solid #0865a8' },
+    dateLabel: { fontSize: '14px', color: '#000000', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', opacity: 0.7 },
+    dateValue: { fontSize: '15px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif' },
+    filesList: { display: 'flex', flexDirection: 'column', gap: '12px' },
+    fileItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: '#f9f9f9', borderRadius: '8px', transition: 'all 0.2s', cursor: 'pointer', color: '#000000', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif', borderRight: '3px solid #f57c00' },
+    rightSidebar: { display: 'flex', flexDirection: 'column', gap: '24px', alignSelf: 'flex-start', position: 'sticky', top: '100px' },
+    priceCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '2px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflow: 'hidden' },
+    pricePreview: { width: '100%', height: '200px', overflow: 'hidden', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)' },
+    previewImage: { width: '100%', height: '100%', objectFit: 'cover' },
+    priceContent: { padding: '24px' },
+    priceSection: { marginBottom: '20px' },
+    currentPrice: { fontSize: '32px', fontWeight: 'bold', color: '#f57c00', display: 'block', marginBottom: '8px', fontFamily: '"Droid Arabic Kufi", serif' },
+    originalPrice: { fontSize: '16px', color: '#000000', textDecoration: 'line-through', opacity: 0.5, fontFamily: '"Droid Arabic Kufi", serif' },
+    actionButtons: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
+    btnAddCart: { width: '100%', padding: '14px 24px', backgroundColor: '#ffffff', color: '#0865a8', border: '2px solid #0865a8', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif' },
+    btnBuyNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(8,101,168,0.3)' },
+    btnEnrollNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(26,122,60,0.3)' },
+    courseIncludes: { borderTop: '2px solid #f0f0f0', paddingTop: '20px' },
+    includesTitle: { fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif' },
+    includesList: { listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' },
+    includesItem: { display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif' },
+    programsCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '2px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: '24px' },
+    programsTitle: { fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif' },
+    otherCoursesList: { display: 'flex', flexDirection: 'column', gap: '16px' },
+    otherCourseCard: { display: 'flex', gap: '12px', padding: '12px', borderRadius: '8px', textDecoration: 'none', color: 'inherit', transition: 'all 0.2s', backgroundColor: '#f9f9f9', border: '2px solid transparent' },
+    otherCourseImg: { width: '80px', height: '80px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 },
+    otherCourseContent: { flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' },
+    otherCourseTitle: { fontSize: '14px', fontWeight: 'bold', color: '#000000', lineHeight: '1.4', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', fontFamily: '"Droid Arabic Kufi", serif' },
+    otherCoursePrice: { display: 'flex', alignItems: 'center', gap: '8px' },
+    otherCurrentPrice: { fontSize: '16px', fontWeight: 'bold', color: '#f57c00', fontFamily: '"Droid Arabic Kufi", serif' },
+    notFoundContainer: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl', marginTop: '100px' },
+    notFoundCard: { backgroundColor: '#ffffff', padding: '48px', borderRadius: '12px', border: '2px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', textAlign: 'center', maxWidth: '500px' },
+    notFoundIcon: { fontSize: '64px', marginBottom: '16px' },
+    btnPrimary: { display: 'inline-block', padding: '14px 32px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#ffffff', textDecoration: 'none', borderRadius: '10px', marginTop: '24px', fontWeight: 'bold', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif' },
 };
 
-// Media Queries
 const mediaQueryStyles = `
   @media (max-width: 768px) {
-    .overview-bar {
-      padding: 10px 16px !important;
-    }
-    
-    .breadcrumb-text {
-      font-size: 12px !important;
-    }
-    
-    .main-container {
-      padding: 20px 16px !important;
-    }
-    
-    .content-wrapper {
-      grid-template-columns: 1fr !important;
-      gap: 24px !important;
-    }
-    
-    .right-sidebar {
-      position: static !important;
-      order: -1;
-    }
+    .overview-bar { padding: 10px 16px !important; }
+    .breadcrumb-text { font-size: 12px !important; }
+    .main-container { padding: 20px 16px !important; }
+    .content-wrapper { grid-template-columns: 1fr !important; gap: 24px !important; }
+    .right-sidebar { position: static !important; order: -1; }
   }
-  
   @media (min-width: 769px) and (max-width: 1024px) {
-    .content-wrapper {
-      grid-template-columns: 1fr 320px !important;
-      gap: 24px !important;
-    }
+    .content-wrapper { grid-template-columns: 1fr 320px !important; gap: 24px !important; }
   }
-  
   @media (hover: hover) {
-    .otherCourseCard:hover {
-      background-color: #ffffff !important;
-      border-color: #0865a8 !important;
-      transform: translateY(-2px);
-    }
-    
-    .btnAddCart:hover {
-      background-color: #0865a8 !important;
-      color: #ffffff !important;
-    }
-    
-    .btnBuyNow:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(8,101,168,0.4) !important;
-    }
-    
-    .topicCard:hover {
-      background-color: #ffffff !important;
-      border-color: #0865a8 !important;
-      transform: translateX(4px);
-    }
-    
-    .fileItem:hover {
-      background-color: #ffffff !important;
-      border-color: #0865a8 !important;
-    }
+    .otherCourseCard:hover { background-color: #ffffff !important; border-color: #0865a8 !important; transform: translateY(-2px); }
+    .btnAddCart:hover { background-color: #0865a8 !important; color: #ffffff !important; }
+    .btnBuyNow:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(8,101,168,0.4) !important; }
+    .btnEnrollNow:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(26,122,60,0.4) !important; }
+    .topicCard:hover { background-color: #ffffff !important; border-color: #0865a8 !important; transform: translateX(4px); }
+    .fileItem:hover { background-color: #ffffff !important; border-color: #0865a8 !important; }
   }
 `;
 

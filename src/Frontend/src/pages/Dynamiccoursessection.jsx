@@ -42,143 +42,170 @@ const DynamicCoursesSection = () => {
                 setLoading(true);
                 setError(null);
 
-                const programIds = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+                console.log('🔄 Step 1: Fetching categories tree...');
+                const categoriesResponse = await fetch(`${API_BASE_URL}/Categories/tree`);
+                if (!categoriesResponse.ok) throw new Error('Failed to fetch categories');
+                const categoriesData = await categoriesResponse.json();
+                console.log('✅ Categories data received');
 
-                // Fetch from all categories
-                const coursePromises = programIds.map(id =>
-                    fetch(`${API_BASE_URL}/course/programs/${id}/courses`)
-                        .then(res => res.ok ? res.json() : null)
-                        .catch(() => null)
-                );
+                const programSlugs = [];
+                const extractSlugs = (categories) => {
+                    if (!categories || !Array.isArray(categories)) return;
+                    categories.forEach(category => {
+                        if (category.slug) programSlugs.push(category.slug);
+                        if (category.subCategories && Array.isArray(category.subCategories)) extractSlugs(category.subCategories);
+                        if (category.children && Array.isArray(category.children)) extractSlugs(category.children);
+                    });
+                };
 
-                const results = await Promise.all(coursePromises);
+                if (Array.isArray(categoriesData)) extractSlugs(categoriesData);
+                else if (categoriesData.categories) extractSlugs(categoriesData.categories);
+                else if (categoriesData.data) extractSlugs(categoriesData.data);
 
-                // Group courses by category and get newest from each
-                const coursesByCategory = results
-                    .map((result, index) => ({
-                        programId: programIds[index],
-                        courses: result?.courses || []
-                    }))
-                    .filter(category => category.courses.length > 0);
+                console.log(`📦 Found ${programSlugs.length} program slugs:`, programSlugs);
+                if (programSlugs.length === 0) throw new Error('No program slugs found in categories tree');
 
-                // Get newest course from each category
-                const newestFromEachCategory = coursesByCategory.map(category => {
-                    const sortedCourses = category.courses
-                        .filter(course => course !== null)
-                        .sort((a, b) => {
-                            const dateA = a.date ? new Date(a.date) : new Date(0);
-                            const dateB = b.date ? new Date(b.date) : new Date(0);
-                            return dateB - dateA;
-                        });
-                    return sortedCourses[0]; // Get newest from this category
-                }).filter(course => course !== undefined);
+                console.log('🔄 Step 2: Fetching courses from all programs...');
+                const allCourses = [];
 
-                // Get all remaining courses
-                const allCourses = coursesByCategory
-                    .flatMap(category => category.courses)
-                    .filter(course => course !== null);
+                for (const slug of programSlugs) {
+                    try {
+                        const res = await fetch(`${API_BASE_URL}/Course/programs/${slug}/courses`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.courses && Array.isArray(data.courses)) {
+                                data.courses.forEach(course => {
+                                    if (course && course.id && course.slug) {
+                                        allCourses.push({ ...course, programSlug: slug });
+                                    }
+                                });
+                                if (data.courses.length > 0) console.log(`✅ ${slug}: ${data.courses.length} courses`);
+                            }
+                        }
+                    } catch (err) {
+                        console.log(`❌ ${slug}: ${err.message}`);
+                    }
+                }
 
-                // Remove the courses we already selected (newest from each category)
-                const remainingCourses = allCourses.filter(course =>
-                    !newestFromEachCategory.some(selected => selected.id === course.id)
-                );
+                console.log(`📊 Total courses collected: ${allCourses.length}`);
+                if (allCourses.length === 0) { setError('لا توجد دورات متاحة حالياً'); setLoading(false); return; }
 
-                // Sort remaining courses by date
-                const sortedRemaining = remainingCourses.sort((a, b) => {
+                const sortedCourses = allCourses.sort((a, b) => {
                     const dateA = a.date ? new Date(a.date) : new Date(0);
                     const dateB = b.date ? new Date(b.date) : new Date(0);
                     return dateB - dateA;
                 });
 
-                // Combine: newest from each category + fill remaining slots with newest overall
-                const totalNeeded = 20;
-                const remainingSlots = totalNeeded - newestFromEachCategory.length;
-                const finalCourses = [
-                    ...newestFromEachCategory,
-                    ...sortedRemaining.slice(0, Math.max(0, remainingSlots))
-                ];
+                const top20 = sortedCourses.slice(0, 20);
+                console.log(`🎯 Selected ${top20.length} newest courses`);
 
-                // Sort final list by date (newest first)
-                const sortedFinal = finalCourses.sort((a, b) => {
-                    const dateA = a.date ? new Date(a.date) : new Date(0);
-                    const dateB = b.date ? new Date(b.date) : new Date(0);
-                    return dateB - dateA;
-                });
+                const transformedCourses = top20.map(apiCourse => {
+                    const originalPrice = apiCourse.cost ? apiCourse.cost / 0.6 : 0;
+                    return {
+                        id: apiCourse.id,
+                        slug: apiCourse.slug,
+                        title: apiCourse.title || 'دورة تدريبية',
+                        subtitle: apiCourse.place || 'دورة تدريبية',
+                        description: apiCourse.description || 'دورة تدريبية شاملة ومتخصصة',
+                        icon: apiCourse.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                        currentPrice: apiCourse.cost || 0,
+                        originalPrice: originalPrice,
+                        date: apiCourse.date || '',
+                        place: apiCourse.place || '',
+                        programSlug: apiCourse.programSlug || '',
+                        isFree: !apiCourse.cost || apiCourse.cost === 0
+                    };
+                }).filter(c => c && c.id && c.slug);
 
-                const transformedCourses = sortedFinal
-                    .slice(0, 20)
-                    .map(transformCourseData);
-
+                console.log(`✨ Final courses to display: ${transformedCourses.length}`);
                 setCourses(transformedCourses);
+
             } catch (err) {
-                console.error('Error fetching courses:', err);
+                console.error('❌ Fatal error:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
+
         fetchNewest20Courses();
     }, []);
 
-    const transformCourseData = (apiCourse) => {
-        // Calculate original price (assuming 40% discount)
-        const originalPrice = apiCourse.cost ? apiCourse.cost / 0.6 : 0;
+    // ✅ UPDATED: free courses save to enrolledCourses + navigate to /my-courses
+    //             paid courses add to cart + navigate to /cart
+    const handleCourseAction = (course) => {
+        if (course.isFree) {
+            // Save to enrolledCourses localStorage
+            const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+            const alreadyEnrolled = existing.some(e => e.id === course.id);
 
-        return {
-            id: apiCourse.id,
-            title: apiCourse.title,
-            subtitle: apiCourse.place || 'دورة تدريبية',
-            description: apiCourse.description || 'دورة تدريبية شاملة ومتخصصة',
-            icon: apiCourse.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
-            currentPrice: apiCourse.cost || 0,
-            originalPrice: originalPrice,
-            date: apiCourse.date || '',
-            place: apiCourse.place || '',
-        };
-    };
+            if (!alreadyEnrolled) {
+                const enrollItem = {
+                    id: course.id,
+                    slug: course.slug,
+                    title: course.title,
+                    place: course.place || '',
+                    instructor: course.place || 'غير محدد',
+                    date: course.date || '',
+                    image: course.icon || 'book',
+                    currentPrice: 0,
+                    progress: 0,
+                };
+                existing.push(enrollItem);
+                localStorage.setItem('enrolledCourses', JSON.stringify(existing));
+                window.dispatchEvent(new Event('enrollUpdated'));
+            }
 
-    const addToCart = (course) => {
-        const existingCart = localStorage.getItem('cartItems');
-        const cartItems = existingCart ? JSON.parse(existingCart) : [];
-
-        // Check if course is already in cart
-        if (!cartItems.some(item => item.id === course.id)) {
-            const cartItem = {
-                id: course.id,
-                title: course.title,
-                instructor: course.place || 'غير محدد',
-                image: course.icon || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
-                rating: 4.6,
-                reviews: 2547,
-                hours: 26,
-                lectures: 12,
-                level: 'متوسط',
-                currentPrice: course.currentPrice || 0,
-                originalPrice: course.originalPrice || (course.currentPrice * 1.6) || 0,
-                badge: 'الأكثر مبيعاً',
-                coupon: 'DISCOUNT2025',
-                quantity: 1
-            };
-
-            cartItems.push(cartItem);
-            localStorage.setItem('cartItems', JSON.stringify(cartItems));
-            window.dispatchEvent(new Event('cartUpdated'));
-
-            // Navigate to cart
-            navigate('/cart');
+            navigate('/my-courses');
         } else {
-            // If already in cart, just navigate to cart
+            // Add to cart for paid courses
+            const existingCart = localStorage.getItem('cartItems');
+            const cartItems = existingCart ? JSON.parse(existingCart) : [];
+
+            if (!cartItems.some(item => item.id === course.id)) {
+                const cartItem = {
+                    id: course.id,
+                    slug: course.slug,
+                    title: course.title,
+                    instructor: course.place || 'غير محدد',
+                    image: course.icon || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                    rating: 4.6,
+                    reviews: 2547,
+                    hours: 26,
+                    lectures: 12,
+                    level: 'متوسط',
+                    currentPrice: course.currentPrice || 0,
+                    originalPrice: course.originalPrice || (course.currentPrice * 1.6) || 0,
+                    badge: 'الأكثر مبيعاً',
+                    coupon: 'DISCOUNT2025',
+                    quantity: 1
+                };
+                cartItems.push(cartItem);
+                localStorage.setItem('cartItems', JSON.stringify(cartItems));
+                window.dispatchEvent(new Event('cartUpdated'));
+            }
             navigate('/cart');
         }
     };
 
-    const handleMainCategoryClick = () => navigate('/courses?category=all&expand=true');
-
-    if (loading || error || courses.length === 0) {
+    if (loading) {
         return (
             <Container maxWidth="xl" sx={{ py: 10, textAlign: 'center' }}>
-                <Typography variant="h6" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: error ? 'error.main' : '#0865a8' }}>
-                    {loading ? 'جاري تحميل الدورات...' : error ? 'حدث خطأ أثناء تحميل الدورات' : 'لا توجد دورات متاحة حالياً'}
+                <Typography variant="h6" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: '#0865a8' }}>
+                    جاري تحميل الدورات...
+                </Typography>
+            </Container>
+        );
+    }
+
+    if (error || courses.length === 0) {
+        return (
+            <Container maxWidth="xl" sx={{ py: 10, textAlign: 'center' }}>
+                <Typography variant="h6" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: 'error.main', mb: 2 }}>
+                    {error || 'لا توجد دورات متاحة حالياً'}
+                </Typography>
+                <Typography variant="body2" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: '#666' }}>
+                    Check console (F12) for details
                 </Typography>
             </Container>
         );
@@ -186,7 +213,6 @@ const DynamicCoursesSection = () => {
 
     return (
         <Container maxWidth="xl" sx={{ py: { xs: 4, sm: 6, md: 10 }, bgcolor: '#fff' }}>
-            {/* Header Section */}
             <Box sx={{ mb: 5, textAlign: 'center' }}>
                 <Typography
                     variant="h3"
@@ -207,7 +233,6 @@ const DynamicCoursesSection = () => {
                 </Typography>
             </Box>
 
-            {/* Swiper Section */}
             <Box sx={{ position: 'relative', px: { lg: 5 } }}>
                 <Swiper
                     modules={[Navigation]}
@@ -227,7 +252,7 @@ const DynamicCoursesSection = () => {
                     {courses.map((course, index) => (
                         <SwiperSlide key={course.id}>
                             <Card
-                                onClick={() => navigate(`/course?id=${course.id}`)}
+                                onClick={() => navigate(`/course/${course.slug}`)}
                                 onMouseEnter={() => setHoveredCourse(course.id)}
                                 onMouseLeave={() => setHoveredCourse(null)}
                                 sx={{
@@ -254,7 +279,6 @@ const DynamicCoursesSection = () => {
                                 >
                                     {getCourseIcon(course, index)}
                                     <Box
-                                        className="overlay"
                                         sx={{
                                             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
                                             bgcolor: 'rgba(245, 124, 0, 0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -268,14 +292,7 @@ const DynamicCoursesSection = () => {
                                 </Box>
 
                                 <CardContent
-                                    sx={{
-                                        flexGrow: 1,
-                                        p: 2,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: 0.5,
-                                        overflow: 'hidden'
-                                    }}
+                                    sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column', gap: 0.5, overflow: 'hidden' }}
                                 >
                                     <Tooltip title={course.title} arrow placement="top">
                                         <Typography
@@ -296,9 +313,13 @@ const DynamicCoursesSection = () => {
                                     </Tooltip>
 
                                     <Box sx={{ mt: 'auto' }}>
-                                        {course.currentPrice > 0 && (
+                                        {!course.isFree ? (
                                             <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1.1rem', color: '#f57c00' }}>
                                                 {course.currentPrice.toFixed(2)} ج.م
+                                            </Typography>
+                                        ) : (
+                                            <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1.1rem', color: '#4caf50' }}>
+                                                مجاناً
                                             </Typography>
                                         )}
                                         <Box sx={{ display: 'flex', flexDirection: 'column', mt: 0.5 }}>
@@ -324,15 +345,24 @@ const DynamicCoursesSection = () => {
                                         variant="outlined"
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            addToCart(course);
+                                            handleCourseAction(course);
                                         }}
                                         sx={{
-                                            borderColor: '#0865a8', color: '#0865a8', fontWeight: 600, borderRadius: 1.5,
-                                            fontSize: '0.75rem', py: 0.5, fontFamily: '"Droid Arabic Kufi", serif',
-                                            '&:hover': { bgcolor: '#0865a8', color: '#fff', borderColor: '#0865a8' }
+                                            borderColor: course.isFree ? '#27ae60' : '#0865a8',
+                                            color: course.isFree ? '#27ae60' : '#0865a8',
+                                            fontWeight: 600,
+                                            borderRadius: 1.5,
+                                            fontSize: '0.75rem',
+                                            py: 0.5,
+                                            fontFamily: '"Droid Arabic Kufi", serif',
+                                            '&:hover': {
+                                                bgcolor: course.isFree ? '#27ae60' : '#0865a8',
+                                                color: '#fff',
+                                                borderColor: course.isFree ? '#27ae60' : '#0865a8'
+                                            }
                                         }}
                                     >
-                                        إضافة إلى السلة
+                                        {course.isFree ? 'اشترك الآن' : 'إضافة إلى السلة'}
                                     </Button>
                                 </CardActions>
                             </Card>
