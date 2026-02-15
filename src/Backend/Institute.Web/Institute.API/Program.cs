@@ -52,6 +52,7 @@ builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddHttpClient<ClerkService>();
 builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
+builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddScoped<BankPaymentService>();
 

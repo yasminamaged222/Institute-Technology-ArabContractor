@@ -1,4 +1,5 @@
 ﻿using Institute.Domain.specifications;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,8 @@ namespace Institute.Application.Interfaces
         Task AddAsync(T entity);
         void Update(T entity);
         void Delete(T entity);
-
+        Task SaveChangesAsync();
+     
 
 
 
