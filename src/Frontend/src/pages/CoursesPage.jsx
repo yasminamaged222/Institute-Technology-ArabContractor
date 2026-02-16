@@ -1333,6 +1333,42 @@ const styles = {
         fontFamily: '"Droid Arabic Kufi", serif',
         opacity: 0.7,
     },
+    // Toast notification styles
+    toast: {
+        position: 'fixed',
+        top: '100px',
+        right: '20px',
+        backgroundColor: '#ffffff',
+        padding: '16px 24px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        maxWidth: '400px',
+        animation: 'slideIn 0.3s ease-out',
+        fontFamily: '"Droid Arabic Kufi", serif',
+    },
+    toastSuccess: {
+        borderRight: '4px solid #4caf50',
+    },
+    toastError: {
+        borderRight: '4px solid #f44336',
+    },
+    toastWarning: {
+        borderRight: '4px solid #ff9800',
+    },
+    toastIcon: {
+        width: '24px',
+        height: '24px',
+        flexShrink: 0,
+    },
+    toastMessage: {
+        fontSize: '14px',
+        color: '#000000',
+        flex: 1,
+    },
 };
 
 // Media query styles
@@ -1775,31 +1811,6 @@ const CoursesPage = () => {
         } finally {
             setAddingToCart(null);
         }
-    };
-
-    // ✅ UPDATED: saves to enrolledCourses localStorage then navigates to /my-courses
-    const handleEnroll = (course) => {
-        const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
-        const alreadyEnrolled = existing.some(e => e.id === course.id);
-
-        if (!alreadyEnrolled) {
-            const enrollItem = {
-                id: course.id,
-                slug: course.slug,
-                title: course.title,
-                place: course.place || '',
-                instructor: course.place || 'غير محدد',
-                date: course.date || '',
-                image: 'book',
-                currentPrice: 0,
-                progress: 0,
-            };
-            existing.push(enrollItem);
-            localStorage.setItem('enrolledCourses', JSON.stringify(existing));
-            window.dispatchEvent(new Event('enrollUpdated'));
-        }
-
-        navigate('/my-courses');
     };
 
     // Loading state
