@@ -62,7 +62,7 @@ const News = () => {
         <div className="news-page-container">
 
             {/* Breadcrumb */}
-            <div className="overview_intro" style={{ position: 'relative', bottom: '50px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee' }}>
+            <div className="overview_intro" style={{ position: 'relative', bottom: '50px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee', bottom:70 }}>
                 <span className="overview"><a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار</span>
             </div>
 

@@ -660,7 +660,7 @@ const NewsDetails = () => {
 
             {/* Fixed Overview Bar */}
             <div className="top-100 fixed left-0 z-50 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{
-                top: '80px',
+                top: '70px',
                 position: 'fixed',
                 left: 0,
                 zIndex: 50,

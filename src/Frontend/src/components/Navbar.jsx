@@ -318,7 +318,9 @@ const Navbar = () => {
                     color: '#000',
                     py: 0.5,
                     top: 0,
-                    zIndex: 1100
+                    zIndex: 1100,
+                    height:70
+                    
                 }}
             >
                 <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>

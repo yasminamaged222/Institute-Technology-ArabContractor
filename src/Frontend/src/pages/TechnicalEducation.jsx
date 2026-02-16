@@ -342,7 +342,7 @@ export default function TechnicalEducationAlt() {
                 }
             `}</style>
 
-            <nav className="tech-fixed-bar">
+            <nav className="tech-fixed-bar" style={{top:70}}>
                 <div className="tech-fixed-bar-content">
                     <a href="/" className="tech-nav-link">الصفحة الرئيسية</a>
                     <span className="tech-nav-sep">-</span>
