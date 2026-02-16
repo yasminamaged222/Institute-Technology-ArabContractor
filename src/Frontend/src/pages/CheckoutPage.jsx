@@ -152,7 +152,7 @@ export default function CheckoutPage() {
             `}</style>
 
             {/* Fixed Overview Bar - Exactly as requested */}
-            <div className="fixed left-0 top-16 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20">
+            <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20" style={{top:70}}>
                 <div className="text-center">
                     <span className="text-sm md:text-base">
                         <a href="/" className="ml-3 text-gray-700 transition-colors hover:text-gray-900">الصفحة الرئيسية</a>

@@ -462,7 +462,7 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                 const transformedBooks = allItems.map((book, index) => {
                     // Extract year from the unusual format: "0001-01-01T00:00:00.0001997"
                     // The actual year is after the decimal point
-                    let year = 'N/A';
+                    let year = '2000';
                     if (book.bookDate) {
                         const match = book.bookDate.match(/\.000(\d{4})$/);
                         if (match && match[1]) {
