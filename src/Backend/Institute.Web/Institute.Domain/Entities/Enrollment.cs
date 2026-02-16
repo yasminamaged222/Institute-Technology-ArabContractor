@@ -6,19 +6,18 @@ using System.Threading.Tasks;
 
 namespace Institute.Domain.Entities
 {
-    public class Cart
+    public class Enrollment
     {
         public int Id { get; set; }
 
         public int UserId { get; set; }
         public AppUser User { get; set; }
 
-        public bool IsCheckedOut { get; set; } = false;
+        public int PlanworkId { get; set; }
+        public Planwork Planwork { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public int OrderId { get; set; }
 
-        public ICollection<CartItem> Items { get; set; } = new List<CartItem>();
-
-
+        public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
     }
 }
