@@ -39,11 +39,14 @@ namespace Institute.API.Controllers
 
             // 3️⃣ إنشاء Order تلقائي على أساس الـ Cart بتاعه
             var order = await _checkoutService.CreateOrderAsync(user.Id);
-            var redirectUrl = await _bankPaymentService
-                    .InitiateCheckoutAsync(order.Id, order.TotalAmount);
 
-            return Ok(new { redirectUrl });
+            // 4️⃣ Initiate checkout عند البنك و get full DTO
+            var checkoutResponse = await _bankPaymentService.InitiateCheckoutAsync(order);
+
+            // 5️⃣ Return JSON كامل للـ frontend
+            return Ok(checkoutResponse);
         }
+
 
 
         [HttpGet("result")]
