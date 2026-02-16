@@ -4,6 +4,7 @@ using Institute.Application.Interfaces.IService;
 using Institute.Application.Services;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,8 +39,10 @@ namespace Institute.API.Controllers
 
             // 3️⃣ إنشاء Order تلقائي على أساس الـ Cart بتاعه
             var order = await _checkoutService.CreateOrderAsync(user.Id);
+            var redirectUrl = await _bankPaymentService
+                    .InitiateCheckoutAsync(order.Id, order.TotalAmount);
 
-            return Ok(order);
+            return Ok(new { redirectUrl });
         }
 
 
@@ -60,5 +63,21 @@ namespace Institute.API.Controllers
                 GatewayResponse = payment.GatewayResponse
             });
         }
+        [AllowAnonymous]
+        [HttpPost("webhook")]
+        public async Task<IActionResult> PaymentWebhook()
+        {
+            using var reader = new StreamReader(Request.Body);
+            var body = await reader.ReadToEndAsync();
+
+            // ممكن تسجل الـ body لو عايز
+            // _logger.LogInformation(body);
+
+            // هنا هتستخرج orderId من البيانات اللي البنك باعتها
+            // حسب ال payload اللي بيجيلك
+
+            return Ok();
+        }
+
     }
 }

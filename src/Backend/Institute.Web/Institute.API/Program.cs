@@ -42,10 +42,7 @@ builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>)
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsListDto>>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsDetailsDto>>();
-builder.Services.Configure<PaymentSettings>(
-    builder.Configuration.GetSection("BankMisr"));
 
-builder.Services.AddHttpClient<BankPaymentService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
@@ -55,9 +52,8 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddScoped<BankPaymentService>();
-
+builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("BankMisr"));
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
-builder.Services.AddHttpClient(); // <-- ضروري علشان IHttpClientFactory يتسجل
 builder.Services.AddHttpClient("BankClient", client =>
 {
     var paymentSettings = builder.Configuration.GetSection("PaymentSettings").Get<PaymentSettings>();

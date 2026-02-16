@@ -1,12 +1,13 @@
 ﻿using Institute.API.DTOs;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Net.Http;
-using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 
 namespace Institute.Application.Services
@@ -52,17 +53,50 @@ namespace Institute.Application.Services
 
             return result["redirectUrl"].ToString(); // رابط صفحة الدفع الحقيقية
         }
-
         public async Task<bool> VerifyPaymentAsync(string orderId)
         {
             var client = _httpClientFactory.CreateClient("BankClient");
-            var response = await client.GetAsync($"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/order/{orderId}");
-            response.EnsureSuccessStatusCode();
+
+            var response = await client.GetAsync(
+                $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/order/{orderId}");
+
+            if (!response.IsSuccessStatusCode)
+                return false;
 
             var body = await response.Content.ReadAsStringAsync();
-            var result = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
 
-            return result["status"].ToString() == "CAPTURED"; // الدفع ناجح؟
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+
+            var result = root.GetProperty("result").GetString();
+
+            if (result != "SUCCESS")
+                return false;
+
+            var transactions = root.GetProperty("transaction");
+
+            foreach (var txn in transactions.EnumerateArray())
+            {
+                var status = txn.GetProperty("transaction").GetProperty("status").GetString();
+
+                if (status == "SUCCESS")
+                    return true;
+            }
+
+            return false;
         }
+
+
+        //public async Task<bool> VerifyPaymentAsync(string orderId)
+        //{
+        //    var client = _httpClientFactory.CreateClient("BankClient");
+        //    var response = await client.GetAsync($"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/order/{orderId}");
+        //    response.EnsureSuccessStatusCode();
+
+        //    var body = await response.Content.ReadAsStringAsync();
+        //    var result = JsonSerializer.Deserialize<Dictionary<string, object>>(body);
+
+        //    return result["status"].ToString() == "CAPTURED"; // الدفع ناجح؟
+        //}
     }
 }
