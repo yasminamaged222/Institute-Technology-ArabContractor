@@ -52,11 +52,12 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddScoped<BankPaymentService>();
-builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("BankMisr"));
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
 builder.Services.AddHttpClient("BankClient", client =>
 {
     var paymentSettings = builder.Configuration.GetSection("PaymentSettings").Get<PaymentSettings>();
+    if (paymentSettings == null) throw new Exception("PaymentSettings section not found in configuration.");
+
     client.BaseAddress = new Uri(paymentSettings.BaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 

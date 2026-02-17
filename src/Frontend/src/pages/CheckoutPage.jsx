@@ -131,19 +131,19 @@
 //                 * {
 //                     font-family: "Droid Arabic Kufi", serif !important;
 //                 }
-                
+
 //                 @media (max-width: 640px) {
 //                     .checkout-main {
 //                         padding-top: 100px !important;
 //                     }
 //                 }
-                
+
 //                 @media (min-width: 641px) and (max-width: 1024px) {
 //                     .checkout-main {
 //                         padding-top: 120px !important;
 //                     }
 //                 }
-                
+
 //                 @media (min-width: 1025px) {
 //                     .checkout-main {
 //                         padding-top: 130px !important;
@@ -178,7 +178,7 @@
 //                             {/* Payment Method */}
 //                             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:p-6 md:p-8">
 //                                 <h2 className="mb-4 text-lg font-bold text-black md:mb-6 md:text-xl">تفاصيل الدفع</h2>
-                                
+
 //                                 <div className="space-y-3 md:space-y-4">
 //                                     {/* Selected Payment Method */}
 //                                     <div className="rounded-lg border-2 border-[#0865a8] bg-blue-50/30 p-4 md:p-5">
@@ -268,7 +268,7 @@
 //                                 {/* Order Details */}
 //                                 <div className="mb-4 md:mb-6">
 //                                     <p className="mb-3 text-sm font-bold text-black md:mb-4">ملخص الطلب</p>
-                                    
+
 //                                     {/* Courses List */}
 //                                     <div className="mb-3 max-h-48 space-y-2.5 overflow-y-auto md:mb-4 md:space-y-3">
 //                                         {cartItems.map((item) => (
@@ -393,7 +393,7 @@
 // export default function CheckoutPage() {
 //     const navigate = useNavigate();
 //     const { getToken, isSignedIn } = useAuth();
-    
+
 //     const [cartItems, setCartItems] = useState([]);
 //     const [loading, setLoading] = useState(false);
 //     const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -441,25 +441,25 @@
 //     // Helper function to handle API responses
 //     const handleResponse = async (response) => {
 //         const contentType = response.headers.get('content-type');
-        
+
 //         // Check if response is JSON
 //         if (contentType && contentType.includes('application/json')) {
 //             const data = await response.json();
-            
+
 //             if (!response.ok) {
 //                 throw new Error(data.message || data.error || `خطأ: ${response.status}`);
 //             }
-            
+
 //             return data;
 //         } else {
 //             // Response is not JSON (HTML, text, etc.)
 //             const text = await response.text();
 //             console.error('Non-JSON response:', text);
-            
+
 //             if (text.includes('System.Net') || text.includes('Exception')) {
 //                 throw new Error('خطأ في الخادم. يرجى المحاولة لاحقاً.');
 //             }
-            
+
 //             throw new Error('تنسيق استجابة غير متوقع من الخادم');
 //         }
 //     };
@@ -469,13 +469,13 @@
 //         setLoading(true);
 //         try {
 //             const token = await getToken();
-            
+
 //             if (!token) {
 //                 throw new Error('فشل في الحصول على رمز المصادقة');
 //             }
 
 //             console.log('Checking payment result for:', { orderId, transactionRef });
-            
+
 //             const response = await fetch(
 //                 `https://acwebsite-icmet-test.azurewebsites.net/api/checkout/result?orderId=${orderId}&transactionRef=${transactionRef}`,
 //                 {
@@ -598,10 +598,10 @@
 
 //         } catch (error) {
 //             console.error('Payment error:', error);
-            
+
 //             // Handle different error types
 //             let errorMessage = 'حدث خطأ أثناء معالجة الطلب';
-            
+
 //             if (error.message.includes('Failed to fetch')) {
 //                 errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت.';
 //             } else if (error.message.includes('Unauthorized') || error.message.includes('401')) {
@@ -612,7 +612,7 @@
 //             } else if (error.message) {
 //                 errorMessage = error.message;
 //             }
-            
+
 //             setError(errorMessage);
 //         } finally {
 //             setLoading(false);
@@ -684,19 +684,19 @@
 //                 * {
 //                     font-family: "Droid Arabic Kufi", serif !important;
 //                 }
-                
+
 //                 @media (max-width: 640px) {
 //                     .checkout-main {
 //                         padding-top: 100px !important;
 //                     }
 //                 }
-                
+
 //                 @media (min-width: 641px) and (max-width: 1024px) {
 //                     .checkout-main {
 //                         padding-top: 120px !important;
 //                     }
 //                 }
-                
+
 //                 @media (min-width: 1025px) {
 //                     .checkout-main {
 //                         padding-top: 130px !important;
@@ -751,7 +751,7 @@
 //                             {/* Payment Method */}
 //                             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:p-6 md:p-8">
 //                                 <h2 className="mb-4 text-lg font-bold text-black md:mb-6 md:text-xl">تفاصيل الدفع</h2>
-                                
+
 //                                 <div className="space-y-3 md:space-y-4">
 //                                     {/* Selected Payment Method */}
 //                                     <div className="rounded-lg border-2 border-[#0865a8] bg-blue-50/30 p-4 md:p-5">
@@ -841,7 +841,7 @@
 //                                 {/* Order Details */}
 //                                 <div className="mb-4 md:mb-6">
 //                                     <p className="mb-3 text-sm font-bold text-black md:mb-4">ملخص الطلب</p>
-                                    
+
 //                                     {/* Courses List */}
 //                                     <div className="mb-3 max-h-48 space-y-2.5 overflow-y-auto md:mb-4 md:space-y-3">
 //                                         {cartItems.map((item) => (
@@ -974,7 +974,7 @@ import { useAuth } from "@clerk/clerk-react";
 export default function CheckoutPage() {
     const navigate = useNavigate();
     const { getToken, isSignedIn } = useAuth();
-    
+
     const [cartItems, setCartItems] = useState([]);
     const [loading, setLoading] = useState(false);
     const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -1022,23 +1022,23 @@ export default function CheckoutPage() {
     // Helper function to handle API responses
     const handleResponse = async (response) => {
         const contentType = response.headers.get('content-type');
-        
+
         console.log('Response status:', response.status);
         console.log('Response content-type:', contentType);
-        
+
         // Try to get the response text first
         const text = await response.text();
         console.log('Raw response:', text.substring(0, 500)); // Log first 500 chars
-        
+
         // Check if response is JSON
         if (contentType && contentType.includes('application/json')) {
             try {
                 const data = JSON.parse(text);
-                
+
                 if (!response.ok) {
                     throw new Error(data.message || data.error || `خطأ: ${response.status}`);
                 }
-                
+
                 return data;
             } catch (parseError) {
                 console.error('JSON parse error:', parseError);
@@ -1047,7 +1047,7 @@ export default function CheckoutPage() {
         } else {
             // Response is not JSON (HTML, text, etc.)
             console.error('Non-JSON response received');
-            
+
             // Check for specific error patterns
             if (text.includes('System.Net') || text.includes('Exception') || text.includes('Error')) {
                 // Extract error message if possible
@@ -1055,12 +1055,12 @@ export default function CheckoutPage() {
                 const errorMessage = errorMatch ? errorMatch[1] : 'خطأ في الخادم';
                 throw new Error(`خطأ في الخادم: ${errorMessage}`);
             }
-            
+
             // If status is 200-299 but not JSON, there might be an issue
             if (response.ok) {
                 throw new Error('الخادم أرجع تنسيق غير متوقع. يرجى التواصل مع الدعم الفني.');
             }
-            
+
             throw new Error(`خطأ: ${response.status} ${response.statusText}`);
         }
     };
@@ -1070,15 +1070,15 @@ export default function CheckoutPage() {
         setLoading(true);
         try {
             const token = await getToken();
-            
+
             if (!token) {
                 throw new Error('فشل في الحصول على رمز المصادقة');
             }
 
             console.log('Checking payment result for:', { orderId, transactionRef });
-            
+
             const response = await fetch(
-                `https://acwebsite-icmet-test.azurewebsites.net/api/checkout/result?orderId=${orderId}&transactionRef=${transactionRef}`,
+                `https://localhost:7177/api/checkout/result?orderId=${orderId}&transactionRef=${transactionRef}`,
                 {
                     method: 'GET',
                     headers: {
@@ -1093,10 +1093,10 @@ export default function CheckoutPage() {
             console.log('Payment result:', result);
 
             // Check for success in multiple possible formats
-            const isSuccess = 
-                result.status === 'success' || 
+            const isSuccess =
+                result.status === 'success' ||
                 result.status === 'Success' ||
-                result.paymentStatus === 'completed' || 
+                result.paymentStatus === 'completed' ||
                 result.paymentStatus === 'Completed' ||
                 result.paymentStatus === 'paid' ||
                 result.paymentStatus === 'Paid' ||
@@ -1166,7 +1166,7 @@ export default function CheckoutPage() {
 
             // Create order via API
             const response = await fetch(
-                'https://acwebsite-icmet-test.azurewebsites.net/api/checkout/checkout/',
+                'https://localhost:7177/api/checkout/checkout',
                 {
                     method: 'POST',
                     headers: {
@@ -1183,49 +1183,68 @@ export default function CheckoutPage() {
             const orderResponse = await handleResponse(response);
             console.log('Order created successfully:', orderResponse);
 
-            // Check different possible response formats
-            const paymentUrl = orderResponse.paymentUrl || 
-                              orderResponse.PaymentUrl || 
-                              orderResponse.payment_url ||
-                              orderResponse.url;
-            
-            const orderId = orderResponse.id || 
-                          orderResponse.Id || 
-                          orderResponse.orderId || 
-                          orderResponse.OrderId;
+            // 1. Check for Mastercard Hosted Checkout (Session ID)
+            if (orderResponse.data && orderResponse.data.sessionId) {
+                const { sessionId, checkoutJsUrl, orderId } = orderResponse.data;
 
-            console.log('Extracted paymentUrl:', paymentUrl);
-            console.log('Extracted orderId:', orderId);
+                console.log('Initializing Mastercard Checkout:', sessionId);
 
-            // Check if response contains payment URL
+                // Load the Mastercard script securely
+                await loadScript(checkoutJsUrl);
+
+                if (window.Checkout) {
+                    window.Checkout.configure({
+                        session: {
+                            id: sessionId
+                        },
+                        order: {
+                            description: `Order #${orderId}`,
+                            id: orderId
+                        },
+                        interaction: {
+                            merchant: {
+                                name: 'Institute Technology Arab Contractor',
+                                address: {
+                                    line1: '26 Ramses St., Downtown',
+                                    line2: 'Cairo, Egypt'
+                                }
+                            }
+                        }
+                    });
+
+                    window.Checkout.showPaymentPage();
+                } else {
+                    throw new Error('فشل تحميل بوابة الدفع. يرجى المحاولة مرة أخرى.');
+                }
+
+                return; // Stop here, payment page will handle the rest
+            }
+
+            // 2. Fallback: Check for standard Redirect URL
+            const paymentUrl = orderResponse.paymentUrl || orderResponse.url;
             if (paymentUrl) {
-                console.log('Redirecting to payment gateway:', paymentUrl);
-                // Small delay to ensure console logs are visible
-                setTimeout(() => {
-                    window.location.href = paymentUrl;
-                }, 100);
-            } else if (orderId) {
-                // Store order ID and show success (for testing or if no redirect needed)
-                console.log('No payment URL provided, showing success page');
-                console.warn('Backend did not provide paymentUrl. Check API response format.');
-                
+                window.location.href = paymentUrl;
+                return;
+            }
+
+            // 3. Fallback: Direct Success (e.g. Test Mode)
+            if (orderId) {
                 setOrderId(orderId);
                 setOrderAmount(orderResponse.totalAmount || orderResponse.TotalAmount || subtotal);
                 setPaymentSuccess(true);
                 localStorage.removeItem('cartItems');
                 window.dispatchEvent(new Event('cartUpdated'));
             } else {
-                console.error('Invalid response format:', orderResponse);
-                throw new Error('استجابة غير صالحة من الخادم. لا يوجد رابط دفع أو معرف طلب.');
+                throw new Error('لم يتم استلام رابط الدفع من الخادم');
             }
 
         } catch (error) {
             console.error('Payment error:', error);
             console.error('Error stack:', error.stack);
-            
+
             // Handle different error types
             let errorMessage = 'حدث خطأ أثناء معالجة الطلب';
-            
+
             if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                 errorMessage = 'فشل الاتصال بالخادم. يرجى التحقق من اتصال الإنترنت والمحاولة مرة أخرى.';
             } else if (error.message.includes('Unauthorized') || error.message.includes('401')) {
@@ -1236,7 +1255,7 @@ export default function CheckoutPage() {
             } else if (error.message) {
                 errorMessage = error.message;
             }
-            
+
             setError(errorMessage);
         } finally {
             setLoading(false);
@@ -1329,7 +1348,7 @@ export default function CheckoutPage() {
             `}</style>
 
             {/* Fixed Overview Bar */}
-            <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20" style={{top:70}}>
+            <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20" style={{ top: 70 }}>
                 <div className="text-center">
                     <span className="text-sm md:text-base">
                         <a href="/" className="ml-3 text-gray-700 transition-colors hover:text-gray-900">الصفحة الرئيسية</a>
@@ -1375,7 +1394,7 @@ export default function CheckoutPage() {
                             {/* Payment Method */}
                             <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:p-6 md:p-8">
                                 <h2 className="mb-4 text-lg font-bold text-black md:mb-6 md:text-xl">تفاصيل الدفع</h2>
-                                
+
                                 <div className="space-y-3 md:space-y-4">
                                     {/* Selected Payment Method */}
                                     <div className="rounded-lg border-2 border-[#0865a8] bg-blue-50/30 p-4 md:p-5">
@@ -1392,14 +1411,14 @@ export default function CheckoutPage() {
                                                 <p className="text-xs text-black opacity-60 md:text-sm">Visa, Mastercard</p>
                                             </div>
                                             <div className="flex gap-1.5 md:gap-2">
-                                                <img 
-                                                    src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" 
-                                                    alt="Visa" 
+                                                <img
+                                                    src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png"
+                                                    alt="Visa"
                                                     className="h-6 md:h-8"
                                                 />
-                                                <img 
-                                                    src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
-                                                    alt="Mastercard" 
+                                                <img
+                                                    src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
+                                                    alt="Mastercard"
                                                     className="h-6 md:h-8"
                                                 />
                                             </div>
@@ -1454,8 +1473,8 @@ export default function CheckoutPage() {
                                     <span className="text-base font-bold text-black md:text-lg">
                                         {cartItems.length === 0 ? 'السلة فارغة' : cartItems.length === 1 ? 'دورة واحدة' : `${cartItems.length} دورات`}
                                     </span>
-                                    <Link 
-                                        to="/cart" 
+                                    <Link
+                                        to="/cart"
                                         className="text-xs font-semibold text-[#0865a8] hover:underline md:text-sm"
                                     >
                                         تغيير
@@ -1465,7 +1484,7 @@ export default function CheckoutPage() {
                                 {/* Order Details */}
                                 <div className="mb-4 md:mb-6">
                                     <p className="mb-3 text-sm font-bold text-black md:mb-4">ملخص الطلب</p>
-                                    
+
                                     {/* Courses List */}
                                     <div className="mb-3 max-h-48 space-y-2.5 overflow-y-auto md:mb-4 md:space-y-3">
                                         {cartItems.map((item) => (
@@ -1519,7 +1538,7 @@ export default function CheckoutPage() {
                                                 placeholder="أدخل كود الخصم"
                                                 className="flex-1 rounded-lg border border-gray-300 px-2.5 py-2 text-xs text-black focus:border-[#0865a8] focus:outline-none focus:ring-2 focus:ring-[#0865a8]/20 md:px-3 md:text-sm"
                                             />
-                                            <button 
+                                            <button
                                                 onClick={() => {
                                                     if (couponCode.trim()) {
                                                         alert('سيتم تطبيق الكود عند إتمام الدفع');
