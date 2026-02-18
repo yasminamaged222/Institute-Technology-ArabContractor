@@ -1801,9 +1801,9 @@ const CoursesPage = () => {
             showToast('تمت إضافة الدورة إلى السلة بنجاح', 'success');
 
             // Navigate to cart page after short delay
-            setTimeout(() => {
-                navigate('/cart');
-            }, 1000);
+            // setTimeout(() => {
+            //     navigate('/cart');
+            // }, 1000);
 
         } catch (error) {
             console.error('Error adding to cart:', error);

@@ -45,11 +45,66 @@ namespace Institute.Application.Services
             var spec = new BaseSpecification<AppUser>(u => u.ClerkUserId == clerkUserId);
             return (await _userRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
         }
+        #region oldCode
+        //public async Task<Order> CreateOrderAsync(int userId)
+        //{
+        //    var spec = new BaseSpecification<Cart>(c => c.UserId == userId && !c.IsCheckedOut);
+        //    spec.AddInclude(c => c.Items);
+        //    var cart = (await _cartRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
 
+        //    if (cart == null || !cart.Items.Any())
+        //        throw new Exception("Cart is empty");
+
+        //    var total = cart.Items.Sum(i => i.Price);
+
+        //    var order = new Order
+        //    {
+        //        UserId = userId,
+        //        TotalAmount = total,
+        //        Status = OrderStatus.Pending,
+        //        CreatedAt = DateTime.UtcNow
+        //    };
+
+        //    await _orderRepository.AddAsync(order);
+        //    await _orderRepository.SaveChangesAsync(); // عشان نجيب order.Id
+
+        //    foreach (var item in cart.Items)
+        //    {
+        //        await _orderItemRepository.AddAsync(new OrderItem
+        //        {
+        //            OrderId = order.Id,
+        //            PlanworkId = item.PlanworkId,
+        //            Price = item.Price
+        //        });
+        //    }
+
+        //    // 🔥 Create Payment Pending هنا
+        //    var payment = new Payment
+        //    {
+        //        OrderId = order.Id,
+        //        Amount = total,
+        //        Method = PaymentMethod.Visa,
+        //        Status = PaymentStatus.Pending
+        //    };
+
+        //    await _paymentRepository.AddAsync(payment);
+
+        //    // 🔥 اقفل الكارت
+        //    cart.IsCheckedOut = true;
+        //    _cartRepository.Update(cart);
+
+        //    await _orderRepository.SaveChangesAsync();
+
+        //    return order;
+        //}
+        #endregion
+
+        //NewCODE 
         public async Task<Order> CreateOrderAsync(int userId)
         {
             var spec = new BaseSpecification<Cart>(c => c.UserId == userId && !c.IsCheckedOut);
             spec.AddInclude(c => c.Items);
+
             var cart = (await _cartRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
 
             if (cart == null || !cart.Items.Any())
@@ -66,7 +121,7 @@ namespace Institute.Application.Services
             };
 
             await _orderRepository.AddAsync(order);
-            await _orderRepository.SaveChangesAsync(); // عشان نجيب order.Id
+            await _orderRepository.SaveChangesAsync(); // عشان نجيب Id
 
             foreach (var item in cart.Items)
             {
@@ -78,21 +133,21 @@ namespace Institute.Application.Services
                 });
             }
 
-            // 🔥 Create Payment Pending هنا
             var payment = new Payment
             {
                 OrderId = order.Id,
                 Amount = total,
                 Method = PaymentMethod.Visa,
-                Status = PaymentStatus.Pending
+                Status = PaymentStatus.Pending,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _paymentRepository.AddAsync(payment);
 
-            // 🔥 اقفل الكارت
             cart.IsCheckedOut = true;
             _cartRepository.Update(cart);
 
+            // ✅ Save once for everything
             await _orderRepository.SaveChangesAsync();
 
             return order;
