@@ -929,6 +929,8 @@ async function exportWord_JSZip(filename, reportTitle, subtitle, headers, rows, 
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════════════════
 const AdminDashboard = () => {
@@ -948,6 +950,70 @@ const AdminDashboard = () => {
     const [exportMenuOpen, setExportMenuOpen] = useState(false);
     const [exporting, setExporting] = useState(false);
     const [exportError, setExportError] = useState(null);
+
+    // ── Attendance: { "userId_courseId": bool } ───────────────────────────────
+    const [attendance, setAttendance] = useState({});
+    const [attendanceSaving, setAttendanceSaving] = useState({});
+    const [attendanceCourseFilter, setAttendanceCourseFilter] = useState('all');
+    const [attendanceUserSearch, setAttendanceUserSearch] = useState('');
+
+    // ── Certificates: { "userId_courseId": { name, url } } ───────────────────
+    const [certificates, setCertificates] = useState({});
+    const [certUploading, setCertUploading] = useState({});
+    const [certModal, setCertModal] = useState(null);
+    const [certDragOver, setCertDragOver] = useState(false);
+    const certFileInputRef = useRef(null);
+    const [certSearch, setCertSearch] = useState('');
+
+    const toggleAttendance = async (userId, courseId) => {
+        const key = `${userId}_${courseId}`;
+        const newVal = !attendance[key];
+        setAttendance(prev => ({ ...prev, [key]: newVal }));
+        setAttendanceSaving(prev => ({ ...prev, [key]: true }));
+        try {
+            if (!USE_MOCK_DATA) {
+                await fetch(`${API_BASE}/admin/attendance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, courseId, attended: newVal }),
+                });
+            }
+        } catch (e) {
+            setAttendance(prev => ({ ...prev, [key]: !newVal }));
+        } finally {
+            setAttendanceSaving(prev => ({ ...prev, [key]: false }));
+        }
+    };
+
+    const handleCertFile = async (userId, courseId, file) => {
+        if (!file) return;
+        const key = `${userId}_${courseId}`;
+        setCertUploading(prev => ({ ...prev, [key]: true }));
+        try {
+            if (!USE_MOCK_DATA) {
+                const fd = new FormData();
+                fd.append('file', file);
+                fd.append('userId', userId);
+                fd.append('courseId', courseId);
+                const res = await fetch(`${API_BASE}/admin/certificates`, { method: 'POST', body: fd });
+                const data = await res.json();
+                setCertificates(prev => ({ ...prev, [key]: { name: file.name, url: data.url, size: file.size } }));
+            } else {
+                const url = URL.createObjectURL(file);
+                setCertificates(prev => ({ ...prev, [key]: { name: file.name, url, size: file.size } }));
+            }
+        } catch (e) {
+            console.error('Upload failed', e);
+        } finally {
+            setCertUploading(prev => ({ ...prev, [key]: false }));
+            setCertModal(null);
+        }
+    };
+
+    const removeCert = (userId, courseId) => {
+        const key = `${userId}_${courseId}`;
+        setCertificates(prev => { const n = { ...prev }; delete n[key]; return n; });
+    };
 
     useEffect(() => {
         if (!isLoaded || !user) return;
@@ -1033,8 +1099,28 @@ const AdminDashboard = () => {
         .map(c => ({ ...c, enrolledUsers: c.enrolledUsers.filter(u => inRange(u.date)) }))
         .filter(c => `${c.title} ${c.category}`.toLowerCase().includes(q));
 
+    // Attendance flat list: all user+course enrollment pairs
+    const attendanceRows = usersData.flatMap(u =>
+        u.enrolledCourses.map(c => ({ user: u, course: c }))
+    ).filter(row => {
+        const matchCourse = attendanceCourseFilter === 'all' || row.course.id === Number(attendanceCourseFilter);
+        const matchUser = `${row.user.firstName} ${row.user.lastName} ${row.user.email}`.toLowerCase().includes(attendanceUserSearch.toLowerCase());
+        return matchCourse && matchUser;
+    });
+
+    const attendedCount = attendanceRows.filter(r => attendance[`${r.user.id}_${r.course.id}`]).length;
+
+    // Certificates flat list
+    const certRows = usersData.flatMap(u =>
+        u.enrolledCourses.map(c => ({ user: u, course: c, key: `${u.id}_${c.id}` }))
+    ).filter(row => {
+        const s = certSearch.toLowerCase();
+        return `${row.user.firstName} ${row.user.lastName} ${row.user.email} ${row.course.title}`.toLowerCase().includes(s);
+    });
+
     const totalEnrollments = usersData.reduce((s, u) => s + u.enrolledCourses.length, 0);
     const avgCourses = usersData.length ? (totalEnrollments / usersData.length).toFixed(1) : 0;
+    const totalCerts = Object.keys(certificates).length;
 
     const withExport = fn => async () => {
         setExporting(true); setExportMenuOpen(false); setExportError(null);
@@ -1051,7 +1137,6 @@ const AdminDashboard = () => {
             headers, rows
         );
     });
-
     const doPDF = withExport(async () => {
         const { headers, rows } = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
         await exportPDF(
@@ -1060,7 +1145,6 @@ const AdminDashboard = () => {
             headers, rows, 'ICEMT — Al-Muqawiloon Al-Arab'
         );
     });
-
     const doWord = withExport(async () => {
         const { headers, rows } = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
         await exportWord(
@@ -1069,7 +1153,6 @@ const AdminDashboard = () => {
             'ICEMT — Al-Muqawiloon Al-Arab', headers, rows
         );
     });
-
     const doPrint = () => { window.print(); setExportMenuOpen(false); };
 
     if (!isLoaded || !user) return (
@@ -1082,6 +1165,8 @@ const AdminDashboard = () => {
         </div>
     );
     if (!ADMIN_EMAILS.includes((user.primaryEmailAddress?.emailAddress || '').toLowerCase())) return null;
+
+    const isExportTab = activeTab === 'users' || activeTab === 'courses';
 
     return (
         <>
@@ -1103,15 +1188,17 @@ const AdminDashboard = () => {
         ._mock code{background:#ffe0b2;padding:1px 5px;border-radius:4px;font-family:monospace}
         ._stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:22px}
         ._sc{background:#fff;border-radius:12px;padding:16px 18px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-right:4px solid #0865a8}
-        ._sc.or{border-right-color:#f57c00}._sc.bk{border-right-color:#111}
+        ._sc.or{border-right-color:#f57c00}._sc.bk{border-right-color:#111}._sc.gr{border-right-color:#16a34a}
         ._sn{font-size:clamp(1.45rem,4vw,1.85rem);font-weight:900;color:#0865a8;line-height:1}
-        .or ._sn{color:#f57c00}.bk ._sn{color:#111}
+        .or ._sn{color:#f57c00}.bk ._sn{color:#111}.gr ._sn{color:#16a34a}
         ._sl{font-size:.73rem;color:#555;font-weight:700;margin-top:4px}
-        ._tb{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-        .tbtn{padding:8px 17px;border-radius:8px;font-family:'Droid Arabic Kufi',serif;font-size:.83rem;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
+        ._tb{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+        .tbtn{padding:8px 14px;border-radius:8px;font-family:'Droid Arabic Kufi',serif;font-size:.8rem;font-weight:700;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
         .tbtn.on{background:#0865a8;color:#fff;border-color:#0865a8}
+        .tbtn.on.gr{background:#16a34a;border-color:#16a34a}
+        .tbtn.on.pu{background:#7c3aed;border-color:#7c3aed}
         .tbtn.off{background:#fff;color:#222;border-color:#ccc}.tbtn.off:hover{border-color:#0865a8;color:#0865a8}
-        ._srch{flex:1;min-width:170px;position:relative}
+        ._srch{flex:1;min-width:160px;position:relative}
         ._srch input{width:100%;padding:8px 38px 8px 12px;border-radius:8px;border:2px solid #ccc;font-family:'Droid Arabic Kufi',serif;font-size:.83rem;outline:none;direction:rtl;transition:border .2s}
         ._srch input:focus{border-color:#0865a8}
         ._srch::after{content:'🔍';position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:.76rem;pointer-events:none}
@@ -1127,6 +1214,8 @@ const AdminDashboard = () => {
         ._flsm{font-size:.77rem;color:#777}
         ._fdate{padding:7px 10px;border-radius:8px;border:2px solid #ddd;font-size:.83rem;color:#111;outline:none;direction:ltr;transition:border .2s}
         ._fdate:focus{border-color:#0865a8}
+        ._fsel{padding:7px 10px;border-radius:8px;border:2px solid #ddd;font-size:.83rem;color:#111;outline:none;font-family:'Droid Arabic Kufi',serif;transition:border .2s;background:#fff}
+        ._fsel:focus{border-color:#16a34a}
         ._fbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 11px;border-radius:20px;background:#fff3e0;border:1px solid #f57c00;color:#f57c00;font-size:.73rem;font-weight:700}
         ._fclear{padding:6px 12px;border-radius:8px;background:#f5f5f5;border:2px solid #ddd;font-family:'Droid Arabic Kufi',serif;font-size:.79rem;font-weight:700;cursor:pointer;color:#555;transition:all .2s}
         ._fclear:hover{border-color:#f57c00;color:#f57c00}
@@ -1135,6 +1224,8 @@ const AdminDashboard = () => {
         ._tscr{overflow-x:auto;-webkit-overflow-scrolling:touch}
         ._tbl{width:100%;border-collapse:collapse}
         ._tbl thead th{background:#0865a8;color:#fff;padding:12px 16px;font-family:'Droid Arabic Kufi',serif;font-size:.81rem;font-weight:700;text-align:right;white-space:nowrap}
+        ._tbl thead th.gr{background:#15803d}
+        ._tbl thead th.pu{background:#6d28d9}
         ._tbl tbody tr{border-bottom:1px solid #f0f0f0;transition:background .15s}
         ._tbl tbody tr:last-child{border-bottom:none}
         ._tbl tbody tr:hover{background:rgba(8,101,168,.03)}
@@ -1144,7 +1235,7 @@ const AdminDashboard = () => {
         ._av.or{background:#f57c00}._av.sm{width:27px;height:27px;font-size:.65rem}
         ._uc{display:flex;align-items:center;gap:8px}._un{font-weight:700}
         ._cb{display:inline-flex;align-items:center;justify-content:center;min-width:25px;height:25px;border-radius:13px;background:#0865a8;color:#fff;font-size:.7rem;font-weight:900;padding:0 7px}
-        ._cb.or{background:#f57c00}
+        ._cb.or{background:#f57c00}._cb.gr{background:#16a34a}
         ._pill{display:inline-block;padding:3px 12px;border-radius:20px;font-size:.72rem;font-weight:700;cursor:pointer;border:2px solid #0865a8;color:#0865a8;background:#fff;user-select:none;transition:all .15s}
         ._pill:hover,._pill.op{background:#0865a8;color:#fff}
         ._pill.or{border-color:#f57c00;color:#f57c00}._pill.or:hover,._pill.or.op{background:#f57c00;color:#fff}
@@ -1165,16 +1256,107 @@ const AdminDashboard = () => {
         ._ovlb ._sp{border-top-color:#f57c00}
         ._ovlb p{font-size:.9rem;margin-top:14px;color:#333;font-family:'Droid Arabic Kufi',serif}
         ._ftr{text-align:center;margin-top:24px;color:#bbb;font-size:.73rem}
-        @media(max-width:768px){._hdr{padding:14px 16px}._body{padding:16px 10px 40px}._stats{grid-template-columns:repeat(2,1fr)}._filter{flex-direction:column;align-items:flex-start}}
-        @media(max-width:480px){.tbtn{padding:7px 10px;font-size:.75rem}._eb{padding:7px 10px;font-size:.75rem}._tbl thead th,._tbl td{padding:9px 9px;font-size:.73rem}}
+
+        /* ── Attendance checkbox ── */
+        ._chk{width:22px;height:22px;border-radius:6px;border:2px solid #ccc;background:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .18s;flex-shrink:0}
+        ._chk:hover{border-color:#16a34a}
+        ._chk.on{background:#16a34a;border-color:#16a34a;color:#fff}
+        ._chk.spin{border-color:#16a34a;border-top-color:transparent;border-radius:50%;animation:_admSpin .6s linear infinite}
+        ._att-row{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #f3f4f6;transition:background .12s}
+        ._att-row:hover{background:#f9fafb}
+        ._att-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700}
+        ._att-badge.on{background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0}
+        ._att-badge.off{background:#f3f4f6;color:#888;border:1px solid #e5e7eb}
+        ._att-sum{display:flex;align-items:center;gap:16px;background:#f0fdf4;border-radius:10px;padding:12px 18px;margin-bottom:14px;border:1px solid #bbf7d0}
+        ._att-sum span{font-size:.82rem;font-weight:700;color:#15803d}
+
+        /* ── Certificate upload ── */
+        ._cert-card{background:#fff;border-radius:12px;padding:14px 16px;border:1px solid #e5e7eb;display:flex;align-items:center;gap:12px;transition:box-shadow .15s}
+        ._cert-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.09)}
+        ._cert-icon{width:40px;height:40px;border-radius:10px;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+        ._cert-icon.has{background:#dcfce7}
+        ._cert-info{flex:1;min-width:0}
+        ._cert-name{font-weight:700;font-size:.82rem;color:#111;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        ._cert-sub{font-size:.72rem;color:#666;margin-top:2px}
+        ._cert-actions{display:flex;gap:6px;flex-shrink:0}
+        ._cert-btn{padding:5px 12px;border-radius:7px;font-family:'Droid Arabic Kufi',serif;font-size:.75rem;font-weight:700;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+        ._cert-btn.up{background:#7c3aed;color:#fff}._cert-btn.up:hover{background:#6d28d9}
+        ._cert-btn.dl{background:#0865a8;color:#fff}._cert-btn.dl:hover{background:#065a94}
+        ._cert-btn.rm{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}._cert-btn.rm:hover{background:#dc2626;color:#fff}
+        ._cert-btn:disabled{opacity:.5;cursor:not-allowed}
+        ._cert-grid{display:grid;gap:10px;padding:16px}
+
+        /* ── Upload modal ── */
+        ._modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px}
+        ._modal{background:#fff;border-radius:18px;padding:32px;max-width:460px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);direction:rtl}
+        ._modal h3{font-size:1.05rem;font-weight:900;color:#111;margin:0 0 4px}
+        ._modal p{font-size:.8rem;color:#666;margin:0 0 20px}
+        ._drop{border:2.5px dashed #c4b5fd;border-radius:12px;padding:32px 20px;text-align:center;cursor:pointer;transition:all .18s;background:#faf5ff}
+        ._drop.over{border-color:#7c3aed;background:#ede9fe}
+        ._drop:hover{border-color:#7c3aed}
+        ._drop-icon{font-size:2.2rem;margin-bottom:10px}
+        ._drop-txt{font-size:.84rem;color:#555;margin-bottom:6px}
+        ._drop-sub{font-size:.73rem;color:#aaa}
+        ._modal-actions{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+        ._modal-cancel{padding:9px 18px;border-radius:8px;background:#f5f5f5;border:2px solid #ddd;font-family:'Droid Arabic Kufi',serif;font-size:.82rem;font-weight:700;cursor:pointer;color:#555}
+        ._modal-cancel:hover{border-color:#ccc;color:#333}
+
+        @media(max-width:768px){._hdr{padding:14px 16px}._body{padding:16px 10px 40px}._stats{grid-template-columns:repeat(2,1fr)}._filter{flex-direction:column;align-items:flex-start}._cert-grid{grid-template-columns:1fr!important}}
+        @media(max-width:480px){.tbtn{padding:6px 9px;font-size:.72rem}._eb{padding:7px 10px;font-size:.75rem}._tbl thead th,._tbl td{padding:9px 9px;font-size:.73rem}}
         @media print{._ovr,._tb,._filter,._mock{display:none!important}._adm{background:#fff!important;padding-top:0!important}._hdr{background:#0865a8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}._tbl thead th{background:#0865a8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}._card{box-shadow:none!important}@page{margin:18mm}}
       `}</style>
 
+            {/* Export overlay */}
             {exporting && (
                 <div className="_ovl">
                     <div className="_ovlb">
                         <div className="_sp" />
                         <p>جاري تصدير الملف... يرجى الانتظار</p>
+                    </div>
+                </div>
+            )}
+
+            {/* Certificate upload modal */}
+            {certModal && (
+                <div className="_modal-bg" onClick={() => setCertModal(null)}>
+                    <div className="_modal" onClick={e => e.stopPropagation()}>
+                        <h3>📜 رفع شهادة</h3>
+                        <p>{certModal.userName} — {certModal.courseTitle}</p>
+                        <div
+                            className={`_drop${certDragOver ? ' over' : ''}`}
+                            onClick={() => certFileInputRef.current?.click()}
+                            onDragOver={e => { e.preventDefault(); setCertDragOver(true); }}
+                            onDragLeave={() => setCertDragOver(false)}
+                            onDrop={e => {
+                                e.preventDefault();
+                                setCertDragOver(false);
+                                const file = e.dataTransfer.files[0];
+                                if (file) handleCertFile(certModal.userId, certModal.courseId, file);
+                            }}
+                        >
+                            <div className="_drop-icon">📂</div>
+                            <div className="_drop-txt">اسحب الملف هنا أو اضغط للاختيار</div>
+                            <div className="_drop-sub">PDF, JPG, PNG — حجم أقصى 10 MB</div>
+                            <input
+                                ref={certFileInputRef}
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                style={{ display: 'none' }}
+                                onChange={e => {
+                                    const file = e.target.files[0];
+                                    if (file) handleCertFile(certModal.userId, certModal.courseId, file);
+                                    e.target.value = '';
+                                }}
+                            />
+                        </div>
+                        {certUploading[`${certModal.userId}_${certModal.courseId}`] && (
+                            <div style={{ textAlign: 'center', marginTop: 14, color: '#7c3aed', fontSize: '.83rem', fontWeight: 700 }}>
+                                ⏳ جاري الرفع...
+                            </div>
+                        )}
+                        <div className="_modal-actions">
+                            <button className="_modal-cancel" onClick={() => setCertModal(null)}>إلغاء</button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -1213,10 +1395,12 @@ const AdminDashboard = () => {
                             <div className="_sc"><div className="_sn">{usersData.length}</div><div className="_sl">👤 إجمالي المستخدمين</div></div>
                             <div className="_sc or"><div className="_sn">{coursesData.length}</div><div className="_sl">📚 إجمالي الدورات</div></div>
                             <div className="_sc bk"><div className="_sn">{totalEnrollments}</div><div className="_sl">✅ إجمالي التسجيلات</div></div>
-                            <div className="_sc"><div className="_sn">{avgCourses}</div><div className="_sl">📊 متوسط الدورات / مستخدم</div></div>
+                            <div className="_sc gr"><div className="_sn">{attendedCount}</div><div className="_sl">🎓 حضروا الدورات</div></div>
+                            <div className="_sc" style={{ borderRightColor: '#7c3aed' }}><div className="_sn" style={{ color: '#7c3aed' }}>{totalCerts}</div><div className="_sl">📜 شهادات مرفوعة</div></div>
                         </div>
                     )}
 
+                    {/* ── Tabs ── */}
                     <div className="_tb">
                         <button className={`tbtn ${activeTab === 'users' ? 'on' : 'off'}`}
                             onClick={() => { setActiveTab('users'); setExpandedRow(null); setSearchQuery(''); }}>
@@ -1226,45 +1410,64 @@ const AdminDashboard = () => {
                             onClick={() => { setActiveTab('courses'); setExpandedRow(null); setSearchQuery(''); }}>
                             📚 الدورات والمستخدمون
                         </button>
-                        <div className="_srch">
-                            <input type="text"
-                                placeholder={activeTab === 'users' ? 'ابحث باسم المستخدم أو البريد...' : 'ابحث باسم الدورة أو الفئة...'}
-                                value={searchQuery}
-                                onChange={e => { setSearchQuery(e.target.value); setExpandedRow(null); }}
-                            />
-                        </div>
-                        <div className="_ew" ref={exportRef}>
-                            <button className="_eb" disabled={exporting} onClick={() => setExportMenuOpen(p => !p)}>
-                                {exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}
-                            </button>
-                            {exportMenuOpen && (
-                                <div className="_emenu">
-                                    <button className="_ei" onClick={doExcel}>📊 Excel (.xlsx)</button>
-                                    <button className="_ei" onClick={doPDF}>📄 PDF</button>
-                                    <button className="_ei" onClick={doWord}>📝 Word (.docx)</button>
-                                    <button className="_ei" onClick={doPrint}>🖨 طباعة</button>
-                                </div>
-                            )}
-                        </div>
+                        <button className={`tbtn gr ${activeTab === 'attendance' ? 'on' : 'off'}`}
+                            onClick={() => { setActiveTab('attendance'); setExpandedRow(null); }}>
+                            ☑️ سجل الحضور
+                        </button>
+                        <button className={`tbtn pu ${activeTab === 'certificates' ? 'on' : 'off'}`}
+                            onClick={() => { setActiveTab('certificates'); setExpandedRow(null); }}>
+                            📜 الشهادات
+                        </button>
+
+                        {/* Search bar — only on users/courses tabs */}
+                        {isExportTab && (
+                            <div className="_srch">
+                                <input type="text"
+                                    placeholder={activeTab === 'users' ? 'ابحث باسم المستخدم أو البريد...' : 'ابحث باسم الدورة أو الفئة...'}
+                                    value={searchQuery}
+                                    onChange={e => { setSearchQuery(e.target.value); setExpandedRow(null); }}
+                                />
+                            </div>
+                        )}
+
+                        {/* Export dropdown — only for users/courses */}
+                        {isExportTab && (
+                            <div className="_ew" ref={exportRef}>
+                                <button className="_eb" disabled={exporting} onClick={() => setExportMenuOpen(p => !p)}>
+                                    {exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}
+                                </button>
+                                {exportMenuOpen && (
+                                    <div className="_emenu">
+                                        <button className="_ei" onClick={doExcel}>📊 Excel (.xlsx)</button>
+                                        <button className="_ei" onClick={doPDF}>📄 PDF</button>
+                                        <button className="_ei" onClick={doWord}>📝 Word (.docx)</button>
+                                        <button className="_ei" onClick={doPrint}>🖨 طباعة</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
-                    <div className="_filter">
-                        <span className="_flbl">📅 فلترة بتاريخ التسجيل:</span>
-                        <div className="_fgrp">
-                            <span className="_flsm">من</span>
-                            <input type="date" className="_fdate" value={dateFrom}
-                                onChange={e => { setDateFrom(e.target.value); setExpandedRow(null); }} />
+                    {/* ── Date filter — only users/courses ── */}
+                    {isExportTab && (
+                        <div className="_filter">
+                            <span className="_flbl">📅 فلترة بتاريخ التسجيل:</span>
+                            <div className="_fgrp">
+                                <span className="_flsm">من</span>
+                                <input type="date" className="_fdate" value={dateFrom}
+                                    onChange={e => { setDateFrom(e.target.value); setExpandedRow(null); }} />
+                            </div>
+                            <div className="_fgrp">
+                                <span className="_flsm">إلى</span>
+                                <input type="date" className="_fdate" value={dateTo} min={dateFrom}
+                                    onChange={e => { setDateTo(e.target.value); setExpandedRow(null); }} />
+                            </div>
+                            {(dateFrom || dateTo) && <>
+                                <span className="_fbadge">🔶 فلتر نشط</span>
+                                <button className="_fclear" onClick={() => { setDateFrom(''); setDateTo(''); setExpandedRow(null); }}>✕ مسح</button>
+                            </>}
                         </div>
-                        <div className="_fgrp">
-                            <span className="_flsm">إلى</span>
-                            <input type="date" className="_fdate" value={dateTo} min={dateFrom}
-                                onChange={e => { setDateTo(e.target.value); setExpandedRow(null); }} />
-                        </div>
-                        {(dateFrom || dateTo) && <>
-                            <span className="_fbadge">🔶 فلتر نشط</span>
-                            <button className="_fclear" onClick={() => { setDateFrom(''); setDateTo(''); setExpandedRow(null); }}>✕ مسح</button>
-                        </>}
-                    </div>
+                    )}
 
                     {exportError && (
                         <div className="_err">⚠️ {exportError}
@@ -1273,13 +1476,195 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    <div className="_card">
-                        {loading ? (
-                            <div className="_ld"><div className="_sp" /><p>جاري تحميل البيانات...</p></div>
-                        ) : error ? (
-                            <div className="_empty"><div className="_emi">⚠️</div><p>{error}</p></div>
-                        ) : activeTab === 'users' ? (
-                            filteredUsers.length === 0 ? (
+                    {/* ══════════════════════════════════════════════════════
+                        ATTENDANCE TAB
+                    ══════════════════════════════════════════════════════ */}
+                    {activeTab === 'attendance' && (
+                        <div>
+                            {/* Filters */}
+                            <div className="_filter">
+                                <span className="_flbl">🎓 الدورة:</span>
+                                <select className="_fsel" value={attendanceCourseFilter}
+                                    onChange={e => setAttendanceCourseFilter(e.target.value)}>
+                                    <option value="all">جميع الدورات</option>
+                                    {coursesData.map(c => (
+                                        <option key={c.id} value={c.id}>{c.title}</option>
+                                    ))}
+                                </select>
+                                <div className="_srch" style={{ minWidth: 180 }}>
+                                    <input type="text" placeholder="ابحث باسم المستخدم..."
+                                        value={attendanceUserSearch}
+                                        onChange={e => setAttendanceUserSearch(e.target.value)}
+                                    />
+                                </div>
+                                {attendanceUserSearch && (
+                                    <button className="_fclear" onClick={() => setAttendanceUserSearch('')}>✕ مسح</button>
+                                )}
+                            </div>
+
+                            {/* Summary bar */}
+                            <div className="_att-sum">
+                                <span>✅ حضر: {attendanceRows.filter(r => attendance[`${r.user.id}_${r.course.id}`]).length}</span>
+                                <span>❌ غائب: {attendanceRows.filter(r => !attendance[`${r.user.id}_${r.course.id}`]).length}</span>
+                                <span>📋 إجمالي: {attendanceRows.length}</span>
+                                {attendanceRows.length > 0 && (
+                                    <span>📊 نسبة الحضور: {Math.round(attendanceRows.filter(r => attendance[`${r.user.id}_${r.course.id}`]).length / attendanceRows.length * 100)}%</span>
+                                )}
+                            </div>
+
+                            <div className="_card">
+                                {loading ? (
+                                    <div className="_ld"><div className="_sp" /><p>جاري تحميل البيانات...</p></div>
+                                ) : attendanceRows.length === 0 ? (
+                                    <div className="_empty"><div className="_emi">🔍</div><p>لا توجد نتائج مطابقة</p></div>
+                                ) : (
+                                    <div className="_tscr">
+                                        <table className="_tbl">
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ width: 42, textAlign: 'center' }}>#</th>
+                                                    <th>المستخدم</th>
+                                                    <th>البريد الإلكتروني</th>
+                                                    <th>الدورة</th>
+                                                    <th style={{ textAlign: 'center' }} className="gr">الحضور</th>
+                                                    <th style={{ textAlign: 'center' }} className="gr">الحالة</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {attendanceRows.map((row, idx) => {
+                                                    const key = `${row.user.id}_${row.course.id}`;
+                                                    const attended = !!attendance[key];
+                                                    const saving = !!attendanceSaving[key];
+                                                    return (
+                                                        <tr key={key}>
+                                                            <td style={{ color: '#ccc', fontSize: '.72rem', textAlign: 'center' }}>{idx + 1}</td>
+                                                            <td>
+                                                                <div className="_uc">
+                                                                    <div className="_av">{row.user.firstName?.[0]}{row.user.lastName?.[0]}</div>
+                                                                    <span className="_un">{row.user.firstName} {row.user.lastName}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td style={{ direction: 'ltr', textAlign: 'right', color: '#444', fontSize: '.78rem' }}>{row.user.email}</td>
+                                                            <td style={{ fontWeight: 600, color: '#0865a8' }}>{row.course.title}</td>
+                                                            <td style={{ textAlign: 'center' }}>
+                                                                <div
+                                                                    className={`_chk${saving ? ' spin' : attended ? ' on' : ''}`}
+                                                                    onClick={() => !saving && toggleAttendance(row.user.id, row.course.id)}
+                                                                    title={attended ? 'حضر — اضغط للتغيير' : 'غائب — اضغط للتسجيل'}
+                                                                >
+                                                                    {!saving && attended && '✓'}
+                                                                </div>
+                                                            </td>
+                                                            <td style={{ textAlign: 'center' }}>
+                                                                <span className={`_att-badge ${attended ? 'on' : 'off'}`}>
+                                                                    {attended ? '✅ حضر' : '❌ غائب'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ══════════════════════════════════════════════════════
+                        CERTIFICATES TAB
+                    ══════════════════════════════════════════════════════ */}
+                    {activeTab === 'certificates' && (
+                        <div>
+                            {/* Search */}
+                            <div className="_filter">
+                                <span className="_flbl">📜 البحث:</span>
+                                <div className="_srch" style={{ minWidth: 220 }}>
+                                    <input type="text" placeholder="ابحث باسم المستخدم أو الدورة..."
+                                        value={certSearch}
+                                        onChange={e => setCertSearch(e.target.value)}
+                                    />
+                                </div>
+                                <span style={{ fontSize: '.8rem', color: '#888', marginRight: 8 }}>
+                                    {Object.keys(certificates).length} شهادة مرفوعة من أصل {certRows.length} تسجيل
+                                </span>
+                            </div>
+
+                            <div className="_card">
+                                {loading ? (
+                                    <div className="_ld"><div className="_sp" /><p>جاري تحميل البيانات...</p></div>
+                                ) : certRows.length === 0 ? (
+                                    <div className="_empty"><div className="_emi">🔍</div><p>لا توجد نتائج مطابقة</p></div>
+                                ) : (
+                                    <div className="_cert-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))' }}>
+                                        {certRows.map(row => {
+                                            const cert = certificates[row.key];
+                                            const uploading = certUploading[row.key];
+                                            const attended = attendance[row.key];
+                                            return (
+                                                <div className="_cert-card" key={row.key}>
+                                                    <div className={`_cert-icon${cert ? ' has' : ''}`}>
+                                                        {cert ? '📜' : '📄'}
+                                                    </div>
+                                                    <div className="_cert-info">
+                                                        <div className="_cert-name">{row.user.firstName} {row.user.lastName}</div>
+                                                        <div className="_cert-sub">📚 {row.course.title}</div>
+                                                        {cert && (
+                                                            <div style={{ fontSize: '.68rem', color: '#16a34a', marginTop: 3, fontWeight: 700 }}>
+                                                                ✅ {cert.name}
+                                                                {cert.size && ` · ${(cert.size / 1024).toFixed(0)} KB`}
+                                                            </div>
+                                                        )}
+                                                        {!cert && !attended && (
+                                                            <div style={{ fontSize: '.68rem', color: '#f59e0b', marginTop: 3 }}>
+                                                                ⚠️ لم يُسجَّل الحضور بعد
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="_cert-actions">
+                                                        {cert ? (
+                                                            <>
+                                                                <a href={cert.url} download={cert.name} target="_blank" rel="noreferrer">
+                                                                    <button className="_cert-btn dl">⬇ تحميل</button>
+                                                                </a>
+                                                                <button className="_cert-btn up"
+                                                                    onClick={() => setCertModal({ userId: row.user.id, courseId: row.course.id, userName: `${row.user.firstName} ${row.user.lastName}`, courseTitle: row.course.title })}>
+                                                                    🔄 تغيير
+                                                                </button>
+                                                                <button className="_cert-btn rm"
+                                                                    onClick={() => removeCert(row.user.id, row.course.id)}>
+                                                                    🗑
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <button
+                                                                className="_cert-btn up"
+                                                                disabled={uploading}
+                                                                onClick={() => setCertModal({ userId: row.user.id, courseId: row.course.id, userName: `${row.user.firstName} ${row.user.lastName}`, courseTitle: row.course.title })}
+                                                            >
+                                                                {uploading ? '⏳ جاري...' : '⬆ رفع شهادة'}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ══════════════════════════════════════════════════════
+                        USERS TAB
+                    ══════════════════════════════════════════════════════ */}
+                    {activeTab === 'users' && (
+                        <div className="_card">
+                            {loading ? (
+                                <div className="_ld"><div className="_sp" /><p>جاري تحميل البيانات...</p></div>
+                            ) : error ? (
+                                <div className="_empty"><div className="_emi">⚠️</div><p>{error}</p></div>
+                            ) : filteredUsers.length === 0 ? (
                                 <div className="_empty"><div className="_emi">🔍</div><p>لا توجد نتائج مطابقة</p></div>
                             ) : (
                                 <div className="_tscr">
@@ -1320,6 +1705,14 @@ const AdminDashboard = () => {
                                                                     <div className="_mc" key={c.id}>
                                                                         <div className="_mt">📚 {c.title}</div>
                                                                         {c.date && <div className="_md">📅 {c.date}</div>}
+                                                                        <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                            <span className={`_att-badge ${attendance[`${u.id}_${c.id}`] ? 'on' : 'off'}`} style={{ fontSize: '.67rem' }}>
+                                                                                {attendance[`${u.id}_${c.id}`] ? '✅ حضر' : '❌ غائب'}
+                                                                            </span>
+                                                                            {certificates[`${u.id}_${c.id}`] && (
+                                                                                <span style={{ fontSize: '.67rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -1330,9 +1723,20 @@ const AdminDashboard = () => {
                                         </tbody>
                                     </table>
                                 </div>
-                            )
-                        ) : (
-                            filteredCourses.length === 0 ? (
+                            )}
+                        </div>
+                    )}
+
+                    {/* ══════════════════════════════════════════════════════
+                        COURSES TAB
+                    ══════════════════════════════════════════════════════ */}
+                    {activeTab === 'courses' && (
+                        <div className="_card">
+                            {loading ? (
+                                <div className="_ld"><div className="_sp" /><p>جاري تحميل البيانات...</p></div>
+                            ) : error ? (
+                                <div className="_empty"><div className="_emi">⚠️</div><p>{error}</p></div>
+                            ) : filteredCourses.length === 0 ? (
                                 <div className="_empty"><div className="_emi">🔍</div><p>لا توجد نتائج مطابقة</p></div>
                             ) : (
                                 <div className="_tscr">
@@ -1374,6 +1778,14 @@ const AdminDashboard = () => {
                                                                             </div>
                                                                         </div>
                                                                         {u.date && <div className="_md">📅 {u.date}</div>}
+                                                                        <div style={{ marginTop: 6, display: 'flex', gap: 6 }}>
+                                                                            <span className={`_att-badge ${attendance[`${u.id}_${c.id}`] ? 'on' : 'off'}`} style={{ fontSize: '.67rem' }}>
+                                                                                {attendance[`${u.id}_${c.id}`] ? '✅ حضر' : '❌ غائب'}
+                                                                            </span>
+                                                                            {certificates[`${u.id}_${c.id}`] && (
+                                                                                <span style={{ fontSize: '.67rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
                                                                 ))}
                                                             </div>
@@ -1384,9 +1796,9 @@ const AdminDashboard = () => {
                                         </tbody>
                                     </table>
                                 </div>
-                            )
-                        )}
-                    </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="_ftr">
                         تم إنشاء هذا التقرير بتاريخ{' '}
