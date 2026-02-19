@@ -16,8 +16,11 @@ import logo from '../assets/logo-removebg-preview.png';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import HistoryIcon from '@mui/icons-material/History';
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 import AuthSync from '../components/AuthSync.jsx';
+
+const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com']; // ← عدّلها
 
 const RECENT_SEARCHES_KEY = 'recentSearches';
 const MAX_RECENT_SEARCHES = 5;
@@ -46,6 +49,10 @@ const Navbar = () => {
     const [selectedCatId, setSelectedCatId] = useState(null);
     const [openSub, setOpenSub] = useState(null);
     const [openTopic, setOpenTopic] = useState(null);
+    const { user } = useUser();
+    const isAdmin = ADMIN_EMAILS.includes(
+        (user?.primaryEmailAddress?.emailAddress || '').toLowerCase()
+    );
 
     const navigate = useNavigate();
     const theme = useTheme();
@@ -241,6 +248,33 @@ const Navbar = () => {
                 .dropdown-menu-item{padding:10px 16px;cursor:pointer;transition:all 0.2s;text-decoration:none;color:#000;display:block;font-family:"Droid Arabic Kufi",serif;font-size:0.85rem;}
                 .dropdown-menu-item:hover{background-color:rgba(245,124,0,0.08);color:#f57c00;padding-right:24px;}
                 .my-courses-nav-btn:hover { background-color: rgba(8,101,168,0.08) !important; transform: scale(1.05); }
+                .admin-nav-btn {
+                    display: inline-flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                    gap: 3px !important;
+                    width: 72px !important;
+                    height: 26px !important;
+                    padding: 0 !important;
+                    background: #f57c00 !important;
+                    color: #fff !important;
+                    border-radius: 6px !important;
+                    font-family: "Droid Arabic Kufi", serif !important;
+                    font-size: 0.7rem !important;
+                    font-weight: 700 !important;
+                    text-decoration: none !important;
+                    border: 2px solid #f57c00 !important;
+                    transition: all 0.2s !important;
+                    cursor: pointer !important;
+                    white-space: nowrap !important;
+                    flex-shrink: 0 !important;
+                    line-height: 1 !important;
+                }
+                .admin-nav-btn:hover {
+                    background: #fff !important;
+                    color: #f57c00 !important;
+                    box-shadow: 0 3px 10px rgba(245,124,0,0.28) !important;
+                }
             `}</style>
 
             <AppBar position="fixed" elevation={4} sx={{ bgcolor: 'white', color: '#000', py: 0.5, top: 0, zIndex: 1100 }}>
@@ -382,7 +416,7 @@ const Navbar = () => {
                     {/* Right side */}
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 0.5, md: 1.5 }, flexShrink: 0 }}>
                         {!isMobile && (
-                            <Stack direction="row" spacing={0.5}>
+                            <Stack direction="row" spacing={0.5} alignItems="center">
                                 <div className="about-dropdown-wrapper">
                                     <Button color="inherit" endIcon={<KeyboardArrowDownIcon />} sx={{ px: 1.5, fontFamily: '"Droid Arabic Kufi",serif', color: '#000', fontSize: '0.9rem', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)', color: '#0865a8' } }}>عن المعهد</Button>
                                     <div className="about-dropdown-menu">
@@ -401,10 +435,18 @@ const Navbar = () => {
                                         {serviceLinks.map((item, idx) => (<Link key={idx} to={item.path} className="dropdown-menu-item">{item.title}</Link>))}
                                     </div>
                                 </div>
+
+                                {/* ✅ Admin button — Desktop — visible only to admin emails when signed in */}
+                                {isAdmin && (
+                                    <Link to="/admin" className="admin-nav-btn">
+                                        <AdminPanelSettingsIcon sx={{ fontSize: 12 }} />
+                                        الإدارة
+                                    </Link>
+                                )}
                             </Stack>
                         )}
 
-                        {/* ✅ My Courses icon — shown only when signed in, next to cart */}
+                        {/* My Courses icon — shown only when signed in */}
                         <SignedIn>
                             <IconButton
                                 className="my-courses-nav-btn"
@@ -498,7 +540,7 @@ const Navbar = () => {
                         </Collapse>
                         <Divider sx={{ my: 2, bgcolor: '#0865a8', height: 2 }} />
 
-                        {/* ✅ My Courses in mobile drawer — only shown when signed in */}
+                        {/* My Courses in mobile drawer — only shown when signed in */}
                         <SignedIn>
                             <ListItemButton component={Link} to="/my-courses" onClick={toggleDrawer(false)} sx={{ borderRadius: 1, mb: 0.5, bgcolor: 'rgba(8,101,168,0.05)', '&:hover': { bgcolor: 'rgba(8,101,168,0.12)' } }}>
                                 <MenuBookIcon sx={{ color: '#0865a8', mr: 1, fontSize: 20 }} />
@@ -506,6 +548,36 @@ const Navbar = () => {
                             </ListItemButton>
                             <Divider sx={{ my: 2, bgcolor: '#0865a8', height: 2 }} />
                         </SignedIn>
+
+                        {/* ✅ Admin button — Mobile Drawer — visible only to admin emails when signed in */}
+                        {isAdmin && (
+                            <>
+                                <ListItemButton
+                                    component={Link}
+                                    to="/admin"
+                                    onClick={toggleDrawer(false)}
+                                    sx={{
+                                        borderRadius: 1,
+                                        mb: 0.5,
+                                        bgcolor: '#f57c00',
+                                        border: '2px solid #f57c00',
+                                        '&:hover': { bgcolor: '#e65100', borderColor: '#e65100' },
+                                        transition: 'all 0.2s',
+                                    }}
+                                >
+                                    <AdminPanelSettingsIcon sx={{ color: '#fff', mr: 1, fontSize: 20 }} />
+                                    <ListItemText
+                                        primary="لوحة الإدارة"
+                                        primaryTypographyProps={{
+                                            fontFamily: '"Droid Arabic Kufi",serif',
+                                            fontWeight: 'bold',
+                                            color: '#fff',
+                                        }}
+                                    />
+                                </ListItemButton>
+                                <Divider sx={{ my: 2, bgcolor: '#f57c00', height: 2 }} />
+                            </>
+                        )}
 
                         <ListItemButton onClick={() => setMobileAboutOpen(!mobileAboutOpen)} sx={{ bgcolor: mobileAboutOpen ? 'rgba(8,101,168,0.08)' : 'transparent', borderRadius: 1, mb: 0.5, '&:hover': { bgcolor: 'rgba(8,101,168,0.12)' } }}>
                             <ListItemText primary="عن المعهد" sx={{ textAlign: 'left', '& .MuiTypography-root': { fontFamily: '"Droid Arabic Kufi",serif', fontWeight: 'bold', color: '#0865a8' } }} />
