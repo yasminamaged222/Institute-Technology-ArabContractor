@@ -1,6 +1,7 @@
 ﻿using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
+using Institute.Domain.Enums;
 using Institute.Domain.specifications;
 using System;
 using System.Linq;
@@ -44,88 +45,185 @@ namespace Institute.Application.Services
             var spec = new BaseSpecification<AppUser>(u => u.ClerkUserId == clerkUserId);
             return (await _userRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
         }
+        #region oldCode
+        //public async Task<Order> CreateOrderAsync(int userId)
+        //{
+        //    var spec = new BaseSpecification<Cart>(c => c.UserId == userId && !c.IsCheckedOut);
+        //    spec.AddInclude(c => c.Items);
+        //    var cart = (await _cartRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
 
+        //    if (cart == null || !cart.Items.Any())
+        //        throw new Exception("Cart is empty");
+
+        //    var total = cart.Items.Sum(i => i.Price);
+
+        //    var order = new Order
+        //    {
+        //        UserId = userId,
+        //        TotalAmount = total,
+        //        Status = OrderStatus.Pending,
+        //        CreatedAt = DateTime.UtcNow
+        //    };
+
+        //    await _orderRepository.AddAsync(order);
+        //    await _orderRepository.SaveChangesAsync(); // عشان نجيب order.Id
+
+        //    foreach (var item in cart.Items)
+        //    {
+        //        await _orderItemRepository.AddAsync(new OrderItem
+        //        {
+        //            OrderId = order.Id,
+        //            PlanworkId = item.PlanworkId,
+        //            Price = item.Price
+        //        });
+        //    }
+
+        //    // 🔥 Create Payment Pending هنا
+        //    var payment = new Payment
+        //    {
+        //        OrderId = order.Id,
+        //        Amount = total,
+        //        Method = PaymentMethod.Visa,
+        //        Status = PaymentStatus.Pending
+        //    };
+
+        //    await _paymentRepository.AddAsync(payment);
+
+        //    // 🔥 اقفل الكارت
+        //    cart.IsCheckedOut = true;
+        //    _cartRepository.Update(cart);
+
+        //    await _orderRepository.SaveChangesAsync();
+
+        //    return order;
+        //}
+        #endregion
+
+        //NewCODE 
         public async Task<Order> CreateOrderAsync(int userId)
         {
-            // نجيب الـ cart بتاع الـ user
-            var spec = new BaseSpecification<Cart>(c => c.UserId == userId);
-            spec.AddInclude(c => c.Items); // عشان تجيب CartItems
+            var spec = new BaseSpecification<Cart>(c => c.UserId == userId && !c.IsCheckedOut);
+            spec.AddInclude(c => c.Items);
+
             var cart = (await _cartRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
 
-            if (cart == null || cart.Items.Count == 0)
+            if (cart == null || !cart.Items.Any())
                 throw new Exception("Cart is empty");
 
-            // نعمل Order
+            var total = cart.Items.Sum(i => i.Price);
+
             var order = new Order
             {
                 UserId = userId,
-                CreatedAt = DateTime.UtcNow,
-                OrderNumber = Guid.NewGuid().ToString().Replace("-", "").ToUpper()
+                TotalAmount = total,
+                Status = OrderStatus.Pending,
+                CreatedAt = DateTime.UtcNow
             };
 
             await _orderRepository.AddAsync(order);
+            await _orderRepository.SaveChangesAsync(); // عشان نجيب Id
 
-            // نعمل OrderItems
             foreach (var item in cart.Items)
             {
-                var orderItem = new OrderItem
+                await _orderItemRepository.AddAsync(new OrderItem
                 {
                     OrderId = order.Id,
                     PlanworkId = item.PlanworkId,
                     Price = item.Price
-                };
-                await _orderItemRepository.AddAsync(orderItem);
+                });
             }
+
+            var payment = new Payment
+            {
+                OrderId = order.Id,
+                Amount = total,
+                Method = PaymentMethod.Visa,
+                Status = PaymentStatus.Pending,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _paymentRepository.AddAsync(payment);
+
+            cart.IsCheckedOut = true;
+            _cartRepository.Update(cart);
+
+            // ✅ Save once for everything
+            await _orderRepository.SaveChangesAsync();
 
             return order;
         }
 
-        public async Task<Payment> ProcessPaymentAsync(int orderId, string transactionRef, string gatewayResponse, bool success)
+        public async Task<Payment> ProcessPaymentAsync(int orderId,string transactionRef,string gatewayResponse,bool success)
         {
-            // 1. نجيب الـ order
             var order = await _orderRepository.GetByIdAsync(orderId);
-            if (order == null) throw new Exception("Order not found");
+            if (order == null)
+                throw new Exception("Order not found");
 
-            // 2. نعمل Payment
-            var payment = new Payment
-            {
-                OrderId = orderId,
-                TransactionRef = transactionRef,
-                GatewayResponse = gatewayResponse,
-                CreatedAt = DateTime.UtcNow
-            };
-            await _paymentRepository.AddAsync(payment);
+            // 🔥 حماية من إعادة التنفيذ
+            if (order.Status == OrderStatus.Paid)
+                return (await _paymentRepository
+                    .GetAllWithSpecAsync(
+                        new BaseSpecification<Payment>(p => p.OrderId == orderId)))
+                    .FirstOrDefault();
 
-            // 3. لو ناجحة، نعمل Enrollments
+            var paymentSpec = new BaseSpecification<Payment>(p => p.OrderId == orderId);
+            var payment = (await _paymentRepository.GetAllWithSpecAsync(paymentSpec))
+                .FirstOrDefault();
+
+            if (payment == null)
+                throw new Exception("Payment not found");
+
+            payment.TransactionRef = transactionRef;
+            payment.GatewayResponse = gatewayResponse;
+            payment.PaymentDate = DateTime.UtcNow;
+
             if (success)
             {
-                // نجيب كل order items
-                var spec = new BaseSpecification<OrderItem>(oi => oi.OrderId == orderId);
-                var items = await _orderItemRepository.GetAllWithSpecAsync(spec);
+                payment.Status = PaymentStatus.Success;
+                order.Status = OrderStatus.Paid;
+
+                // 🔥 نجيب OrderItems
+                var orderItemsSpec =
+                    new BaseSpecification<OrderItem>(o => o.OrderId == orderId);
+
+                var items =
+                    await _orderItemRepository.GetAllWithSpecAsync(orderItemsSpec);
 
                 foreach (var item in items)
                 {
-                    var enrollment = new Enrollment
-                    {
-                        UserId = order.UserId,
-                        PlanworkId = item.PlanworkId,
-                        OrderId = orderId,
-                        EnrolledAt = DateTime.UtcNow
-                    };
-                    await _enrollmentRepository.AddAsync(enrollment);
-                }
+                    // 🔥 منع Duplicate Enrollment
+                    var existingSpec = new BaseSpecification<Enrollment>(
+                        e => e.UserId == order.UserId &&
+                             e.PlanworkId == item.PlanworkId);
 
-                // تحديث الـ order
-                order.SuccessIndicator = "SUCCESS";
-                _orderRepository.Update(order);
+                    var exists = (await _enrollmentRepository
+                        .GetAllWithSpecAsync(existingSpec)).Any();
+
+                    if (!exists)
+                    {
+                        await _enrollmentRepository.AddAsync(new Enrollment
+                        {
+                            UserId = order.UserId,
+                            PlanworkId = item.PlanworkId,
+                            OrderId = orderId,
+                            EnrolledAt = DateTime.UtcNow
+                        });
+                    }
+                }
             }
             else
             {
-                order.SuccessIndicator = "FAILED";
-                _orderRepository.Update(order);
+                payment.Status = PaymentStatus.Failed;
+                order.Status = OrderStatus.Cancelled;
             }
+
+            _paymentRepository.Update(payment);
+            _orderRepository.Update(order);
+
+            await _orderRepository.SaveChangesAsync();
 
             return payment;
         }
+
     }
 }

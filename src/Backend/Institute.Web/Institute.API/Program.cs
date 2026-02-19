@@ -13,6 +13,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,33 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // ======= Controllers & Swagger =======
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "أدخل الـ JWT token هنا"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 #region (CORS)
 builder.Services.AddCors(options =>
 {
@@ -42,10 +69,12 @@ builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>)
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsListDto>>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsDetailsDto>>();
-builder.Services.Configure<PaymentSettings>(
-    builder.Configuration.GetSection("BankMisr"));
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 
-builder.Services.AddHttpClient<BankPaymentService>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
@@ -55,18 +84,21 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
 
 builder.Services.AddScoped<BankPaymentService>();
-
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
-builder.Services.AddHttpClient(); // <-- ضروري علشان IHttpClientFactory يتسجل
 builder.Services.AddHttpClient("BankClient", client =>
 {
     var paymentSettings = builder.Configuration.GetSection("PaymentSettings").Get<PaymentSettings>();
+    if (paymentSettings == null) throw new Exception("PaymentSettings section not found in configuration.");
+
     client.BaseAddress = new Uri(paymentSettings.BaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 
+    //var authValue = Convert.ToBase64String(
+    //    Encoding.ASCII.GetBytes($"{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}")
+    //);
     var authValue = Convert.ToBase64String(
-        Encoding.ASCII.GetBytes($"{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}")
-    );
+    Encoding.ASCII.GetBytes($"merchant.{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}")
+);
     client.DefaultRequestHeaders.Authorization =
         new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authValue);
 });

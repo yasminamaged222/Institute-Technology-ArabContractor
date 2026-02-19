@@ -277,7 +277,19 @@ const Navbar = () => {
                 }
             `}</style>
 
-            <AppBar position="fixed" elevation={4} sx={{ bgcolor: 'white', color: '#000', py: 0.5, top: 0, zIndex: 1100 }}>
+            <AppBar
+                position="fixed"
+                elevation={4}
+                sx={{
+                    bgcolor: 'white',
+                    color: '#000',
+                    py: 0.5,
+                    top: 0,
+                    zIndex: 1100,
+                    height:70
+                    
+                }}
+            >
                 <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
 
                     {/* Logo */}
