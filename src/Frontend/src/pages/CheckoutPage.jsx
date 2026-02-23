@@ -5,29 +5,39 @@ import { useAuth } from "@clerk/clerk-react";
 
 const API_BASE = "https://localhost:7177";
 
-// ─── Helper: move purchased cart items → enrolledCourses ──────────────────────
+// ─── Helper: move purchased cart items → enrolledCourses AND purchasedCourses ──
 const movePurchasedToEnrolled = (cartItems) => {
     try {
-        const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+        const existingEnrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+        const existingPurchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+
         cartItems.forEach(item => {
-            if (!existing.find(e => e.id === item.id)) {
-                existing.push({
-                    id: item.id,
-                    slug: item.slug || '',
-                    title: item.title,
-                    place: item.place || item.instructor || '',
-                    instructor: item.instructor || item.place || 'غير محدد',
-                    date: item.date || '',
-                    image: item.image || 'book',
-                    currentPrice: item.currentPrice || 0,
-                    progress: 0,
-                });
+            const courseObj = {
+                id: item.id,
+                slug: item.slug || '',
+                title: item.title,
+                place: item.place || item.instructor || '',
+                instructor: item.instructor || item.place || 'غير محدد',
+                date: item.date || '',
+                image: item.image || 'book',
+                currentPrice: item.currentPrice || 0,
+                progress: 0,
+            };
+
+            if (!existingEnrolled.find(e => e.id === item.id)) {
+                existingEnrolled.push(courseObj);
+            }
+            if (!existingPurchased.find(e => e.id === item.id)) {
+                existingPurchased.push(courseObj);
             }
         });
-        localStorage.setItem('enrolledCourses', JSON.stringify(existing));
+
+        localStorage.setItem('enrolledCourses', JSON.stringify(existingEnrolled));
+        localStorage.setItem('purchasedCourses', JSON.stringify(existingPurchased));
         window.dispatchEvent(new Event('enrollUpdated'));
+        window.dispatchEvent(new Event('cartUpdated'));
     } catch (err) {
-        console.error('Error moving courses to enrolled:', err);
+        console.error('Error moving courses to enrolled/purchased:', err);
     }
 };
 
@@ -48,7 +58,7 @@ export default function CheckoutPage() {
     const orderIdRef = useRef(null);
     const subtotalRef = useRef(0);
     const getTokenRef = useRef(null);
-    const cartItemsRef = useRef([]); // ← keep cart snapshot for post-payment use
+    const cartItemsRef = useRef([]);
 
     // ─── Load cart ────────────────────────────────────────────────────────────
     useEffect(() => {
@@ -99,7 +109,7 @@ export default function CheckoutPage() {
                     );
                 } catch (_) { }
 
-                // ✅ Move purchased courses to enrolled BEFORE clearing cart
+                // ✅ Move purchased courses to enrolled AND purchasedCourses BEFORE clearing cart
                 movePurchasedToEnrolled(cartItemsRef.current);
 
                 // ✅ Clear cart
@@ -157,7 +167,7 @@ export default function CheckoutPage() {
             );
             const data = await res.json();
             if (data.isSuccess) {
-                // ✅ Move purchased courses to enrolled BEFORE clearing cart
+                // ✅ Move purchased courses to enrolled AND purchasedCourses BEFORE clearing cart
                 const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
                 movePurchasedToEnrolled(savedCart);
 
@@ -271,7 +281,6 @@ export default function CheckoutPage() {
                                 </p>
                             </div>
                             <div className="space-y-3">
-                                {/* ✅ Go directly to My Courses after payment */}
                                 <Link
                                     to="/my-courses"
                                     className="block w-full rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-semibold text-white transition-all hover:shadow-lg md:py-4"

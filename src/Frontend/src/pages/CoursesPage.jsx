@@ -138,6 +138,9 @@ const styles = {
     cardHeaderFree: {
         background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)',
     },
+    cardHeaderOwned: {
+        background: 'linear-gradient(135deg, #4a4a8a 0%, #7b5ea7 100%)',
+    },
     cardHeaderOverlay: {
         position: 'absolute',
         top: 0,
@@ -193,6 +196,20 @@ const styles = {
         fontSize: '12px',
         fontWeight: 'bold',
         color: '#1a7a3c',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        fontFamily: '"Droid Arabic Kufi", serif',
+        zIndex: 3,
+    },
+    ownedBadge: {
+        position: 'absolute',
+        right: '12px',
+        top: '12px',
+        borderRadius: '10px',
+        backgroundColor: '#ffffff',
+        padding: '6px 12px',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        color: '#4a4a8a',
         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
         fontFamily: '"Droid Arabic Kufi", serif',
         zIndex: 3,
@@ -331,6 +348,20 @@ const styles = {
         position: 'relative',
         overflow: 'hidden',
     },
+    viewCourseBtn: {
+        width: '100%',
+        borderRadius: '10px',
+        background: 'linear-gradient(135deg, #4a4a8a 0%, #7b5ea7 100%)',
+        padding: '12px 20px',
+        fontWeight: 'bold',
+        color: '#ffffff',
+        border: 'none',
+        boxShadow: '0 3px 10px rgba(74,74,138,0.25)',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+        fontSize: '15px',
+        fontFamily: '"Droid Arabic Kufi", serif',
+    },
     addToCartBtnHover: {
         transform: 'translateY(-2px)',
         boxShadow: '0 6px 16px rgba(8,101,168,0.35)',
@@ -338,6 +369,10 @@ const styles = {
     enrollBtnHover: {
         transform: 'translateY(-2px)',
         boxShadow: '0 6px 16px rgba(26,122,60,0.35)',
+    },
+    viewCourseBtnHover: {
+        transform: 'translateY(-2px)',
+        boxShadow: '0 6px 16px rgba(74,74,138,0.35)',
     },
     addToCartBtnDisabled: {
         opacity: 0.6,
@@ -533,6 +568,33 @@ const CoursesPage = () => {
     const [error, setError] = useState(null);
     const [addingToCart, setAddingToCart] = useState(null);
     const [toast, setToast] = useState(null);
+
+    // ── Track owned (purchased or enrolled) course IDs ────────────────────────
+    const [ownedCourseIds, setOwnedCourseIds] = useState(() => {
+        try {
+            const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+            const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+            return new Set([...purchased.map(c => c.id), ...enrolled.map(c => c.id)]);
+        } catch { return new Set(); }
+    });
+
+    useEffect(() => {
+        const updateOwned = () => {
+            try {
+                const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+                const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+                setOwnedCourseIds(new Set([...purchased.map(c => c.id), ...enrolled.map(c => c.id)]));
+            } catch { }
+        };
+        window.addEventListener('cartUpdated', updateOwned);
+        window.addEventListener('enrollUpdated', updateOwned);
+        window.addEventListener('storage', updateOwned);
+        return () => {
+            window.removeEventListener('cartUpdated', updateOwned);
+            window.removeEventListener('enrollUpdated', updateOwned);
+            window.removeEventListener('storage', updateOwned);
+        };
+    }, []);
 
     const showToast = (message, type = 'success') => setToast({ message, type });
 
@@ -763,6 +825,8 @@ const CoursesPage = () => {
                                 const originalPrice = hasCost ? course.cost / 0.6 : null;
                                 const discountPercent = 40;
                                 const isAdding = addingToCart === course.id;
+                                // ── Check if user already owns this course ────
+                                const isOwned = ownedCourseIds.has(course.id);
 
                                 return (
                                     <div
@@ -775,7 +839,7 @@ const CoursesPage = () => {
                                         <div
                                             style={{
                                                 ...styles.cardHeader,
-                                                ...(isFree ? styles.cardHeaderFree : {}),
+                                                ...(isOwned ? styles.cardHeaderOwned : isFree ? styles.cardHeaderFree : {}),
                                             }}
                                             className="card-header"
                                             onMouseEnter={() => setHoveredHeaderCard(course.id)}
@@ -792,8 +856,10 @@ const CoursesPage = () => {
                                                 </svg>
                                             </div>
 
-                                            {/* Badge: مجاناً for free, discount% for paid */}
-                                            {isFree ? (
+                                            {/* Badge */}
+                                            {isOwned ? (
+                                                <div style={styles.ownedBadge}>✅ مسجل</div>
+                                            ) : isFree ? (
                                                 <div style={styles.freeBadge}>مجاناً</div>
                                             ) : (
                                                 <div style={styles.discountBadge}>خصم {discountPercent}%</div>
@@ -830,7 +896,12 @@ const CoursesPage = () => {
                                             {/* Price section */}
                                             <div style={styles.priceSection}>
                                                 <div style={styles.priceContainer}>
-                                                    {isFree ? (
+                                                    {isOwned ? (
+                                                        <>
+                                                            <span style={{ ...styles.freePriceLabel, color: '#4a4a8a' }} className="current-price">مسجل ✓</span>
+                                                            <span style={styles.priceLabel}>لديك هذه الدورة بالفعل</span>
+                                                        </>
+                                                    ) : isFree ? (
                                                         <>
                                                             <span style={styles.freePriceLabel} className="current-price">مجاناً</span>
                                                             <span style={styles.priceLabel}>دورة مجانية بالكامل</span>
@@ -845,53 +916,83 @@ const CoursesPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Buttons */}
+                                            {/* ── Buttons: owned → details only | free → enroll + details | paid → cart + details ── */}
                                             <div style={styles.buttonsContainer}>
-                                                {isFree ? (
-                                                    /* FREE → اشترك الآن (green) */
+                                                {isOwned ? (
+                                                    /* Already owned → only View Details */
                                                     <button
-                                                        onClick={() => handleEnroll(course)}
                                                         style={{
-                                                            ...styles.enrollBtn,
-                                                            ...(hoveredAddBtn === course.id ? styles.enrollBtnHover : {}),
+                                                            ...styles.detailsBtn,
+                                                            ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}),
                                                         }}
-                                                        onMouseEnter={() => setHoveredAddBtn(course.id)}
-                                                        onMouseLeave={() => setHoveredAddBtn(null)}
+                                                        onMouseEnter={() => setHoveredDetailsBtn(course.id)}
+                                                        onMouseLeave={() => setHoveredDetailsBtn(null)}
+                                                        onClick={() => navigate(`/course/${course.slug}`)}
                                                     >
-                                                        اشترك الآن
+                                                        عرض التفاصيل
                                                     </button>
+                                                ) : isFree ? (
+                                                    /* FREE → enroll + details */
+                                                    <>
+                                                        <button
+                                                            onClick={() => handleEnroll(course)}
+                                                            style={{
+                                                                ...styles.enrollBtn,
+                                                                ...(hoveredAddBtn === course.id ? styles.enrollBtnHover : {}),
+                                                            }}
+                                                            onMouseEnter={() => setHoveredAddBtn(course.id)}
+                                                            onMouseLeave={() => setHoveredAddBtn(null)}
+                                                        >
+                                                            اشترك الآن
+                                                        </button>
+                                                        <button
+                                                            style={{
+                                                                ...styles.detailsBtn,
+                                                                ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}),
+                                                            }}
+                                                            onMouseEnter={() => setHoveredDetailsBtn(course.id)}
+                                                            onMouseLeave={() => setHoveredDetailsBtn(null)}
+                                                            onClick={() => navigate(`/course/${course.slug}`)}
+                                                        >
+                                                            عرض التفاصيل
+                                                        </button>
+                                                    </>
                                                 ) : (
-                                                    /* PAID → أضف إلى السلة */
-                                                    <button
-                                                        onClick={() => addToCart(course)}
-                                                        disabled={isAdding}
-                                                        style={{
-                                                            ...styles.addToCartBtn,
-                                                            ...(hoveredAddBtn === course.id && !isAdding ? styles.addToCartBtnHover : {}),
-                                                            ...(isAdding ? styles.addToCartBtnDisabled : {}),
-                                                        }}
-                                                        onMouseEnter={() => !isAdding && setHoveredAddBtn(course.id)}
-                                                        onMouseLeave={() => setHoveredAddBtn(null)}
-                                                    >
-                                                        {isAdding ? (
-                                                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                                                <svg style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                                                </svg>
-                                                                جاري الإضافة...
-                                                            </span>
-                                                        ) : 'أضف إلى السلة'}
-                                                    </button>
+                                                    /* PAID → add to cart + details */
+                                                    <>
+                                                        <button
+                                                            onClick={() => addToCart(course)}
+                                                            disabled={isAdding}
+                                                            style={{
+                                                                ...styles.addToCartBtn,
+                                                                ...(hoveredAddBtn === course.id && !isAdding ? styles.addToCartBtnHover : {}),
+                                                                ...(isAdding ? styles.addToCartBtnDisabled : {}),
+                                                            }}
+                                                            onMouseEnter={() => !isAdding && setHoveredAddBtn(course.id)}
+                                                            onMouseLeave={() => setHoveredAddBtn(null)}
+                                                        >
+                                                            {isAdding ? (
+                                                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                                    <svg style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                                    </svg>
+                                                                    جاري الإضافة...
+                                                                </span>
+                                                            ) : 'أضف إلى السلة'}
+                                                        </button>
+                                                        <button
+                                                            style={{
+                                                                ...styles.detailsBtn,
+                                                                ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}),
+                                                            }}
+                                                            onMouseEnter={() => setHoveredDetailsBtn(course.id)}
+                                                            onMouseLeave={() => setHoveredDetailsBtn(null)}
+                                                            onClick={() => navigate(`/course/${course.slug}`)}
+                                                        >
+                                                            عرض التفاصيل
+                                                        </button>
+                                                    </>
                                                 )}
-
-                                                <button
-                                                    style={{ ...styles.detailsBtn, ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}) }}
-                                                    onMouseEnter={() => setHoveredDetailsBtn(course.id)}
-                                                    onMouseLeave={() => setHoveredDetailsBtn(null)}
-                                                    onClick={() => navigate(`/course/${course.slug}`)}
-                                                >
-                                                    عرض التفاصيل
-                                                </button>
                                             </div>
                                         </div>
                                     </div>

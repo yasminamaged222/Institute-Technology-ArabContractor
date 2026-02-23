@@ -8,8 +8,33 @@ const CourseDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [otherCourses, setOtherCourses] = useState([]);
+    const [isOwned, setIsOwned] = useState(false);
 
     const API_BASE_URL = 'https://acwebsite-icmet-test.azurewebsites.net/api';
+
+    // ── Check ownership whenever course loads or storage changes ──────────────
+    useEffect(() => {
+        const checkOwned = () => {
+            if (!course) return;
+            try {
+                const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+                const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+                setIsOwned(
+                    purchased.some(c => c.id === course.id) ||
+                    enrolled.some(c => c.id === course.id)
+                );
+            } catch { }
+        };
+        checkOwned();
+        window.addEventListener('cartUpdated', checkOwned);
+        window.addEventListener('enrollUpdated', checkOwned);
+        window.addEventListener('storage', checkOwned);
+        return () => {
+            window.removeEventListener('cartUpdated', checkOwned);
+            window.removeEventListener('enrollUpdated', checkOwned);
+            window.removeEventListener('storage', checkOwned);
+        };
+    }, [course]);
 
     const parseContent = (htmlContent) => {
         const parser = new DOMParser();
@@ -331,14 +356,20 @@ const CourseDetails = () => {
 
                 <div style={{
                     ...styles.heroSection,
-                    background: course.isFree
-                        ? 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)'
-                        : 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
+                    background: isOwned
+                        ? 'linear-gradient(135deg, #4a4a8a 0%, #7b5ea7 100%)'
+                        : course.isFree
+                            ? 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)'
+                            : 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
                 }}>
                     <div style={styles.heroContainer}>
                         <div style={styles.heroContent}>
+                            {/* Owned badge in hero */}
+                            {isOwned && (
+                                <div style={{ ...styles.freeBadgeHero, backgroundColor: 'rgba(255,255,255,0.9)', color: '#4a4a8a' }}>✅ مسجل في هذه الدورة</div>
+                            )}
                             {/* Free badge in hero */}
-                            {course.isFree && (
+                            {!isOwned && course.isFree && (
                                 <div style={styles.freeBadgeHero}>مجاناً</div>
                             )}
                             <h1 style={styles.heroTitle}>{course.title}</h1>
@@ -468,9 +499,11 @@ const CourseDetails = () => {
                             <div style={styles.priceCard}>
                                 <div style={{
                                     ...styles.pricePreview,
-                                    background: course.isFree
-                                        ? 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)'
-                                        : 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
+                                    background: isOwned
+                                        ? 'linear-gradient(135deg, #4a4a8a 0%, #7b5ea7 100%)'
+                                        : course.isFree
+                                            ? 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)'
+                                            : 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
                                 }}>
                                     <img src={course.image} alt={course.title} style={styles.previewImage} />
                                 </div>
@@ -478,7 +511,13 @@ const CourseDetails = () => {
 
                                     {/* ===== PRICE SECTION ===== */}
                                     <div style={styles.priceSection}>
-                                        {course.isFree ? (
+                                        {isOwned ? (
+                                            /* OWNED COURSE: show مسجل */
+                                            <div style={styles.freePriceWrapper}>
+                                                <span style={{ ...styles.freePriceLabel, color: '#4a4a8a' }}>✅ مسجل</span>
+                                                <span style={styles.freePriceSubtext}>لديك هذه الدورة بالفعل</span>
+                                            </div>
+                                        ) : course.isFree ? (
                                             /* FREE COURSE: show مجاناً in green */
                                             <div style={styles.freePriceWrapper}>
                                                 <span style={styles.freePriceLabel}>مجاناً</span>
@@ -501,7 +540,15 @@ const CourseDetails = () => {
 
                                     {/* ===== ACTION BUTTONS ===== */}
                                     <div style={styles.actionButtons}>
-                                        {course.isFree ? (
+                                        {isOwned ? (
+                                            /* Already owned → go to My Courses */
+                                            <button
+                                                style={styles.btnViewMyCourses}
+                                                onClick={() => navigate('/my-courses')}
+                                            >
+                                                عرض في دوراتي
+                                            </button>
+                                        ) : course.isFree ? (
                                             /* FREE: single green اشترك الآن button */
                                             <button style={styles.btnEnrollNow} onClick={handleEnroll}>
                                                 اشترك الآن
@@ -641,7 +688,6 @@ const styles = {
     priceContent: { padding: '24px' },
     priceSection: { marginBottom: '20px' },
 
-    /* Free price display */
     freePriceWrapper: { display: 'flex', flexDirection: 'column', gap: '4px' },
     freePriceLabel: {
         fontSize: '36px',
@@ -657,7 +703,6 @@ const styles = {
         fontFamily: '"Droid Arabic Kufi", serif',
     },
 
-    /* Paid price display */
     currentPrice: { fontSize: '32px', fontWeight: 'bold', color: '#f57c00', display: 'block', marginBottom: '8px', fontFamily: '"Droid Arabic Kufi", serif' },
     originalPrice: { fontSize: '16px', color: '#000000', textDecoration: 'line-through', opacity: 0.5, fontFamily: '"Droid Arabic Kufi", serif' },
 
@@ -665,6 +710,7 @@ const styles = {
     btnAddCart: { width: '100%', padding: '14px 24px', backgroundColor: '#ffffff', color: '#0865a8', border: '2px solid #0865a8', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif' },
     btnBuyNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(8,101,168,0.3)' },
     btnEnrollNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(26,122,60,0.3)' },
+    btnViewMyCourses: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #4a4a8a 0%, #7b5ea7 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(74,74,138,0.3)' },
     courseIncludes: { borderTop: '2px solid #f0f0f0', paddingTop: '20px' },
     includesTitle: { fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif' },
     includesList: { listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' },
@@ -700,6 +746,7 @@ const mediaQueryStyles = `
     .btnAddCart:hover { background-color: #0865a8 !important; color: #ffffff !important; }
     .btnBuyNow:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(8,101,168,0.4) !important; }
     .btnEnrollNow:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(26,122,60,0.4) !important; }
+    .btnViewMyCourses:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(74,74,138,0.4) !important; }
     .topicCard:hover { background-color: #ffffff !important; border-color: #0865a8 !important; transform: translateX(4px); }
     .fileItem:hover { background-color: #ffffff !important; border-color: #0865a8 !important; }
   }
