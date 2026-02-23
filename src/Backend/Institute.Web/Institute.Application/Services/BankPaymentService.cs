@@ -23,116 +23,11 @@ namespace Institute.Application.Services
             _settings = options.Value;
         }
 
-        //public async Task<CheckoutResponseDto> InitiateCheckoutAsync(Order order)
-        //{
-        //    try
-        //    {
-        //        // 1️⃣ Create payload for bank API
-        //        var client = _httpClientFactory.CreateClient("BankClient");
-
-        //        var payload = new
-        //        {
-        //            apiOperation = "INITIATE_CHECKOUT",
-        //            interaction = new
-        //            {
-        //                operation = "PURCHASE",
-        //                returnUrl = $"{_settings.ReturnUrl}?orderId={order.Id}"
-        //            },
-        //            order = new
-        //            {
-        //                id = order.Id.ToString(),
-        //                amount = order.TotalAmount.ToString("F2"),
-        //                currency = _settings.Currency
-        //            }
-        //        };
-
-        //        var json = JsonSerializer.Serialize(payload);
-        //        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        //        var response = await client.PostAsync(
-        //            $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/session", content
-        //        );
-
-        //        if (!response.IsSuccessStatusCode)
-        //        {
-        //            var errorBody = await response.Content.ReadAsStringAsync();
-        //            throw new Exception($"Bank API error: {response.StatusCode} - {errorBody}");
-        //        }
-
-        //        var responseBody = await response.Content.ReadAsStringAsync();
-        //        var bankResult = JsonSerializer.Deserialize<Dictionary<string, object>>(responseBody);
-
-        //        if (bankResult == null || !bankResult.ContainsKey("session"))
-        //        {
-        //            throw new Exception("Invalid response from Bank API: Missing session data");
-        //        }
-
-        //        // The bank returns session as a nested dictionary or object
-        //        var sessionObj = bankResult["session"] as JsonElement?;
-        //        string sessionId = sessionObj?.GetProperty("id").GetString() ?? throw new Exception("Session ID not found in bank response");
-
-        //        string successIndicator = bankResult.ContainsKey("successIndicator") 
-        //            ? bankResult["successIndicator"].ToString() 
-        //            : Guid.NewGuid().ToString("N");
-
-        //        // 2️⃣ Construct the DTO for frontend
-        //        var firstItem = order.Items?.FirstOrDefault();
-
-        //        var checkoutData = new CheckoutDataDto
-        //        {
-        //            SessionId = sessionId,
-        //            SuccessIndicator = successIndicator,
-        //            OrderId = order.Id.ToString(),
-        //            CheckoutJsUrl = $"{_settings.BaseUrl}/static/checkout/checkout.min.js",
-        //            Course = firstItem != null ? new CourseDto
-        //            {
-        //                Id = firstItem.Planwork?.ChildId ?? 0,
-        //                Title = firstItem.Planwork?.ServiceTitle ?? "Course",
-        //                Price = firstItem.Price,
-        //                Currency = _settings.Currency
-        //            } : null
-        //        };
-
-        //        return new CheckoutResponseDto
-        //        {
-        //            Success = true,
-        //            Message = "Checkout session created",
-        //            Data = checkoutData
-        //        };
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Log the exception here if you have a logger
-        //        return new CheckoutResponseDto
-        //        {
-        //            Success = false,
-        //            Message = $"Failed to initiate checkout: {ex.Message}",
-        //            Data = null
-        //        };
-        //    }
-        //}
-
-
         public async Task<CheckoutResponseDto> InitiateCheckoutAsync(Order order)
         {
             try
             {
                 var client = _httpClientFactory.CreateClient("BankClient");
-
-                //var payload = new
-                //{
-                //    apiOperation = "INITIATE_CHECKOUT",
-                //    interaction = new
-                //    {
-                //        operation = "PURCHASE",
-                //        returnUrl = $"{_settings.ReturnUrl}?orderId={order.Id}"
-                //    },
-                //    order = new
-                //    {
-                //        id = order.Id.ToString(),
-                //        amount = order.TotalAmount.ToString("F2"),
-                //        currency = _settings.Currency
-                //    }
-                //};
                 var payload = new
                 {
                     apiOperation = "INITIATE_CHECKOUT",
@@ -153,7 +48,7 @@ namespace Institute.Application.Services
                     },
                     order = new
                     {
-                        id = $"ORD-{order.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}",
+                        id = order.OrderNumber,
                         amount = order.TotalAmount.ToString("F2"),
                         currency = _settings.Currency,
                         description = $"Order #{order.Id}"
@@ -186,7 +81,9 @@ namespace Institute.Application.Services
                 var successIndicator = root
                     .GetProperty("successIndicator")
                     .GetString();
-
+                order.GatewaySessionId = sessionId;
+                order.SuccessIndicator = successIndicator;
+                
                 return new CheckoutResponseDto
                 {
                     Success = true,
@@ -240,97 +137,53 @@ namespace Institute.Application.Services
             public string Currency { get; set; }
         }
 
-        //public async Task<bool> VerifyPaymentAsync(string orderId)
-        //{
-        //    try
-        //    {
-        //        var client = _httpClientFactory.CreateClient("BankClient");
 
-        //        var response = await client.GetAsync(
-        //            $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/order/{orderId}");
 
-        //        if (!response.IsSuccessStatusCode)
-        //            return false;
-
-        //        var body = await response.Content.ReadAsStringAsync();
-
-        //        using var doc = JsonDocument.Parse(body);
-        //        var root = doc.RootElement;
-
-        //        if (!root.TryGetProperty("result", out var resultProp))
-        //            return false;
-
-        //        var result = resultProp.GetString();
-
-        //        if (result != "SUCCESS")
-        //            return false;
-
-        //        if (root.TryGetProperty("transaction", out var transactions))
-        //        {
-        //            foreach (var txn in transactions.EnumerateArray())
-        //            {
-        //                if (txn.TryGetProperty("transaction", out var innerTxn) && 
-        //                    innerTxn.TryGetProperty("status", out var statusProp))
-        //                {
-        //                    var status = statusProp.GetString();
-        //                    if (status == "SUCCESS")
-        //                        return true;
-        //                }
-        //            }
-        //        }
-
-        //        return false;
-        //    }
-        //    catch
-        //    {
-        //        return false;
-        //    }
-        //}
-
-        public async Task<bool> VerifyPaymentAsync(string orderId)
+        public async Task<(bool IsSuccess, string? SuccessIndicator, string? GatewayResponse)>
+            VerifyPaymentAsync(string orderNumber)
         {
             try
             {
+                // 1️⃣ URL endpoint للبنك
+                var url = $"{_settings.BaseUrl}/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/order/{orderNumber}";
+
                 var client = _httpClientFactory.CreateClient("BankClient");
 
-                var response = await client.GetAsync(
-                    $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/order/{orderId}"
-                );
+                // 2️⃣ Authorization Basic
+                var authBytes = Encoding.ASCII.GetBytes($"merchant.{_settings.MerchantId}:{_settings.ApiPassword}");
+                client.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
+
+                // 3️⃣ Call GET
+                var response = await client.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
-                    return false;
-
-                var body = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(body);
-
-                var root = doc.RootElement;
-
-                if (!root.TryGetProperty("result", out var resultProp))
-                    return false;
-
-                if (resultProp.GetString() != "SUCCESS")
-                    return false;
-
-                if (!root.TryGetProperty("transaction", out var transactions))
-                    return false;
-
-                foreach (var txn in transactions.EnumerateArray())
                 {
-                    if (txn.TryGetProperty("transaction", out var innerTxn))
-                    {
-                        if (innerTxn.TryGetProperty("status", out var statusProp))
-                        {
-                            if (statusProp.GetString() == "SUCCESS")
-                                return true;
-                        }
-                    }
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    return (false, null, errorContent);
                 }
 
-                return false;
+                // 4️⃣ Parse JSON
+                var body = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(body);
+                var root = doc.RootElement;
+
+                // 5️⃣ Extract result
+                var result = root.GetProperty("result").GetString();
+                bool isSuccess = result == "SUCCESS";
+
+                // 6️⃣ Extract successIndicator
+                string? successIndicator = null;
+                if (root.TryGetProperty("successIndicator", out var indicatorProp))
+                {
+                    successIndicator = indicatorProp.GetString();
+                }
+
+                return (isSuccess, successIndicator, body);
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return (false, null, ex.Message);
             }
         }
 

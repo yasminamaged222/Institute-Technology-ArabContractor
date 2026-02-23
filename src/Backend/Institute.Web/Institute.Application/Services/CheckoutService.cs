@@ -3,6 +3,7 @@ using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.Enums;
 using Institute.Domain.specifications;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -100,6 +101,19 @@ namespace Institute.Application.Services
         #endregion
 
         //NewCODE 
+        public async Task UpdateOrderGatewayDataAsync(Order order)
+        {
+            _orderRepository.Update(order);
+            await _orderRepository.SaveChangesAsync();
+        }
+        public async Task<Order?> GetOrderByIdAsync(int orderId)
+        {
+            var spec = new BaseSpecification<Order>(o => o.Id == orderId);
+            spec.AddInclude(o => o.Items);
+
+            return (await _orderRepository.GetAllWithSpecAsync(spec))
+                .FirstOrDefault();
+        }
         public async Task<Order> CreateOrderAsync(int userId)
         {
             var spec = new BaseSpecification<Cart>(c => c.UserId == userId && !c.IsCheckedOut);
@@ -151,6 +165,59 @@ namespace Institute.Application.Services
             await _orderRepository.SaveChangesAsync();
 
             return order;
+        }
+        public async Task UpdateOrderAsync(Order order)
+        {
+            if (order == null)
+                throw new ArgumentNullException(nameof(order));
+
+            _orderRepository.Update(order);
+            await _orderRepository.SaveChangesAsync();
+        }
+        public async Task<Payment> MarkOrderAsPaidAsync(Order order, string transactionRef, string gatewayResponse)
+        {
+            if (order == null)
+                throw new ArgumentNullException(nameof(order));
+
+            // 1️⃣ تحديث حالة الطلب
+            order.Status = OrderStatus.Paid;
+            _orderRepository.Update(order);
+
+            // 2️⃣ إنشاء سجل الدفع
+            var payment = new Payment
+            {
+                OrderId = order.Id,
+                Amount = order.TotalAmount,
+                Method = PaymentMethod.Visa, // أو حسب اختيارك
+                Status = PaymentStatus.Success,
+                TransactionRef = transactionRef,
+                GatewayResponse = gatewayResponse,
+                PaymentDate = DateTime.UtcNow
+            };
+            await _paymentRepository.AddAsync(payment);
+
+            // 3️⃣ إنشاء Enrollments
+            foreach (var item in order.Items)
+            {
+                var enrollmentExists = await _enrollmentRepository.AnyAsync(e => e.UserId == order.UserId && e.PlanworkId == item.PlanworkId);
+
+                if (!enrollmentExists)
+                {
+                    var enrollment = new Enrollment
+                    {
+                        UserId = order.UserId,
+                        PlanworkId = item.PlanworkId,
+                        OrderId = order.Id,
+                        EnrolledAt = DateTime.UtcNow
+                    };
+                    await _enrollmentRepository.AddAsync(enrollment);
+                }
+            }
+
+            // 4️⃣ حفظ كل التغييرات
+            await _enrollmentRepository.SaveChangesAsync();
+
+            return payment;
         }
 
         public async Task<Payment> ProcessPaymentAsync(int orderId,string transactionRef,string gatewayResponse,bool success)
