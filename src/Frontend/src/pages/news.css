@@ -635,96 +635,29 @@
     }
 }
 
-/* 1024px - 1279px: Small Desktops */
-@media (min-width: 1024px) and (max-width: 1279px) {
+/* 1024px and above: All Desktops — always 3 columns */
+@media (min-width: 1024px) {
     .news-content-wrapper {
         padding: 0 5% 70px;
-        max-width: 1200px;
+        max-width: 1400px;
         margin: 0 auto;
     }
 
     .news-cards-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
-    }
-
-    .news-image-wrapper {
-        height: 220px;
-    }
-
-    .news-title-wrapper {
-        padding: 18px;
-    }
-}
-
-/* 1280px - 1439px: Medium Desktops */
-@media (min-width: 1280px) and (max-width: 1439px) {
-    .news-content-wrapper {
-        padding: 0 6% 70px;
-        max-width: 1300px;
-        margin: 0 auto;
-    }
-
-    .news-cards-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 26px;
+        gap: 28px;
     }
 
     .news-image-wrapper {
         height: 230px;
     }
-}
 
-/* 1440px - 1919px: Large Desktops */
-@media (min-width: 1440px) and (max-width: 1919px) {
-    .news-content-wrapper {
-        padding: 0 8% 70px;
-        max-width: 1500px;
-        margin: 0 auto;
-    }
-
-    .news-cards-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 28px;
-    }
-
-    .news-image-wrapper {
-        height: 240px;
+    .news-title-wrapper {
+        padding: 18px;
     }
 
     .year-slider-box {
         max-width: 900px;
-    }
-}
-
-/* 1920px and above: Extra Large Desktops */
-@media (min-width: 1920px) {
-    .news-page-container {
-        max-width: 2000px;
-        margin: 0 auto;
-    }
-
-    .news-content-wrapper {
-        padding: 0 10% 80px;
-        max-width: 1800px;
-        margin: 0 auto;
-    }
-
-    .news-cards-grid {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 30px;
-    }
-
-    .news-image-wrapper {
-        height: 250px;
-    }
-
-    .news-title-link {
-        font-size: 16px;
-    }
-
-    .year-slider-box {
-        max-width: 1000px;
     }
 
     .pagination-dot,

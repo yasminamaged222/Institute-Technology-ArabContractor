@@ -5,6 +5,32 @@ import { useAuth } from "@clerk/clerk-react";
 
 const API_BASE = "https://localhost:7177";
 
+// ─── Helper: move purchased cart items → enrolledCourses ──────────────────────
+const movePurchasedToEnrolled = (cartItems) => {
+    try {
+        const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+        cartItems.forEach(item => {
+            if (!existing.find(e => e.id === item.id)) {
+                existing.push({
+                    id: item.id,
+                    slug: item.slug || '',
+                    title: item.title,
+                    place: item.place || item.instructor || '',
+                    instructor: item.instructor || item.place || 'غير محدد',
+                    date: item.date || '',
+                    image: item.image || 'book',
+                    currentPrice: item.currentPrice || 0,
+                    progress: 0,
+                });
+            }
+        });
+        localStorage.setItem('enrolledCourses', JSON.stringify(existing));
+        window.dispatchEvent(new Event('enrollUpdated'));
+    } catch (err) {
+        console.error('Error moving courses to enrolled:', err);
+    }
+};
+
 export default function CheckoutPage() {
     const navigate = useNavigate();
     const { getToken, isSignedIn } = useAuth();
@@ -18,19 +44,23 @@ export default function CheckoutPage() {
     const [orderId, setOrderId] = useState(null);
     const [orderAmount, setOrderAmount] = useState(0);
 
-    // Refs so Mastercard callbacks (outside React) can access current values
     const successIndicatorRef = useRef(null);
     const orderIdRef = useRef(null);
     const subtotalRef = useRef(0);
     const getTokenRef = useRef(null);
+    const cartItemsRef = useRef([]); // ← keep cart snapshot for post-payment use
 
-    // ─── Load cart ────────────────────────────────────────────
+    // ─── Load cart ────────────────────────────────────────────────────────────
     useEffect(() => {
         const savedCart = localStorage.getItem("cartItems");
-        if (savedCart) setCartItems(JSON.parse(savedCart));
+        if (savedCart) {
+            const parsed = JSON.parse(savedCart);
+            setCartItems(parsed);
+            cartItemsRef.current = parsed;
+        }
     }, []);
 
-    // ─── Auth guard ───────────────────────────────────────────
+    // ─── Auth guard ───────────────────────────────────────────────────────────
     useEffect(() => {
         if (isSignedIn === false) {
             alert("يجب تسجيل الدخول أولاً");
@@ -38,12 +68,16 @@ export default function CheckoutPage() {
         }
     }, [isSignedIn, navigate]);
 
-    // ─── Keep getToken accessible in callbacks ─────────────────
+    // ─── Keep refs in sync ────────────────────────────────────────────────────
     useEffect(() => {
         getTokenRef.current = getToken;
     }, [getToken]);
 
-    // ─── Handle redirect back from bank ──────────────────────
+    useEffect(() => {
+        cartItemsRef.current = cartItems;
+    }, [cartItems]);
+
+    // ─── Handle redirect back from bank ──────────────────────────────────────
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const orderIdParam = urlParams.get("orderId");
@@ -53,10 +87,7 @@ export default function CheckoutPage() {
         }
     }, []);
 
-    // ─── Register Mastercard global callbacks ─────────────────
-    // NOTE: The script tag in index.html uses data-complete/error/cancel
-    // so these window functions must exist BEFORE Mastercard script runs.
-    // We define them here so React state updates work correctly.
+    // ─── Mastercard global callbacks ──────────────────────────────────────────
     useEffect(() => {
         window.completeCallback = async (resultIndicator) => {
             if (resultIndicator === successIndicatorRef.current) {
@@ -64,18 +95,20 @@ export default function CheckoutPage() {
                     const token = await getTokenRef.current();
                     await fetch(
                         `${API_BASE}/api/checkout/result?orderId=${orderIdRef.current}&transactionRef=${resultIndicator}`,
-                        {
-                            method: "GET",
-                            headers: { Authorization: `Bearer ${token}` },
-                        }
+                        { method: "GET", headers: { Authorization: `Bearer ${token}` } }
                     );
-                } catch (_) { /* sync error is non-critical */ }
+                } catch (_) { }
+
+                // ✅ Move purchased courses to enrolled BEFORE clearing cart
+                movePurchasedToEnrolled(cartItemsRef.current);
+
+                // ✅ Clear cart
+                localStorage.removeItem("cartItems");
+                window.dispatchEvent(new Event("cartUpdated"));
 
                 setPaymentSuccess(true);
                 setOrderId(orderIdRef.current);
                 setOrderAmount(subtotalRef.current);
-                localStorage.removeItem("cartItems");
-                window.dispatchEvent(new Event("cartUpdated"));
             } else {
                 setLoading(false);
                 setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
@@ -83,7 +116,7 @@ export default function CheckoutPage() {
         };
 
         window.errorCallback = (err) => {
-            console.error("Mastercard error full:", JSON.stringify(err));
+            console.error("Mastercard error:", JSON.stringify(err));
             setLoading(false);
             setError("حدث خطأ أثناء الدفع: " + (err?.error?.explanation || "يرجى المحاولة مرة أخرى."));
         };
@@ -100,7 +133,7 @@ export default function CheckoutPage() {
         };
     }, []);
 
-    // ─── Totals ───────────────────────────────────────────────
+    // ─── Totals ───────────────────────────────────────────────────────────────
     const subtotal = cartItems.reduce(
         (sum, item) => sum + item.currentPrice * (item.quantity || 1), 0
     );
@@ -113,7 +146,7 @@ export default function CheckoutPage() {
         subtotalRef.current = subtotal;
     }, [subtotal]);
 
-    // ─── Verify after bank redirect ───────────────────────────
+    // ─── Verify after bank redirect ───────────────────────────────────────────
     const verifyAfterRedirect = async (oid, transactionRef) => {
         setLoading(true);
         try {
@@ -124,11 +157,16 @@ export default function CheckoutPage() {
             );
             const data = await res.json();
             if (data.isSuccess) {
+                // ✅ Move purchased courses to enrolled BEFORE clearing cart
+                const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+                movePurchasedToEnrolled(savedCart);
+
+                localStorage.removeItem("cartItems");
+                window.dispatchEvent(new Event("cartUpdated"));
+
                 setPaymentSuccess(true);
                 setOrderId(oid);
                 setOrderAmount(subtotalRef.current);
-                localStorage.removeItem("cartItems");
-                window.dispatchEvent(new Event("cartUpdated"));
             } else {
                 setError("فشلت عملية الدفع. يرجى المحاولة مرة أخرى.");
             }
@@ -139,7 +177,7 @@ export default function CheckoutPage() {
         }
     };
 
-    // ─── Main payment handler ─────────────────────────────────
+    // ─── Main payment handler ─────────────────────────────────────────────────
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -155,7 +193,6 @@ export default function CheckoutPage() {
             const token = await getToken();
             if (!token) throw new Error("فشل في الحصول على رمز المصادقة");
 
-            // ── Step 1: POST to backend → get Mastercard session ──
             const response = await fetch(`${API_BASE}/api/checkout/checkout`, {
                 method: "POST",
                 headers: {
@@ -171,7 +208,6 @@ export default function CheckoutPage() {
             }
 
             const result = await response.json();
-            console.log("Checkout session:", result);
 
             if (!result.success || !result.data?.sessionId) {
                 throw new Error(result.message || "لم يتم استلام بيانات الجلسة من الخادم");
@@ -179,21 +215,15 @@ export default function CheckoutPage() {
 
             const { sessionId, successIndicator, orderId } = result.data;
 
-            // Store in refs for callbacks
             successIndicatorRef.current = successIndicator;
             orderIdRef.current = orderId;
             setOrderId(orderId);
 
-            // ── Step 2: Make sure Checkout is loaded (from index.html script tag) ──
             if (!window.Checkout) {
                 throw new Error("بوابة الدفع لم تُحمَّل بعد. يرجى تحديث الصفحة والمحاولة مرة أخرى.");
             }
 
-            // ── Step 3: Configure & open payment page ──
-            window.Checkout.configure({
-                session: { id: sessionId }
-            });
-
+            window.Checkout.configure({ session: { id: sessionId } });
             window.Checkout.showPaymentPage();
 
         } catch (err) {
@@ -230,7 +260,7 @@ export default function CheckoutPage() {
                                 تم إتمام عملية الدفع بنجاح!
                             </h1>
                             <p className="mb-8 text-base text-black opacity-70 md:text-lg">
-                                شكراً لك! تم تأكيد طلبك وسيتم تفعيل الدورات في حسابك قريباً
+                                شكراً لك! تم تأكيد طلبك وتم إضافة الدورات إلى حسابك
                             </p>
                             <div className="mb-8 rounded-2xl border border-gray-200 bg-gray-50 p-6">
                                 <p className="mb-2 text-sm font-medium text-black opacity-60">رقم الطلب</p>
@@ -239,17 +269,19 @@ export default function CheckoutPage() {
                                 <p className="text-3xl font-bold text-[#f57c00] md:text-4xl">
                                     {(orderAmount || subtotal).toFixed(2)} جنيه
                                 </p>
-                                {cartItems.length > 0 && (
-                                    <p className="mt-2 text-sm text-black opacity-50">
-                                        {cartItems.length} {cartItems.length === 1 ? "دورة" : "دورات"}
-                                    </p>
-                                )}
                             </div>
                             <div className="space-y-3">
-                                <Link to="/my-courses" className="block w-full rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-semibold text-white transition-all hover:shadow-lg md:py-4">
+                                {/* ✅ Go directly to My Courses after payment */}
+                                <Link
+                                    to="/my-courses"
+                                    className="block w-full rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-semibold text-white transition-all hover:shadow-lg md:py-4"
+                                >
                                     عرض دوراتي
                                 </Link>
-                                <Link to="/" className="block w-full rounded-xl border-2 border-gray-200 py-3 font-semibold text-black transition-colors hover:bg-gray-50 md:py-4">
+                                <Link
+                                    to="/"
+                                    className="block w-full rounded-xl border-2 border-gray-200 py-3 font-semibold text-black transition-colors hover:bg-gray-50 md:py-4"
+                                >
                                     الصفحة الرئيسية
                                 </Link>
                             </div>
@@ -287,14 +319,12 @@ export default function CheckoutPage() {
             <div dir="rtl" className="checkout-main min-h-screen bg-white px-3 pb-16 sm:px-4 md:px-6">
                 <div className="mx-auto max-w-7xl">
 
-                    {/* Title */}
                     <div className="mb-6 text-center md:mb-10">
                         <h1 className="mb-2 text-3xl font-bold text-black sm:text-4xl md:mb-3 md:text-5xl">
                             اشترك في دوراتنا
                         </h1>
                     </div>
 
-                    {/* Error */}
                     {error && (
                         <div className="mb-6 rounded-lg bg-red-50 p-4 md:mb-8">
                             <div className="flex items-start gap-3">
@@ -440,7 +470,6 @@ export default function CheckoutPage() {
 
                                 <div className="mb-4 border-t border-gray-200 md:mb-6" />
 
-                                {/* Total */}
                                 <div className="mb-4 flex items-center justify-between md:mb-6">
                                     <span className="text-sm font-bold text-black md:text-base">إجمالي المستحق</span>
                                     <span className="text-xl font-bold text-[#f57c00] md:text-2xl">{subtotal.toFixed(2)} جنيه</span>
@@ -465,7 +494,6 @@ export default function CheckoutPage() {
                                     )}
                                 </button>
 
-                                {/* Security notice */}
                                 <div className="rounded-lg bg-gray-50 p-3 text-center md:p-4">
                                     <Lock className="mx-auto mb-1.5 h-5 w-5 text-black opacity-60 md:mb-2 md:h-6 md:w-6" />
                                     <p className="text-xs text-black opacity-60">الدفع عبر بوابة بنك مصر الآمنة</p>
@@ -478,4 +506,4 @@ export default function CheckoutPage() {
             </div>
         </>
     );
-}
+} 

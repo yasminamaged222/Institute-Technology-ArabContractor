@@ -120,6 +120,7 @@ const CourseDetails = () => {
         const programDates = extractProgramDates(apiCourse.content);
         const { startDate, endDate } = extractDates(apiCourse.date);
         const discount = apiCourse.cost && apiCourse.onSale ? Math.round(((apiCourse.onSale - apiCourse.cost) / apiCourse.onSale) * 100) : 38;
+        const isFree = !apiCourse.cost || apiCourse.cost === 0;
 
         return {
             id: apiCourse.id,
@@ -128,7 +129,7 @@ const CourseDetails = () => {
             description: apiCourse.description,
             place: apiCourse.place,
             price: apiCourse.cost || 0,
-            originalPrice: apiCourse.onSale || (apiCourse.cost ? apiCourse.cost * 1.6 : 3999),
+            originalPrice: apiCourse.onSale || (apiCourse.cost ? apiCourse.cost * 1.6 : 0),
             currency: "جنيه",
             discount: discount,
             rating: 4.8,
@@ -142,6 +143,7 @@ const CourseDetails = () => {
             hasMoneyBackGuarantee: true,
             language: "العربية",
             level: "مبتدئ",
+            isFree,
             topics,
             objectives,
             prerequisites,
@@ -197,7 +199,6 @@ const CourseDetails = () => {
         }
     };
 
-    // ✅ UPDATED: saves to enrolledCourses localStorage then navigates to /my-courses
     const handleEnroll = () => {
         if (!course) return;
 
@@ -312,8 +313,6 @@ const CourseDetails = () => {
         );
     }
 
-    const hasCost = course.price !== null && course.price !== undefined && course.price > 0;
-
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
@@ -330,9 +329,18 @@ const CourseDetails = () => {
                     </div>
                 </div>
 
-                <div style={styles.heroSection}>
+                <div style={{
+                    ...styles.heroSection,
+                    background: course.isFree
+                        ? 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)'
+                        : 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
+                }}>
                     <div style={styles.heroContainer}>
                         <div style={styles.heroContent}>
+                            {/* Free badge in hero */}
+                            {course.isFree && (
+                                <div style={styles.freeBadgeHero}>مجاناً</div>
+                            )}
                             <h1 style={styles.heroTitle}>{course.title}</h1>
                             <p style={styles.heroDescription}>{course.description}</p>
                             <div style={styles.heroInfo}>
@@ -455,29 +463,59 @@ const CourseDetails = () => {
                             )}
                         </div>
 
+                        {/* ===== RIGHT SIDEBAR ===== */}
                         <div style={styles.rightSidebar} className="right-sidebar">
                             <div style={styles.priceCard}>
-                                <div style={styles.pricePreview}>
+                                <div style={{
+                                    ...styles.pricePreview,
+                                    background: course.isFree
+                                        ? 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)'
+                                        : 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
+                                }}>
                                     <img src={course.image} alt={course.title} style={styles.previewImage} />
                                 </div>
                                 <div style={styles.priceContent}>
-                                    {hasCost && (
-                                        <div style={styles.priceSection}>
-                                            <span style={styles.currentPrice}>{course.price.toLocaleString('ar-EG')} {course.currency}</span>
-                                            {course.originalPrice && (
-                                                <span style={styles.originalPrice}>{course.originalPrice.toLocaleString('ar-EG')} {course.currency}</span>
-                                            )}
-                                        </div>
-                                    )}
 
-                                    <div style={styles.actionButtons}>
-                                        {hasCost ? (
-                                            <>
-                                                <button style={styles.btnAddCart} onClick={() => addToCart(false)}>إضافة إلى السلة</button>
-                                                <button style={styles.btnBuyNow} onClick={() => addToCart(true)}>اشترِ الآن</button>
-                                            </>
+                                    {/* ===== PRICE SECTION ===== */}
+                                    <div style={styles.priceSection}>
+                                        {course.isFree ? (
+                                            /* FREE COURSE: show مجاناً in green */
+                                            <div style={styles.freePriceWrapper}>
+                                                <span style={styles.freePriceLabel}>مجاناً</span>
+                                                <span style={styles.freePriceSubtext}>دورة مجانية بالكامل</span>
+                                            </div>
                                         ) : (
-                                            <button style={styles.btnEnrollNow} onClick={handleEnroll}>اشترك الآن</button>
+                                            /* PAID COURSE: show price */
+                                            <>
+                                                <span style={styles.currentPrice}>
+                                                    {course.price.toLocaleString('ar-EG')} {course.currency}
+                                                </span>
+                                                {course.originalPrice > 0 && (
+                                                    <span style={styles.originalPrice}>
+                                                        {course.originalPrice.toLocaleString('ar-EG')} {course.currency}
+                                                    </span>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* ===== ACTION BUTTONS ===== */}
+                                    <div style={styles.actionButtons}>
+                                        {course.isFree ? (
+                                            /* FREE: single green اشترك الآن button */
+                                            <button style={styles.btnEnrollNow} onClick={handleEnroll}>
+                                                اشترك الآن
+                                            </button>
+                                        ) : (
+                                            /* PAID: add to cart + buy now */
+                                            <>
+                                                <button style={styles.btnAddCart} onClick={() => addToCart(false)}>
+                                                    إضافة إلى السلة
+                                                </button>
+                                                <button style={styles.btnBuyNow} onClick={() => addToCart(true)}>
+                                                    اشترِ الآن
+                                                </button>
+                                            </>
                                         )}
                                     </div>
 
@@ -526,8 +564,11 @@ const CourseDetails = () => {
                                                 <div style={styles.otherCourseContent}>
                                                     <h4 style={styles.otherCourseTitle}>{otherCourse.title}</h4>
                                                     <div style={styles.otherCoursePrice}>
-                                                        <span style={styles.otherCurrentPrice}>
-                                                            {otherCourse.price > 0 ? `${otherCourse.price.toLocaleString('ar-EG')} ${otherCourse.currency}` : 'مجاناً'}
+                                                        <span style={{
+                                                            ...styles.otherCurrentPrice,
+                                                            color: otherCourse.isFree ? '#1a7a3c' : '#f57c00'
+                                                        }}>
+                                                            {otherCourse.isFree ? 'مجاناً' : `${otherCourse.price.toLocaleString('ar-EG')} ${otherCourse.currency}`}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -551,9 +592,21 @@ const styles = {
     breadcrumbSeparator: { color: '#000000', margin: '0 8px', opacity: 0.4 },
     breadcrumbCurrent: { marginRight: '12px', color: '#000000', fontWeight: '600' },
     pageWrapper: { minHeight: '100vh', backgroundColor: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' },
-    heroSection: { background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#ffffff', padding: '100px 24px 48px', marginTop: '52px' },
+    heroSection: { color: '#ffffff', padding: '100px 24px 48px', marginTop: '52px' },
     heroContainer: { maxWidth: '1200px', margin: '0 auto' },
     heroContent: { maxWidth: '900px' },
+    freeBadgeHero: {
+        display: 'inline-block',
+        backgroundColor: '#ffffff',
+        color: '#1a7a3c',
+        fontWeight: 800,
+        fontSize: '1rem',
+        fontFamily: '"Droid Arabic Kufi", serif',
+        padding: '4px 16px',
+        borderRadius: '20px',
+        marginBottom: '16px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+    },
     heroTitle: { fontSize: '36px', fontWeight: 'bold', marginBottom: '16px', lineHeight: '1.4', color: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif' },
     heroDescription: { fontSize: '18px', marginBottom: '24px', lineHeight: '1.6', color: '#ffffff', opacity: 0.95, fontFamily: '"Droid Arabic Kufi", serif' },
     heroInfo: { display: 'flex', gap: '24px', flexWrap: 'wrap' },
@@ -583,16 +636,35 @@ const styles = {
     fileItem: { display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', backgroundColor: '#f9f9f9', borderRadius: '8px', transition: 'all 0.2s', cursor: 'pointer', color: '#000000', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif', borderRight: '3px solid #f57c00' },
     rightSidebar: { display: 'flex', flexDirection: 'column', gap: '24px', alignSelf: 'flex-start', position: 'sticky', top: '100px' },
     priceCard: { backgroundColor: '#ffffff', borderRadius: '12px', border: '2px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflow: 'hidden' },
-    pricePreview: { width: '100%', height: '200px', overflow: 'hidden', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)' },
+    pricePreview: { width: '100%', height: '200px', overflow: 'hidden' },
     previewImage: { width: '100%', height: '100%', objectFit: 'cover' },
     priceContent: { padding: '24px' },
     priceSection: { marginBottom: '20px' },
+
+    /* Free price display */
+    freePriceWrapper: { display: 'flex', flexDirection: 'column', gap: '4px' },
+    freePriceLabel: {
+        fontSize: '36px',
+        fontWeight: 'bold',
+        color: '#1a7a3c',
+        display: 'block',
+        fontFamily: '"Droid Arabic Kufi", serif',
+        lineHeight: 1.2
+    },
+    freePriceSubtext: {
+        fontSize: '13px',
+        color: '#666',
+        fontFamily: '"Droid Arabic Kufi", serif',
+    },
+
+    /* Paid price display */
     currentPrice: { fontSize: '32px', fontWeight: 'bold', color: '#f57c00', display: 'block', marginBottom: '8px', fontFamily: '"Droid Arabic Kufi", serif' },
     originalPrice: { fontSize: '16px', color: '#000000', textDecoration: 'line-through', opacity: 0.5, fontFamily: '"Droid Arabic Kufi", serif' },
+
     actionButtons: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
     btnAddCart: { width: '100%', padding: '14px 24px', backgroundColor: '#ffffff', color: '#0865a8', border: '2px solid #0865a8', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif' },
     btnBuyNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(8,101,168,0.3)' },
-    btnEnrollNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(26,122,60,0.3)' },
+    btnEnrollNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(26,122,60,0.3)' },
     courseIncludes: { borderTop: '2px solid #f0f0f0', paddingTop: '20px' },
     includesTitle: { fontSize: '18px', fontWeight: 'bold', marginBottom: '16px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif' },
     includesList: { listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '12px' },
@@ -605,7 +677,7 @@ const styles = {
     otherCourseContent: { flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' },
     otherCourseTitle: { fontSize: '14px', fontWeight: 'bold', color: '#000000', lineHeight: '1.4', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', fontFamily: '"Droid Arabic Kufi", serif' },
     otherCoursePrice: { display: 'flex', alignItems: 'center', gap: '8px' },
-    otherCurrentPrice: { fontSize: '16px', fontWeight: 'bold', color: '#f57c00', fontFamily: '"Droid Arabic Kufi", serif' },
+    otherCurrentPrice: { fontSize: '16px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
     notFoundContainer: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl', marginTop: '100px' },
     notFoundCard: { backgroundColor: '#ffffff', padding: '48px', borderRadius: '12px', border: '2px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', textAlign: 'center', maxWidth: '500px' },
     notFoundIcon: { fontSize: '64px', marginBottom: '16px' },
