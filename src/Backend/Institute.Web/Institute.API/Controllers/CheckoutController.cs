@@ -104,49 +104,55 @@ namespace Institute.API.Controllers
         ///
         /// Verifies payment with the bank, updates Order/Enrollment, returns result.
         /// </summary>
+
         [HttpGet("result")]
+        [AllowAnonymous]
         public async Task<IActionResult> PaymentResult(
     [FromQuery] int orderId,
-    [FromQuery] string transactionRef)
+    [FromQuery] string? transactionRef,
+    [FromQuery] string? resultIndicator)
         {
+            var refToUse = transactionRef ?? resultIndicator;
+
             if (orderId <= 0)
                 return BadRequest(new { success = false, message = "رقم الطلب غير صحيح." });
 
-            if (string.IsNullOrEmpty(transactionRef))
+            if (string.IsNullOrEmpty(refToUse))
                 return BadRequest(new { success = false, message = "مرجع المعاملة مفقود." });
 
             var order = await _checkoutService.GetOrderByIdAsync(orderId);
             if (order == null)
                 return NotFound("الطلب غير موجود.");
 
-            // 1️⃣ Verify payment status directly with the bank gateway
-            var verify = await _bankPaymentService.VerifyPaymentAsync(order.OrderNumber);
-            bool success = verify.IsSuccess && verify.SuccessIndicator == order.SuccessIndicator;
+            // ✅ المقارنة الصح: resultIndicator الجاي في URL == successIndicator المحفوظ عند إنشاء الجلسة
+            bool success = refToUse == order.SuccessIndicator;
 
             if (!success)
             {
                 order.Status = OrderStatus.Cancelled;
                 await _checkoutService.UpdateOrderAsync(order);
-                return BadRequest("فشل الدفع أو تحقق من successIndicator");
+                return BadRequest(new { success = false, message = "فشل الدفع أو بيانات غير صحيحة." });
             }
 
-            // 2️⃣ Mark order as paid and create payment & enrollments
-            var payment = await _checkoutService.MarkOrderAsPaidAsync(order, transactionRef, "VerifiedByGateway");
+            // ✅ اختياري: verify مع البنك للتأكيد الإضافي
+            var verify = await _bankPaymentService.VerifyPaymentAsync(order.OrderNumber);
+            if (!verify.IsSuccess)
+            {
+                order.Status = OrderStatus.Cancelled;
+                await _checkoutService.UpdateOrderAsync(order);
+                return BadRequest(new { success = false, message = "البنك لم يؤكد الدفع." });
+            }
 
-            // 3️⃣ Return result to frontend
+            var payment = await _checkoutService.MarkOrderAsPaidAsync(order, refToUse, verify.GatewayResponse ?? "VerifiedByGateway");
+
             return Ok(new PaymentResponseDto
             {
                 OrderId = orderId,
-                TransactionRef = transactionRef,
-                IsSuccess = success,
+                TransactionRef = refToUse,
+                IsSuccess = true,
                 GatewayResponse = payment?.GatewayResponse
             });
         }
-
-
-
-
-
 
 
 

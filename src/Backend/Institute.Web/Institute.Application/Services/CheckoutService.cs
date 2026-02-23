@@ -179,43 +179,45 @@ namespace Institute.Application.Services
             if (order == null)
                 throw new ArgumentNullException(nameof(order));
 
-            // 1️⃣ تحديث حالة الطلب
+            // 1️⃣ جيب الـ Payment الموجود بدل ما تعمل جديد
+            var paymentSpec = new BaseSpecification<Payment>(p => p.OrderId == order.Id);
+            var payment = (await _paymentRepository.GetAllWithSpecAsync(paymentSpec)).FirstOrDefault();
+
+            if (payment == null)
+                throw new Exception("Payment record not found for this order.");
+
+            // 2️⃣ Update الـ Payment الموجود
+            payment.Status = PaymentStatus.Success;
+            payment.TransactionRef = transactionRef;
+            payment.GatewayResponse = gatewayResponse;
+            payment.PaymentDate = DateTime.UtcNow;
+            payment.Method = PaymentMethod.Visa;
+            _paymentRepository.Update(payment);
+
+            // 3️⃣ Update الـ Order
             order.Status = OrderStatus.Paid;
             _orderRepository.Update(order);
 
-            // 2️⃣ إنشاء سجل الدفع
-            var payment = new Payment
-            {
-                OrderId = order.Id,
-                Amount = order.TotalAmount,
-                Method = PaymentMethod.Visa, // أو حسب اختيارك
-                Status = PaymentStatus.Success,
-                TransactionRef = transactionRef,
-                GatewayResponse = gatewayResponse,
-                PaymentDate = DateTime.UtcNow
-            };
-            await _paymentRepository.AddAsync(payment);
-
-            // 3️⃣ إنشاء Enrollments
+            // 4️⃣ Enrollments
             foreach (var item in order.Items)
             {
-                var enrollmentExists = await _enrollmentRepository.AnyAsync(e => e.UserId == order.UserId && e.PlanworkId == item.PlanworkId);
+                var enrollmentExists = await _enrollmentRepository.AnyAsync(
+                    e => e.UserId == order.UserId && e.PlanworkId == item.PlanworkId);
 
                 if (!enrollmentExists)
                 {
-                    var enrollment = new Enrollment
+                    await _enrollmentRepository.AddAsync(new Enrollment
                     {
                         UserId = order.UserId,
                         PlanworkId = item.PlanworkId,
                         OrderId = order.Id,
                         EnrolledAt = DateTime.UtcNow
-                    };
-                    await _enrollmentRepository.AddAsync(enrollment);
+                    });
                 }
             }
 
-            // 4️⃣ حفظ كل التغييرات
-            await _enrollmentRepository.SaveChangesAsync();
+            // 5️⃣ Save everything
+            await _orderRepository.SaveChangesAsync();
 
             return payment;
         }
