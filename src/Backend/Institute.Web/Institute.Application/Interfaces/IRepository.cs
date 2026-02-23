@@ -1,8 +1,10 @@
-﻿using Institute.Domain.specifications;
+﻿using Institute.Domain.Entities;
+using Institute.Domain.specifications;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,7 +18,8 @@ namespace Institute.Application.Interfaces
         void Update(T entity);
         void Delete(T entity);
         Task SaveChangesAsync();
-     
+        Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
+        
 
 
 

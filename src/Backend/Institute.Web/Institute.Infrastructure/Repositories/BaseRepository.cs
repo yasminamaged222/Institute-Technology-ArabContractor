@@ -1,9 +1,11 @@
 ﻿using Institute.Application.Interfaces;
+using Institute.Domain.Entities;
 using Institute.Domain.specifications;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -53,5 +55,12 @@ namespace Institute.Infrastructure.Repositories
             // هنا DbContext هو اللي يعمل Set<T>()
             return SpecificationEvaluator<T>.GetQuery(_context.Set<T>().AsQueryable(), spec);
         }
+
+        public async Task<bool> AnyAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().AnyAsync(predicate);
+        }
+
+        
     }
 }
