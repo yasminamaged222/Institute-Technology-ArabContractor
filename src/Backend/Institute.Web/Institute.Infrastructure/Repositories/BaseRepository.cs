@@ -61,6 +61,25 @@ namespace Institute.Infrastructure.Repositories
             return await _context.Set<T>().AnyAsync(predicate);
         }
 
-        
+        public async Task<IReadOnlyList<T>> ListAsync(Ispecification<T> spec)
+        {
+            IQueryable<T> query = _context.Set<T>();
+
+            // apply criteria
+            if (spec.Criteria != null)
+                query = query.Where(spec.Criteria);
+
+            // apply includes
+            foreach (var include in spec.Includes)
+                query = query.Include(include);
+
+            return await query.ToListAsync();
+        }
+        public async Task<AppUser?> GetByClerkIdAsync(string clerkUserId)
+        {
+            return await _context.AppUsers
+                .FirstOrDefaultAsync(u => u.ClerkUserId == clerkUserId);
+        }
+
     }
 }

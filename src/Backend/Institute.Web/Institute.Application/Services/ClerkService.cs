@@ -2,6 +2,7 @@
 using Institute.Application.Interfaces.IService;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Headers;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace Institute.Application.Services
@@ -40,6 +41,13 @@ namespace Institute.Application.Services
                 LastName = root.GetProperty("last_name").GetString(),
                 Username = root.GetProperty("username").GetString()
             };
+        }
+
+        public string? GetAuthenticatedUserId(ClaimsPrincipal user)
+        {
+            // Clerk بيضيف الـuser ID في claim باسم "sub"
+            var claim = user.Claims.FirstOrDefault(c => c.Type == "sub");
+            return claim?.Value;
         }
     }
 }

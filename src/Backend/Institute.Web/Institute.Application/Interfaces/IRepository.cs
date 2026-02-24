@@ -19,8 +19,9 @@ namespace Institute.Application.Interfaces
         void Delete(T entity);
         Task SaveChangesAsync();
         Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
-        
 
+        Task<IReadOnlyList<T>> ListAsync(Ispecification<T> spec);
+        Task<AppUser?> GetByClerkIdAsync(string clerkUserId);
 
 
 

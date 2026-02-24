@@ -4,8 +4,10 @@ using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.CourseSpec;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Institute.API.Controllers
 {
@@ -15,15 +17,25 @@ namespace Institute.API.Controllers
     {
         private readonly IRepository<Planwork> _planRepo;
         private readonly IRepository<PlanFile> _fileRepo;
+        private readonly IRepository<Enrollment> _enrollmentRepo;
+        private readonly IClerkService _clerkService;
+        private readonly IRepository<AppUser> _userRepo;
         private readonly ICategoryService _categoryService;
+
 
         public CourseController(
             IRepository<Planwork> planRepo,
             IRepository<PlanFile> fileRepo,
+            IRepository<Enrollment> enrollmentRepo,
+            IClerkService clerkService,
+            IRepository<AppUser> userRepo,
             ICategoryService categoryService)
         {
             _planRepo = planRepo;
             _fileRepo = fileRepo;
+            _enrollmentRepo = enrollmentRepo;
+            _clerkService = clerkService;
+            _userRepo = userRepo;
             _categoryService = categoryService;
         }
 
@@ -186,5 +198,37 @@ namespace Institute.API.Controllers
             var courses = await _categoryService.GetLatestCoursesAsync(20);
             return Ok(courses);
         }
+
+        [HttpGet("my-courses")]
+        public async Task<IActionResult> GetMyCourses()
+        {
+            // 1️⃣ جايب الـuser الحالي من Clerk
+            var clerkUserId = _clerkService.GetAuthenticatedUserId(User); // string
+            if (clerkUserId == null)
+                return Unauthorized();
+
+            // map to AppUser int ID
+            var appUser = await _userRepo.GetByClerkIdAsync(clerkUserId); // method تجيب AppUser من ClerkUserId
+            if (appUser == null)
+                return NotFound("User not found in local DB");
+
+            // دلوقتي استخدم الـint ID في الـSpecification
+            var spec = new EnrollmentsByUserSpecification(appUser.Id);
+            var enrollments = await _enrollmentRepo.ListAsync(spec);
+
+            // 3️⃣ ترجع الكورسات
+            var courses = enrollments.Select(e => new
+            {
+                e.Planwork.ChildId,
+                e.Planwork.CoursePlace,
+                e.Planwork.CourseDate,
+                e.Planwork.ServiceTitle,
+                e.Planwork.Slug,
+                e.EnrolledAt
+            });
+
+            return Ok(courses);
+        }
+
     }
 }
