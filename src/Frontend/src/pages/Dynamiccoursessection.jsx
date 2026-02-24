@@ -37,105 +37,62 @@ const DynamicCoursesSection = () => {
     };
 
     useEffect(() => {
-        const fetchNewest20Courses = async () => {
+        const fetchLatestCourses = async () => {
             try {
                 setLoading(true);
                 setError(null);
 
-                console.log('🔄 Step 1: Fetching categories tree...');
-                const categoriesResponse = await fetch(`${API_BASE_URL}/Categories/tree`);
-                if (!categoriesResponse.ok) throw new Error('Failed to fetch categories');
-                const categoriesData = await categoriesResponse.json();
-                console.log('✅ Categories data received');
+                const response = await fetch(`${API_BASE_URL}/Course/latest`);
+                if (!response.ok) throw new Error(`Failed to fetch latest courses: ${response.status}`);
 
-                const programSlugs = [];
-                const extractSlugs = (categories) => {
-                    if (!categories || !Array.isArray(categories)) return;
-                    categories.forEach(category => {
-                        if (category.slug) programSlugs.push(category.slug);
-                        if (category.subCategories && Array.isArray(category.subCategories)) extractSlugs(category.subCategories);
-                        if (category.children && Array.isArray(category.children)) extractSlugs(category.children);
-                    });
-                };
+                const data = await response.json();
 
-                if (Array.isArray(categoriesData)) extractSlugs(categoriesData);
-                else if (categoriesData.categories) extractSlugs(categoriesData.categories);
-                else if (categoriesData.data) extractSlugs(categoriesData.data);
+                // Support both array response and wrapped { courses: [...] } shape
+                const rawCourses = Array.isArray(data)
+                    ? data
+                    : data.courses || data.data || [];
 
-                console.log(`📦 Found ${programSlugs.length} program slugs:`, programSlugs);
-                if (programSlugs.length === 0) throw new Error('No program slugs found in categories tree');
-
-                console.log('🔄 Step 2: Fetching courses from all programs...');
-                const allCourses = [];
-
-                for (const slug of programSlugs) {
-                    try {
-                        const res = await fetch(`${API_BASE_URL}/Course/programs/${slug}/courses`);
-                        if (res.ok) {
-                            const data = await res.json();
-                            if (data.courses && Array.isArray(data.courses)) {
-                                data.courses.forEach(course => {
-                                    if (course && course.id && course.slug) {
-                                        allCourses.push({ ...course, programSlug: slug });
-                                    }
-                                });
-                                if (data.courses.length > 0) console.log(`✅ ${slug}: ${data.courses.length} courses`);
-                            }
-                        }
-                    } catch (err) {
-                        console.log(`❌ ${slug}: ${err.message}`);
-                    }
+                if (rawCourses.length === 0) {
+                    setError('لا توجد دورات متاحة حالياً');
+                    setLoading(false);
+                    return;
                 }
 
-                console.log(`📊 Total courses collected: ${allCourses.length}`);
-                if (allCourses.length === 0) { setError('لا توجد دورات متاحة حالياً'); setLoading(false); return; }
+                const transformedCourses = rawCourses
+                    .filter(c => c && c.childId)
+                    .map(apiCourse => {
+                        const cost = apiCourse.cost || apiCourse.price || 0;
+                        const originalPrice = cost ? cost / 0.6 : 0;
+                        return {
+                            id: apiCourse.childId,
+                            slug: apiCourse.slug || String(apiCourse.childId),
+                            title: apiCourse.serviceTitle || apiCourse.title || 'دورة تدريبية',
+                            subtitle: apiCourse.place || 'دورة تدريبية',
+                            description: apiCourse.description || 'دورة تدريبية شاملة ومتخصصة',
+                            icon: apiCourse.image || apiCourse.imageUrl || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                            currentPrice: cost,
+                            originalPrice: originalPrice,
+                            date: apiCourse.date || apiCourse.startDate || '',
+                            place: apiCourse.place || apiCourse.location || '',
+                            programSlug: apiCourse.programSlug || String(apiCourse.parentId) || '',
+                            isFree: !cost || cost === 0
+                        };
+                    });
 
-                const sortedCourses = allCourses.sort((a, b) => {
-                    const dateA = a.date ? new Date(a.date) : new Date(0);
-                    const dateB = b.date ? new Date(b.date) : new Date(0);
-                    return dateB - dateA;
-                });
-
-                const top20 = sortedCourses.slice(0, 20);
-                console.log(`🎯 Selected ${top20.length} newest courses`);
-
-                const transformedCourses = top20.map(apiCourse => {
-                    const originalPrice = apiCourse.cost ? apiCourse.cost / 0.6 : 0;
-                    return {
-                        id: apiCourse.id,
-                        slug: apiCourse.slug,
-                        title: apiCourse.title || 'دورة تدريبية',
-                        subtitle: apiCourse.place || 'دورة تدريبية',
-                        description: apiCourse.description || 'دورة تدريبية شاملة ومتخصصة',
-                        icon: apiCourse.image || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
-                        currentPrice: apiCourse.cost || 0,
-                        originalPrice: originalPrice,
-                        date: apiCourse.date || '',
-                        place: apiCourse.place || '',
-                        programSlug: apiCourse.programSlug || '',
-                        isFree: !apiCourse.cost || apiCourse.cost === 0
-                    };
-                }).filter(c => c && c.id && c.slug);
-
-                console.log(`✨ Final courses to display: ${transformedCourses.length}`);
                 setCourses(transformedCourses);
 
             } catch (err) {
-                console.error('❌ Fatal error:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchNewest20Courses();
+        fetchLatestCourses();
     }, []);
 
-    // ✅ UPDATED: free courses save to enrolledCourses + navigate to /my-courses
-    //             paid courses add to cart + navigate to /cart
     const handleCourseAction = (course) => {
         if (course.isFree) {
-            // Save to enrolledCourses localStorage
             const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
             const alreadyEnrolled = existing.some(e => e.id === course.id);
 
@@ -158,7 +115,6 @@ const DynamicCoursesSection = () => {
 
             navigate('/my-courses');
         } else {
-            // Add to cart for paid courses
             const existingCart = localStorage.getItem('cartItems');
             const cartItems = existingCart ? JSON.parse(existingCart) : [];
 

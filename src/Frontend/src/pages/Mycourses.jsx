@@ -1,21 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/clerk-react';
+import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@mui/material';
 
-// ─── Storage Keys ─────────────────────────────────────────────────────────────
-const ENROLLED_KEY = 'enrolledCourses';
-const PURCHASED_KEY = 'purchasedCourses';
+// ─── API Configuration ─────────────────────────────────────────────────────────
+const API_BASE_URL = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
-// ─── Data helpers ─────────────────────────────────────────────────────────────
-const loadPurchased = () => {
-    try { return JSON.parse(localStorage.getItem(PURCHASED_KEY) || '[]'); }
-    catch { return []; }
-};
+// ─── API Fetch Helper ──────────────────────────────────────────────────────────
+const fetchMyCourses = async (token) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/Course/my-courses`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
 
-const loadEnrolled = () => {
-    try { return JSON.parse(localStorage.getItem(ENROLLED_KEY) || '[]'); }
-    catch { return []; }
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return Array.isArray(data) ? data : (data?.data || []);
+    } catch (error) {
+        console.error('Error fetching courses:', error);
+        return [];
+    }
 };
 
 // ─── Progress bar ─────────────────────────────────────────────────────────────
@@ -37,33 +49,45 @@ const BookIcon = () => (
 const MyCourses = () => {
     const navigate = useNavigate();
     const { user } = useUser();
+    const { getToken } = useAuth();
     const [tab, setTab] = useState('all');
-    const [purchased, setPurchased] = useState([]);
-    const [enrolled, setEnrolled] = useState([]);
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [hoveredCard, setHoveredCard] = useState(null);
     const [search, setSearch] = useState('');
 
     // Get user's first name
     const userName = user?.firstName || user?.fullName?.split(' ')[0] || '';
 
-    const reload = () => {
-        setPurchased(loadPurchased());
-        setEnrolled(loadEnrolled());
-    };
-
+    // Fetch courses from API on component mount
     useEffect(() => {
-        reload();
-        window.addEventListener('cartUpdated', reload);
-        window.addEventListener('enrollUpdated', reload);
-        window.addEventListener('storage', reload);
-        return () => {
-            window.removeEventListener('cartUpdated', reload);
-            window.removeEventListener('enrollUpdated', reload);
-            window.removeEventListener('storage', reload);
+        const loadCourses = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const token = await getToken();
+                const data = await fetchMyCourses(token);
+                setCourses(data);
+            } catch (err) {
+                console.error('Failed to load courses:', err);
+                setError('Failed to load courses. Please try again later.');
+                setCourses([]);
+            } finally {
+                setLoading(false);
+            }
         };
-    }, []);
 
-    // ── Derived list — purely dynamic, no defaults ────────────────────────────
+        if (user) {
+            loadCourses();
+        }
+    }, [user, getToken]);
+
+    // ── Separate courses by type ────────────────────────────────────────────────
+    const purchased = courses.filter(c => c.isPurchased === true) || [];
+    const enrolled = courses.filter(c => c.isPurchased !== true) || [];
+
+    // ── Combine courses with type indicator ─────────────────────────────────────
     const allCourses = [
         ...purchased.map(c => ({ ...c, _type: 'purchased' })),
         ...enrolled
@@ -71,6 +95,7 @@ const MyCourses = () => {
             .map(c => ({ ...c, _type: 'enrolled' })),
     ];
 
+    // ── Filter by tab and search ────────────────────────────────────────────────
     const filtered = allCourses
         .filter(c => {
             if (tab === 'purchased') return c._type === 'purchased';
@@ -159,7 +184,6 @@ const MyCourses = () => {
                             <div style={styles.heroTopRow} className="mc-hero-top">
                                 <div style={styles.heroAvatar}>📚</div>
                                 <div>
-                                    {/* ✅ Personalized greeting: مرحباً [name]، */}
                                     <p style={styles.heroGreeting}>
                                         مرحباً {userName}،
                                     </p>
@@ -211,10 +235,29 @@ const MyCourses = () => {
                             </div>
                         </div>
 
-                        {/* ✅ Only show courses that exist — no defaults */}
-                        {filtered.length === 0 ? (
+                        {/* Loading State */}
+                        {loading && (
+                            <div style={styles.loadingWrap}>
+                                <div style={styles.spinner} />
+                                <p style={styles.loadingText}>جاري تحميل دوراتك...</p>
+                            </div>
+                        )}
+
+                        {/* Error State */}
+                        {error && !loading && (
+                            <div style={styles.errorWrap}>
+                                <div style={styles.errorIcon}>⚠️</div>
+                                <h3 style={styles.errorTitle}>{error}</h3>
+                                <button style={styles.errorBtn} onClick={() => window.location.reload()}>
+                                    حاول مرة أخرى
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Courses Grid or Empty State */}
+                        {!loading && !error && filtered.length === 0 ? (
                             <EmptyState tab={tab} search={search} navigate={navigate} />
-                        ) : (
+                        ) : !loading && !error ? (
                             <div style={styles.grid} className="mc-grid">
                                 {filtered.map(course => (
                                     <CourseCard
@@ -227,7 +270,7 @@ const MyCourses = () => {
                                     />
                                 ))}
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </SignedIn>
             </div>
@@ -238,7 +281,7 @@ const MyCourses = () => {
 // ─── Course Card ──────────────────────────────────────────────────────────────
 const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
     const isPurchased = course._type === 'purchased';
-    const progress = course.progress ?? 0; // ✅ Default to 0, no fake progress
+    const progress = course.progress ?? 0;
 
     const goToCourse = () => {
         navigate(course.slug ? `/course/${course.slug}` : `/course/${course.id}`);
@@ -251,7 +294,6 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
             onMouseLeave={onLeave}
             className="mc-card"
         >
-            {/* ✅ Card header: always use icon (blue→orange gradient like CoursesPage), no static images */}
             <div style={styles.cardHeader}>
                 <div style={{
                     ...styles.cardImgPlaceholder,
@@ -259,18 +301,15 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
                         ? 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
                         : 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)',
                 }}>
-                    {/* Glassmorphism icon wrapper — same as CoursesPage */}
                     <div style={styles.iconWrapper}>
                         <BookIcon />
                     </div>
                 </div>
 
-                {/* Badge */}
                 <span style={{ ...styles.badge, ...(isPurchased ? styles.badgePaid : styles.badgeFree) }}>
                     {isPurchased ? '💳 مدفوع' : '✅ مسجل'}
                 </span>
 
-                {/* Progress overlay on hover */}
                 {progress > 0 && (
                     <div style={{ ...styles.progressOverlay, opacity: hovered ? 1 : 0 }}>
                         <span style={styles.progressOverlayText}>{progress}% مكتمل</span>
@@ -369,7 +408,6 @@ const styles = {
     heroTopRow: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' },
     heroAvatar: { width: '64px', height: '64px', borderRadius: '50%', flexShrink: 0, background: 'rgba(255,255,255,0.2)', border: '2.5px solid rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', boxShadow: '0 4px 18px rgba(0,0,0,0.2)' },
 
-    // ✅ Larger greeting line to show name prominently
     heroGreeting: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif', textShadow: '0 1px 6px rgba(0,0,0,0.2)' },
     heroTitle: { margin: '4px 0 0', fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Droid Arabic Kufi", serif', textShadow: '0 2px 12px rgba(0,0,0,0.18)' },
 
@@ -397,10 +435,8 @@ const styles = {
     cardHover: { transform: 'translateY(-7px)', boxShadow: '0 14px 28px rgba(0,0,0,0.13)', borderColor: '#0865a8' },
     cardHeader: { position: 'relative', height: '160px', overflow: 'hidden' },
 
-    // ✅ Icon placeholder — same style as CoursesPage card headers
     cardImgPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
 
-    // ✅ Glassmorphism icon wrapper — matches CoursesPage exactly
     iconWrapper: {
         borderRadius: '50%',
         backgroundColor: 'rgba(255,255,255,0.15)',
@@ -413,7 +449,7 @@ const styles = {
     badgePaid: { backgroundColor: '#0865a8', color: '#fff', boxShadow: '0 2px 8px rgba(8,101,168,0.35)' },
     badgeFree: { backgroundColor: '#27ae60', color: '#fff', boxShadow: '0 2px 8px rgba(39,174,96,0.35)' },
     progressOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 14px', background: 'linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 100%)', transition: 'opacity 0.3s', display: 'flex', justifyContent: 'flex-end' },
-    progressOverlayText: { color: '#fff', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
+    progressOverlayText: { fontSize: '12px', color: '#fff', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
 
     cardBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 },
     cardTitle: { fontSize: '16px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 },
@@ -442,6 +478,15 @@ const styles = {
     emptySub: { fontSize: '15px', color: '#777', fontFamily: '"Droid Arabic Kufi", serif', margin: '0 0 28px' },
     emptyBtn: { padding: '13px 36px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', boxShadow: '0 4px 12px rgba(8,101,168,0.25)' },
 
+    loadingWrap: { textAlign: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #e0e0e0' },
+    spinner: { width: '50px', height: '50px', border: '4px solid #f0f0f0', borderTop: '4px solid #0865a8', borderRadius: '50%', margin: '0 auto 20px', animation: 'spin 1s linear infinite' },
+    loadingText: { fontSize: '16px', color: '#666', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
+
+    errorWrap: { textAlign: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #ff6b6b' },
+    errorIcon: { fontSize: '64px', marginBottom: '16px' },
+    errorTitle: { fontSize: '22px', fontWeight: 'bold', color: '#d32f2f', fontFamily: '"Droid Arabic Kufi", serif', margin: '0 0 20px' },
+    errorBtn: { padding: '13px 36px', background: '#d32f2f', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', boxShadow: '0 4px 12px rgba(211,47,47,0.25)' },
+
     authGate: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '120px 20px 60px', background: 'linear-gradient(135deg, #f0f4f8 0%, #e8eef5 100%)' },
     authGateCard: { backgroundColor: '#fff', borderRadius: '20px', padding: '52px 44px', boxShadow: '0 8px 40px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '420px', width: '100%', border: '1.5px solid #e8eef5', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' },
     authGateIcon: { fontSize: '64px' },
@@ -452,6 +497,10 @@ const styles = {
 
 const css = `
   * { font-family: "Droid Arabic Kufi", serif !important; box-sizing: border-box; }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 
   @media (max-width: 640px) {
     .mc-hero         { padding-top: 100px !important; padding-bottom: 36px !important; }

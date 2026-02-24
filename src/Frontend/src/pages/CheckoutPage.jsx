@@ -5,40 +5,26 @@ import { useAuth } from "@clerk/clerk-react";
 
 const API_BASE = "https://localhost:7177";
 
-// ─── Helper: move purchased cart items → enrolledCourses AND purchasedCourses ──
 const movePurchasedToEnrolled = (cartItems) => {
     try {
         const existingEnrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
         const existingPurchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
-
         cartItems.forEach(item => {
             const courseObj = {
-                id: item.id,
-                slug: item.slug || '',
-                title: item.title,
+                id: item.id, slug: item.slug || '', title: item.title,
                 place: item.place || item.instructor || '',
                 instructor: item.instructor || item.place || 'غير محدد',
-                date: item.date || '',
-                image: item.image || 'book',
-                currentPrice: item.currentPrice || 0,
-                progress: 0,
+                date: item.date || '', image: item.image || 'book',
+                currentPrice: item.currentPrice || 0, progress: 0,
             };
-
-            if (!existingEnrolled.find(e => e.id === item.id)) {
-                existingEnrolled.push(courseObj);
-            }
-            if (!existingPurchased.find(e => e.id === item.id)) {
-                existingPurchased.push(courseObj);
-            }
+            if (!existingEnrolled.find(e => e.id === item.id)) existingEnrolled.push(courseObj);
+            if (!existingPurchased.find(e => e.id === item.id)) existingPurchased.push(courseObj);
         });
-
         localStorage.setItem('enrolledCourses', JSON.stringify(existingEnrolled));
         localStorage.setItem('purchasedCourses', JSON.stringify(existingPurchased));
         window.dispatchEvent(new Event('enrollUpdated'));
         window.dispatchEvent(new Event('cartUpdated'));
-    } catch (err) {
-        console.error('Error moving courses to enrolled/purchased:', err);
-    }
+    } catch (err) { }
 };
 
 export default function CheckoutPage() {
@@ -60,7 +46,6 @@ export default function CheckoutPage() {
     const getTokenRef = useRef(null);
     const cartItemsRef = useRef([]);
 
-    // ─── Load cart ────────────────────────────────────────────────────────────
     useEffect(() => {
         const savedCart = localStorage.getItem("cartItems");
         if (savedCart) {
@@ -70,52 +55,31 @@ export default function CheckoutPage() {
         }
     }, []);
 
-    // ─── Auth guard ───────────────────────────────────────────────────────────
     useEffect(() => {
-        if (isSignedIn === false) {
-            alert("يجب تسجيل الدخول أولاً");
-            navigate("/sign-in");
-        }
+        if (isSignedIn === false) { alert("يجب تسجيل الدخول أولاً"); navigate("/sign-in"); }
     }, [isSignedIn, navigate]);
 
-    // ─── Keep refs in sync ────────────────────────────────────────────────────
-    useEffect(() => {
-        getTokenRef.current = getToken;
-    }, [getToken]);
+    useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+    useEffect(() => { cartItemsRef.current = cartItems; }, [cartItems]);
 
-    useEffect(() => {
-        cartItemsRef.current = cartItems;
-    }, [cartItems]);
-
-    // ─── Handle redirect back from bank ──────────────────────────────────────
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const orderIdParam = urlParams.get("orderId");
         const transactionRef = urlParams.get("transactionRef");
-        if (orderIdParam && transactionRef) {
-            verifyAfterRedirect(orderIdParam, transactionRef);
-        }
+        if (orderIdParam && transactionRef) verifyAfterRedirect(orderIdParam, transactionRef);
     }, []);
 
-    // ─── Mastercard global callbacks ──────────────────────────────────────────
     useEffect(() => {
         window.completeCallback = async (resultIndicator) => {
             if (resultIndicator === successIndicatorRef.current) {
                 try {
                     const token = await getTokenRef.current();
-                    await fetch(
-                        `${API_BASE}/api/checkout/result?orderId=${orderIdRef.current}&transactionRef=${resultIndicator}`,
-                        { method: "GET", headers: { Authorization: `Bearer ${token}` } }
-                    );
+                    await fetch(`${API_BASE}/api/checkout/result?orderId=${orderIdRef.current}&transactionRef=${resultIndicator}`,
+                        { method: "GET", headers: { Authorization: `Bearer ${token}` } });
                 } catch (_) { }
-
-                // ✅ Move purchased courses to enrolled AND purchasedCourses BEFORE clearing cart
                 movePurchasedToEnrolled(cartItemsRef.current);
-
-                // ✅ Clear cart
                 localStorage.removeItem("cartItems");
                 window.dispatchEvent(new Event("cartUpdated"));
-
                 setPaymentSuccess(true);
                 setOrderId(orderIdRef.current);
                 setOrderAmount(subtotalRef.current);
@@ -124,175 +88,116 @@ export default function CheckoutPage() {
                 setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
             }
         };
-
         window.errorCallback = (err) => {
-            console.error("Mastercard error:", JSON.stringify(err));
             setLoading(false);
             setError("حدث خطأ أثناء الدفع: " + (err?.error?.explanation || "يرجى المحاولة مرة أخرى."));
         };
-
-        window.cancelCallback = () => {
-            setLoading(false);
-            setError("تم إلغاء عملية الدفع.");
-        };
-
-        return () => {
-            delete window.completeCallback;
-            delete window.errorCallback;
-            delete window.cancelCallback;
-        };
+        window.cancelCallback = () => { setLoading(false); setError("تم إلغاء عملية الدفع."); };
+        return () => { delete window.completeCallback; delete window.errorCallback; delete window.cancelCallback; };
     }, []);
 
-    // ─── Totals ───────────────────────────────────────────────────────────────
-    const subtotal = cartItems.reduce(
-        (sum, item) => sum + item.currentPrice * (item.quantity || 1), 0
-    );
-    const totalOriginalPrice = cartItems.reduce(
-        (sum, item) => sum + item.originalPrice * (item.quantity || 1), 0
-    );
+    const subtotal = cartItems.reduce((sum, item) => sum + item.currentPrice * (item.quantity || 1), 0);
+    const totalOriginalPrice = cartItems.reduce((sum, item) => sum + item.originalPrice * (item.quantity || 1), 0);
     const totalDiscount = totalOriginalPrice - subtotal;
+    useEffect(() => { subtotalRef.current = subtotal; }, [subtotal]);
 
-    useEffect(() => {
-        subtotalRef.current = subtotal;
-    }, [subtotal]);
-
-    // ─── Verify after bank redirect ───────────────────────────────────────────
     const verifyAfterRedirect = async (oid, transactionRef) => {
         setLoading(true);
         try {
             const token = await getToken();
-            const res = await fetch(
-                `${API_BASE}/api/checkout/result?orderId=${oid}&transactionRef=${transactionRef}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await fetch(`${API_BASE}/api/checkout/result?orderId=${oid}&transactionRef=${transactionRef}`,
+                { headers: { Authorization: `Bearer ${token}` } });
             const data = await res.json();
             if (data.isSuccess) {
-                // ✅ Move purchased courses to enrolled AND purchasedCourses BEFORE clearing cart
                 const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
                 movePurchasedToEnrolled(savedCart);
-
                 localStorage.removeItem("cartItems");
                 window.dispatchEvent(new Event("cartUpdated"));
-
-                setPaymentSuccess(true);
-                setOrderId(oid);
-                setOrderAmount(subtotalRef.current);
-            } else {
-                setError("فشلت عملية الدفع. يرجى المحاولة مرة أخرى.");
-            }
-        } catch {
-            setError("حدث خطأ أثناء التحقق من حالة الدفع.");
-        } finally {
-            setLoading(false);
-        }
+                setPaymentSuccess(true); setOrderId(oid); setOrderAmount(subtotalRef.current);
+            } else { setError("فشلت عملية الدفع. يرجى المحاولة مرة أخرى."); }
+        } catch { setError("حدث خطأ أثناء التحقق من حالة الدفع."); }
+        finally { setLoading(false); }
     };
 
-    // ─── Main payment handler ─────────────────────────────────────────────────
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
-
-        if (cartItems.length === 0) {
-            setError("السلة فارغة. يرجى إضافة دورات أولاً.");
-            return;
-        }
-
+        if (cartItems.length === 0) { setError("السلة فارغة. يرجى إضافة دورات أولاً."); return; }
         setLoading(true);
-
         try {
             const token = await getToken();
             if (!token) throw new Error("فشل في الحصول على رمز المصادقة");
-
             const response = await fetch(`${API_BASE}/api/checkout/checkout`, {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json", Accept: "application/json" },
             });
-
             if (!response.ok) {
                 const errData = await response.json().catch(() => ({}));
                 throw new Error(errData.message || `خطأ في الخادم: ${response.status}`);
             }
-
             const result = await response.json();
-
-            if (!result.success || !result.data?.sessionId) {
-                throw new Error(result.message || "لم يتم استلام بيانات الجلسة من الخادم");
-            }
-
+            if (!result.success || !result.data?.sessionId) throw new Error(result.message || "لم يتم استلام بيانات الجلسة من الخادم");
             const { sessionId, successIndicator, orderId } = result.data;
-
             successIndicatorRef.current = successIndicator;
             orderIdRef.current = orderId;
             setOrderId(orderId);
-
-            if (!window.Checkout) {
-                throw new Error("بوابة الدفع لم تُحمَّل بعد. يرجى تحديث الصفحة والمحاولة مرة أخرى.");
-            }
-
+            if (!window.Checkout) throw new Error("بوابة الدفع لم تُحمَّل بعد. يرجى تحديث الصفحة والمحاولة مرة أخرى.");
             window.Checkout.configure({ session: { id: sessionId } });
             window.Checkout.showPaymentPage();
-
         } catch (err) {
-            console.error("Payment error:", err);
             let msg = "حدث خطأ أثناء معالجة الطلب";
-            if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError")) {
-                msg = "فشل الاتصال بالخادم. تحقق من اتصال الإنترنت.";
-            } else if (err.message?.includes("401") || err.message?.includes("Unauthorized")) {
-                msg = "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.";
-                setTimeout(() => navigate("/sign-in"), 2000);
-            } else if (err.message) {
-                msg = err.message;
-            }
-            setError(msg);
-            setLoading(false);
+            if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError")) msg = "فشل الاتصال بالخادم. تحقق من اتصال الإنترنت.";
+            else if (err.message?.includes("401") || err.message?.includes("Unauthorized")) { msg = "انتهت جلستك. يرجى تسجيل الدخول مرة أخرى."; setTimeout(() => navigate("/sign-in"), 2000); }
+            else if (err.message) msg = err.message;
+            setError(msg); setLoading(false);
         }
     };
 
-    // ════════════════════════════════════════════════════════════
-    // SUCCESS SCREEN
-    // ════════════════════════════════════════════════════════════
+    const Spinner = () => (
+        <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
+    );
+
+    /* ── Inline SVG logos — never break regardless of network ── */
+    const VisaLogo = () => (
+        <svg style={{ height: 22, width: 'auto' }} viewBox="0 0 152 47" xmlns="http://www.w3.org/2000/svg">
+            <path fill="#1A1F71" d="M62.4 45.6H50.5L57.8 1.4h11.9zM42.7 1.4L31.4 31.7l-1.3-6.6L26.2 5.2S25.7 1.4 21 1.4H2.1L2 2.1s5.7 1.2 12.4 5.2l10.3 38.3h12.4L55 1.4H42.7zm80.1 0h-11c-4 0-5 3.1-5 3.1L91.2 45.6h12.3l2.4-6.7h15l1.4 6.7h10.9L122.8 1.4zm-14.4 28.4l6.2-17.1 3.5 17.1h-9.7zm-27.1-18s-5.5-2.8-11.3-2.8c-6.2 0-21 2.7-21 16.2 0 12.6 17.6 12.8 17.6 19.4 0 .8-.7 6.6-11.5 6.6-10.8 0-15.8-5.7-15.8-5.7l-2.8 9.8s6.2 4 16.7 4c10.6 0 22.7-6.1 22.7-18.4 0-12.6-17.7-13.7-17.7-19.5 0-1.5 1.4-5.7 9.8-5.7 7.9 0 12.7 3.7 12.7 3.7l2.6-7.6z" />
+        </svg>
+    );
+
+    const MastercardLogo = () => (
+        <svg style={{ height: 30, width: 'auto' }} viewBox="0 0 131.39 86.9" xmlns="http://www.w3.org/2000/svg">
+            <rect fill="#FF5F00" x="48.37" width="34.65" height="86.9" />
+            <path fill="#EB001B" d="M51.94 43.45a55.2 55.2 0 0 1 14.12-37.42A48.19 48.19 0 0 0 0 43.45a48.19 48.19 0 0 0 66.06 43.42A55.2 55.2 0 0 1 51.94 43.45z" />
+            <path fill="#F79E1B" d="M131.39 43.45A48.19 48.19 0 0 0 65.33 0a55.23 55.23 0 0 1 0 86.87 48.19 48.19 0 0 0 66.06-43.42z" />
+        </svg>
+    );
+
+    // ════════ SUCCESS ════════
     if (paymentSuccess) {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
                 <style>{`* { font-family: "Droid Arabic Kufi", serif !important; }`}</style>
-                <div dir="rtl" className="min-h-screen bg-white px-4 py-16">
-                    <div className="mx-auto max-w-2xl">
-                        <div className="rounded-3xl bg-white p-8 text-center shadow-lg md:p-12">
-                            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50 md:h-24 md:w-24">
-                                <CheckCircle className="h-12 w-12 text-green-600 md:h-16 md:w-16" />
+                <div dir="rtl" style={{ minHeight: '100vh', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4rem 1rem' }}>
+                    <div style={{ width: '100%', maxWidth: 480 }}>
+                        <div style={{ borderRadius: 24, background: '#fff', padding: '2.5rem 2rem', textAlign: 'center', boxShadow: '0 4px 32px rgba(0,0,0,0.10)' }}>
+                            <div style={{ margin: '0 auto 1.5rem', width: 88, height: 88, borderRadius: '50%', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <CheckCircle style={{ width: 52, height: 52, color: '#16a34a' }} />
                             </div>
-                            <h1 className="mb-4 text-2xl font-bold text-black md:text-3xl">
-                                تم إتمام عملية الدفع بنجاح!
-                            </h1>
-                            <p className="mb-8 text-base text-black opacity-70 md:text-lg">
-                                شكراً لك! تم تأكيد طلبك وتم إضافة الدورات إلى حسابك
-                            </p>
-                            <div className="mb-8 rounded-2xl border border-gray-200 bg-gray-50 p-6">
-                                <p className="mb-2 text-sm font-medium text-black opacity-60">رقم الطلب</p>
-                                <p className="text-2xl font-bold text-[#0865a8] md:text-3xl">{orderId || "N/A"}</p>
-                                <p className="mt-4 text-sm font-medium text-black opacity-60">المبلغ المدفوع</p>
-                                <p className="text-3xl font-bold text-[#f57c00] md:text-4xl">
-                                    {(orderAmount || subtotal).toFixed(2)} جنيه
-                                </p>
+                            <h1 style={{ fontSize: 'clamp(1.3rem,4vw,1.8rem)', fontWeight: 700, marginBottom: '1rem' }}>تم إتمام عملية الدفع بنجاح!</h1>
+                            <p style={{ color: '#666', marginBottom: '2rem', fontSize: 'clamp(0.85rem,2vw,1rem)' }}>شكراً لك! تم تأكيد طلبك وتم إضافة الدورات إلى حسابك</p>
+                            <div style={{ borderRadius: 16, border: '1px solid #e5e7eb', background: '#f9fafb', padding: '1.5rem', marginBottom: '2rem' }}>
+                                <p style={{ fontSize: '0.8rem', opacity: 0.6, marginBottom: 4 }}>رقم الطلب</p>
+                                <p style={{ fontSize: 'clamp(1.2rem,4vw,1.6rem)', fontWeight: 700, color: '#0865a8' }}>{orderId || "N/A"}</p>
+                                <p style={{ fontSize: '0.8rem', opacity: 0.6, margin: '1rem 0 4px' }}>المبلغ المدفوع</p>
+                                <p style={{ fontSize: 'clamp(1.5rem,5vw,2rem)', fontWeight: 700, color: '#f57c00' }}>{(orderAmount || subtotal).toFixed(2)} جنيه</p>
                             </div>
-                            <div className="space-y-3">
-                                <Link
-                                    to="/my-courses"
-                                    className="block w-full rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-semibold text-white transition-all hover:shadow-lg md:py-4"
-                                >
-                                    عرض دوراتي
-                                </Link>
-                                <Link
-                                    to="/"
-                                    className="block w-full rounded-xl border-2 border-gray-200 py-3 font-semibold text-black transition-colors hover:bg-gray-50 md:py-4"
-                                >
-                                    الصفحة الرئيسية
-                                </Link>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                <Link to="/my-courses" style={{ display: 'block', borderRadius: 12, background: 'linear-gradient(90deg,#0865a8,#f57c00)', padding: '0.85rem', fontWeight: 700, color: '#fff', textDecoration: 'none', textAlign: 'center' }}>عرض دوراتي</Link>
+                                <Link to="/" style={{ display: 'block', borderRadius: 12, border: '2px solid #e5e7eb', padding: '0.85rem', fontWeight: 700, color: '#000', textDecoration: 'none', textAlign: 'center' }}>الصفحة الرئيسية</Link>
                             </div>
                         </div>
                     </div>
@@ -301,214 +206,193 @@ export default function CheckoutPage() {
         );
     }
 
-    // ════════════════════════════════════════════════════════════
-    // CHECKOUT SCREEN
-    // ════════════════════════════════════════════════════════════
+    // ════════ CHECKOUT ════════
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
             <style>{`
                 * { font-family: "Droid Arabic Kufi", serif !important; }
-                @media (max-width: 640px) { .checkout-main { padding-top: 100px !important; } }
-                @media (min-width: 641px) and (max-width: 1024px) { .checkout-main { padding-top: 120px !important; } }
-                @media (min-width: 1025px) { .checkout-main { padding-top: 130px !important; } }
+                .co-wrap { padding-top: 108px; }
+                @media (min-width: 768px)  { .co-wrap { padding-top: 128px; } }
+                @media (min-width: 1024px) { .co-wrap { padding-top: 138px; } }
             `}</style>
 
             {/* Breadcrumb */}
-            <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20" style={{ top: 70 }}>
-                <div className="text-center text-sm md:text-base">
-                    <a href="/" className="ml-3 text-gray-700 hover:text-gray-900">الصفحة الرئيسية</a>
-                    <span className="text-gray-500"> - </span>
-                    <Link to="/cart" className="mx-2 text-gray-700 hover:text-gray-900">سلة التسوق</Link>
-                    <span className="text-gray-500"> - </span>
-                    <span className="mr-2 font-semibold text-gray-900">إتمام الدفع</span>
-                </div>
+            <div style={{ position: 'fixed', top: 70, left: 0, right: 0, zIndex: 40, background: '#F5F7E1', borderBottom: '1px solid #d1d5db', padding: '6px 12px', textAlign: 'center', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>
+                <a href="/" style={{ color: '#374151', textDecoration: 'none' }}>الصفحة الرئيسية</a>
+                <span style={{ margin: '0 6px', color: '#9ca3af' }}>-</span>
+                <Link to="/cart" style={{ color: '#374151', textDecoration: 'none' }}>سلة التسوق</Link>
+                <span style={{ margin: '0 6px', color: '#9ca3af' }}>-</span>
+                <span style={{ fontWeight: 700, color: '#111' }}>إتمام الدفع</span>
             </div>
 
-            <div dir="rtl" className="checkout-main min-h-screen bg-white px-3 pb-16 sm:px-4 md:px-6">
-                <div className="mx-auto max-w-7xl">
+            <div dir="rtl" className="co-wrap" style={{ minHeight: '100vh', background: '#fff', paddingBottom: '4rem' }}>
 
-                    <div className="mb-6 text-center md:mb-10">
-                        <h1 className="mb-2 text-3xl font-bold text-black sm:text-4xl md:mb-3 md:text-5xl">
-                            اشترك في دوراتنا
-                        </h1>
+                {/* Title */}
+                <div style={{ textAlign: 'center', padding: 'clamp(1rem,4vw,2rem) 1rem clamp(0.75rem,3vw,1.5rem)' }}>
+                    <h1 style={{ fontSize: 'clamp(1.4rem,5vw,3rem)', fontWeight: 700 }}>اشترك في دوراتنا</h1>
+                </div>
+
+                {/* Error */}
+                {error && (
+                    <div style={{ maxWidth: 900, margin: '0 auto 1.5rem', padding: '0 12px' }}>
+                        <div style={{ background: '#fef2f2', borderRadius: 10, padding: '1rem' }}>
+                            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                <AlertCircle style={{ width: 20, height: 20, color: '#dc2626', flexShrink: 0, marginTop: 2 }} />
+                                <div>
+                                    <p style={{ fontWeight: 700, color: '#991b1b' }}>خطأ في الدفع</p>
+                                    <p style={{ fontSize: '0.85rem', color: '#b91c1c', marginTop: 4 }}>{error}</p>
+                                    <button onClick={() => setError("")} style={{ marginTop: 8, fontSize: '0.75rem', color: '#dc2626', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>إغلاق</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                )}
 
-                    {error && (
-                        <div className="mb-6 rounded-lg bg-red-50 p-4 md:mb-8">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle className="h-5 w-5 flex-shrink-0 text-red-600" />
-                                <div className="flex-1">
-                                    <h3 className="font-semibold text-red-800">خطأ في الدفع</h3>
-                                    <p className="mt-1 whitespace-pre-wrap text-sm text-red-700">{error}</p>
-                                    <button onClick={() => setError("")} className="mt-2 text-xs font-semibold text-red-600 hover:text-red-800">
-                                        إغلاق
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                {/* ── Centered content container ── */}
+                <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 clamp(8px, 3vw, 24px)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'stretch' }}>
 
-                    <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+                        {/* On lg+: side by side via CSS */}
+                        <style>{`
+                            @media (min-width: 1024px) {
+                                .co-grid { flex-direction: row !important; align-items: flex-start !important; }
+                                .co-left { flex: 1 1 0%; }
+                                .co-right { width: 340px; flex-shrink: 0; position: sticky; top: 144px; }
+                            }
+                            @media (min-width: 1280px) { .co-right { width: 380px; } }
+                            @media (min-width: 1920px) { .co-right { width: 420px; } }
+                        `}</style>
 
-                        {/* ── Left: Payment method ── */}
-                        <div className="lg:col-span-2">
-                            <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 sm:p-6 md:p-8">
-                                <h2 className="mb-4 text-lg font-bold text-black md:mb-6 md:text-xl">تفاصيل الدفع</h2>
-                                <div className="space-y-3 md:space-y-4">
-                                    <div className="rounded-lg border-2 border-[#0865a8] bg-blue-50/30 p-4 md:p-5">
-                                        <div className="flex items-center gap-3 md:gap-4">
-                                            <div className="flex h-5 w-5 items-center justify-center">
-                                                <div className="flex h-4 w-4 items-center justify-center rounded-full border-2 border-[#0865a8] bg-[#0865a8] md:h-5 md:w-5">
-                                                    <div className="h-1.5 w-1.5 rounded-full bg-white md:h-2 md:w-2" />
-                                                </div>
+                        <div className="co-grid" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+                            {/* ── LEFT: Payment details ── */}
+                            <div className="co-left">
+                                <div style={{ borderRadius: 16, background: '#fff', boxShadow: '0 1px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', padding: 'clamp(14px,3vw,24px)' }}>
+                                    <h2 style={{ fontSize: 'clamp(0.95rem,2.5vw,1.1rem)', fontWeight: 700, marginBottom: 'clamp(12px,3vw,20px)' }}>تفاصيل الدفع</h2>
+
+                                    {/* Card option */}
+                                    <div style={{ borderRadius: 12, border: '2px solid #0865a8', background: 'rgba(8,101,168,0.04)', padding: 'clamp(10px,2.5vw,18px)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                            {/* Radio */}
+                                            <div style={{ width: 20, height: 20, borderRadius: '50%', border: '2px solid #0865a8', background: '#0865a8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />
                                             </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-bold text-black md:text-base">بطاقة ائتمان/خصم مباشر</p>
-                                                <p className="text-xs text-black opacity-60 md:text-sm">Visa, Mastercard</p>
+                                            {/* Text */}
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <p style={{ fontWeight: 700, fontSize: 'clamp(0.8rem,2vw,0.95rem)' }}>بطاقة ائتمان/خصم مباشر</p>
+                                                <p style={{ fontSize: '0.75rem', opacity: 0.6 }}>Visa, Mastercard</p>
                                             </div>
-                                            <div className="flex gap-1.5 md:gap-2">
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/Visa_Logo.png" alt="Visa" className="h-6 md:h-8" />
-                                                <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-6 md:h-8" />
+                                            {/* Logos */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                                                <VisaLogo />
+                                                <MastercardLogo />
                                             </div>
                                         </div>
                                     </div>
 
-                                    <div className="flex items-start gap-2 rounded-lg bg-green-50 p-3 md:gap-3 md:p-4">
-                                        <ShieldCheck className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600 md:h-5 md:w-5" />
+                                    {/* Security */}
+                                    <div style={{ marginTop: 12, borderRadius: 12, background: '#f0fdf4', padding: 'clamp(10px,2.5vw,16px)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                        <ShieldCheck style={{ width: 18, height: 18, color: '#16a34a', flexShrink: 0, marginTop: 2 }} />
                                         <div>
-                                            <p className="text-xs font-semibold text-black md:text-sm">معاملة آمنة ومشفرة بالكامل</p>
-                                            <p className="mt-1 text-xs text-black opacity-60">معلوماتك محمية بأعلى معايير الأمان العالمية</p>
+                                            <p style={{ fontWeight: 700, fontSize: 'clamp(0.78rem,2vw,0.9rem)' }}>معاملة آمنة ومشفرة بالكامل</p>
+                                            <p style={{ fontSize: '0.75rem', opacity: 0.6, marginTop: 2 }}>معلوماتك محمية بأعلى معايير الأمان العالمية</p>
                                         </div>
                                     </div>
+
+                                    {/* Mobile pay button */}
+                                    <button onClick={handleSubmit} disabled={loading || cartItems.length === 0}
+                                        style={{ marginTop: 16, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, background: 'linear-gradient(90deg,#0865a8,#f57c00)', padding: '0.85rem', fontWeight: 700, color: '#fff', border: 'none', cursor: loading || cartItems.length === 0 ? 'not-allowed' : 'pointer', opacity: loading || cartItems.length === 0 ? 0.7 : 1 }}
+                                        className="co-mobile-btn"
+                                    >
+                                        {loading ? <><Spinner />جاري المعالجة...</> : <>المتابعة إلى الدفع <ArrowRight style={{ width: 18, height: 18, transform: 'rotate(180deg)' }} /></>}
+                                    </button>
+                                    <style>{`@media (min-width: 1024px) { .co-mobile-btn { display: none !important; } }`}</style>
                                 </div>
                             </div>
 
-                            {/* Mobile button */}
-                            <div className="mt-4 md:mt-6 lg:hidden">
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={loading || cartItems.length === 0}
-                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-bold text-white shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 md:py-4"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                            </svg>
-                                            جاري المعالجة...
-                                        </>
-                                    ) : (
-                                        <>المتابعة إلى الدفع <ArrowRight className="h-4 w-4 rotate-180" /></>
-                                    )}
-                                </button>
-                            </div>
-                        </div>
+                            {/* ── RIGHT: Order summary ── */}
+                            <div className="co-right">
+                                <div style={{ borderRadius: 16, background: '#fff', boxShadow: '0 1px 8px rgba(0,0,0,0.08)', border: '1px solid #e5e7eb', padding: 'clamp(14px,3vw,24px)' }}>
 
-                        {/* ── Right: Order summary ── */}
-                        <div className="lg:col-span-1">
-                            <div className="sticky top-28 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-200 md:top-32 md:p-6">
+                                    {/* Header */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: 12, marginBottom: 16 }}>
+                                        <span style={{ fontWeight: 700, fontSize: 'clamp(0.85rem,2.5vw,1rem)' }}>
+                                            {cartItems.length === 0 ? "السلة فارغة" : cartItems.length === 1 ? "دورة واحدة" : `${cartItems.length} دورات`}
+                                        </span>
+                                        <Link to="/cart" style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0865a8', textDecoration: 'none' }}>تغيير</Link>
+                                    </div>
 
-                                <div className="mb-4 flex items-center justify-between border-b border-gray-200 pb-3 md:mb-6 md:pb-4">
-                                    <span className="text-base font-bold text-black md:text-lg">
-                                        {cartItems.length === 0 ? "السلة فارغة" : cartItems.length === 1 ? "دورة واحدة" : `${cartItems.length} دورات`}
-                                    </span>
-                                    <Link to="/cart" className="text-xs font-semibold text-[#0865a8] hover:underline md:text-sm">تغيير</Link>
-                                </div>
-
-                                <div className="mb-4 md:mb-6">
-                                    <p className="mb-3 text-sm font-bold text-black md:mb-4">ملخص الطلب</p>
-                                    <div className="mb-3 max-h-48 space-y-2.5 overflow-y-auto md:mb-4 md:space-y-3">
+                                    {/* Courses */}
+                                    <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 12 }}>ملخص الطلب</p>
+                                    <div style={{ maxHeight: 210, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
                                         {cartItems.map((item) => (
-                                            <div key={item.id} className="flex items-start gap-2.5 text-sm md:gap-3">
-                                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[#0865a8] to-[#f57c00] md:h-12 md:w-12">
-                                                    <BookOpen className="h-5 w-5 text-white md:h-6 md:w-6" />
+                                            <div key={item.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                                <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: 'linear-gradient(135deg,#0865a8,#f57c00)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <BookOpen style={{ width: 22, height: 22, color: '#fff' }} />
                                                 </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="line-clamp-2 text-xs font-medium text-black md:text-sm">{item.title}</p>
-                                                    <p className="mt-1 text-xs font-bold text-[#f57c00]">
-                                                        {(item.currentPrice * (item.quantity || 1)).toFixed(2)} جنيه
-                                                    </p>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <p style={{ fontSize: 'clamp(0.75rem,2vw,0.875rem)', fontWeight: 500, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.title}</p>
+                                                    <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f57c00', marginTop: 4 }}>{(item.currentPrice * (item.quantity || 1)).toFixed(2)} جنيه</p>
                                                 </div>
                                             </div>
                                         ))}
                                     </div>
-                                    <div className="space-y-1.5 text-sm md:space-y-2">
-                                        <div className="flex justify-between text-black opacity-70">
-                                            <span className="text-xs md:text-sm">المجموع الفرعي</span>
-                                            <span className="text-xs md:text-sm">{totalOriginalPrice.toFixed(2)} جنيه</span>
+
+                                    {/* Subtotal */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 'clamp(0.78rem,2vw,0.875rem)', marginBottom: 16 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.7 }}>
+                                            <span>المجموع الفرعي</span><span>{totalOriginalPrice.toFixed(2)} جنيه</span>
                                         </div>
                                         {totalDiscount > 0 && (
-                                            <div className="flex justify-between text-green-600">
-                                                <span className="text-xs md:text-sm">الخصم</span>
-                                                <span className="text-xs md:text-sm">-{totalDiscount.toFixed(2)} جنيه</span>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a' }}>
+                                                <span>الخصم</span><span>-{totalDiscount.toFixed(2)} جنيه</span>
                                             </div>
                                         )}
                                     </div>
-                                </div>
 
-                                {/* Coupon */}
-                                {!showCoupon ? (
-                                    <button
-                                        onClick={() => setShowCoupon(true)}
-                                        className="mb-4 flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 py-2.5 text-xs font-semibold text-black transition-colors hover:bg-gray-50 md:mb-6 md:py-3 md:text-sm"
-                                    >
-                                        <Tag className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                        استخدم كود الخصم
-                                    </button>
-                                ) : (
-                                    <div className="mb-4 md:mb-6">
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                value={couponCode}
-                                                onChange={(e) => setCouponCode(e.target.value)}
-                                                placeholder="أدخل كود الخصم"
-                                                className="flex-1 rounded-lg border border-gray-300 px-2.5 py-2 text-xs text-black focus:border-[#0865a8] focus:outline-none focus:ring-2 focus:ring-[#0865a8]/20 md:px-3 md:text-sm"
-                                            />
-                                            <button
-                                                onClick={() => couponCode.trim() && alert("سيتم تطبيق الكود عند إتمام الدفع")}
-                                                className="rounded-lg bg-[#0865a8] px-3 py-2 text-xs font-semibold text-white hover:bg-[#0865a8]/90 md:px-4 md:text-sm"
-                                            >
-                                                تطبيق
+                                    {/* Coupon */}
+                                    <div style={{ marginBottom: 16 }}>
+                                        {!showCoupon ? (
+                                            <button onClick={() => setShowCoupon(true)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, border: '1px solid #d1d5db', padding: '0.6rem', fontSize: '0.85rem', fontWeight: 600, background: '#fff', cursor: 'pointer' }}>
+                                                <Tag style={{ width: 15, height: 15 }} />استخدم كود الخصم
                                             </button>
-                                        </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="أدخل كود الخصم"
+                                                    style={{ flex: 1, borderRadius: 10, border: '1px solid #d1d5db', padding: '0.5rem 0.75rem', fontSize: '0.85rem', outline: 'none' }} />
+                                                <button onClick={() => couponCode.trim() && alert("سيتم تطبيق الكود عند إتمام الدفع")}
+                                                    style={{ borderRadius: 10, background: '#0865a8', color: '#fff', padding: '0.5rem 1rem', fontWeight: 700, fontSize: '0.85rem', border: 'none', cursor: 'pointer' }}>
+                                                    تطبيق
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                )}
 
-                                <div className="mb-4 border-t border-gray-200 md:mb-6" />
+                                    <div style={{ borderTop: '1px solid #e5e7eb', marginBottom: 16 }} />
 
-                                <div className="mb-4 flex items-center justify-between md:mb-6">
-                                    <span className="text-sm font-bold text-black md:text-base">إجمالي المستحق</span>
-                                    <span className="text-xl font-bold text-[#f57c00] md:text-2xl">{subtotal.toFixed(2)} جنيه</span>
-                                </div>
+                                    {/* Total */}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                        <span style={{ fontWeight: 700, fontSize: 'clamp(0.9rem,2.5vw,1rem)' }}>إجمالي المستحق</span>
+                                        <span style={{ fontWeight: 700, fontSize: 'clamp(1.2rem,3vw,1.5rem)', color: '#f57c00' }}>{subtotal.toFixed(2)} جنيه</span>
+                                    </div>
 
-                                {/* Desktop button */}
-                                <button
-                                    onClick={handleSubmit}
-                                    disabled={loading || cartItems.length === 0}
-                                    className="mb-3 hidden w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-bold text-white shadow-md transition-all hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-70 md:mb-4 md:py-4 lg:flex"
-                                >
-                                    {loading ? (
-                                        <>
-                                            <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                            </svg>
-                                            جاري المعالجة...
-                                        </>
-                                    ) : (
-                                        <>المتابعة إلى الدفع <ArrowRight className="h-5 w-5 rotate-180" /></>
-                                    )}
-                                </button>
+                                    {/* Desktop pay button */}
+                                    <button onClick={handleSubmit} disabled={loading || cartItems.length === 0}
+                                        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, background: 'linear-gradient(90deg,#0865a8,#f57c00)', padding: '0.9rem', fontWeight: 700, color: '#fff', border: 'none', cursor: loading || cartItems.length === 0 ? 'not-allowed' : 'pointer', opacity: loading || cartItems.length === 0 ? 0.7 : 1, marginBottom: 12 }}
+                                    >
+                                        {loading ? <><Spinner />جاري المعالجة...</> : <>المتابعة إلى الدفع <ArrowRight style={{ width: 20, height: 20, transform: 'rotate(180deg)' }} /></>}
+                                    </button>
 
-                                <div className="rounded-lg bg-gray-50 p-3 text-center md:p-4">
-                                    <Lock className="mx-auto mb-1.5 h-5 w-5 text-black opacity-60 md:mb-2 md:h-6 md:w-6" />
-                                    <p className="text-xs text-black opacity-60">الدفع عبر بوابة بنك مصر الآمنة</p>
-                                    <p className="mt-1 text-xs font-semibold text-black">معاملة مشفرة بتقنية SSL</p>
+                                    {/* SSL badge */}
+                                    <div style={{ borderRadius: 10, background: '#f9fafb', padding: '0.75rem', textAlign: 'center' }}>
+                                        <Lock style={{ width: 20, height: 20, opacity: 0.5, margin: '0 auto 6px' }} />
+                                        <p style={{ fontSize: '0.75rem', opacity: 0.6 }}>الدفع عبر بوابة بنك مصر الآمنة</p>
+                                        <p style={{ fontSize: '0.75rem', fontWeight: 700, marginTop: 2 }}>معاملة مشفرة بتقنية SSL</p>
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
