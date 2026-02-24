@@ -46,11 +46,7 @@ const DynamicCoursesSection = () => {
                 if (!response.ok) throw new Error(`Failed to fetch latest courses: ${response.status}`);
 
                 const data = await response.json();
-
-                // Support both array response and wrapped { courses: [...] } shape
-                const rawCourses = Array.isArray(data)
-                    ? data
-                    : data.courses || data.data || [];
+                const rawCourses = Array.isArray(data) ? data : data.courses || data.data || [];
 
                 if (rawCourses.length === 0) {
                     setError('لا توجد دورات متاحة حالياً');
@@ -61,20 +57,21 @@ const DynamicCoursesSection = () => {
                 const transformedCourses = rawCourses
                     .filter(c => c && c.childId)
                     .map(apiCourse => {
-                        const cost = apiCourse.cost || apiCourse.price || 0;
+                        // ✅ Exact field names from the API response
+                        const cost = apiCourse.planCost || 0;
                         const originalPrice = cost ? cost / 0.6 : 0;
                         return {
                             id: apiCourse.childId,
                             slug: apiCourse.slug || String(apiCourse.childId),
-                            title: apiCourse.serviceTitle || apiCourse.title || 'دورة تدريبية',
-                            subtitle: apiCourse.place || 'دورة تدريبية',
-                            description: apiCourse.description || 'دورة تدريبية شاملة ومتخصصة',
-                            icon: apiCourse.image || apiCourse.imageUrl || 'https://img-c.udemycdn.com/course/240x135/4931546_c247.jpg',
+                            title: apiCourse.serviceTitle || 'دورة تدريبية',
+                            description: apiCourse.courseDesc || 'دورة تدريبية شاملة ومتخصصة',
+                            icon: apiCourse.image || apiCourse.imageUrl || '',
                             currentPrice: cost,
-                            originalPrice: originalPrice,
-                            date: apiCourse.date || apiCourse.startDate || '',
-                            place: apiCourse.place || apiCourse.location || '',
-                            programSlug: apiCourse.programSlug || String(apiCourse.parentId) || '',
+                            originalPrice,
+                            date: apiCourse.courseDate || '',
+                            place: apiCourse.coursePlace || '',
+                            days: apiCourse.courseDays || '',
+                            programSlug: apiCourse.slug || String(apiCourse.parentId) || '',
                             isFree: !cost || cost === 0
                         };
                     });
@@ -95,9 +92,8 @@ const DynamicCoursesSection = () => {
         if (course.isFree) {
             const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
             const alreadyEnrolled = existing.some(e => e.id === course.id);
-
             if (!alreadyEnrolled) {
-                const enrollItem = {
+                existing.push({
                     id: course.id,
                     slug: course.slug,
                     title: course.title,
@@ -107,19 +103,16 @@ const DynamicCoursesSection = () => {
                     image: course.icon || 'book',
                     currentPrice: 0,
                     progress: 0,
-                };
-                existing.push(enrollItem);
+                });
                 localStorage.setItem('enrolledCourses', JSON.stringify(existing));
                 window.dispatchEvent(new Event('enrollUpdated'));
             }
-
             navigate('/my-courses');
         } else {
             const existingCart = localStorage.getItem('cartItems');
             const cartItems = existingCart ? JSON.parse(existingCart) : [];
-
             if (!cartItems.some(item => item.id === course.id)) {
-                const cartItem = {
+                cartItems.push({
                     id: course.id,
                     slug: course.slug,
                     title: course.title,
@@ -135,8 +128,7 @@ const DynamicCoursesSection = () => {
                     badge: 'الأكثر مبيعاً',
                     coupon: 'DISCOUNT2025',
                     quantity: 1
-                };
-                cartItems.push(cartItem);
+                });
                 localStorage.setItem('cartItems', JSON.stringify(cartItems));
                 window.dispatchEvent(new Event('cartUpdated'));
             }
@@ -159,9 +151,6 @@ const DynamicCoursesSection = () => {
             <Container maxWidth="xl" sx={{ py: 10, textAlign: 'center' }}>
                 <Typography variant="h6" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: 'error.main', mb: 2 }}>
                     {error || 'لا توجد دورات متاحة حالياً'}
-                </Typography>
-                <Typography variant="body2" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: '#666' }}>
-                    Check console (F12) for details
                 </Typography>
             </Container>
         );
@@ -213,7 +202,7 @@ const DynamicCoursesSection = () => {
                                 onMouseLeave={() => setHoveredCourse(null)}
                                 sx={{
                                     width: '100%',
-                                    aspectRatio: '1/1',
+                                    minHeight: 300,
                                     display: 'flex',
                                     flexDirection: 'column',
                                     borderRadius: 3,
@@ -226,11 +215,13 @@ const DynamicCoursesSection = () => {
                                     boxShadow: hoveredCourse === course.id ? '0 10px 30px rgba(0,0,0,0.1)' : 'none'
                                 }}
                             >
+                                {/* Header banner */}
                                 <Box
                                     sx={{
-                                        height: '30%',
+                                        height: 90,
                                         background: 'linear-gradient(135deg, #0865a8 0%, #064a7a 100%)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+                                        flexShrink: 0
                                     }}
                                 >
                                     {getCourseIcon(course, index)}
@@ -241,68 +232,106 @@ const DynamicCoursesSection = () => {
                                             opacity: hoveredCourse === course.id ? 1 : 0, transition: 'opacity 0.3s'
                                         }}
                                     >
-                                        <Typography sx={{ color: '#fff', fontFamily: '"Droid Arabic Kufi", serif', fontWeight: 700, fontSize: '0.8rem' }}>
+                                        <Typography sx={{ color: '#fff', fontFamily: '"Droid Arabic Kufi", serif', fontWeight: 700, fontSize: '0.85rem' }}>
                                             عرض التفاصيل ←
                                         </Typography>
                                     </Box>
                                 </Box>
 
-                                <CardContent
-                                    sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column', gap: 0.5, overflow: 'hidden' }}
-                                >
+                                {/* Content */}
+                                <CardContent sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column', gap: 1, overflow: 'hidden' }}>
+
+                                    {/* Title */}
                                     <Tooltip title={course.title} arrow placement="top">
                                         <Typography
                                             sx={{
                                                 fontWeight: 700,
                                                 fontFamily: '"Droid Arabic Kufi", serif',
-                                                fontSize: { xs: '0.8rem', md: '0.9rem' },
-                                                lineHeight: 1.3,
-                                                color: '#000',
+                                                fontSize: { xs: '0.8rem', md: '0.875rem' },
+                                                lineHeight: 1.4,
+                                                color: '#111',
                                                 display: '-webkit-box',
-                                                WebkitLineClamp: 3,
+                                                WebkitLineClamp: 2,
                                                 WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden'
+                                                overflow: 'hidden',
+                                                minHeight: '2.8em'
                                             }}
                                         >
                                             {course.title}
                                         </Typography>
                                     </Tooltip>
 
-                                    <Box sx={{ mt: 'auto' }}>
-                                        {!course.isFree ? (
-                                            <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1.1rem', color: '#f57c00' }}>
-                                                {course.currentPrice.toFixed(2)} ج.م
-                                            </Typography>
-                                        ) : (
-                                            <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1.1rem', color: '#4caf50' }}>
-                                                مجاناً
-                                            </Typography>
-                                        )}
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', mt: 0.5 }}>
-                                            {course.place && (
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <LocationOnIcon sx={{ fontSize: '0.8rem', color: '#0865a8' }} />
-                                                    <Typography variant="caption" sx={{ color: '#666', fontSize: '0.65rem' }}>{course.place}</Typography>
-                                                </Box>
-                                            )}
-                                            {course.date && (
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <AccessTimeIcon sx={{ fontSize: '0.8rem', color: '#0865a8' }} />
-                                                    <Typography variant="caption" sx={{ color: '#666', fontSize: '0.65rem' }}>{course.date}</Typography>
-                                                </Box>
+                                    {/* Description */}
+                                    {course.description && (
+                                        <Typography
+                                            sx={{
+                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                fontSize: '0.7rem',
+                                                color: '#666',
+                                                lineHeight: 1.4,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                            }}
+                                        >
+                                            {course.description}
+                                        </Typography>
+                                    )}
+
+                                    {/* Details: place, date, days */}
+                                    <Box sx={{ mt: 'auto', display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+
+                                        {/* Price */}
+                                        <Box sx={{ mb: 0.5 }}>
+                                            {!course.isFree ? (
+                                                <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem', color: '#f57c00' }}>
+                                                    {course.currentPrice.toFixed(2)} ج.م
+                                                </Typography>
+                                            ) : (
+                                                <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem', color: '#4caf50' }}>
+                                                    مجاناً
+                                                </Typography>
                                             )}
                                         </Box>
+
+                                        {/* Place */}
+                                        {course.place && (
+                                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5 }}>
+                                                <LocationOnIcon sx={{ fontSize: '0.8rem', color: '#0865a8', mt: '2px', flexShrink: 0 }} />
+                                                <Typography variant="caption" sx={{ color: '#555', fontSize: '0.65rem', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: 1.3 }}>
+                                                    {course.place}
+                                                </Typography>
+                                            </Box>
+                                        )}
+
+                                        {/* Date */}
+                                        {course.date && (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <AccessTimeIcon sx={{ fontSize: '0.8rem', color: '#0865a8', flexShrink: 0 }} />
+                                                <Typography variant="caption" sx={{ color: '#555', fontSize: '0.65rem', fontFamily: '"Droid Arabic Kufi", serif' }}>
+                                                    {course.date}
+                                                </Typography>
+                                            </Box>
+                                        )}
+
+                                        {/* Days count */}
+                                        {course.days && (
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                <Typography variant="caption" sx={{ color: '#0865a8', fontSize: '0.65rem', fontFamily: '"Droid Arabic Kufi", serif', fontWeight: 700 }}>
+                                                    المدة: {course.days} أيام
+                                                </Typography>
+                                            </Box>
+                                        )}
                                     </Box>
                                 </CardContent>
 
+                                {/* Action button */}
                                 <CardActions sx={{ p: 1.5, pt: 0 }}>
                                     <Button
                                         fullWidth
                                         variant="outlined"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleCourseAction(course);
-                                        }}
+                                        onClick={(e) => { e.stopPropagation(); handleCourseAction(course); }}
                                         sx={{
                                             borderColor: course.isFree ? '#27ae60' : '#0865a8',
                                             color: course.isFree ? '#27ae60' : '#0865a8',
