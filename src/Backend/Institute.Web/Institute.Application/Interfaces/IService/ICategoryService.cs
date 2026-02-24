@@ -1,4 +1,5 @@
 ﻿using Institute.Application.DTOs;
+using Institute.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,6 @@ namespace Institute.Application.Interfaces.IService
     public interface ICategoryService
     {
         Task<List<CategoryTreeDto>> GetCategoryTreeAsync();
-
+        Task<IReadOnlyList<Planwork>> GetLatestCoursesAsync(int count);
     }
 }

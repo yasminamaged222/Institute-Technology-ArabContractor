@@ -1,6 +1,7 @@
 ﻿using Institute.API.DTOs;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;
+using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.CourseSpec;
 using Microsoft.AspNetCore.Http;
@@ -14,13 +15,16 @@ namespace Institute.API.Controllers
     {
         private readonly IRepository<Planwork> _planRepo;
         private readonly IRepository<PlanFile> _fileRepo;
+        private readonly ICategoryService _categoryService;
 
         public CourseController(
             IRepository<Planwork> planRepo,
-            IRepository<PlanFile> fileRepo)
+            IRepository<PlanFile> fileRepo,
+            ICategoryService categoryService)
         {
             _planRepo = planRepo;
             _fileRepo = fileRepo;
+            _categoryService = categoryService;
         }
 
         
@@ -176,6 +180,11 @@ namespace Institute.API.Controllers
             return Ok(dto);
         }
 
-
+        [HttpGet("latest")]
+        public async Task<IActionResult> GetLatestCourses()
+        {
+            var courses = await _categoryService.GetLatestCoursesAsync(20);
+            return Ok(courses);
+        }
     }
 }
