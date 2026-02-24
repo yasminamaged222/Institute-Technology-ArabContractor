@@ -9,7 +9,7 @@ import logoSrc from '../assets/logo-removebg-preview.png';
 // ════════════════════════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════════════════════════
-const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com'];
+const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com','amrshamy91@gmail.com'];
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 const USE_MOCK_DATA = true;
 
