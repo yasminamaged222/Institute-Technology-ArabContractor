@@ -969,7 +969,7 @@ const AdminDashboard = () => {
         }
 
         /* ── 600px: hide sidebar completely ─────── */
-        @media (max-width: 600px) {
+        @media (max-width: 200px) {
           :root { --sidebar-w: 0px; }
           .d-sidebar { display: none; }
           .d-main { margin-right: 0; }
