@@ -30,6 +30,53 @@ const fetchMyCourses = async (token) => {
     }
 };
 
+// ─── Merge API courses with localStorage purchased/enrolled courses ────────────
+// This ensures courses bought in this session (before API syncs) appear immediately
+const mergeWithLocalStorage = (apiCourses) => {
+    try {
+        const localPurchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+        const localEnrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+
+        // Build a map of all API course IDs
+        const apiIds = new Set(apiCourses.map(c => String(c.id)));
+
+        // Add purchased courses from localStorage that aren't already in API results
+        const extraPurchased = localPurchased
+            .filter(c => !apiIds.has(String(c.id)))
+            .map(c => ({
+                ...c,
+                isPurchased: true,
+                // Normalize fields so the component can read them
+                title: c.title || 'دورة تدريبية',
+                progress: c.progress ?? 0,
+            }));
+
+        // Add enrolled (free) courses from localStorage that aren't already in API results
+        const extraEnrolled = localEnrolled
+            .filter(c =>
+                !apiIds.has(String(c.id)) &&
+                !extraPurchased.find(p => String(p.id) === String(c.id))
+            )
+            .map(c => ({
+                ...c,
+                isPurchased: false,
+                title: c.title || 'دورة تدريبية',
+                progress: c.progress ?? 0,
+            }));
+
+        // Also, for API courses that are in purchasedCourses localStorage, force isPurchased=true
+        // in case the API hasn't synced yet
+        const mergedApiCourses = apiCourses.map(c => {
+            const isLocalPurchased = localPurchased.some(p => String(p.id) === String(c.id));
+            return isLocalPurchased ? { ...c, isPurchased: true } : c;
+        });
+
+        return [...mergedApiCourses, ...extraPurchased, ...extraEnrolled];
+    } catch {
+        return apiCourses;
+    }
+};
+
 // ─── Progress bar ─────────────────────────────────────────────────────────────
 const ProgressBar = ({ value }) => (
     <div style={styles.progressTrack}>
@@ -60,19 +107,23 @@ const MyCourses = () => {
     // Get user's first name
     const userName = user?.firstName || user?.fullName?.split(' ')[0] || '';
 
-    // Fetch courses from API on component mount
+    // Fetch courses from API on component mount, then merge with localStorage
     useEffect(() => {
         const loadCourses = async () => {
             try {
                 setLoading(true);
                 setError(null);
                 const token = await getToken();
-                const data = await fetchMyCourses(token);
-                setCourses(data);
+                const apiData = await fetchMyCourses(token);
+                // Merge API results with any locally stored purchased/enrolled courses
+                const merged = mergeWithLocalStorage(apiData);
+                setCourses(merged);
             } catch (err) {
                 console.error('Failed to load courses:', err);
                 setError('Failed to load courses. Please try again later.');
-                setCourses([]);
+                // Fallback: show only localStorage courses
+                const merged = mergeWithLocalStorage([]);
+                setCourses(merged);
             } finally {
                 setLoading(false);
             }
@@ -81,6 +132,17 @@ const MyCourses = () => {
         if (user) {
             loadCourses();
         }
+
+        // Re-run when localStorage changes (e.g. after purchase/enroll in another tab)
+        const handleStorageChange = () => {
+            if (user) loadCourses();
+        };
+        window.addEventListener('enrollUpdated', handleStorageChange);
+        window.addEventListener('cartUpdated', handleStorageChange);
+        return () => {
+            window.removeEventListener('enrollUpdated', handleStorageChange);
+            window.removeEventListener('cartUpdated', handleStorageChange);
+        };
     }, [user, getToken]);
 
     // ── Separate courses by type ────────────────────────────────────────────────
@@ -244,7 +306,7 @@ const MyCourses = () => {
                         )}
 
                         {/* Error State */}
-                        {error && !loading && (
+                        {error && !loading && allCourses.length === 0 && (
                             <div style={styles.errorWrap}>
                                 <div style={styles.errorIcon}>⚠️</div>
                                 <h3 style={styles.errorTitle}>{error}</h3>
@@ -255,9 +317,9 @@ const MyCourses = () => {
                         )}
 
                         {/* Courses Grid or Empty State */}
-                        {!loading && !error && filtered.length === 0 ? (
+                        {!loading && filtered.length === 0 && !(error && allCourses.length === 0) ? (
                             <EmptyState tab={tab} search={search} navigate={navigate} />
-                        ) : !loading && !error ? (
+                        ) : !loading && filtered.length > 0 ? (
                             <div style={styles.grid} className="mc-grid">
                                 {filtered.map(course => (
                                     <CourseCard

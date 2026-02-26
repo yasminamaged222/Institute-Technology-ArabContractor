@@ -30,7 +30,7 @@ import TrainingMethods from '../pages/TrainingMethods';
 import OnsiteTraining from '../pages/OnsiteTraining_fixed';
 import CEAProgram from '../pages/CEAProgram';
 import ScrollToTop from '../components/ScrollToTop'
-import SearchPage from '../pages/SearchPage';
+import SearchPage from '../pages/Searchpage';
 import Mycourses from '../pages/Mycourses';
 import AdminDashboard from '../pages/AdminDashboard';   // أو المسار الصحيح
 
