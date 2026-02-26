@@ -4,24 +4,15 @@ import { SignedIn, SignedOut, SignInButton, useUser } from '@clerk/clerk-react';
 import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@mui/material';
 
-// ─── API Configuration ─────────────────────────────────────────────────────────
 const API_BASE_URL = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
-// ─── API Fetch Helper ──────────────────────────────────────────────────────────
 const fetchMyCourses = async (token) => {
     try {
         const response = await fetch(`${API_BASE_URL}/Course/my-courses`, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         });
-
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
         const data = await response.json();
         return Array.isArray(data) ? data : (data?.data || []);
     } catch (error) {
@@ -30,61 +21,68 @@ const fetchMyCourses = async (token) => {
     }
 };
 
-// ─── Merge API courses with localStorage purchased/enrolled courses ────────────
-// This ensures courses bought in this session (before API syncs) appear immediately
-const mergeWithLocalStorage = (apiCourses) => {
+// ─── Build deduplicated course list ───────────────────────────────────────────
+// - purchasedCourses (localStorage) → isPurchased: true  → shows as "مدفوع"
+// - enrolledCourses  (localStorage) → isPurchased: false → shows as "مسجل"
+// - A course in both always wins as purchased
+// - API courses that match a purchased ID also get isPurchased: true
+const buildCourseList = (apiCourses) => {
     try {
         const localPurchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
         const localEnrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
 
-        // Build a map of all API course IDs
-        const apiIds = new Set(apiCourses.map(c => String(c.id)));
+        const map = new Map();
 
-        // Add purchased courses from localStorage that aren't already in API results
-        const extraPurchased = localPurchased
-            .filter(c => !apiIds.has(String(c.id)))
-            .map(c => ({
-                ...c,
-                isPurchased: true,
-                // Normalize fields so the component can read them
-                title: c.title || 'دورة تدريبية',
-                progress: c.progress ?? 0,
-            }));
+        // 1. API courses first
+        for (const c of apiCourses) {
+            const id = String(c.id);
+            const inPurchased = localPurchased.some(p => String(p.id) === id);
+            map.set(id, { ...c, isPurchased: c.isPurchased === true || inPurchased, progress: c.progress ?? 0 });
+        }
 
-        // Add enrolled (free) courses from localStorage that aren't already in API results
-        const extraEnrolled = localEnrolled
-            .filter(c =>
-                !apiIds.has(String(c.id)) &&
-                !extraPurchased.find(p => String(p.id) === String(c.id))
-            )
-            .map(c => ({
-                ...c,
-                isPurchased: false,
-                title: c.title || 'دورة تدريبية',
-                progress: c.progress ?? 0,
-            }));
+        // 2. localStorage purchased (may not be in API yet)
+        for (const c of localPurchased) {
+            const id = String(c.id);
+            if (!map.has(id)) {
+                map.set(id, { ...c, isPurchased: true, progress: c.progress ?? 0 });
+            } else {
+                // Upgrade existing entry to purchased
+                map.set(id, { ...map.get(id), isPurchased: true });
+            }
+        }
 
-        // Also, for API courses that are in purchasedCourses localStorage, force isPurchased=true
-        // in case the API hasn't synced yet
-        const mergedApiCourses = apiCourses.map(c => {
-            const isLocalPurchased = localPurchased.some(p => String(p.id) === String(c.id));
-            return isLocalPurchased ? { ...c, isPurchased: true } : c;
-        });
+        // 3. localStorage enrolled (free courses) — don't downgrade purchased ones
+        for (const c of localEnrolled) {
+            const id = String(c.id);
+            if (!map.has(id)) {
+                map.set(id, { ...c, isPurchased: false, progress: c.progress ?? 0 });
+            }
+            // Already exists → keep as-is (might be purchased, don't change)
+        }
 
-        return [...mergedApiCourses, ...extraPurchased, ...extraEnrolled];
+        return Array.from(map.values());
     } catch {
         return apiCourses;
     }
 };
 
-// ─── Progress bar ─────────────────────────────────────────────────────────────
+const deleteCourseFromStorage = (courseId) => {
+    try {
+        const id = String(courseId);
+        const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+        localStorage.setItem('purchasedCourses', JSON.stringify(purchased.filter(c => String(c.id) !== id)));
+        const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+        localStorage.setItem('enrolledCourses', JSON.stringify(enrolled.filter(c => String(c.id) !== id)));
+        window.dispatchEvent(new Event('enrollUpdated'));
+    } catch (e) { console.error('Delete error:', e); }
+};
+
 const ProgressBar = ({ value }) => (
     <div style={styles.progressTrack}>
-        <div style={{ ...styles.progressFill, width: `${value}%` }} />
+        <div style={{ ...styles.progressFill, width: `${Math.min(100, Math.max(0, value))}%` }} />
     </div>
 );
 
-// ─── Book Icon (matches CoursesPage style) ────────────────────────────────────
 const BookIcon = () => (
     <svg width="48" height="48" fill="none" stroke="#ffffff" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
@@ -92,7 +90,27 @@ const BookIcon = () => (
     </svg>
 );
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+const DeleteModal = ({ course, onConfirm, onCancel }) => (
+    <div style={styles.modalOverlay}>
+        <div style={styles.modalBox}>
+            <div style={styles.modalIcon}>🗑️</div>
+            <h3 style={styles.modalTitle}>حذف الدورة</h3>
+            <p style={styles.modalText}>
+                هل تريد حذف <strong>"{course?.title}"</strong> من قائمتك؟
+            </p>
+            {course?._type === 'purchased' && (
+                <p style={styles.modalWarning}>
+                    ⚠️ لن يُسترد المبلغ المدفوع. سيتم إزالة الدورة من قائمتك المحلية فقط.
+                </p>
+            )}
+            <div style={styles.modalActions}>
+                <button style={styles.modalCancelBtn} onClick={onCancel}>إلغاء</button>
+                <button style={styles.modalDeleteBtn} onClick={onConfirm}>حذف</button>
+            </div>
+        </div>
+    </div>
+);
+
 const MyCourses = () => {
     const navigate = useNavigate();
     const { user } = useUser();
@@ -103,158 +121,115 @@ const MyCourses = () => {
     const [error, setError] = useState(null);
     const [hoveredCard, setHoveredCard] = useState(null);
     const [search, setSearch] = useState('');
+    const [deleteTarget, setDeleteTarget] = useState(null);
 
-    // Get user's first name
     const userName = user?.firstName || user?.fullName?.split(' ')[0] || '';
 
-    // Fetch courses from API on component mount, then merge with localStorage
-    useEffect(() => {
-        const loadCourses = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const token = await getToken();
-                const apiData = await fetchMyCourses(token);
-                // Merge API results with any locally stored purchased/enrolled courses
-                const merged = mergeWithLocalStorage(apiData);
-                setCourses(merged);
-            } catch (err) {
-                console.error('Failed to load courses:', err);
-                setError('Failed to load courses. Please try again later.');
-                // Fallback: show only localStorage courses
-                const merged = mergeWithLocalStorage([]);
-                setCourses(merged);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (user) {
-            loadCourses();
+    const loadCourses = async () => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            setError(null);
+            const token = await getToken();
+            const apiData = await fetchMyCourses(token);
+            setCourses(buildCourseList(apiData));
+        } catch {
+            setError('فشل في تحميل الدورات. يرجى المحاولة مرة أخرى.');
+            setCourses(buildCourseList([]));
+        } finally {
+            setLoading(false);
         }
+    };
 
-        // Re-run when localStorage changes (e.g. after purchase/enroll in another tab)
-        const handleStorageChange = () => {
-            if (user) loadCourses();
-        };
-        window.addEventListener('enrollUpdated', handleStorageChange);
-        window.addEventListener('cartUpdated', handleStorageChange);
+    useEffect(() => {
+        loadCourses();
+        window.addEventListener('enrollUpdated', loadCourses);
+        window.addEventListener('purchaseCompleted', loadCourses);
         return () => {
-            window.removeEventListener('enrollUpdated', handleStorageChange);
-            window.removeEventListener('cartUpdated', handleStorageChange);
+            window.removeEventListener('enrollUpdated', loadCourses);
+            window.removeEventListener('purchaseCompleted', loadCourses);
         };
-    }, [user, getToken]);
+    }, [user]);
 
-    // ── Separate courses by type ────────────────────────────────────────────────
-    const purchased = courses.filter(c => c.isPurchased === true) || [];
-    const enrolled = courses.filter(c => c.isPurchased !== true) || [];
+    const handleDeleteConfirm = () => {
+        if (!deleteTarget) return;
+        deleteCourseFromStorage(deleteTarget.id);
+        setCourses(prev => prev.filter(c => String(c.id) !== String(deleteTarget.id)));
+        setDeleteTarget(null);
+    };
 
-    // ── Combine courses with type indicator ─────────────────────────────────────
+    const purchased = courses.filter(c => c.isPurchased === true);
+    const enrolledOnly = courses.filter(c => c.isPurchased !== true && !purchased.find(p => String(p.id) === String(c.id)));
+
     const allCourses = [
         ...purchased.map(c => ({ ...c, _type: 'purchased' })),
-        ...enrolled
-            .filter(e => !purchased.find(p => p.id === e.id))
-            .map(c => ({ ...c, _type: 'enrolled' })),
+        ...enrolledOnly.map(c => ({ ...c, _type: 'enrolled' })),
     ];
 
-    // ── Filter by tab and search ────────────────────────────────────────────────
     const filtered = allCourses
         .filter(c => {
             if (tab === 'purchased') return c._type === 'purchased';
             if (tab === 'enrolled') return c._type === 'enrolled';
             return true;
         })
-        .filter(c =>
-            search.trim() === '' ||
-            (c.title || '').toLowerCase().includes(search.toLowerCase())
-        );
-
-    const freeCount = enrolled.filter(e => !purchased.find(p => p.id === e.id)).length;
+        .filter(c => search.trim() === '' || (c.title || '').toLowerCase().includes(search.toLowerCase()));
 
     const stats = [
         { label: 'إجمالي الدورات', value: allCourses.length, icon: '📚' },
         { label: 'دورات مدفوعة', value: purchased.length, icon: '🎓' },
-        { label: 'دورات مسجلة', value: freeCount, icon: '✅' },
+        { label: 'دورات مسجلة', value: enrolledOnly.length, icon: '✅' },
     ];
-
-    const breadcrumb = (
-        <div style={styles.overviewBar} className="mc-overview-bar">
-            <div style={styles.overviewBarText}>
-                <a href="/" style={styles.breadcrumbLink}
-                    onMouseEnter={e => (e.target.style.color = '#f57c00')}
-                    onMouseLeave={e => (e.target.style.color = '#0865a8')}>
-                    الصفحة الرئيسية
-                </a>
-                <span style={styles.breadcrumbSep}>•</span>
-                <span style={styles.breadcrumbCurrent}>دوراتي التدريبية</span>
-            </div>
-        </div>
-    );
 
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
             <style>{css}</style>
 
-            <div dir="rtl" style={styles.page}>
-                {breadcrumb}
+            {deleteTarget && (
+                <DeleteModal course={deleteTarget} onConfirm={handleDeleteConfirm} onCancel={() => setDeleteTarget(null)} />
+            )}
 
-                {/* ── NOT LOGGED IN ── */}
+            <div dir="rtl" style={styles.page}>
+                <div style={styles.overviewBar} className="mc-overview-bar">
+                    <div style={styles.overviewBarText}>
+                        <a href="/" style={styles.breadcrumbLink}
+                            onMouseEnter={e => (e.target.style.color = '#f57c00')}
+                            onMouseLeave={e => (e.target.style.color = '#0865a8')}>
+                            الصفحة الرئيسية
+                        </a>
+                        <span style={styles.breadcrumbSep}>•</span>
+                        <span style={styles.breadcrumbCurrent}>دوراتي التدريبية</span>
+                    </div>
+                </div>
+
                 <SignedOut>
                     <div style={styles.authGate}>
                         <div style={styles.authGateCard}>
                             <div style={styles.authGateIcon}>🔒</div>
                             <h2 style={styles.authGateTitle}>تسجيل الدخول مطلوب</h2>
-                            <p style={styles.authGateSub}>
-                                يجب تسجيل الدخول أولاً لعرض دوراتك التدريبية
-                            </p>
-                            <SignInButton
-                                mode="modal"
-                                appearance={{
-                                    variables: { colorPrimary: '#0865a8', colorText: '#000000', colorBackground: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif', borderRadius: '12px' },
-                                    elements: {
-                                        card: { direction: 'ltr', textAlign: 'left', backgroundColor: '#ffffff', border: '1px solid #0865a8', boxShadow: '0 15px 40px rgba(0,0,0,0.08)' },
-                                        headerTitle: { textAlign: 'center', color: '#0865a8', fontWeight: '700' },
-                                        headerSubtitle: { textAlign: 'center', color: '#000000' },
-                                        formFieldLabel: { textAlign: 'left', color: '#000000', fontWeight: '600' },
-                                        formFieldInput: { textAlign: 'left', borderRadius: '8px', border: '1px solid #0865a8' },
-                                        formButtonPrimary: { backgroundColor: '#0865a8', color: '#ffffff', fontWeight: '600' },
-                                        footerAction: { textAlign: 'left' },
-                                        footerActionLink: { color: '#f57c00', fontWeight: '600' },
-                                    },
-                                }}
-                            >
-                                <Button variant="contained" sx={{ fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem', bgcolor: '#0865a8', color: '#ffffff', px: 4, py: 1.5, borderRadius: 5, textTransform: 'none', fontWeight: 600, boxShadow: '0 4px 12px rgba(8,101,168,0.25)', '&:hover': { bgcolor: '#f57c00' } }}>
+                            <p style={styles.authGateSub}>يجب تسجيل الدخول أولاً لعرض دوراتك التدريبية</p>
+                            <SignInButton mode="modal">
+                                <Button variant="contained" sx={{ fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem', bgcolor: '#0865a8', color: '#ffffff', px: 4, py: 1.5, borderRadius: 5, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#f57c00' } }}>
                                     تسجيل دخول
                                 </Button>
                             </SignInButton>
-                            <button style={styles.btnBrowse} onClick={() => navigate('/')}>
-                                استعرض الدورات بدون تسجيل
-                            </button>
+                            <button style={styles.btnBrowse} onClick={() => navigate('/')}>استعرض الدورات بدون تسجيل</button>
                         </div>
                     </div>
                 </SignedOut>
 
-                {/* ── LOGGED IN ── */}
                 <SignedIn>
-                    {/* Hero */}
                     <div style={styles.hero} className="mc-hero">
-                        <div style={styles.heroDeco1} />
-                        <div style={styles.heroDeco2} />
-                        <div style={styles.heroDeco3} />
+                        <div style={styles.heroDeco1} /><div style={styles.heroDeco2} /><div style={styles.heroDeco3} />
                         <div style={styles.heroInner}>
                             <div style={styles.heroTopRow} className="mc-hero-top">
                                 <div style={styles.heroAvatar}>📚</div>
                                 <div>
-                                    <p style={styles.heroGreeting}>
-                                        مرحباً {userName}،
-                                    </p>
+                                    <p style={styles.heroGreeting}>مرحباً {userName}،</p>
                                     <h1 style={styles.heroTitle}>بدوراتك التدريبية</h1>
                                 </div>
                             </div>
-                            <p style={styles.heroSub}>
-                                تابع رحلتك التعليمية — كل دوراتك في مكان واحد
-                            </p>
+                            <p style={styles.heroSub}>تابع رحلتك التعليمية — كل دوراتك في مكان واحد</p>
                             <div style={styles.heroDivider} />
                             <div style={styles.statsRow} className="mc-stats-row">
                                 {stats.map((s, i) => (
@@ -268,36 +243,22 @@ const MyCourses = () => {
                         </div>
                     </div>
 
-                    {/* Main */}
                     <div style={styles.main} className="mc-main">
-                        {/* Toolbar */}
                         <div style={styles.toolbar} className="mc-toolbar">
                             <div style={styles.searchWrap}>
                                 <svg style={styles.searchIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
                                 </svg>
-                                <input
-                                    style={styles.searchInput}
-                                    placeholder="ابحث في دوراتك..."
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                />
+                                <input style={styles.searchInput} placeholder="ابحث في دوراتك..." value={search} onChange={e => setSearch(e.target.value)} />
                             </div>
                             <div style={styles.tabs}>
-                                {[
-                                    { key: 'all', label: 'الكل' },
-                                    { key: 'purchased', label: 'المدفوعة' },
-                                    { key: 'enrolled', label: 'المسجلة' },
-                                ].map(t => (
+                                {[{ key: 'all', label: 'الكل' }, { key: 'purchased', label: 'المدفوعة' }, { key: 'enrolled', label: 'المسجلة' }].map(t => (
                                     <button key={t.key} onClick={() => setTab(t.key)}
-                                        style={{ ...styles.tabBtn, ...(tab === t.key ? styles.tabBtnActive : {}) }}>
-                                        {t.label}
-                                    </button>
+                                        style={{ ...styles.tabBtn, ...(tab === t.key ? styles.tabBtnActive : {}) }}>{t.label}</button>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Loading State */}
                         {loading && (
                             <div style={styles.loadingWrap}>
                                 <div style={styles.spinner} />
@@ -305,34 +266,40 @@ const MyCourses = () => {
                             </div>
                         )}
 
-                        {/* Error State */}
                         {error && !loading && allCourses.length === 0 && (
                             <div style={styles.errorWrap}>
                                 <div style={styles.errorIcon}>⚠️</div>
                                 <h3 style={styles.errorTitle}>{error}</h3>
-                                <button style={styles.errorBtn} onClick={() => window.location.reload()}>
-                                    حاول مرة أخرى
-                                </button>
+                                <button style={styles.errorBtn} onClick={loadCourses}>حاول مرة أخرى</button>
                             </div>
                         )}
 
-                        {/* Courses Grid or Empty State */}
-                        {!loading && filtered.length === 0 && !(error && allCourses.length === 0) ? (
-                            <EmptyState tab={tab} search={search} navigate={navigate} />
-                        ) : !loading && filtered.length > 0 ? (
+                        {!loading && filtered.length === 0 && !(error && allCourses.length === 0) && (
+                            <div style={styles.emptyWrap}>
+                                <div style={styles.emptyIcon}>{search ? '🔍' : '📭'}</div>
+                                <h3 style={styles.emptyTitle}>
+                                    {search ? 'لا توجد دورات تطابق بحثك'
+                                        : tab === 'purchased' ? 'لم تشترِ أي دورة بعد'
+                                            : tab === 'enrolled' ? 'لم تسجل في أي دورة مجانية بعد'
+                                                : 'لم تنضم إلى أي دورة بعد'}
+                                </h3>
+                                <p style={styles.emptySub}>{search ? 'جرّب كلمات بحث مختلفة' : 'استعرض الدورات المتاحة وابدأ رحلتك التعليمية'}</p>
+                                {!search && <button style={styles.emptyBtn} onClick={() => navigate('/')}>استعرض الدورات</button>}
+                            </div>
+                        )}
+
+                        {!loading && filtered.length > 0 && (
                             <div style={styles.grid} className="mc-grid">
                                 {filtered.map(course => (
-                                    <CourseCard
-                                        key={course.id}
-                                        course={course}
+                                    <CourseCard key={course.id} course={course}
                                         hovered={hoveredCard === course.id}
                                         onHover={() => setHoveredCard(course.id)}
                                         onLeave={() => setHoveredCard(null)}
                                         navigate={navigate}
-                                    />
+                                        onDelete={() => setDeleteTarget(course)} />
                                 ))}
                             </div>
-                        ) : null}
+                        )}
                     </div>
                 </SignedIn>
             </div>
@@ -340,48 +307,30 @@ const MyCourses = () => {
     );
 };
 
-// ─── Course Card ──────────────────────────────────────────────────────────────
-const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
+const CourseCard = ({ course, hovered, onHover, onLeave, navigate, onDelete }) => {
     const isPurchased = course._type === 'purchased';
     const progress = course.progress ?? 0;
 
-    const goToCourse = () => {
-        navigate(course.slug ? `/course/${course.slug}` : `/course/${course.id}`);
-    };
-
     return (
-        <div
-            style={{ ...styles.card, ...(hovered ? styles.cardHover : {}) }}
-            onMouseEnter={onHover}
-            onMouseLeave={onLeave}
-            className="mc-card"
-        >
+        <div style={{ ...styles.card, ...(hovered ? styles.cardHover : {}) }}
+            onMouseEnter={onHover} onMouseLeave={onLeave} className="mc-card">
             <div style={styles.cardHeader}>
-                <div style={{
-                    ...styles.cardImgPlaceholder,
-                    background: isPurchased
-                        ? 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)'
-                        : 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)',
-                }}>
-                    <div style={styles.iconWrapper}>
-                        <BookIcon />
-                    </div>
+                <div style={{ ...styles.cardImgPlaceholder, background: isPurchased ? 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)' : 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)' }}>
+                    <div style={styles.iconWrapper}><BookIcon /></div>
                 </div>
-
                 <span style={{ ...styles.badge, ...(isPurchased ? styles.badgePaid : styles.badgeFree) }}>
                     {isPurchased ? '💳 مدفوع' : '✅ مسجل'}
                 </span>
-
+                {/* Delete button */}
+                <button style={styles.deleteBtn} onClick={(e) => { e.stopPropagation(); onDelete(); }} title="حذف">🗑️</button>
                 {progress > 0 && (
                     <div style={{ ...styles.progressOverlay, opacity: hovered ? 1 : 0 }}>
                         <span style={styles.progressOverlayText}>{progress}% مكتمل</span>
                     </div>
                 )}
             </div>
-
             <div style={styles.cardBody}>
                 <h3 style={styles.cardTitle}>{course.title}</h3>
-
                 {(course.instructor || course.place) && (
                     <div style={styles.metaRow}>
                         <svg style={styles.metaIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,7 +339,6 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
                         <span style={styles.metaText}>{course.instructor || course.place}</span>
                     </div>
                 )}
-
                 {(course.date || course.startDate) && (
                     <div style={styles.metaRow}>
                         <svg style={styles.metaIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -399,7 +347,6 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
                         <span style={styles.metaText}>{course.date || course.startDate}</span>
                     </div>
                 )}
-
                 <div style={styles.progressSection}>
                     <div style={styles.progressHeader}>
                         <span style={styles.progressLabel}>التقدم</span>
@@ -407,21 +354,17 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
                     </div>
                     <ProgressBar value={progress} />
                 </div>
-
                 {isPurchased && course.currentPrice > 0 && (
                     <div style={styles.priceTag}>
                         <span style={styles.pricePaid}>{Number(course.currentPrice).toLocaleString('ar-EG')} ج.م</span>
                         <span style={styles.priceLabel}>تم الشراء</span>
                     </div>
                 )}
-
                 <button
                     style={{ ...styles.ctaBtn, ...(hovered ? styles.ctaBtnHover : {}), ...(isPurchased ? {} : styles.ctaBtnFree) }}
-                    onClick={goToCourse}
-                >
+                    onClick={() => navigate(course.slug ? `/course/${course.slug}` : `/course/${course.id}`)}>
                     {progress > 0 ? 'متابعة الدورة' : 'ابدأ الدورة'}
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        style={{ marginRight: '8px', transform: 'rotate(180deg)' }}>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ marginRight: '8px', transform: 'rotate(180deg)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                 </button>
@@ -430,58 +373,29 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
     );
 };
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
-const EmptyState = ({ tab, search, navigate }) => {
-    const msg = search
-        ? 'لا توجد دورات تطابق بحثك'
-        : tab === 'purchased' ? 'لم تشترِ أي دورة بعد'
-            : tab === 'enrolled' ? 'لم تسجل في أي دورة مجانية بعد'
-                : 'لم تنضم إلى أي دورة بعد';
-    const sub = search ? 'جرّب كلمات بحث مختلفة' : 'استعرض الدورات المتاحة وابدأ رحلتك التعليمية';
-
-    return (
-        <div style={styles.emptyWrap}>
-            <div style={styles.emptyIcon}>{search ? '🔍' : '📭'}</div>
-            <h3 style={styles.emptyTitle}>{msg}</h3>
-            <p style={styles.emptySub}>{sub}</p>
-            {!search && (
-                <button style={styles.emptyBtn} onClick={() => navigate('/')}>استعرض الدورات</button>
-            )}
-        </div>
-    );
-};
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = {
     page: { minHeight: '100vh', backgroundColor: '#f7f8fc', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' },
-
     overviewBar: { position: 'fixed', right: 0, left: 0, top: 70, zIndex: 40, backgroundColor: '#f5f5f5', padding: '12px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.08)', borderBottom: '1px solid #e0e0e0' },
     overviewBarText: { textAlign: 'center', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif' },
     breadcrumbLink: { marginLeft: '12px', color: '#0865a8', textDecoration: 'none', fontWeight: '500', cursor: 'pointer', transition: 'color 0.2s' },
     breadcrumbSep: { color: '#000', margin: '0 8px', opacity: 0.4 },
     breadcrumbCurrent: { marginRight: '12px', color: '#000', fontWeight: '600' },
-
     hero: { position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #05416d 0%, #0865a8 45%, #c96000 100%)', paddingTop: '116px', paddingBottom: '52px', paddingLeft: '24px', paddingRight: '24px' },
     heroDeco1: { position: 'absolute', top: '-60px', left: '-60px', width: '260px', height: '260px', borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' },
     heroDeco2: { position: 'absolute', bottom: '-80px', right: '-40px', width: '320px', height: '320px', borderRadius: '50%', background: 'rgba(245,124,0,0.18)', pointerEvents: 'none' },
     heroDeco3: { position: 'absolute', top: '40px', right: '30%', width: '120px', height: '120px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none' },
     heroInner: { maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 },
-
     heroTopRow: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' },
     heroAvatar: { width: '64px', height: '64px', borderRadius: '50%', flexShrink: 0, background: 'rgba(255,255,255,0.2)', border: '2.5px solid rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', boxShadow: '0 4px 18px rgba(0,0,0,0.2)' },
-
-    heroGreeting: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif', textShadow: '0 1px 6px rgba(0,0,0,0.2)' },
-    heroTitle: { margin: '4px 0 0', fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Droid Arabic Kufi", serif', textShadow: '0 2px 12px rgba(0,0,0,0.18)' },
-
+    heroGreeting: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif' },
+    heroTitle: { margin: '4px 0 0', fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Droid Arabic Kufi", serif' },
     heroSub: { fontSize: '16px', color: 'rgba(255,255,255,0.8)', margin: '0 0 24px', fontFamily: '"Droid Arabic Kufi", serif' },
     heroDivider: { width: '100%', height: '1px', background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%)', marginBottom: '28px' },
-
     statsRow: { display: 'flex', gap: '16px', flexWrap: 'wrap' },
     statCard: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', border: '1.5px solid rgba(255,255,255,0.25)', borderRadius: '16px', padding: '18px 32px', minWidth: '130px', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 14px rgba(0,0,0,0.15)' },
     statIcon: { fontSize: '26px' },
     statValue: { fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: 1 },
     statLabel: { fontSize: '13px', color: 'rgba(255,255,255,0.82)', fontFamily: '"Droid Arabic Kufi", serif' },
-
     main: { maxWidth: '1200px', margin: '0 auto', padding: '36px 24px 60px' },
     toolbar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '28px', backgroundColor: '#fff', borderRadius: '14px', padding: '16px 20px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', border: '1.5px solid #ebebeb' },
     searchWrap: { display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '200px', backgroundColor: '#f7f8fc', borderRadius: '10px', padding: '8px 14px', border: '1.5px solid #e0e0e0' },
@@ -490,99 +404,79 @@ const styles = {
     tabs: { display: 'flex', gap: '8px' },
     tabBtn: { padding: '8px 20px', borderRadius: '8px', border: '1.5px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', transition: 'all 0.25s', fontWeight: '500' },
     tabBtnActive: { backgroundColor: '#0865a8', color: '#fff', borderColor: '#0865a8', boxShadow: '0 3px 10px rgba(8,101,168,0.25)' },
-
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' },
-
     card: { backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #f0f0f0', boxShadow: '0 4px 14px rgba(0,0,0,0.06)', overflow: 'hidden', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)', display: 'flex', flexDirection: 'column' },
     cardHover: { transform: 'translateY(-7px)', boxShadow: '0 14px 28px rgba(0,0,0,0.13)', borderColor: '#0865a8' },
     cardHeader: { position: 'relative', height: '160px', overflow: 'hidden' },
-
     cardImgPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-
-    iconWrapper: {
-        borderRadius: '50%',
-        backgroundColor: 'rgba(255,255,255,0.15)',
-        padding: '24px',
-        backdropFilter: 'blur(10px)',
-        border: '2px solid rgba(255,255,255,0.3)',
-    },
-
+    iconWrapper: { borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', padding: '24px', backdropFilter: 'blur(10px)', border: '2px solid rgba(255,255,255,0.3)' },
     badge: { position: 'absolute', top: '12px', right: '12px', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
     badgePaid: { backgroundColor: '#0865a8', color: '#fff', boxShadow: '0 2px 8px rgba(8,101,168,0.35)' },
     badgeFree: { backgroundColor: '#27ae60', color: '#fff', boxShadow: '0 2px 8px rgba(39,174,96,0.35)' },
+    deleteBtn: { position: 'absolute', top: '12px', left: '12px', background: 'rgba(0,0,0,0.4)', border: 'none', borderRadius: '8px', padding: '5px 9px', fontSize: '14px', cursor: 'pointer', color: '#fff', backdropFilter: 'blur(4px)', zIndex: 2, transition: 'background 0.2s' },
     progressOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 14px', background: 'linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 100%)', transition: 'opacity 0.3s', display: 'flex', justifyContent: 'flex-end' },
     progressOverlayText: { fontSize: '12px', color: '#fff', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
-
     cardBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 },
     cardTitle: { fontSize: '16px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 },
     metaRow: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#555', fontFamily: '"Droid Arabic Kufi", serif' },
     metaIcon: { width: '15px', height: '15px', flexShrink: 0, color: '#0865a8' },
     metaText: { overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' },
-
     progressSection: { marginTop: '4px' },
     progressHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '6px' },
     progressLabel: { fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif' },
     progressPct: { fontSize: '12px', fontWeight: 'bold', color: '#0865a8', fontFamily: '"Droid Arabic Kufi", serif' },
     progressTrack: { height: '7px', borderRadius: '99px', backgroundColor: '#eef0f5', overflow: 'hidden' },
     progressFill: { height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #0865a8 0%, #f57c00 100%)', transition: 'width 0.6s ease' },
-
     priceTag: { display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px', backgroundColor: '#fff8f0', borderRadius: '8px', border: '1.5px solid #fde0b8' },
     pricePaid: { fontSize: '17px', fontWeight: 'bold', color: '#f57c00', fontFamily: '"Droid Arabic Kufi", serif' },
     priceLabel: { fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif' },
-
     ctaBtn: { marginTop: 'auto', width: '100%', padding: '12px 20px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease', boxShadow: '0 3px 10px rgba(8,101,168,0.2)' },
     ctaBtnHover: { transform: 'translateY(-2px)', boxShadow: '0 6px 18px rgba(8,101,168,0.32)' },
     ctaBtnFree: { background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', boxShadow: '0 3px 10px rgba(26,122,60,0.2)' },
-
     emptyWrap: { textAlign: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '16px', border: '2px dashed #d0dce8' },
     emptyIcon: { fontSize: '64px', marginBottom: '16px' },
     emptyTitle: { fontSize: '22px', fontWeight: 'bold', color: '#222', fontFamily: '"Droid Arabic Kufi", serif', margin: '0 0 10px' },
     emptySub: { fontSize: '15px', color: '#777', fontFamily: '"Droid Arabic Kufi", serif', margin: '0 0 28px' },
     emptyBtn: { padding: '13px 36px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', boxShadow: '0 4px 12px rgba(8,101,168,0.25)' },
-
     loadingWrap: { textAlign: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #e0e0e0' },
     spinner: { width: '50px', height: '50px', border: '4px solid #f0f0f0', borderTop: '4px solid #0865a8', borderRadius: '50%', margin: '0 auto 20px', animation: 'spin 1s linear infinite' },
     loadingText: { fontSize: '16px', color: '#666', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
-
     errorWrap: { textAlign: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #ff6b6b' },
     errorIcon: { fontSize: '64px', marginBottom: '16px' },
     errorTitle: { fontSize: '22px', fontWeight: 'bold', color: '#d32f2f', fontFamily: '"Droid Arabic Kufi", serif', margin: '0 0 20px' },
-    errorBtn: { padding: '13px 36px', background: '#d32f2f', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', boxShadow: '0 4px 12px rgba(211,47,47,0.25)' },
-
+    errorBtn: { padding: '13px 36px', background: '#d32f2f', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer' },
     authGate: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '120px 20px 60px', background: 'linear-gradient(135deg, #f0f4f8 0%, #e8eef5 100%)' },
     authGateCard: { backgroundColor: '#fff', borderRadius: '20px', padding: '52px 44px', boxShadow: '0 8px 40px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '420px', width: '100%', border: '1.5px solid #e8eef5', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' },
     authGateIcon: { fontSize: '64px' },
     authGateTitle: { fontSize: '26px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
     authGateSub: { fontSize: '15px', color: '#666', fontFamily: '"Droid Arabic Kufi", serif', margin: 0, lineHeight: '1.7' },
     btnBrowse: { marginTop: '4px', width: '100%', padding: '10px 24px', backgroundColor: 'transparent', color: '#888', border: '1.5px solid #ddd', borderRadius: '10px', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer' },
+    modalOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
+    modalBox: { backgroundColor: '#fff', borderRadius: '20px', padding: '36px 32px', maxWidth: '420px', width: '100%', textAlign: 'center', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', fontFamily: '"Droid Arabic Kufi", serif' },
+    modalIcon: { fontSize: '52px', marginBottom: '12px' },
+    modalTitle: { fontSize: '22px', fontWeight: 'bold', color: '#111', marginBottom: '12px' },
+    modalText: { fontSize: '15px', color: '#444', lineHeight: '1.7', marginBottom: '12px' },
+    modalWarning: { fontSize: '13px', color: '#c0392b', backgroundColor: '#fef2f2', borderRadius: '8px', padding: '10px 14px', marginBottom: '20px', border: '1px solid #fecaca' },
+    modalActions: { display: 'flex', gap: '12px', justifyContent: 'center' },
+    modalCancelBtn: { padding: '11px 28px', borderRadius: '10px', border: '2px solid #ddd', backgroundColor: '#fff', color: '#555', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif' },
+    modalDeleteBtn: { padding: '11px 28px', borderRadius: '10px', border: 'none', backgroundColor: '#d32f2f', color: '#fff', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(211,47,47,0.3)' },
 };
 
 const css = `
   * { font-family: "Droid Arabic Kufi", serif !important; box-sizing: border-box; }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
+  @keyframes spin { to { transform: rotate(360deg); } }
   @media (max-width: 640px) {
-    .mc-hero         { padding-top: 100px !important; padding-bottom: 36px !important; }
-    .mc-hero-top     { gap: 14px !important; }
-    .mc-stats-row    { gap: 10px !important; }
-    .mc-stat-card    { padding: 12px 18px !important; min-width: 90px !important; }
-    .mc-main         { padding: 24px 14px 48px !important; }
-    .mc-toolbar      { flex-direction: column !important; align-items: stretch !important; }
-    .mc-grid         { grid-template-columns: 1fr !important; gap: 18px !important; }
+    .mc-hero { padding-top: 100px !important; padding-bottom: 36px !important; }
+    .mc-stats-row { gap: 10px !important; }
+    .mc-stat-card { padding: 12px 18px !important; min-width: 90px !important; }
+    .mc-main { padding: 24px 14px 48px !important; }
+    .mc-toolbar { flex-direction: column !important; align-items: stretch !important; }
+    .mc-grid { grid-template-columns: 1fr !important; gap: 18px !important; }
     .mc-overview-bar { padding: 10px 14px !important; }
   }
-  @media (min-width: 641px) and (max-width: 1024px) {
-    .mc-grid { grid-template-columns: repeat(2, 1fr) !important; }
-  }
-  @media (min-width: 1025px) {
-    .mc-grid { grid-template-columns: repeat(3, 1fr) !important; }
-  }
-  @media (min-width: 1600px) {
-    .mc-grid { grid-template-columns: repeat(4, 1fr) !important; }
-  }
+  @media (min-width: 641px) and (max-width: 1024px) { .mc-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+  @media (min-width: 1025px) { .mc-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+  @media (min-width: 1600px) { .mc-grid { grid-template-columns: repeat(4, 1fr) !important; } }
 `;
 
 export default MyCourses;

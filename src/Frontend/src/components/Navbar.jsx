@@ -20,7 +20,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 import AuthSync from '../components/AuthSync.jsx';
 
-const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com']; // ← عدّلها
+const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com','amrshamy91@gmail.com']; // ← عدّلها
 
 const RECENT_SEARCHES_KEY = 'recentSearches';
 const MAX_RECENT_SEARCHES = 5;

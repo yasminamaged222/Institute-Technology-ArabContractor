@@ -1,22 +1,12 @@
 ﻿import { useState, useEffect } from 'react';
-import { ShoppingCart, Trash2, Tag, ArrowRight, Minus, Plus, BookOpen } from 'lucide-react';
+import { ShoppingCart, Trash2, Tag, ArrowRight, BookOpen } from 'lucide-react';
 import { Link } from "react-router-dom";
 import { useAuth } from '@clerk/clerk-react';
 
-const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
-    const [quantity, setQuantity] = useState(item.quantity || 1);
-
-    const handleQuantityChange = (newQuantity) => {
-        if (newQuantity >= 1) {
-            setQuantity(newQuantity);
-            onUpdateQuantity(item.id, newQuantity);
-        }
-    };
-
+const CartItemFull = ({ item, onRemove }) => {
     return (
         <div className="group relative mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg md:mb-6">
             <div className="flex flex-col md:flex-row">
-                {/* Icon instead of Image */}
                 <div className="relative flex items-center justify-center bg-gradient-to-br from-[#0865a8] to-[#f57c00] md:w-64">
                     <div className="p-10 md:p-12">
                         <BookOpen className="h-20 w-20 text-white md:h-24 md:w-24" strokeWidth={1.5} />
@@ -26,14 +16,8 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                             {item.badge}
                         </span>
                     )}
-                    {item.discount && (
-                        <span className="absolute bottom-2 right-2 rounded-lg bg-[#f57c00] px-2.5 py-1 text-xs font-bold text-white shadow-md md:bottom-3 md:right-3 md:px-3 md:py-1.5">
-                            خصم {item.discount}%
-                        </span>
-                    )}
                 </div>
 
-                {/* Content */}
                 <div className="flex flex-1 flex-col p-4 md:p-6">
                     <div className="mb-2 flex items-start justify-between gap-3 md:mb-3">
                         <h3 className="flex-1 text-base font-bold leading-tight text-black md:text-lg lg:text-xl">
@@ -41,7 +25,6 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                         </h3>
                     </div>
 
-                    {/* Instructor/Place Info */}
                     {(item.instructor || item.place) && (
                         <p className="mb-2 text-sm text-black md:mb-3">
                             <span className="font-semibold text-[#0865a8]">
@@ -50,7 +33,6 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                         </p>
                     )}
 
-                    {/* Course Info - Dynamic */}
                     <div className="mb-3 flex flex-wrap gap-2 text-xs text-black md:mb-4 md:gap-4">
                         {item.hours && item.hours > 0 && (
                             <span className="flex items-center gap-1">
@@ -75,7 +57,6 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                         )}
                     </div>
 
-                    {/* Additional Info - Place and Date */}
                     {(item.place || item.date) && (
                         <div className="mb-3 flex flex-wrap gap-2 text-xs text-black md:mb-4 md:gap-3">
                             {item.place && (
@@ -97,9 +78,7 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                         </div>
                     )}
 
-                    {/* Footer Actions */}
                     <div className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-3 md:flex-row md:items-end md:justify-between md:gap-4 md:pt-4">
-                        {/* Quantity & Remove */}
                         <div className="flex items-center gap-3 md:gap-4">
                             <button
                                 onClick={() => onRemove(item.id)}
@@ -110,11 +89,10 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                             </button>
                         </div>
 
-                        {/* Price */}
                         <div className="text-left md:text-right">
                             <div className="mb-1 flex items-center gap-2">
                                 <span className="text-xl font-bold text-[#f57c00] md:text-2xl">
-                                    {((item.currentPrice || 0) * quantity).toFixed(2)} ج.م
+                                    {(item.currentPrice || 0).toFixed(2)} ج.م
                                 </span>
                                 {item.coupon && (
                                     <Tag className="h-3.5 w-3.5 text-emerald-600 md:h-4 md:w-4" title={item.coupon} />
@@ -122,7 +100,7 @@ const CartItemFull = ({ item, onRemove, onUpdateQuantity }) => {
                             </div>
                             {item.originalPrice && item.originalPrice > 0 && item.originalPrice !== item.currentPrice && (
                                 <p className="text-xs font-medium text-gray-400 line-through md:text-sm">
-                                    {((item.originalPrice || 0) * quantity).toFixed(2)} ج.م
+                                    {(item.originalPrice || 0).toFixed(2)} ج.م
                                 </p>
                             )}
                         </div>
@@ -137,7 +115,6 @@ export default function ShoppingCartPage() {
     const { getToken, isSignedIn } = useAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
 
@@ -145,29 +122,36 @@ export default function ShoppingCartPage() {
         document.title = 'سلة التسوق - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
-    // Fetch cart items from API
     useEffect(() => {
-        const fetchCartItems = async () => {
+        const loadCart = async () => {
+            setLoading(true);
+
+            // ─── Step 1: Get purchased IDs so we never re-show them ──────────
+            const getPurchasedIds = () => {
+                try {
+                    const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+                    return new Set(purchased.map(c => String(c.id)));
+                } catch { return new Set(); }
+            };
+
             if (!isSignedIn) {
-                setLoading(false);
-                // Fallback to localStorage if not signed in
+                // Not signed in: just read localStorage, filter out already purchased
                 const savedCart = localStorage.getItem('cartItems');
                 if (savedCart) {
-                    setItems(JSON.parse(savedCart).map(item => ({
-                        ...item,
-                        quantity: item.quantity || 1
-                    })));
+                    const purchasedIds = getPurchasedIds();
+                    const parsed = JSON.parse(savedCart)
+                        .filter(item => !purchasedIds.has(String(item.id)));
+                    setItems(parsed);
+                    // Update localStorage to remove purchased items
+                    localStorage.setItem('cartItems', JSON.stringify(parsed));
                 }
+                setLoading(false);
                 return;
             }
 
             try {
-                setLoading(true);
                 const token = await getToken();
-
-                if (!token) {
-                    throw new Error('فشل في الحصول على رمز المصادقة');
-                }
+                if (!token) throw new Error('no token');
 
                 const response = await fetch(
                     'https://acwebsite-icmet-test.azurewebsites.net/api/cart',
@@ -180,57 +164,60 @@ export default function ShoppingCartPage() {
                     }
                 );
 
-                if (!response.ok) {
-                    throw new Error('فشل في تحميل السلة');
-                }
+                if (!response.ok) throw new Error('API failed');
 
                 const data = await response.json();
-                
-                // Transform API data to match component format
-                const transformedItems = data.map(item => ({
-                    id: item.id || item.courseId,
-                    title: item.title || item.courseName || 'دورة تدريبية',
-                    instructor: item.place || item.instructor || 'غير محدد',
-                    place: item.place || '',
-                    date: item.date || '',
-                    image: 'book',
-                    rating: item.rating || 4.6,
-                    reviews: item.reviews || 0,
-                    hours: item.hours || 0,
-                    lectures: item.lectures || 0,
-                    level: item.level || 'متوسط',
-                    currentPrice: item.cost || item.price || item.currentPrice || 0,
-                    originalPrice: item.originalPrice || (item.cost ? item.cost / 0.6 : 0),
-                    badge: item.badge || 'الأكثر مبيعاً',
-                    coupon: item.coupon || '',
-                    quantity: item.quantity || 1,
-                    discount: item.discount || 40
-                }));
+                const purchasedIds = getPurchasedIds();
+
+                // ─── Filter out any courses already purchased ─────────────────
+                const transformedItems = data
+                    .filter(item => !purchasedIds.has(String(item.id || item.courseId)))
+                    .map(item => ({
+                        id: item.id || item.courseId,
+                        title: item.title || item.courseName || 'دورة تدريبية',
+                        instructor: item.place || item.instructor || 'غير محدد',
+                        place: item.place || '',
+                        date: item.date || '',
+                        image: 'book',
+                        rating: item.rating || 4.6,
+                        reviews: item.reviews || 0,
+                        hours: item.hours || 0,
+                        lectures: item.lectures || 0,
+                        level: item.level || 'متوسط',
+                        currentPrice: item.cost || item.price || item.currentPrice || 0,
+                        originalPrice: item.originalPrice || (item.cost ? item.cost / 0.6 : 0),
+                        badge: item.badge || 'الأكثر مبيعاً',
+                        coupon: item.coupon || '',
+                        quantity: 1,
+                        discount: item.discount || 40
+                    }));
 
                 setItems(transformedItems);
-                // Update localStorage for consistency
+                // Sync localStorage with filtered API result
                 localStorage.setItem('cartItems', JSON.stringify(transformedItems));
-                setError(null);
+
             } catch (err) {
-                console.error('Error fetching cart:', err);
-                setError(err.message);
-                // Fallback to localStorage if API fails
+                // Fallback: localStorage, still filter purchased
                 const savedCart = localStorage.getItem('cartItems');
                 if (savedCart) {
-                    setItems(JSON.parse(savedCart).map(item => ({
-                        ...item,
-                        quantity: item.quantity || 1
-                    })));
+                    const purchasedIds = getPurchasedIds();
+                    const parsed = JSON.parse(savedCart)
+                        .filter(item => !purchasedIds.has(String(item.id)));
+                    setItems(parsed);
                 }
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchCartItems();
+        loadCart();
+
+        // Re-run if purchase completes (e.g. in another tab)
+        window.addEventListener('purchaseCompleted', loadCart);
+        return () => window.removeEventListener('purchaseCompleted', loadCart);
     }, [isSignedIn, getToken]);
 
-    // Update localStorage when items change
+    // Sync localStorage whenever items change (after initial load)
     useEffect(() => {
         if (!loading) {
             localStorage.setItem('cartItems', JSON.stringify(items));
@@ -242,35 +229,20 @@ export default function ShoppingCartPage() {
         try {
             if (isSignedIn) {
                 const token = await getToken();
-                
                 if (token) {
-                    // Call API to remove item from cart
                     await fetch(
                         `https://acwebsite-icmet-test.azurewebsites.net/api/cart/remove/${id}`,
                         {
                             method: 'DELETE',
-                            headers: {
-                                'Authorization': `Bearer ${token}`,
-                                'Content-Type': 'application/json',
-                            },
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                         }
                     );
                 }
             }
         } catch (error) {
-            console.error('Error removing item from cart:', error);
+            console.error('Error removing item:', error);
         }
-        
-        // Update local state regardless of API call result
-        setItems(prevItems => prevItems.filter(item => item.id !== id));
-    };
-
-    const handleUpdateQuantity = (id, quantity) => {
-        setItems(prevItems =>
-            prevItems.map(item =>
-                item.id === id ? { ...item, quantity } : item
-            )
-        );
+        setItems(prev => prev.filter(item => item.id !== id));
     };
 
     const applyCoupon = () => {
@@ -291,51 +263,24 @@ export default function ShoppingCartPage() {
     const totalSavings = totalOriginalPrice - totalPrice;
     const discountPercent = totalOriginalPrice > 0 ? Math.round((totalSavings / totalOriginalPrice) * 100) : 0;
 
-    // Loading state
     if (loading) {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-                <style>{`
-                    * {
-                        font-family: "Droid Arabic Kufi", serif !important;
-                    }
-                    
-                    @media (max-width: 640px) {
-                        .cart-main {
-                            padding-top: 100px !important;
-                        }
-                    }
-                    
-                    @media (min-width: 641px) and (max-width: 1024px) {
-                        .cart-main {
-                            padding-top: 120px !important;
-                        }
-                    }
-                    
-                    @media (min-width: 1025px) {
-                        .cart-main {
-                            padding-top: 130px !important;
-                        }
-                    }
-                `}</style>
-
-                <div className="fixed left-0 top-16 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20" style={{top:70}}>
+                <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } @media (max-width: 640px) { .cart-main { padding-top: 100px !important; } } @media (min-width: 641px) and (max-width: 1024px) { .cart-main { padding-top: 120px !important; } } @media (min-width: 1025px) { .cart-main { padding-top: 130px !important; } }`}</style>
+                <div className="fixed left-0 top-16 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: 70 }}>
                     <div className="text-center">
-                        <span className="text-sm md:text-base">
-                            <a href="/" className="ml-3 text-gray-700 transition-colors hover:text-gray-900">الصفحة الرئيسية</a>
+                        <span className="text-sm">
+                            <a href="/" className="ml-3 text-gray-700">الصفحة الرئيسية</a>
                             <span className="text-gray-500"> - </span>
                             <span className="mr-3 font-semibold text-gray-900">سلة التسوق</span>
                         </span>
                     </div>
                 </div>
-
                 <div className="cart-main min-h-screen bg-white pb-12" dir="rtl">
                     <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
-                        <div className="flex items-center justify-center" style={{minHeight: '400px'}}>
-                            <div className="text-center">
-                                <div className="mb-4 text-2xl font-bold text-[#0865a8]">جاري تحميل السلة...</div>
-                            </div>
+                        <div className="flex items-center justify-center" style={{ minHeight: '400px' }}>
+                            <div className="text-center text-2xl font-bold text-[#0865a8]">جاري تحميل السلة...</div>
                         </div>
                     </div>
                 </div>
@@ -345,35 +290,15 @@ export default function ShoppingCartPage() {
 
     return (
         <>
-            {/* Google Fonts */}
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-
             <style>{`
-                * {
-                    font-family: "Droid Arabic Kufi", serif !important;
-                }
-                
-                @media (max-width: 640px) {
-                    .cart-main {
-                        padding-top: 100px !important;
-                    }
-                }
-                
-                @media (min-width: 641px) and (max-width: 1024px) {
-                    .cart-main {
-                        padding-top: 120px !important;
-                    }
-                }
-                
-                @media (min-width: 1025px) {
-                    .cart-main {
-                        padding-top: 130px !important;
-                    }
-                }
+                * { font-family: "Droid Arabic Kufi", serif !important; }
+                @media (max-width: 640px) { .cart-main { padding-top: 100px !important; } }
+                @media (min-width: 641px) and (max-width: 1024px) { .cart-main { padding-top: 120px !important; } }
+                @media (min-width: 1025px) { .cart-main { padding-top: 130px !important; } }
             `}</style>
 
-            {/* Fixed Overview Bar */}
-            <div className="fixed left-0 top-16 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 md:top-20" style={{top:70}}>
+            <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: 70 }}>
                 <div className="text-center">
                     <span className="text-sm md:text-base">
                         <a href="/" className="ml-3 text-gray-700 transition-colors hover:text-gray-900">الصفحة الرئيسية</a>
@@ -383,58 +308,42 @@ export default function ShoppingCartPage() {
                 </div>
             </div>
 
-            {/* Main Content */}
             <div className="cart-main min-h-screen bg-white pb-12" dir="rtl">
                 <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8">
-                    {/* Header */}
                     <div className="mb-6 md:mb-8">
-                        <h1 className="mb-2 text-3xl font-bold text-black md:text-4xl lg:text-5xl">
-                            سلة التسوق
-                        </h1>
+                        <h1 className="mb-2 text-3xl font-bold text-black md:text-4xl lg:text-5xl">سلة التسوق</h1>
                         <p className="text-base text-black opacity-70 md:text-lg">
                             {items.length === 0 ? 'السلة فارغة' :
                                 items.length === 1 ? 'دورة واحدة في السلة' :
                                     items.length === 2 ? 'دورتان في السلة' :
                                         `${items.length} دورات في السلة`}
                         </p>
-                       
                     </div>
 
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
-                        {/* Cart Items */}
                         <div className="lg:col-span-2">
                             {items.length === 0 ? (
                                 <div className="rounded-2xl bg-white p-12 text-center shadow-lg ring-1 ring-gray-200 md:p-16">
                                     <ShoppingCart className="mx-auto mb-4 h-20 w-20 text-gray-300 md:h-24 md:w-24" />
                                     <h3 className="mb-2 text-xl font-bold text-black md:text-2xl">سلة التسوق فارغة</h3>
                                     <p className="mb-6 text-sm text-black opacity-60 md:text-base">لم تقم بإضافة أي دورات إلى السلة بعد</p>
-                                    <Link
-                                        to="/"
-                                        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] px-6 py-3 font-bold text-white shadow-lg transition-all hover:scale-105 md:px-8"
-                                    >
+                                    <Link to="/" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] px-6 py-3 font-bold text-white shadow-lg transition-all hover:scale-105 md:px-8">
                                         تصفح الدورات
                                         <ArrowRight className="h-4 w-4 rotate-180 md:h-5 md:w-5" />
                                     </Link>
                                 </div>
                             ) : (
                                 items.map(item => (
-                                    <CartItemFull
-                                        key={item.id}
-                                        item={item}
-                                        onRemove={handleRemove}
-                                        onUpdateQuantity={handleUpdateQuantity}
-                                    />
+                                    <CartItemFull key={item.id} item={item} onRemove={handleRemove} />
                                 ))
                             )}
                         </div>
 
-                        {/* Summary Sidebar */}
                         {items.length > 0 && (
                             <div className="lg:col-span-1">
                                 <div className="sticky top-28 rounded-2xl bg-white p-5 shadow-lg ring-1 ring-gray-200 md:top-32 md:p-6">
                                     <h2 className="mb-4 text-lg font-bold text-black md:mb-6 md:text-xl">ملخص الطلب</h2>
 
-                                    {/* Price Breakdown */}
                                     <div className="mb-4 space-y-2 border-b border-gray-200 pb-4 md:mb-6 md:space-y-3 md:pb-6">
                                         <div className="flex items-center justify-between text-sm text-black opacity-70 md:text-base">
                                             <span>المجموع الفرعي</span>
@@ -454,7 +363,6 @@ export default function ShoppingCartPage() {
                                         )}
                                     </div>
 
-                                    {/* Total */}
                                     <div className="mb-4 md:mb-6">
                                         <p className="mb-1 text-xs text-black opacity-60 md:text-sm">الإجمالي:</p>
                                         <p className="mb-3 text-3xl font-bold text-[#f57c00] md:text-4xl">
@@ -467,20 +375,31 @@ export default function ShoppingCartPage() {
                                         )}
                                     </div>
 
-                                    {/* Checkout Button */}
-                                    <Link
-                                        to="/checkout"
-                                        className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:py-4"
-                                    >
+                                    {/* Coupon input */}
+                                    <div className="mb-4">
+                                        {!appliedCoupon && (
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={couponCode}
+                                                    onChange={e => setCouponCode(e.target.value)}
+                                                    placeholder="كود الخصم"
+                                                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none"
+                                                />
+                                                <button onClick={applyCoupon} className="rounded-xl bg-[#0865a8] px-4 py-2 text-sm font-bold text-white">
+                                                    تطبيق
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <Link to="/checkout" className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:py-4">
                                         المتابعة للدفع
                                         <ArrowRight className="h-4 w-4 rotate-180 md:h-5 md:w-5" />
                                     </Link>
 
-                                    <p className="mb-4 text-center text-xs text-black opacity-60 md:mb-6">
-                                        🔒 معاملة آمنة ومحمية
-                                    </p>
+                                    <p className="mb-4 text-center text-xs text-black opacity-60 md:mb-6">🔒 معاملة آمنة ومحمية</p>
 
-                                    {/* Security Badges */}
                                     <div className="mt-4 flex items-center justify-center gap-3 text-xs text-black opacity-60 md:mt-6 md:gap-4">
                                         <div className="flex items-center gap-1">
                                             <svg className="h-3.5 w-3.5 text-green-600 md:h-4 md:w-4" fill="currentColor" viewBox="0 0 20 20">

@@ -33,6 +33,8 @@ import ScrollToTop from '../components/ScrollToTop'
 import SearchPage from '../pages/Searchpage';
 import Mycourses from '../pages/Mycourses';
 import AdminDashboard from '../pages/AdminDashboard';   // أو المسار الصحيح
+import PaymentReturnPage from '../pages/PaymentReturnPage'; // أو المسار الصحيح
+
 
 
    
@@ -74,7 +76,9 @@ const AppRoutes = () => {
             <Route path="/onsite-training" element={<OnsiteTraining />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/my-courses" element={<Mycourses />} />    
-                  <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/payment-return" element={<PaymentReturnPage />} />
+
 
             
 
