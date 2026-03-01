@@ -63,27 +63,27 @@ jobs:
         shell: pwsh
         run: |
           $webConfig = @"
-<configuration>
-  <system.webServer>
-    <rewrite>
-      <rules>
-        <rule name="React Routes" stopProcessing="true">
-          <match url=".*" />
-          <conditions logicalGrouping="MatchAll">
-            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-          </conditions>
-          <action type="Rewrite" url="/index.html" />
-        </rule>
-      </rules>
-    </rewrite>
-  </system.webServer>
-</configuration>
-"@
-          if (!(Test-Path "published/wwwroot")) {
-            New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
-          }
-          $webConfig | Out-File -FilePath "published/wwwroot/web.config" -Encoding utf8
+          <configuration>
+            <system.webServer>
+              <rewrite>
+                <rules>
+                  <rule name="React Routes" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions logicalGrouping="MatchAll">
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/index.html" />
+                  </rule>
+                </rules>
+              </rewrite>
+            </system.webServer>
+          </configuration>
+          "@
+                    if (!(Test-Path "published/wwwroot")) {
+                      New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
+                    }
+                    $webConfig | Out-File -FilePath "published/wwwroot/web.config" -Encoding utf8
 
       # ------------------ Verify publish folder ------------------
       - name: Show publish folder contents
@@ -143,4 +143,5 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
+
 
