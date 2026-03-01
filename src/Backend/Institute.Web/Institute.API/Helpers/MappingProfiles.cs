@@ -24,6 +24,10 @@ namespace Institute.API.Helpers
            .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom<NewsPictureUrlResolver<NewsListDto>>());
 
 
+            CreateMap<Cart, CartDto>();
+            CreateMap<CartItem, CartItemDto>();
+
+
             CreateMap<Dailynews, NewsDetailsDto>()
     .ForMember(d => d.Id,
         o => o.MapFrom(s => s.NewsId))

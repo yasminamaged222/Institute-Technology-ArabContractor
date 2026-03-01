@@ -111,8 +111,7 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    options.Authority = "https://mighty-basilisk-11.clerk.accounts.dev";
-
+    options.Authority = builder.Configuration["Clerk:Authority"];
     options.RequireHttpsMetadata = true;
 
     // 🔥 مهم جدًا مع Clerk

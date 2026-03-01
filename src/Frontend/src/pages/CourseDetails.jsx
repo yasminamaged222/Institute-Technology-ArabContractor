@@ -12,18 +12,26 @@ const CourseDetails = () => {
 
     const API_BASE_URL = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
+    // ── Helper: read all owned IDs from localStorage ──────────────────────────
+    const getOwnedIds = () => {
+        try {
+            const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
+            const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
+            return new Set([
+                ...purchased.map(c => String(c.id)),
+                ...enrolled.map(c => String(c.id)),
+            ]);
+        } catch {
+            return new Set();
+        }
+    };
+
     // ── Check ownership whenever course loads or storage changes ──────────────
     useEffect(() => {
         const checkOwned = () => {
             if (!course) return;
-            try {
-                const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
-                const enrolled = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
-                setIsOwned(
-                    purchased.some(c => c.id === course.id) ||
-                    enrolled.some(c => c.id === course.id)
-                );
-            } catch { }
+            const ownedIds = getOwnedIds();
+            setIsOwned(ownedIds.has(String(course.id)));
         };
         checkOwned();
         window.addEventListener('cartUpdated', checkOwned);
@@ -188,6 +196,7 @@ const CourseDetails = () => {
         };
     };
 
+    // ── Add paid course to cart ────────────────────────────────────────────────
     const addToCart = (buyNow = false) => {
         if (!course) return;
         const existingCart = localStorage.getItem('cartItems');
@@ -224,11 +233,12 @@ const CourseDetails = () => {
         }
     };
 
+    // ── Enroll in free course ─────────────────────────────────────────────────
     const handleEnroll = () => {
         if (!course) return;
 
         const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
-        const alreadyEnrolled = existing.some(e => e.id === course.id);
+        const alreadyEnrolled = existing.some(e => String(e.id) === String(course.id));
 
         if (!alreadyEnrolled) {
             const enrollItem = {
@@ -354,6 +364,7 @@ const CourseDetails = () => {
                     </div>
                 </div>
 
+                {/* ── HERO - colour changes based on owned/free/paid ── */}
                 <div style={{
                     ...styles.heroSection,
                     background: isOwned
@@ -364,11 +375,11 @@ const CourseDetails = () => {
                 }}>
                     <div style={styles.heroContainer}>
                         <div style={styles.heroContent}>
-                            {/* Owned badge in hero */}
+                            {/* Owned badge */}
                             {isOwned && (
                                 <div style={{ ...styles.freeBadgeHero, backgroundColor: 'rgba(255,255,255,0.9)', color: '#4a4a8a' }}>✅ مسجل في هذه الدورة</div>
                             )}
-                            {/* Free badge in hero */}
+                            {/* Free badge */}
                             {!isOwned && course.isFree && (
                                 <div style={styles.freeBadgeHero}>مجاناً</div>
                             )}
@@ -512,19 +523,19 @@ const CourseDetails = () => {
                                     {/* ===== PRICE SECTION ===== */}
                                     <div style={styles.priceSection}>
                                         {isOwned ? (
-                                            /* OWNED COURSE: show مسجل */
+                                            /* OWNED: show مسجل */
                                             <div style={styles.freePriceWrapper}>
                                                 <span style={{ ...styles.freePriceLabel, color: '#4a4a8a' }}>✅ مسجل</span>
                                                 <span style={styles.freePriceSubtext}>لديك هذه الدورة بالفعل</span>
                                             </div>
                                         ) : course.isFree ? (
-                                            /* FREE COURSE: show مجاناً in green */
+                                            /* FREE: show مجاناً */
                                             <div style={styles.freePriceWrapper}>
                                                 <span style={styles.freePriceLabel}>مجاناً</span>
                                                 <span style={styles.freePriceSubtext}>دورة مجانية بالكامل</span>
                                             </div>
                                         ) : (
-                                            /* PAID COURSE: show price */
+                                            /* PAID: show price */
                                             <>
                                                 <span style={styles.currentPrice}>
                                                     {course.price.toLocaleString('ar-EG')} {course.currency}
@@ -538,10 +549,13 @@ const CourseDetails = () => {
                                         )}
                                     </div>
 
-                                    {/* ===== ACTION BUTTONS ===== */}
+                                    {/* ===== ACTION BUTTONS =====
+                                        - Owned (purchased OR enrolled free) → only "عرض في دوراتي"
+                                        - Free & not owned → only "اشترك الآن"
+                                        - Paid & not owned → "إضافة إلى السلة" + "اشترِ الآن"
+                                    */}
                                     <div style={styles.actionButtons}>
                                         {isOwned ? (
-                                            /* Already owned → go to My Courses */
                                             <button
                                                 style={styles.btnViewMyCourses}
                                                 onClick={() => navigate('/my-courses')}
@@ -549,12 +563,10 @@ const CourseDetails = () => {
                                                 عرض في دوراتي
                                             </button>
                                         ) : course.isFree ? (
-                                            /* FREE: single green اشترك الآن button */
                                             <button style={styles.btnEnrollNow} onClick={handleEnroll}>
                                                 اشترك الآن
                                             </button>
                                         ) : (
-                                            /* PAID: add to cart + buy now */
                                             <>
                                                 <button style={styles.btnAddCart} onClick={() => addToCart(false)}>
                                                     إضافة إلى السلة
@@ -687,25 +699,11 @@ const styles = {
     previewImage: { width: '100%', height: '100%', objectFit: 'cover' },
     priceContent: { padding: '24px' },
     priceSection: { marginBottom: '20px' },
-
     freePriceWrapper: { display: 'flex', flexDirection: 'column', gap: '4px' },
-    freePriceLabel: {
-        fontSize: '36px',
-        fontWeight: 'bold',
-        color: '#1a7a3c',
-        display: 'block',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        lineHeight: 1.2
-    },
-    freePriceSubtext: {
-        fontSize: '13px',
-        color: '#666',
-        fontFamily: '"Droid Arabic Kufi", serif',
-    },
-
+    freePriceLabel: { fontSize: '36px', fontWeight: 'bold', color: '#1a7a3c', display: 'block', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: 1.2 },
+    freePriceSubtext: { fontSize: '13px', color: '#666', fontFamily: '"Droid Arabic Kufi", serif' },
     currentPrice: { fontSize: '32px', fontWeight: 'bold', color: '#f57c00', display: 'block', marginBottom: '8px', fontFamily: '"Droid Arabic Kufi", serif' },
     originalPrice: { fontSize: '16px', color: '#000000', textDecoration: 'line-through', opacity: 0.5, fontFamily: '"Droid Arabic Kufi", serif' },
-
     actionButtons: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
     btnAddCart: { width: '100%', padding: '14px 24px', backgroundColor: '#ffffff', color: '#0865a8', border: '2px solid #0865a8', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif' },
     btnBuyNow: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(8,101,168,0.3)' },
