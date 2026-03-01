@@ -63,7 +63,6 @@ jobs:
         shell: pwsh
         run: |
           $webConfig = @"
-<?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <system.webServer>
     <rewrite>
@@ -144,3 +143,4 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
+
