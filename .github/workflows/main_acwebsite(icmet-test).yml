@@ -43,13 +43,14 @@ jobs:
         run: |
           cd src/Frontend
           npm install
-    # Build frontend
+
+      # Build frontend
       - name: Build frontend
         shell: pwsh
         run: |
           cd src/Frontend
           npm run build
-          
+
       - name: Copy React dist to wwwroot
         shell: pwsh
         run: |
@@ -57,34 +58,33 @@ jobs:
             New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
           }
           Copy-Item -Path src/Frontend/dist/* -Destination published/wwwroot -Recurse -Force
-          
+
       - name: Add web.config for React routing
         shell: pwsh
         run: |
           $webConfig = @"
-          <configuration>
-            <system.webServer>
-              <rewrite>
-                <rules>
-                  <rule name="React Routes" stopProcessing="true">
-                    <match url=".*" />
-                    <conditions logicalGrouping="MatchAll">
-                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-                    </conditions>
-                    <action type="Rewrite" url="/index.html" />
-                  </rule>
-                </rules>
-              </rewrite>
-            </system.webServer>
-          </configuration>
-          "@
-          
-              if (!(Test-Path "published/wwwroot")) {
-                New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
-              }
-          
-              $webConfig | Out-File -FilePath "published/wwwroot/web.config" -Encoding utf8
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <system.webServer>
+    <rewrite>
+      <rules>
+        <rule name="React Routes" stopProcessing="true">
+          <match url=".*" />
+          <conditions logicalGrouping="MatchAll">
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="/index.html" />
+        </rule>
+      </rules>
+    </rewrite>
+  </system.webServer>
+</configuration>
+"@
+          if (!(Test-Path "published/wwwroot")) {
+            New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
+          }
+          $webConfig | Out-File -FilePath "published/wwwroot/web.config" -Encoding utf8
 
       # ------------------ Verify publish folder ------------------
       - name: Show publish folder contents
@@ -136,6 +136,7 @@ jobs:
             Write-Host "✅ Artifact downloaded successfully."
             $files
           }
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -143,11 +144,3 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
-
-
-
-
-
-
-
-
