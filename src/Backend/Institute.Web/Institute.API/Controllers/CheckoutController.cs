@@ -78,7 +78,7 @@ namespace Institute.API.Controllers
 
             await _checkoutService.UpdateOrderGatewayDataAsync(order);
 
-            
+
 
             // 5️⃣ Return the session data to the React frontend
             // Frontend uses sessionId + checkoutJsUrl to call window.Checkout.showPaymentPage()
@@ -177,5 +177,79 @@ namespace Institute.API.Controllers
             // For now, just acknowledge receipt
             return Ok(new { received = true });
         }
+        /// <summary>
+        /// POST /api/checkout/refund
+        /// Admin only — يعمل Refund كامل للـ Order ويلغي الـ Enrollments
+        /// Body: { "orderId": 80, "adminNote": "سبب الاسترداد" }
+        /// </summary>
+        //[HttpPost("refund")]
+        //[Authorize(Roles = "Admin")]
+        //public async Task<IActionResult> RefundOrder([FromBody] RefundRequestDto request)
+        //{
+        //    if (request.OrderId <= 0)
+        //        return BadRequest(new { success = false, message = "رقم الطلب غير صحيح." });
+
+        //    var result = await _checkoutService.RefundOrderAsync(
+        //        request.OrderId,
+        //        request.AdminNote ?? "استرداد من الادمن"
+        //    );
+
+        //    if (!result.IsSuccess)
+        //        return BadRequest(new { success = false, message = result.Message });
+
+        //    return Ok(new
+        //    {
+        //        success = true,
+        //        message = result.Message,
+        //        data = new
+        //        {
+        //            orderId = request.OrderId,
+        //            refundAmount = result.Payment?.Amount,
+        //            refundDate = result.Payment?.RefundDate,
+        //            status = "Refunded"
+        //        }
+        //    });
+        //}
+
+        [HttpGet("order/{orderId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetOrderDetails(int orderId)
+        {
+            if (orderId <= 0)
+                return BadRequest(new { success = false, message = "رقم الطلب غير صحيح." });
+
+            var order = await _checkoutService.GetOrderByIdAsync(orderId);
+            if (order == null)
+                return NotFound(new { success = false, message = "الطلب غير موجود." });
+
+            // Only return details for paid orders (security: don't expose pending/cancelled)
+            if (order.Status != Domain.Enums.OrderStatus.Paid)
+                return BadRequest(new { success = false, message = "لم يتم تأكيد الدفع بعد." });
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    orderId = order.Id,
+                    orderNumber = order.OrderNumber,
+                    totalAmount = order.TotalAmount,
+                    currency = "EGP",
+                    status = order.Status.ToString(),
+                    createdAt = order.CreatedAt,
+                    items = order.Items.Select(i => new
+                    {
+                        planworkId = i.PlanworkId,
+                        price = i.Price
+                    })
+                }
+            });
+        }
+    }
+
+    public class RefundRequestDto
+    {
+        public int OrderId { get; set; }
+        public string? AdminNote { get; set; }
     }
 }

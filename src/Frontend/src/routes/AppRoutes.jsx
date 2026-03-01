@@ -33,6 +33,7 @@ import ScrollToTop from '../components/ScrollToTop'
 import SearchPage from '../pages/SearchPage';
 import Mycourses from '../pages/Mycourses';
 import AdminDashboard from '../pages/AdminDashboard';   // أو المسار الصحيح
+import PaymentResultPage from '../pages/Paymentresultpage.jsx';
 
 
    
@@ -75,6 +76,7 @@ const AppRoutes = () => {
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/my-courses" element={<Mycourses />} />    
                   <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/payment/result" element={<PaymentResultPage />} />
 
             
 

@@ -88,12 +88,14 @@ export default function CheckoutPage() {
     }, [cartItems]);
 
     // ─── Handle redirect back from bank ──────────────────────────────────────
+    // NOTE: Bank redirects to /payment/result page now (see PaymentResultPage.jsx)
+    // This useEffect is kept as fallback only
     useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const orderIdParam = urlParams.get("orderId");
-        const transactionRef = urlParams.get("transactionRef");
-        if (orderIdParam && transactionRef) {
-            verifyAfterRedirect(orderIdParam, transactionRef);
+        const resultIndicator = urlParams.get("resultIndicator");
+        if (orderIdParam && resultIndicator) {
+            verifyAfterRedirect(orderIdParam, resultIndicator);
         }
     }, []);
 
@@ -157,12 +159,12 @@ export default function CheckoutPage() {
     }, [subtotal]);
 
     // ─── Verify after bank redirect ───────────────────────────────────────────
-    const verifyAfterRedirect = async (oid, transactionRef) => {
+    const verifyAfterRedirect = async (oid, resultIndicator) => {
         setLoading(true);
         try {
             const token = await getToken();
             const res = await fetch(
-                `${API_BASE}/api/checkout/result?orderId=${oid}&transactionRef=${transactionRef}`,
+                `${API_BASE}/api/checkout/result?orderId=${oid}&resultIndicator=${resultIndicator}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             const data = await res.json();
@@ -515,4 +517,4 @@ export default function CheckoutPage() {
             </div>
         </>
     );
-} 
+}

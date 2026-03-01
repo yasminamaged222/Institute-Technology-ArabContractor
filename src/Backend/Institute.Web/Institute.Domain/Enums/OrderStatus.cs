@@ -8,8 +8,9 @@ namespace Institute.Domain.Enums
 {
     public enum OrderStatus
     {
-        Pending,
-        Paid,
-        Cancelled
+        Pending = 0,
+        Paid = 1,
+        Cancelled = 2,
+        Refunded = 3
     }
 }

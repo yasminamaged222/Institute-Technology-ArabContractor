@@ -83,7 +83,7 @@ namespace Institute.Application.Services
                     .GetString();
                 order.GatewaySessionId = sessionId;
                 order.SuccessIndicator = successIndicator;
-                
+
                 return new CheckoutResponseDto
                 {
                     Success = true,
@@ -138,6 +138,55 @@ namespace Institute.Application.Services
         }
 
 
+
+        public async Task<(bool IsSuccess, string? GatewayResponse)>
+            RefundPaymentAsync(string orderNumber, string transactionId, decimal amount)
+        {
+            try
+            {
+                var client = _httpClientFactory.CreateClient("BankClient");
+
+                // Basic Auth
+                var authBytes = Encoding.ASCII.GetBytes($"merchant.{_settings.MerchantId}:{_settings.ApiPassword}");
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
+
+                // Refund transaction ID (must be unique)
+                var refundTransactionId = $"refund-{Guid.NewGuid():N}";
+
+                var payload = new
+                {
+                    apiOperation = "REFUND",
+                    transaction = new
+                    {
+                        amount = amount.ToString("F2"),
+                        currency = _settings.Currency
+                    }
+                };
+
+                var json = JsonSerializer.Serialize(payload);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                var url = $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}" +
+                          $"/order/{orderNumber}/transaction/{refundTransactionId}";
+
+                var response = await client.PutAsync(url, content);
+                var body = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                    return (false, body);
+
+                using var doc = JsonDocument.Parse(body);
+                var root = doc.RootElement;
+                var result = root.TryGetProperty("result", out var r) ? r.GetString() : null;
+
+                return (result == "SUCCESS", body);
+            }
+            catch (Exception ex)
+            {
+                return (false, ex.Message);
+            }
+        }
 
         public async Task<(bool IsSuccess, string? SuccessIndicator, string? GatewayResponse)>
             VerifyPaymentAsync(string orderNumber)
