@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Institute.API.DTOs;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;

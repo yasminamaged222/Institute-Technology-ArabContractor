@@ -13,7 +13,7 @@ import { ClerkProvider } from '@clerk/clerk-react'
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import ErrorBoundary from './pages/ErrorBoundary.jsx';
 
-const PUBLISHABLE_KEY = "pk_test_bWlnaHR5LWJhc2lsaXNrLTExLmNsZXJrLmFjY291bnRzLmRldiQ"
+const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYWN3ZWJzaXRlLWljbWV0LXRlc3QuYXp1cmV3ZWJzaXRlcy5uZXQk"
 
 
 if (!PUBLISHABLE_KEY) {
@@ -23,7 +23,7 @@ if (!PUBLISHABLE_KEY) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   //<React.StrictMode>
-        <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY} proxyUrl="https://acwebsite-icmet-test.azurewebsites.net/__clerk">
             <CacheProvider value={cacheRtl}>
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
