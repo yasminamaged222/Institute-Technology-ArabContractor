@@ -157,6 +157,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles();
 app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -164,47 +165,5 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
-app.UseStaticFiles();
-// ======= Clerk Proxy =======
-app.Map("/__clerk/{**path}", async (HttpContext context) =>
-{
-    var path = context.Request.Path.Value?.Replace("/__clerk", "") ?? "";
-    var query = context.Request.QueryString.Value ?? "";
-    var targetUrl = $"https://frontend-api.clerk.services{path}{query}";
 
-    using var httpClient = new HttpClient(new HttpClientHandler
-    {
-        AllowAutoRedirect = true
-    });
-
-    var requestMessage = new HttpRequestMessage
-    {
-        Method = new HttpMethod(context.Request.Method),
-        RequestUri = new Uri(targetUrl)
-    };
-
-    // Copy safe headers only
-    foreach (var header in context.Request.Headers)
-    {
-        if (header.Key.ToLower() is "host" or "content-length" or "transfer-encoding")
-            continue;
-        requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value.ToArray());
-    }
-
-    var response = await httpClient.SendAsync(requestMessage, HttpCompletionOption.ResponseHeadersRead);
-
-    context.Response.StatusCode = (int)response.StatusCode;
-
-    foreach (var header in response.Headers)
-    {
-        if (header.Key.ToLower() is "transfer-encoding")
-            continue;
-        context.Response.Headers[header.Key] = header.Value.ToArray();
-    }
-
-    foreach (var header in response.Content.Headers)
-        context.Response.Headers[header.Key] = header.Value.ToArray();
-
-    await response.Content.CopyToAsync(context.Response.Body);
-});
 app.Run();
