@@ -13,7 +13,7 @@ import { ClerkProvider } from '@clerk/clerk-react'
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react'
 import ErrorBoundary from './pages/ErrorBoundary.jsx';
 
-const PUBLISHABLE_KEY = "pk_live_Y2xlcmsuYWN3ZWJzaXRlLWljbWV0LXRlc3QuYXp1cmV3ZWJzaXRlcy5uZXQk"
+const PUBLISHABLE_KEY = "pk_test_bWlnaHR5LWJhc2lsaXNrLTExLmNsZXJrLmFjY291bnRzLmRldiQ"
 
 
 if (!PUBLISHABLE_KEY) {
