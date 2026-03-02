@@ -157,7 +157,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseStaticFiles();
 app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -165,7 +164,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
-
+app.UseStaticFiles();
 // ======= Clerk Proxy =======
 app.MapForward("/__clerk/{**path}", "https://frontend-api.clerk.services");
 
