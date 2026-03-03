@@ -8,7 +8,7 @@ import logoSrc from '../assets/logo-removebg-preview.png';
 // ════════════════════════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════════════════════════
-const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com','amrshamy91@gmail.com'];
+const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com', 'amrshamy91@gmail.com','abdelmawla1642@gmail.com'];
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 const USE_MOCK_DATA = true;
 
@@ -36,6 +36,92 @@ const MOCK_ENROLLMENTS = [
     { userId: 6, courseId: 101, enrolledAt: '2025-04-01' }, { userId: 6, courseId: 102, enrolledAt: '2025-04-05' },
 ];
 
+// ── MOCK REFUND REQUESTS ────────────────────────────────────────────────────
+const MOCK_REFUNDS = [
+    {
+        id: 'REF-2025-001',
+        orderId: 'ORD-10045',
+        userId: 2,
+        courseId: 101,
+        amount: 1200,
+        currency: 'EGP',
+        reason: 'تعارض في المواعيد مع العمل',
+        details: 'لم أتمكن من حضور أي محاضرة بسبب ظروف العمل الطارئة وأطلب استرداد المبلغ كاملاً.',
+        requestedAt: '2025-04-10',
+        status: 'pending',
+        bankName: 'البنك الأهلي المصري',
+        accountNumber: '1234567890',
+        accountHolder: 'سارة علي',
+        iban: 'EG380019000500000012345678901',
+    },
+    {
+        id: 'REF-2025-002',
+        orderId: 'ORD-10031',
+        userId: 4,
+        courseId: 103,
+        amount: 850,
+        currency: 'EGP',
+        reason: 'المحتوى لا يتوافق مع الوصف',
+        details: 'المحتوى المقدم لا يتطابق مع ما هو موضح في صفحة الدورة.',
+        requestedAt: '2025-04-08',
+        status: 'approved',
+        bankName: 'بنك مصر',
+        accountNumber: '9876543210',
+        accountHolder: 'نور إبراهيم',
+        iban: 'EG800002000100000097654321012',
+    },
+    {
+        id: 'REF-2025-003',
+        orderId: 'ORD-10019',
+        userId: 1,
+        courseId: 103,
+        amount: 950,
+        currency: 'EGP',
+        reason: 'مشكلة تقنية في الوصول للمحتوى',
+        details: 'منذ التسجيل لم أستطع الوصول لأي من مواد الدورة وتواصلت مع الدعم أكثر من مرة.',
+        requestedAt: '2025-04-05',
+        status: 'sent_to_bank',
+        bankName: 'بنك القاهرة',
+        accountNumber: '5566778899',
+        accountHolder: 'أحمد محمد',
+        iban: 'EG410004000200000055667788992',
+        sentAt: '2025-04-12',
+    },
+    {
+        id: 'REF-2025-004',
+        orderId: 'ORD-10052',
+        userId: 5,
+        courseId: 105,
+        amount: 1500,
+        currency: 'EGP',
+        reason: 'ازدواجية في الدفع',
+        details: 'تم خصم المبلغ مرتين من حسابي البنكي وأرفق كشف حساب يوضح ذلك.',
+        requestedAt: '2025-04-13',
+        status: 'pending',
+        bankName: 'البنك التجاري الدولي',
+        accountNumber: '1122334455',
+        accountHolder: 'خالد عبدالله',
+        iban: 'EG210006000300000011223344556',
+    },
+    {
+        id: 'REF-2025-005',
+        orderId: 'ORD-10007',
+        userId: 3,
+        courseId: 104,
+        amount: 700,
+        currency: 'EGP',
+        reason: 'إلغاء الدورة من قِبل المنظم',
+        details: 'تم إبلاغي بإلغاء الدورة ولم أستلم أي رد حتى الآن.',
+        requestedAt: '2025-03-28',
+        status: 'rejected',
+        bankName: 'بنك الإسكندرية',
+        accountNumber: '6677889900',
+        accountHolder: 'محمود حسن',
+        iban: '',
+        rejectionReason: 'الدورة لم تُلغَ وتم إعادة جدولتها — تواصل مع الدعم',
+    },
+];
+
 const NAVBAR_H = 70;
 const OVERVIEW_H = 36;
 
@@ -57,6 +143,16 @@ async function exportExcel(filename, reportTitle, headers, rows) { const reportD
 function renderTextToImage(text, { fontSize = 12, bold = false, color = '#111111', width = 200, height = 30, bgColor = null, align = 'right' } = {}) { const scale = 3; const canvas = document.createElement('canvas'); canvas.width = Math.round(width * scale); canvas.height = Math.round(height * scale); const ctx = canvas.getContext('2d'); ctx.scale(scale, scale); if (bgColor) { ctx.fillStyle = bgColor; ctx.fillRect(0, 0, width, height); } ctx.fillStyle = color; ctx.font = `${bold ? 'bold ' : ''}${fontSize}px "Segoe UI", Arial, "Noto Naskh Arabic", sans-serif`; ctx.direction = 'rtl'; ctx.textAlign = align === 'right' ? 'right' : align === 'left' ? 'left' : 'center'; ctx.textBaseline = 'middle'; const padding = 4; let x; if (align === 'right') x = width - padding; else if (align === 'left') x = padding; else x = width / 2; ctx.fillText(String(text ?? ''), x, height / 2); return canvas.toDataURL('image/png'); }
 async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') { const logoDataUrl = await getLogoBase64(); const reportDate = new Date().toLocaleDateString('ar-EG'); const jsPDFModule = await import('jspdf'); const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF; const autoTableModule = await import('jspdf-autotable'); const autoTable = autoTableModule.default; const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' }); const pageW = doc.internal.pageSize.getWidth(); const pageH = doc.internal.pageSize.getHeight(); const BLUE = [8, 101, 168]; const ORANGE = [245, 124, 0]; const drawHeader = () => { doc.setFillColor(...BLUE); doc.rect(0, 0, pageW, 34, 'F'); doc.setFillColor(...ORANGE); doc.rect(0, 34, pageW, 2.5, 'F'); if (logoDataUrl) { doc.setFillColor(255, 255, 255); doc.roundedRect(5, 4, 36, 26, 3, 3, 'F'); try { doc.addImage(logoDataUrl, 'PNG', 6, 5, 34, 24); } catch (_) { } } const titleImg = renderTextToImage(reportTitle, { fontSize: 17, bold: true, color: '#FFFFFF', width: 520, height: 44, align: 'center' }); doc.addImage(titleImg, 'PNG', pageW / 2 - 85, 3, 170, 17); if (subtitle) { const subImg = renderTextToImage(subtitle, { fontSize: 9, color: '#CCE4FF', width: 400, height: 28, align: 'center' }); doc.addImage(subImg, 'PNG', pageW / 2 - 55, 21, 110, 9); } const dateImg = renderTextToImage(reportDate, { fontSize: 8, color: '#BBDAFF', width: 160, height: 22, align: 'right' }); doc.addImage(dateImg, 'PNG', pageW - 58, 25, 52, 7); }; drawHeader(); autoTable(doc, { startY: 40, head: [headers], body: rows.map(r => r.map(c => String(c ?? ''))), theme: 'grid', styles: { font: 'helvetica', fontSize: 0.01, textColor: [255, 255, 255, 0], cellPadding: { top: 2, bottom: 2, left: 2, right: 2 }, lineColor: [218, 218, 218], lineWidth: 0.3, minCellHeight: 10, valign: 'middle' }, headStyles: { fillColor: BLUE, textColor: [255, 255, 255, 0], minCellHeight: 12, lineColor: ORANGE, lineWidth: { bottom: 1.2, top: 0.3, left: 0.3, right: 0.3 } }, alternateRowStyles: { fillColor: [240, 246, 251] }, columnStyles: { 0: { cellWidth: 14 } }, margin: { top: 40, left: 8, right: 8, bottom: 16 }, didDrawCell: (data) => { const text = String(data.cell.raw ?? ''); if (!text || text.trim() === '') return; const { x, y, width: w, height: h } = data.cell; const isHeader = data.section === 'head'; const isFirstCol = data.column.index === 0; const align = isFirstCol ? 'center' : 'right'; const img = renderTextToImage(text, { fontSize: isHeader ? 10 : 9, bold: isHeader, color: isHeader ? '#FFFFFF' : '#1A1A1A', width: Math.max(Math.round(w * 3.5), 40), height: Math.max(Math.round(h * 3.5), 18), align }); try { doc.addImage(img, 'PNG', x + 0.5, y + 0.3, w - 1, h - 0.6); } catch (_) { } }, didDrawPage: (data) => { if (data.pageNumber > 1) drawHeader(); const pCount = doc.internal.getNumberOfPages(); doc.setFillColor(245, 247, 250); doc.rect(0, pageH - 12, pageW, 12, 'F'); doc.setDrawColor(...ORANGE); doc.setLineWidth(0.5); doc.line(8, pageH - 12, pageW - 8, pageH - 12); const mkFI = (t, w, a) => renderTextToImage(t, { fontSize: 7.5, color: '#666666', width: w, height: 18, align: a }); doc.addImage(mkFI('ICEMT — Al-Muqawiloon Al-Arab', 220, 'left'), 'PNG', 8, pageH - 10, 58, 6); doc.addImage(mkFI(`Page ${data.pageNumber} of ${pCount}`, 110, 'center'), 'PNG', pageW / 2 - 18, pageH - 10, 36, 6); doc.addImage(mkFI(reportDate, 140, 'right'), 'PNG', pageW - 52, pageH - 10, 44, 6); } }); doc.save(filename); }
 async function exportWord(filename, reportTitle, subtitle, headers, rows) { const logoDataUrl = await getLogoBase64(); const reportDate = new Date().toLocaleDateString('ar-EG'); let logoBase64Raw = null, LOGO_W_EMU = 900000, LOGO_H_EMU = 600000; if (logoDataUrl) { logoBase64Raw = logoDataUrl.split(',')[1]; await new Promise(res => { const img = new Image(); img.onload = () => { const H = 600000; LOGO_H_EMU = H; LOGO_W_EMU = img.naturalHeight > 0 ? Math.round((img.naturalWidth / img.naturalHeight) * H) : 900000; res(); }; img.onerror = res; img.src = logoDataUrl; }); } try { const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign, PageOrientation, ImageRun } = await import('docx'); const CB = { top: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, left: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, right: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' } }; const totalDxa = 13440; const cw = Math.floor(totalDxa / headers.length); const colWidths = headers.map(() => cw); const mkTC = (text, isHdr, width, center = false) => new TableCell({ width: { size: width, type: WidthType.DXA }, shading: { fill: isHdr ? '0865a8' : 'FFFFFF', type: ShadingType.CLEAR }, borders: CB, margins: { top: 80, bottom: 80, left: 120, right: 120 }, verticalAlign: VerticalAlign.CENTER, children: [new Paragraph({ bidirectional: true, alignment: center ? AlignmentType.CENTER : AlignmentType.RIGHT, children: [new TextRun({ text: String(text ?? ''), bold: isHdr, color: isHdr ? 'FFFFFF' : '1A1A1A', size: isHdr ? 22 : 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA', eastAsiaValue: 'ar-SA' } })] })] }); const logoRuns = []; if (logoBase64Raw && ImageRun) { try { logoRuns.push(new ImageRun({ data: logoBase64Raw, type: 'png', transformation: { width: 90, height: 60 } })); logoRuns.push(new TextRun({ text: '  ', size: 28 })); } catch (_) { } } const arabicPara = (text, opts = {}) => new Paragraph({ bidirectional: true, alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT, spacing: opts.spacing, border: opts.border, shading: opts.shading, children: [new TextRun({ text, bold: opts.bold || false, color: opts.color || '111111', size: opts.size || 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' }, ...(opts.italic ? { italics: true } : {}) })] }); const doc = new Document({ sections: [{ properties: { page: { size: { width: 12240, height: 15840, orientation: PageOrientation.LANDSCAPE }, margin: { top: 720, right: 720, bottom: 900, left: 720 } } }, children: [new Paragraph({ bidirectional: true, alignment: AlignmentType.CENTER, shading: { fill: '0865a8', type: ShadingType.CLEAR }, border: { bottom: { style: BorderStyle.THICK, size: 18, color: 'f57c00', space: 6 } }, spacing: { before: 0, after: 80 }, children: [...logoRuns, new TextRun({ text: reportTitle, color: 'FFFFFF', bold: true, size: 28, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' } }), subtitle ? new TextRun({ text: `  —  ${subtitle}`, color: 'D0E8FF', size: 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' } }) : new TextRun({ text: '' })] }), arabicPara(`تاريخ التقرير: ${reportDate}   |   إجمالي السجلات: ${rows.length}`, { size: 18, color: '555555', italic: true, spacing: { before: 100, after: 100 } }), new Table({ width: { size: totalDxa, type: WidthType.DXA }, columnWidths: colWidths, rows: [new TableRow({ tableHeader: true, children: headers.map((h, i) => mkTC(h, true, colWidths[i], i === 0)) }), ...rows.map((row, ri) => new TableRow({ children: row.map((cell, ci) => new TableCell({ width: { size: colWidths[ci], type: WidthType.DXA }, shading: { fill: ri % 2 === 0 ? 'FFFFFF' : 'F0F6FB', type: ShadingType.CLEAR }, borders: CB, margins: { top: 70, bottom: 70, left: 110, right: 110 }, verticalAlign: VerticalAlign.CENTER, children: [new Paragraph({ bidirectional: true, alignment: ci === 0 ? AlignmentType.CENTER : AlignmentType.RIGHT, children: [new TextRun({ text: String(cell ?? ''), size: 19, color: '222222', rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' } })] })] })) }))] })] }] }); const buffer = await Packer.toBuffer(doc); triggerDownload(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), filename); return; } catch (docxError) { console.warn('docx package not available:', docxError); } }
+
+// ════════════════════════════════════════════════════════════════════════════
+// REFUND HELPERS
+// ════════════════════════════════════════════════════════════════════════════
+const REFUND_STATUS_META = {
+    pending: { label: 'قيد المراجعة', icon: '⏳', color: '#b45309', bg: '#fff8f0', border: 'rgba(245,124,0,0.35)' },
+    approved: { label: 'موافق عليه', icon: '✅', color: '#15803d', bg: '#f0fdf4', border: '#86efac' },
+    sent_to_bank: { label: 'أُرسل للبنك', icon: '🏦', color: '#0865a8', bg: '#e8f1f9', border: 'rgba(8,101,168,0.35)' },
+    rejected: { label: 'مرفوض', icon: '❌', color: '#dc2626', bg: '#fef2f2', border: 'rgba(220,38,38,0.3)' },
+};
 
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -91,6 +187,15 @@ const AdminDashboard = () => {
     const certFileInputRef = useRef(null);
     const [certSearch, setCertSearch] = useState('');
 
+    // ── REFUND STATE ─────────────────────────────────────────────────────────
+    const [refunds, setRefunds] = useState(MOCK_REFUNDS);
+    const [refundStatusFilter, setRefundStatusFilter] = useState('all');
+    const [refundSearch, setRefundSearch] = useState('');
+    const [refundDetailModal, setRefundDetailModal] = useState(null);   // full refund object
+    const [refundActionModal, setRefundActionModal] = useState(null);   // { refund, action: 'approve'|'reject'|'send_to_bank' }
+    const [refundActionNote, setRefundActionNote] = useState('');
+    const [refundActionSaving, setRefundActionSaving] = useState(false);
+
     const toggleAttendance = async (userId, courseId) => {
         const key = `${userId}_${courseId}`;
         const newVal = !attendance[key];
@@ -113,6 +218,31 @@ const AdminDashboard = () => {
         finally { setCertUploading(p => ({ ...p, [key]: false })); setCertModal(null); }
     };
     const removeCert = (userId, courseId) => { const key = `${userId}_${courseId}`; setCertificates(p => { const n = { ...p }; delete n[key]; return n; }); };
+
+    // ── REFUND ACTIONS ───────────────────────────────────────────────────────
+    const commitRefundAction = async () => {
+        if (!refundActionModal) return;
+        setRefundActionSaving(true);
+        const { refund, action } = refundActionModal;
+        await new Promise(r => setTimeout(r, 700)); // simulate API
+        const now = new Date().toISOString().split('T')[0];
+        setRefunds(prev => prev.map(r => {
+            if (r.id !== refund.id) return r;
+            if (action === 'approve') return { ...r, status: 'approved', approvedAt: now, adminNote: refundActionNote };
+            if (action === 'reject') return { ...r, status: 'rejected', rejectedAt: now, rejectionReason: refundActionNote };
+            if (action === 'send_to_bank') return { ...r, status: 'sent_to_bank', sentAt: now, adminNote: refundActionNote };
+            return r;
+        }));
+        setRefundActionSaving(false);
+        setRefundActionModal(null);
+        setRefundActionNote('');
+        if (refundDetailModal?.id === refund.id) {
+            setRefundDetailModal(prev => ({
+                ...prev,
+                status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'sent_to_bank',
+            }));
+        }
+    };
 
     useEffect(() => {
         if (!isLoaded || !user) return;
@@ -165,6 +295,28 @@ const AdminDashboard = () => {
 
     const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => ({ user: u, course: c, key: `${u.id}_${c.id}` }))).filter(r => `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.course.title}`.toLowerCase().includes(certSearch.toLowerCase()));
 
+    // ── REFUND DERIVED DATA ──────────────────────────────────────────────────
+    const filteredRefunds = refunds.filter(r => {
+        const user = MOCK_USERS.find(u => u.id === r.userId);
+        const course = MOCK_COURSES.find(c => c.id === r.courseId);
+        const matchStatus = refundStatusFilter === 'all' || r.status === refundStatusFilter;
+        const matchSearch = refundSearch === '' || [
+            r.id, r.orderId, r.reason,
+            user ? `${user.firstName} ${user.lastName}` : '',
+            course?.title || '',
+            String(r.amount),
+        ].join(' ').toLowerCase().includes(refundSearch.toLowerCase());
+        return matchStatus && matchSearch;
+    });
+    const refundStats = {
+        total: refunds.length,
+        pending: refunds.filter(r => r.status === 'pending').length,
+        approved: refunds.filter(r => r.status === 'approved').length,
+        sent_to_bank: refunds.filter(r => r.status === 'sent_to_bank').length,
+        rejected: refunds.filter(r => r.status === 'rejected').length,
+        totalAmount: refunds.filter(r => r.status !== 'rejected').reduce((s, r) => s + r.amount, 0),
+    };
+
     const totalEnrollments = usersData.reduce((s, u) => s + u.enrolledCourses.length, 0);
     const totalCerts = Object.keys(certificates).length;
 
@@ -195,6 +347,7 @@ const AdminDashboard = () => {
         { id: 'courses', label: 'الدورات', icon: '📚', color: 'blue' },
         { id: 'attendance', label: 'الحضور', icon: '✅', color: 'green' },
         { id: 'certificates', label: 'الشهادات', icon: '📜', color: 'purple' },
+        { id: 'refunds', label: 'المستردات', icon: '💳', color: 'red' },
     ];
 
     const STATS = [
@@ -203,830 +356,301 @@ const AdminDashboard = () => {
         { label: 'التسجيلات', value: totalEnrollments, icon: '🔗', accent: '#1a1a2e', bg: 'rgba(26,26,46,0.06)', border: 'rgba(26,26,46,0.15)' },
         { label: 'حضروا', value: attCount, icon: '🎓', accent: '#16a34a', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.2)' },
         { label: 'الشهادات', value: totalCerts, icon: '📜', accent: '#7c3aed', bg: 'rgba(124,58,237,0.08)', border: 'rgba(124,58,237,0.2)' },
+        { label: 'المستردات', value: refundStats.pending, icon: '💳', accent: '#dc2626', bg: 'rgba(220,38,38,0.07)', border: 'rgba(220,38,38,0.2)' },
     ];
 
-    // Sidebar width: 200px desktop, 52px collapsed, 0 mobile
     return (
         <>
             <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap');
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-        /* ─── ANIMATIONS ─────────────────────────── */
         @keyframes d-spin   { to { transform: rotate(360deg); } }
         @keyframes d-fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
         @keyframes d-slideIn{ from { opacity:0; transform:translateX(8px); } to { opacity:1; transform:translateX(0); } }
+        @keyframes d-pulse  { 0%,100%{opacity:1} 50%{opacity:.5} }
 
-        /* ─── CSS VARS ───────────────────────────── */
         :root {
-          --blue:    #0865a8;
-          --blue-lt: #e8f1f9;
-          --blue-md: rgba(8,101,168,0.12);
-          --orange:  #f57c00;
-          --orng-lt: #fff3e0;
-          --orng-md: rgba(245,124,0,0.12);
-          --black:   #111827;
-          --gray1:   #374151;
-          --gray2:   #6b7280;
-          --gray3:   #9ca3af;
-          --gray4:   #d1d5db;
-          --gray5:   #e5e7eb;
-          --white:   #ffffff;
-          --bg:      linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
-          --bg-flat: #f5f7fa;
-          --card-bg: #ffffff;
-          --card-border: #e5e7eb;
-          --sidebar-w: 200px;
-          --sidebar-col: 52px;
-          --nav-h: ${NAVBAR_H + OVERVIEW_H}px;
-          --font: "Droid Arabic Kufi", serif;
-          --radius: 12px;
-          --shadow: 0 2px 16px rgba(8,101,168,0.08), 0 1px 4px rgba(0,0,0,0.05);
-          --shadow-md: 0 4px 24px rgba(8,101,168,0.12), 0 2px 8px rgba(0,0,0,0.06);
+          --blue:    #0865a8; --blue-lt: #e8f1f9; --blue-md: rgba(8,101,168,0.12);
+          --orange:  #f57c00; --orng-lt: #fff3e0; --orng-md: rgba(245,124,0,0.12);
+          --red:     #dc2626; --red-lt:  #fef2f2; --red-md:  rgba(220,38,38,0.1);
+          --black:   #111827; --gray1:#374151; --gray2:#6b7280; --gray3:#9ca3af; --gray4:#d1d5db; --gray5:#e5e7eb;
+          --white:   #ffffff; --bg: linear-gradient(135deg,#f5f7fa 0%,#e8eef5 100%); --bg-flat:#f5f7fa;
+          --card-bg:#ffffff; --card-border:#e5e7eb;
+          --sidebar-w:200px; --sidebar-col:52px;
+          --nav-h:${NAVBAR_H + OVERVIEW_H}px;
+          --font:"Droid Arabic Kufi",serif; --radius:12px;
+          --shadow:0 2px 16px rgba(8,101,168,0.08),0 1px 4px rgba(0,0,0,0.05);
+          --shadow-md:0 4px 24px rgba(8,101,168,0.12),0 2px 8px rgba(0,0,0,0.06);
         }
 
-        /* ─── ROOT ───────────────────────────────── */
-        .d-root {
-          font-family: var(--font);
-          direction: rtl;
-          min-height: 100vh;
-          background: var(--bg);
-          padding-top: var(--nav-h);
-          color: var(--black);
-          display: flex;
-        }
+        .d-root { font-family:var(--font); direction:rtl; min-height:100vh; background:var(--bg); padding-top:var(--nav-h); color:var(--black); display:flex; }
 
-        /* ─── BREADCRUMB ─────────────────────────── */
-        ._ovr {
-          position: fixed;
-          top: ${NAVBAR_H}px;
-          left: 0; z-index: 1050;
-          width: 100%;
-          background: #ffffff;
-          border-bottom: 2px solid var(--orange);
-          padding: 7px 20px;
-          text-align: center;
-          font-family: var(--font);
-          font-size: clamp(0.7rem, 1.3vw, 0.78rem);
-          color: var(--gray1);
-          box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-        }
-        ._ovr a { margin-left: 10px; color: var(--blue); text-decoration: none; font-weight: 700; }
-        ._ovr a:hover { text-decoration: underline; }
-        ._ovr .sep { color: var(--gray3); margin: 0 4px; }
-        ._ovr .cur { margin-right: 10px; color: var(--gray2); }
+        ._ovr { position:fixed; top:${NAVBAR_H}px; left:0; z-index:1050; width:100%; background:#fff; border-bottom:2px solid var(--orange); padding:7px 20px; text-align:center; font-family:var(--font); font-size:clamp(0.7rem,1.3vw,0.78rem); color:var(--gray1); box-shadow:0 1px 6px rgba(0,0,0,0.06); }
+        ._ovr a { margin-left:10px; color:var(--blue); text-decoration:none; font-weight:700; }
+        ._ovr a:hover { text-decoration:underline; }
+        ._ovr .sep { color:var(--gray3); margin:0 4px; }
+        ._ovr .cur { margin-right:10px; color:var(--gray2); }
 
-        /* ═══════════════════════════════════════════
-           SIDEBAR — fixed, right side, narrow
-        ═══════════════════════════════════════════ */
-        .d-sidebar {
-          position: fixed;
-          top: var(--nav-h);
-          right: 0;
-          width: var(--sidebar-w);
-          height: calc(100vh - var(--nav-h));
-          background: var(--white);
-          border-left: 1.5px solid var(--card-border);
-          box-shadow: -2px 0 12px rgba(8,101,168,0.06);
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          z-index: 200;
-          transition: width 0.25s ease;
-        }
+        .d-sidebar { position:fixed; top:var(--nav-h); right:0; width:var(--sidebar-w); height:calc(100vh - var(--nav-h)); background:var(--white); border-left:1.5px solid var(--card-border); box-shadow:-2px 0 12px rgba(8,101,168,0.06); display:flex; flex-direction:column; overflow:hidden; z-index:200; transition:width .25s ease; }
+        .d-sidebar-brand { padding:16px 12px; border-bottom:1.5px solid var(--card-border); display:flex; align-items:center; gap:10px; background:var(--blue); flex-shrink:0; }
+        .d-sb-logo { width:34px; height:34px; object-fit:contain; filter:brightness(0) invert(1); flex-shrink:0; }
+        .d-sb-title { min-width:0; overflow:hidden; }
+        .d-sb-name { font-size:.82rem; font-weight:900; color:#fff; white-space:nowrap; letter-spacing:.3px; }
+        .d-sb-sub { font-size:.6rem; color:rgba(255,255,255,.55); margin-top:2px; white-space:nowrap; }
+        .d-sidebar-user { padding:12px; border-bottom:1.5px solid var(--card-border); display:flex; align-items:center; gap:10px; background:var(--blue-lt); flex-shrink:0; }
+        .d-su-av { width:34px; height:34px; border-radius:9px; background:var(--blue); display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:900; color:#fff; flex-shrink:0; border:2px solid rgba(8,101,168,.2); }
+        .d-su-info { flex:1; min-width:0; overflow:hidden; }
+        .d-su-name { font-size:.74rem; font-weight:700; color:var(--black); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .d-su-role { display:inline-flex; align-items:center; gap:3px; margin-top:2px; padding:1px 7px; background:var(--orng-lt); border:1px solid rgba(245,124,0,.3); border-radius:20px; font-size:.58rem; color:var(--orange); font-weight:700; }
+        .d-sidebar-nav { flex:1; padding:10px 8px; overflow-y:auto; overflow-x:hidden; }
+        .d-sidebar-nav::-webkit-scrollbar { width:3px; }
+        .d-sidebar-nav::-webkit-scrollbar-thumb { background:var(--gray4); border-radius:2px; }
+        .d-nav-section { margin-bottom:6px; }
+        .d-nav-label { font-size:.58rem; font-weight:700; color:var(--gray3); letter-spacing:1.2px; text-transform:uppercase; padding:0 8px; margin-bottom:4px; }
+        .d-nav-btn { width:100%; display:flex; align-items:center; gap:8px; padding:9px 10px; border-radius:9px; border:1.5px solid transparent; background:transparent; color:var(--gray2); font-family:var(--font); font-size:.78rem; font-weight:700; cursor:pointer; transition:all .16s; text-align:right; margin-bottom:2px; white-space:nowrap; overflow:hidden; position:relative; }
+        .d-nav-btn:hover { background:var(--blue-lt); color:var(--blue); border-color:rgba(8,101,168,.15); }
+        .d-nav-btn.active { background:var(--blue-md); color:var(--blue); border-color:rgba(8,101,168,.3); }
+        .d-nav-btn.active.gr { background:rgba(22,163,74,.1); color:#16a34a; border-color:rgba(22,163,74,.3); }
+        .d-nav-btn.active.pu { background:rgba(124,58,237,.1); color:#7c3aed; border-color:rgba(124,58,237,.3); }
+        .d-nav-btn.active.rd { background:rgba(220,38,38,.08); color:#dc2626; border-color:rgba(220,38,38,.3); }
+        .d-nav-btn.active::after { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background:var(--blue); border-radius:2px 0 0 2px; }
+        .d-nav-btn.active.gr::after { background:#16a34a; }
+        .d-nav-btn.active.pu::after { background:#7c3aed; }
+        .d-nav-btn.active.rd::after { background:#dc2626; }
+        .d-nav-icon { font-size:.9rem; flex-shrink:0; }
+        .d-nav-label-text { flex:1; text-align:right; overflow:hidden; text-overflow:ellipsis; }
+        .d-nav-badge { margin-right:auto; padding:1px 6px; border-radius:9px; font-size:.58rem; font-weight:900; background:var(--orng-lt); color:var(--orange); border:1px solid rgba(245,124,0,.3); flex-shrink:0; }
+        .d-nav-badge.rd { background:var(--red-lt); color:var(--red); border-color:rgba(220,38,38,.3); animation:d-pulse 2s ease infinite; }
+        .d-sidebar-footer { padding:10px 12px; border-top:1.5px solid var(--card-border); font-size:.6rem; color:var(--gray3); text-align:center; background:var(--bg-flat); flex-shrink:0; }
 
-        /* Brand block */
-        .d-sidebar-brand {
-          padding: 16px 12px;
-          border-bottom: 1.5px solid var(--card-border);
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          background: var(--blue);
-          flex-shrink: 0;
-        }
-        .d-sb-logo {
-          width: 34px; height: 34px;
-          object-fit: contain;
-          filter: brightness(0) invert(1);
-          flex-shrink: 0;
-        }
-        .d-sb-title { min-width: 0; overflow: hidden; }
-        .d-sb-name {
-          font-size: 0.82rem; font-weight: 900;
-          color: #fff; white-space: nowrap;
-          letter-spacing: 0.3px;
-        }
-        .d-sb-sub { font-size: 0.6rem; color: rgba(255,255,255,0.55); margin-top: 2px; white-space: nowrap; }
+        .d-main { margin-right:var(--sidebar-w); flex:1; min-width:0; padding:clamp(14px,2.5vw,28px) clamp(12px,2.5vw,28px) clamp(32px,5vw,56px); animation:d-fadeUp .28s ease; }
+        .d-page-hdr { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:clamp(16px,2.5vw,28px); padding-bottom:clamp(14px,2vw,20px); border-bottom:1.5px solid var(--gray5); }
+        .d-page-title { font-size:clamp(1rem,2.5vw,1.4rem); font-weight:900; color:var(--black); line-height:1.2; }
+        .d-page-sub { font-size:clamp(.66rem,1.2vw,.74rem); color:var(--gray2); margin-top:4px; }
+        .d-page-actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+        .d-mock { display:flex; align-items:center; gap:8px; background:#fff8f0; border:1px solid rgba(245,124,0,.35); border-radius:9px; padding:8px 14px; margin-bottom:clamp(12px,2vw,20px); font-size:clamp(.68rem,1.3vw,.76rem); color:#b45309; }
+        .d-mock code { background:var(--orng-lt); color:var(--orange); padding:1px 5px; border-radius:4px; font-family:'Courier New',monospace; font-size:.86em; }
 
-        /* User card */
-        .d-sidebar-user {
-          padding: 12px;
-          border-bottom: 1.5px solid var(--card-border);
-          display: flex; align-items: center; gap: 10px;
-          background: var(--blue-lt);
-          flex-shrink: 0;
-        }
-        .d-su-av {
-          width: 34px; height: 34px;
-          border-radius: 9px;
-          background: var(--blue);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 0.7rem; font-weight: 900; color: #fff;
-          flex-shrink: 0;
-          border: 2px solid rgba(8,101,168,0.2);
-        }
-        .d-su-info { flex: 1; min-width: 0; overflow: hidden; }
-        .d-su-name {
-          font-size: 0.74rem; font-weight: 700;
-          color: var(--black); overflow: hidden;
-          text-overflow: ellipsis; white-space: nowrap;
-        }
-        .d-su-role {
-          display: inline-flex; align-items: center; gap: 3px;
-          margin-top: 2px; padding: 1px 7px;
-          background: var(--orng-lt);
-          border: 1px solid rgba(245,124,0,0.3);
-          border-radius: 20px;
-          font-size: 0.58rem; color: var(--orange); font-weight: 700;
-        }
+        .d-stats { display:grid; grid-template-columns:repeat(auto-fill,minmax(clamp(110px,14vw,150px),1fr)); gap:clamp(8px,1.5vw,14px); margin-bottom:clamp(16px,2.5vw,26px); }
+        .d-sc { background:var(--white); border-radius:var(--radius); padding:clamp(14px,2vw,18px) clamp(12px,2vw,16px); border:1.5px solid var(--card-border); box-shadow:var(--shadow); position:relative; overflow:hidden; transition:transform .2s,box-shadow .2s; cursor:default; }
+        .d-sc:hover { transform:translateY(-2px); box-shadow:var(--shadow-md); }
+        .d-sc::after { content:attr(data-icon); position:absolute; left:-4px; bottom:-6px; font-size:clamp(1.8rem,4vw,2.5rem); opacity:.06; pointer-events:none; transform:rotate(-10deg); }
+        .d-sc-val { font-size:clamp(1.5rem,3.5vw,2rem); font-weight:900; line-height:1; font-family:'Courier New',monospace; }
+        .d-sc-lbl { font-size:clamp(.62rem,1.1vw,.7rem); margin-top:5px; color:var(--gray2); font-weight:700; }
+        .d-sc-bar { height:3px; border-radius:2px; margin-top:10px; width:40%; opacity:.6; }
 
-        /* Nav */
-        .d-sidebar-nav {
-          flex: 1; padding: 10px 8px;
-          overflow-y: auto; overflow-x: hidden;
-        }
-        .d-sidebar-nav::-webkit-scrollbar { width: 3px; }
-        .d-sidebar-nav::-webkit-scrollbar-track { background: transparent; }
-        .d-sidebar-nav::-webkit-scrollbar-thumb { background: var(--gray4); border-radius: 2px; }
+        .d-toolbar { display:flex; align-items:center; gap:clamp(6px,1.2vw,10px); flex-wrap:wrap; margin-bottom:clamp(12px,2vw,18px); background:var(--white); border:1.5px solid var(--card-border); border-radius:var(--radius); padding:clamp(9px,1.5vw,13px) clamp(12px,2vw,16px); box-shadow:var(--shadow); }
+        .d-search { flex:1; min-width:clamp(140px,18vw,200px); position:relative; }
+        .d-search input { width:100%; padding:clamp(7px,1.2vw,10px) 36px clamp(7px,1.2vw,10px) clamp(10px,1.5vw,14px); border-radius:9px; border:1.5px solid var(--gray4); background:var(--bg-flat); color:var(--black); font-family:var(--font); font-size:clamp(.72rem,1.3vw,.8rem); outline:none; direction:rtl; transition:border .18s,background .18s; }
+        .d-search input::placeholder { color:var(--gray3); }
+        .d-search input:focus { border-color:var(--blue); background:#fff; }
+        .d-search::after { content:'🔍'; position:absolute; right:11px; top:50%; transform:translateY(-50%); font-size:.7rem; pointer-events:none; opacity:.5; }
+        .d-expw { position:relative; }
+        .d-expbtn { display:flex; align-items:center; gap:6px; padding:clamp(7px,1.2vw,10px) clamp(12px,2vw,18px); background:var(--orange); color:#fff; border:none; border-radius:9px; font-family:var(--font); font-size:clamp(.72rem,1.3vw,.8rem); font-weight:700; cursor:pointer; white-space:nowrap; transition:all .18s; box-shadow:0 3px 12px rgba(245,124,0,.3); }
+        .d-expbtn:hover { background:#e65100; transform:translateY(-1px); }
+        .d-expbtn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+        .d-expmenu { position:absolute; top:calc(100% + 6px); left:0; background:var(--white); border:1.5px solid var(--card-border); border-radius:11px; box-shadow:0 8px 32px rgba(0,0,0,.12); overflow:hidden; z-index:400; min-width:185px; animation:d-slideIn .15s ease; }
+        .d-expitem { display:flex; align-items:center; gap:9px; width:100%; padding:clamp(9px,1.8vw,12px) clamp(12px,2vw,16px); background:none; border:none; border-bottom:1px solid var(--gray5); font-family:var(--font); font-size:clamp(.72rem,1.3vw,.8rem); font-weight:700; color:var(--gray1); direction:rtl; cursor:pointer; transition:background .12s,color .12s; }
+        .d-expitem:last-child { border-bottom:none; }
+        .d-expitem:hover { background:var(--blue-lt); color:var(--blue); }
+        .d-filter { display:flex; align-items:center; gap:clamp(6px,1.2vw,12px); flex-wrap:wrap; background:var(--white); border:1.5px solid var(--card-border); border-radius:var(--radius); padding:clamp(9px,1.5vw,12px) clamp(12px,2vw,16px); margin-bottom:clamp(12px,2vw,18px); box-shadow:var(--shadow); }
+        .d-flbl { font-size:clamp(.68rem,1.2vw,.76rem); font-weight:700; color:var(--gray2); white-space:nowrap; }
+        .d-fsm  { font-size:clamp(.64rem,1.1vw,.7rem); color:var(--gray3); }
+        .d-fdate { padding:clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius:8px; border:1.5px solid var(--gray4); background:var(--bg-flat); color:var(--black); font-family:var(--font); font-size:clamp(.7rem,1.2vw,.78rem); outline:none; direction:ltr; transition:border .18s; }
+        .d-fdate:focus { border-color:var(--blue); background:#fff; }
+        .d-fsel { padding:clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius:8px; border:1.5px solid var(--gray4); background:var(--bg-flat); color:var(--black); font-family:var(--font); font-size:clamp(.7rem,1.2vw,.78rem); outline:none; cursor:pointer; }
+        .d-fbadge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; background:var(--orng-lt); border:1px solid rgba(245,124,0,.3); color:var(--orange); font-size:clamp(.62rem,1.1vw,.7rem); font-weight:700; }
+        .d-fclear { padding:clamp(4px,.9vw,7px) clamp(9px,1.5vw,12px); border-radius:8px; background:var(--bg-flat); border:1.5px solid var(--gray4); font-family:var(--font); font-size:clamp(.64rem,1.1vw,.72rem); font-weight:700; cursor:pointer; color:var(--gray2); transition:all .16s; }
+        .d-fclear:hover { border-color:var(--orange); color:var(--orange); background:var(--orng-lt); }
+        .d-err { background:#fef2f2; border:1.5px solid rgba(220,38,38,.3); color:#dc2626; border-radius:9px; padding:clamp(8px,1.5vw,11px) clamp(10px,2vw,14px); margin-bottom:14px; font-size:clamp(.7rem,1.3vw,.78rem); display:flex; align-items:center; gap:9px; }
+        .d-card { background:var(--white); border-radius:var(--radius); border:1.5px solid var(--card-border); overflow:hidden; box-shadow:var(--shadow); }
+        .d-tscr { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        .d-tbl { width:100%; border-collapse:collapse; min-width:480px; }
+        .d-tbl thead th { background:var(--blue); color:#fff; padding:clamp(10px,1.8vw,14px) clamp(10px,2vw,18px); font-family:var(--font); font-size:clamp(.68rem,1.2vw,.76rem); font-weight:700; text-align:right; white-space:nowrap; border-bottom:3px solid var(--orange); letter-spacing:.3px; }
+        .d-tbl thead th.gr  { background:#16a34a; border-bottom-color:#86efac; }
+        .d-tbl thead th.pu  { background:#7c3aed; border-bottom-color:#c4b5fd; }
+        .d-tbl thead th.rd  { background:#dc2626; border-bottom-color:#fca5a5; }
+        .d-tbl thead th.c   { text-align:center; }
+        .d-tbl tbody tr { border-bottom:1px solid var(--gray5); transition:background .12s; }
+        .d-tbl tbody tr:last-child { border-bottom:none; }
+        .d-tbl tbody tr:hover { background:var(--blue-lt); }
+        .d-tbl tbody tr.xopen { background:var(--blue-lt); }
+        .d-tbl tbody tr:nth-child(even) { background:#fafbfc; }
+        .d-tbl tbody tr:nth-child(even):hover { background:var(--blue-lt); }
+        .d-tbl td { padding:clamp(9px,1.6vw,13px) clamp(10px,2vw,18px); font-family:var(--font); font-size:clamp(.69rem,1.25vw,.78rem); color:var(--gray1); vertical-align:middle; }
+        .d-av { width:clamp(28px,3.5vw,36px); height:clamp(28px,3.5vw,36px); border-radius:9px; background:var(--blue); color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:900; font-size:clamp(.58rem,1vw,.66rem); flex-shrink:0; border:2px solid rgba(8,101,168,.2); }
+        .d-av.or { background:var(--orange); border-color:rgba(245,124,0,.2); }
+        .d-av.sm { width:24px; height:24px; border-radius:7px; font-size:.58rem; }
+        .d-av.rd { background:#dc2626; border-color:rgba(220,38,38,.2); }
+        .d-uc { display:flex; align-items:center; gap:9px; }
+        .d-uname { font-weight:700; color:var(--black); }
+        .d-cb { display:inline-flex; align-items:center; justify-content:center; min-width:24px; height:24px; border-radius:7px; background:var(--blue-lt); border:1.5px solid rgba(8,101,168,.25); color:var(--blue); font-size:clamp(.62rem,1.1vw,.7rem); font-weight:900; padding:0 6px; font-family:'Courier New',monospace; }
+        .d-cb.or { background:var(--orng-lt); border-color:rgba(245,124,0,.3); color:var(--orange); }
+        .d-cb.gr { background:#f0fdf4; border-color:rgba(22,163,74,.3); color:#16a34a; }
+        .d-cb.rd { background:var(--red-lt); border-color:rgba(220,38,38,.3); color:var(--red); }
+        .d-pill { display:inline-block; padding:4px 12px; border-radius:7px; font-size:clamp(.62rem,1.1vw,.7rem); font-weight:700; cursor:pointer; border:1.5px solid rgba(8,101,168,.3); color:var(--blue); background:var(--blue-lt); user-select:none; transition:all .14s; font-family:var(--font); }
+        .d-pill:hover,.d-pill.op { background:var(--blue-md); border-color:rgba(8,101,168,.6); }
+        .d-pill.or { border-color:rgba(245,124,0,.3); color:var(--orange); background:var(--orng-lt); }
+        .d-pill.or:hover,.d-pill.or.op { background:var(--orng-md); border-color:rgba(245,124,0,.6); }
+        .d-cat { display:inline-block; padding:2px 9px; border-radius:6px; font-size:clamp(.6rem,1.05vw,.68rem); font-weight:700; background:var(--orng-lt); color:var(--orange); border:1px solid rgba(245,124,0,.25); }
+        .d-xrow td { padding:0!important; border:none; }
+        .d-xin { padding:clamp(12px,2vw,16px) clamp(14px,2.5vw,22px); display:flex; flex-wrap:wrap; gap:clamp(7px,1.3vw,11px); background:var(--blue-lt); border-top:2px solid rgba(8,101,168,.15); }
+        .d-mc { background:var(--white); border-radius:10px; padding:clamp(9px,1.8vw,13px) clamp(10px,2vw,14px); border:1.5px solid var(--gray5); min-width:clamp(150px,20vw,200px); flex:1 1 150px; max-width:260px; transition:border-color .14s; box-shadow:var(--shadow); }
+        .d-mc:hover { border-color:rgba(8,101,168,.3); }
+        .d-mt { font-size:clamp(.7rem,1.25vw,.78rem); font-weight:700; color:var(--blue); margin-bottom:2px; }
+        .d-mt.or { color:var(--orange); }
+        .d-ms { font-size:clamp(.63rem,1.1vw,.7rem); color:var(--gray2); }
+        .d-md { font-size:clamp(.6rem,1vw,.66rem); color:var(--gray3); margin-top:4px; }
+        .d-empty { text-align:center; padding:clamp(40px,8vw,70px) 20px; }
+        .d-emi   { font-size:clamp(1.8rem,4vw,2.5rem); margin-bottom:12px; opacity:.35; }
+        .d-empty p { color:var(--gray3); font-size:clamp(.74rem,1.4vw,.82rem); }
+        .d-ld  { text-align:center; padding:clamp(50px,10vw,80px) 20px; }
+        .d-sp  { width:clamp(32px,4.5vw,42px); height:clamp(32px,4.5vw,42px); border:3px solid var(--gray5); border-top-color:var(--blue); border-radius:50%; animation:d-spin .7s linear infinite; margin:0 auto clamp(12px,2vw,18px); }
+        .d-ld p { color:var(--gray3); font-size:clamp(.72rem,1.3vw,.8rem); }
+        .d-ovl { position:fixed; inset:0; background:rgba(245,247,250,.85); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px); }
+        .d-ovlb { background:var(--white); border-radius:18px; padding:clamp(28px,5vw,44px) clamp(44px,7vw,64px); text-align:center; box-shadow:0 16px 48px rgba(8,101,168,.18); border:2px solid rgba(8,101,168,.15); }
+        .d-ovlb p { font-size:clamp(.78rem,1.5vw,.86rem); margin-top:14px; color:var(--gray2); font-family:var(--font); }
+        .d-chk { width:22px; height:22px; border-radius:6px; border:2px solid var(--gray4); background:var(--bg-flat); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; transition:all .16s; flex-shrink:0; font-size:.75rem; color:transparent; }
+        .d-chk:hover { border-color:#16a34a; background:#f0fdf4; }
+        .d-chk.on  { background:#f0fdf4; border-color:#16a34a; color:#16a34a; }
+        .d-chk.spin { border-color:#16a34a; border-top-color:transparent; border-radius:50%; animation:d-spin .6s linear infinite; }
+        .d-att-badge { display:inline-flex; align-items:center; gap:3px; padding:3px 9px; border-radius:7px; font-size:clamp(.62rem,1.1vw,.7rem); font-weight:700; }
+        .d-att-badge.on  { background:#f0fdf4; color:#16a34a; border:1px solid #86efac; }
+        .d-att-badge.off { background:var(--bg-flat); color:var(--gray3); border:1px solid var(--gray4); }
+        .d-att-sum { display:flex; align-items:center; gap:clamp(10px,2vw,20px); flex-wrap:wrap; background:#f0fdf4; border:1.5px solid #86efac; border-radius:var(--radius); padding:clamp(9px,1.8vw,13px) clamp(12px,2vw,18px); margin-bottom:clamp(12px,2vw,18px); box-shadow:var(--shadow); }
+        .d-att-sum span { font-size:clamp(.7rem,1.3vw,.78rem); font-weight:700; color:#15803d; }
+        .d-prog-wrap { flex:1; min-width:100px; height:6px; background:#bbf7d0; border-radius:3px; overflow:hidden; }
+        .d-prog-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#16a34a,#22c55e); transition:width .5s ease; }
+        .d-cert-grid { display:grid; gap:clamp(9px,1.8vw,13px); padding:clamp(12px,2vw,18px); grid-template-columns:repeat(auto-fill,minmax(clamp(260px,30vw,320px),1fr)); }
+        .d-cert-card { background:var(--white); border-radius:12px; padding:clamp(11px,2vw,15px) clamp(12px,2vw,16px); border:1.5px solid var(--card-border); display:flex; align-items:center; gap:clamp(9px,1.5vw,12px); transition:border-color .16s,box-shadow .16s; box-shadow:var(--shadow); }
+        .d-cert-card:hover { border-color:rgba(124,58,237,.3); box-shadow:0 4px 16px rgba(124,58,237,.1); }
+        .d-cert-icon { width:clamp(36px,4.5vw,44px); height:clamp(36px,4.5vw,44px); border-radius:10px; background:rgba(124,58,237,.08); border:1.5px solid rgba(124,58,237,.2); display:flex; align-items:center; justify-content:center; font-size:clamp(.95rem,1.8vw,1.2rem); flex-shrink:0; }
+        .d-cert-icon.has { background:#f0fdf4; border-color:#86efac; }
+        .d-cert-info { flex:1; min-width:0; }
+        .d-cert-name { font-weight:700; font-size:clamp(.72rem,1.3vw,.8rem); color:var(--black); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .d-cert-sub  { font-size:clamp(.62rem,1.1vw,.7rem); color:var(--gray2); margin-top:2px; }
+        .d-cert-actions { display:flex; gap:5px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+        .d-cert-btn { padding:clamp(4px,1vw,6px) clamp(8px,1.5vw,12px); border-radius:7px; font-family:var(--font); font-size:clamp(.62rem,1.1vw,.7rem); font-weight:700; cursor:pointer; border:none; transition:all .14s; white-space:nowrap; }
+        .d-cert-btn.up  { background:rgba(124,58,237,.1); color:#7c3aed; border:1.5px solid rgba(124,58,237,.25); }
+        .d-cert-btn.up:hover { background:rgba(124,58,237,.2); }
+        .d-cert-btn.dl  { background:var(--blue-lt); color:var(--blue); border:1.5px solid rgba(8,101,168,.25); }
+        .d-cert-btn.dl:hover { background:var(--blue-md); }
+        .d-cert-btn.rm  { background:#fef2f2; color:#dc2626; border:1.5px solid rgba(220,38,38,.2); }
+        .d-cert-btn.rm:hover { background:#fee2e2; }
+        .d-cert-btn:disabled { opacity:.45; cursor:not-allowed; }
+        .d-modal-bg { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:10000; display:flex; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); animation:d-fadeUp .16s ease; }
+        .d-modal { background:var(--white); border-radius:14px; padding:clamp(14px,2.5vw,20px); max-width:clamp(290px,88vw,520px); width:100%; box-shadow:0 16px 48px rgba(0,0,0,.15); direction:rtl; border:2px solid rgba(124,58,237,.2); border-top:4px solid #7c3aed; }
+        .d-modal.rd-modal { border-color:rgba(220,38,38,.2); border-top-color:#dc2626; max-width:clamp(290px,92vw,540px); max-height:90vh; overflow-y:auto; }
+        .d-modal h3 { font-size:clamp(.82rem,1.5vw,.92rem); font-weight:900; color:var(--black); margin-bottom:3px; }
+        .d-modal p  { font-size:clamp(.66rem,1.1vw,.72rem); color:var(--gray2); margin-bottom:12px; font-family:var(--font); }
+        .d-drop { border:2px dashed rgba(124,58,237,.35); border-radius:12px; padding:clamp(24px,5vw,36px) 16px; text-align:center; cursor:pointer; transition:all .16s; background:rgba(124,58,237,.04); }
+        .d-drop.over { border-color:#7c3aed; background:rgba(124,58,237,.1); }
+        .d-drop:hover { border-color:rgba(124,58,237,.6); }
+        .d-drop-icon { font-size:clamp(1.7rem,3.5vw,2.3rem); margin-bottom:8px; }
+        .d-drop-txt  { font-size:clamp(.72rem,1.4vw,.8rem); color:var(--gray1); margin-bottom:4px; font-family:var(--font); }
+        .d-drop-sub  { font-size:clamp(.62rem,1.1vw,.7rem); color:var(--gray3); }
+        .d-modal-actions { display:flex; gap:7px; margin-top:18px; justify-content:flex-end; }
+        .d-modal-cancel { padding:clamp(7px,1.3vw,10px) clamp(12px,2vw,18px); border-radius:9px; background:var(--bg-flat); border:1.5px solid var(--gray4); font-family:var(--font); font-size:clamp(.7rem,1.3vw,.78rem); font-weight:700; cursor:pointer; color:var(--gray2); transition:all .14s; }
+        .d-modal-cancel:hover { border-color:var(--gray2); color:var(--black); background:var(--white); }
 
-        .d-nav-section { margin-bottom: 6px; }
-        .d-nav-label {
-          font-size: 0.58rem; font-weight: 700;
-          color: var(--gray3);
-          letter-spacing: 1.2px; text-transform: uppercase;
-          padding: 0 8px; margin-bottom: 4px;
-        }
-        .d-nav-btn {
-          width: 100%;
-          display: flex; align-items: center;
-          gap: 8px;
-          padding: 9px 10px;
-          border-radius: 9px;
-          border: 1.5px solid transparent;
-          background: transparent;
-          color: var(--gray2);
-          font-family: var(--font);
-          font-size: 0.78rem; font-weight: 700;
-          cursor: pointer;
-          transition: all 0.16s;
-          text-align: right;
-          margin-bottom: 2px;
-          white-space: nowrap; overflow: hidden;
-        }
-        .d-nav-btn:hover {
-          background: var(--blue-lt);
-          color: var(--blue);
-          border-color: rgba(8,101,168,0.15);
-        }
-        .d-nav-btn.active {
-          background: var(--blue-md);
-          color: var(--blue);
-          border-color: rgba(8,101,168,0.3);
-        }
-        .d-nav-btn.active.gr {
-          background: rgba(22,163,74,0.1);
-          color: #16a34a;
-          border-color: rgba(22,163,74,0.3);
-        }
-        .d-nav-btn.active.pu {
-          background: rgba(124,58,237,0.1);
-          color: #7c3aed;
-          border-color: rgba(124,58,237,0.3);
-        }
-        .d-nav-btn.active::after {
-          content: '';
-          position: absolute; right: 0; top: 0; bottom: 0;
-          width: 3px;
-          background: var(--blue);
-          border-radius: 2px 0 0 2px;
-        }
-        .d-nav-btn { position: relative; }
-        .d-nav-btn.active.gr::after { background: #16a34a; }
-        .d-nav-btn.active.pu::after { background: #7c3aed; }
+        /* ── REFUND SPECIFIC ──────────────────────────────────────────────── */
+        .rf-stat-bar { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin-bottom:20px; }
+        .rf-sc { background:var(--white); border-radius:11px; padding:14px 16px; border:1.5px solid var(--card-border); box-shadow:var(--shadow); display:flex; align-items:center; gap:11px; transition:transform .2s; }
+        .rf-sc:hover { transform:translateY(-2px); }
+        .rf-sc-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; flex-shrink:0; }
+        .rf-sc-body { flex:1; min-width:0; }
+        .rf-sc-val { font-size:1.35rem; font-weight:900; line-height:1; font-family:'Courier New',monospace; }
+        .rf-sc-lbl { font-size:.65rem; color:var(--gray2); font-weight:700; margin-top:3px; }
 
-        .d-nav-icon { font-size: 0.9rem; flex-shrink: 0; }
-        .d-nav-label-text { flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; }
-        .d-nav-badge {
-          margin-right: auto;
-          padding: 1px 6px; border-radius: 9px;
-          font-size: 0.58rem; font-weight: 900;
-          background: var(--orng-lt);
-          color: var(--orange);
-          border: 1px solid rgba(245,124,0,0.3);
-          flex-shrink: 0;
-        }
+        .rf-status { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:8px; font-size:.7rem; font-weight:700; white-space:nowrap; border:1.5px solid transparent; }
 
-        /* Sidebar footer */
-        .d-sidebar-footer {
-          padding: 10px 12px;
-          border-top: 1.5px solid var(--card-border);
-          font-size: 0.6rem;
-          color: var(--gray3);
-          text-align: center;
-          background: var(--bg-flat);
-          flex-shrink: 0;
-        }
+        .rf-amount { font-family:'Courier New',monospace; font-weight:900; font-size:.88rem; color:#15803d; direction:ltr; display:inline-block; }
 
-        /* ═══════════════════════════════════════════
-           MAIN
-        ═══════════════════════════════════════════ */
-        .d-main {
-          margin-right: var(--sidebar-w);
-          flex: 1; min-width: 0;
-          padding: clamp(14px,2.5vw,28px) clamp(12px,2.5vw,28px) clamp(32px,5vw,56px);
-          animation: d-fadeUp 0.28s ease;
-        }
+        .rf-filter-btns { display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+        .rf-fbtn { padding:5px 13px; border-radius:8px; border:1.5px solid var(--gray4); background:var(--bg-flat); font-family:var(--font); font-size:.7rem; font-weight:700; cursor:pointer; color:var(--gray2); transition:all .14s; }
+        .rf-fbtn:hover { border-color:var(--blue); color:var(--blue); background:var(--blue-lt); }
+        .rf-fbtn.active { background:var(--blue-md); border-color:rgba(8,101,168,.4); color:var(--blue); }
+        .rf-fbtn.active.pend { background:#fff8f0; border-color:rgba(245,124,0,.4); color:var(--orange); }
+        .rf-fbtn.active.appr { background:#f0fdf4; border-color:#86efac; color:#16a34a; }
+        .rf-fbtn.active.bank { background:var(--blue-lt); border-color:rgba(8,101,168,.35); color:var(--blue); }
+        .rf-fbtn.active.rjct { background:var(--red-lt); border-color:rgba(220,38,38,.35); color:var(--red); }
 
-        /* ─── Page header ─────────────────────────── */
-        .d-page-hdr {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          flex-wrap: wrap;
-          gap: 12px;
-          margin-bottom: clamp(16px,2.5vw,28px);
-          padding-bottom: clamp(14px,2vw,20px);
-          border-bottom: 1.5px solid var(--gray5);
-        }
-        .d-page-title {
-          font-size: clamp(1rem,2.5vw,1.4rem);
-          font-weight: 900;
-          color: var(--black);
-          line-height: 1.2;
-        }
-        .d-page-title-accent { color: var(--blue); }
-        .d-page-sub {
-          font-size: clamp(0.66rem,1.2vw,0.74rem);
-          color: var(--gray2);
-          margin-top: 4px;
-        }
-        .d-page-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .rf-action-btn { padding:5px 12px; border-radius:7px; font-family:var(--font); font-size:.68rem; font-weight:700; cursor:pointer; border:1.5px solid; transition:all .14s; white-space:nowrap; }
+        .rf-action-btn:disabled { opacity:.4; cursor:not-allowed; }
+        .rf-action-btn.view { background:var(--blue-lt); color:var(--blue); border-color:rgba(8,101,168,.3); }
+        .rf-action-btn.view:hover { background:var(--blue-md); }
+        .rf-action-btn.approve { background:#f0fdf4; color:#16a34a; border-color:#86efac; }
+        .rf-action-btn.approve:hover { background:#dcfce7; }
+        .rf-action-btn.bank { background:var(--blue-lt); color:var(--blue); border-color:rgba(8,101,168,.35); }
+        .rf-action-btn.bank:hover { background:var(--blue-md); }
+        .rf-action-btn.reject { background:var(--red-lt); color:var(--red); border-color:rgba(220,38,38,.3); }
+        .rf-action-btn.reject:hover { background:#fee2e2; }
 
-        /* ─── Mock warning ────────────────────────── */
-        .d-mock {
-          display: flex; align-items: center; gap: 8px;
-          background: #fff8f0;
-          border: 1px solid rgba(245,124,0,0.35);
-          border-radius: 9px;
-          padding: 8px 14px;
-          margin-bottom: clamp(12px,2vw,20px);
-          font-size: clamp(0.68rem,1.3vw,0.76rem);
-          color: #b45309;
-        }
-        .d-mock code {
-          background: var(--orng-lt);
-          color: var(--orange);
-          padding: 1px 5px; border-radius: 4px;
-          font-family: 'Courier New', monospace;
-          font-size: 0.86em;
-        }
+        /* Detail modal */
+        .rf-detail { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; }
+        .rf-field { }
+        .rf-field-lbl { font-size:.58rem; color:var(--gray3); font-weight:700; margin-bottom:2px; }
+        .rf-field-val { font-size:.74rem; color:var(--black); font-weight:700; word-break:break-all; }
+        .rf-field-val.mono { font-family:'Courier New',monospace; direction:ltr; display:inline-block; }
+        .rf-full { grid-column:1/-1; }
+        .rf-divider { grid-column:1/-1; border:none; border-top:1.5px dashed var(--gray5); margin:2px 0; }
+        .rf-bank-block { grid-column:1/-1; background:#f8faff; border:1.5px solid rgba(8,101,168,.15); border-radius:9px; padding:9px 12px; }
+        .rf-bank-title { font-size:.68rem; font-weight:900; color:var(--blue); margin-bottom:7px; display:flex; align-items:center; gap:5px; }
+        .rf-bank-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px 14px; }
 
-        /* ─── Stat cards ──────────────────────────── */
-        .d-stats {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(clamp(110px,15vw,155px), 1fr));
-          gap: clamp(8px,1.5vw,14px);
-          margin-bottom: clamp(16px,2.5vw,26px);
-        }
-        .d-sc {
-          background: var(--white);
-          border-radius: var(--radius);
-          padding: clamp(14px,2vw,18px) clamp(12px,2vw,16px);
-          border: 1.5px solid var(--card-border);
-          box-shadow: var(--shadow);
-          position: relative; overflow: hidden;
-          transition: transform 0.2s, box-shadow 0.2s;
-          cursor: default;
-        }
-        .d-sc:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .d-sc::after {
-          content: attr(data-icon);
-          position: absolute; left: -4px; bottom: -6px;
-          font-size: clamp(1.8rem,4vw,2.5rem);
-          opacity: 0.06; pointer-events: none;
-          transform: rotate(-10deg);
-        }
-        .d-sc-val {
-          font-size: clamp(1.5rem,3.5vw,2rem);
-          font-weight: 900; line-height: 1;
-          font-family: 'Courier New', monospace;
-        }
-        .d-sc-lbl { font-size: clamp(0.62rem,1.1vw,0.7rem); margin-top: 5px; color: var(--gray2); font-weight: 700; }
-        .d-sc-bar { height: 3px; border-radius: 2px; margin-top: 10px; width: 40%; opacity: 0.6; }
+        .rf-action-area { margin-top:12px; border-top:1.5px solid var(--gray5); padding-top:10px; }
+        .rf-action-row { display:flex; gap:7px; flex-wrap:wrap; }
+        .rf-textarea { width:100%; padding:8px 10px; border-radius:8px; border:1.5px solid var(--gray4); background:var(--bg-flat); font-family:var(--font); font-size:.74rem; color:var(--black); resize:vertical; min-height:60px; outline:none; direction:rtl; margin-top:8px; transition:border .18s; }
+        .rf-textarea:focus { border-color:var(--blue); background:#fff; }
+        .rf-action-confirm { padding:8px 18px; border-radius:8px; font-family:var(--font); font-size:.76rem; font-weight:700; cursor:pointer; border:none; transition:all .16s; }
+        .rf-action-confirm.approve { background:#16a34a; color:#fff; }
+        .rf-action-confirm.approve:hover { background:#15803d; }
+        .rf-action-confirm.bank { background:var(--blue); color:#fff; }
+        .rf-action-confirm.bank:hover { background:#0552a0; }
+        .rf-action-confirm.reject { background:var(--red); color:#fff; }
+        .rf-action-confirm.reject:hover { background:#b91c1c; }
+        .rf-action-confirm:disabled { opacity:.5; cursor:not-allowed; }
 
-        /* ─── Toolbar ─────────────────────────────── */
-        .d-toolbar {
-          display: flex; align-items: center;
-          gap: clamp(6px,1.2vw,10px); flex-wrap: wrap;
-          margin-bottom: clamp(12px,2vw,18px);
-          background: var(--white);
-          border: 1.5px solid var(--card-border);
-          border-radius: var(--radius);
-          padding: clamp(9px,1.5vw,13px) clamp(12px,2vw,16px);
-          box-shadow: var(--shadow);
-        }
+        .d-ftr { text-align:center; margin-top:clamp(20px,3.5vw,32px); padding-top:18px; border-top:1.5px solid var(--gray5); color:var(--gray3); font-size:clamp(.6rem,1vw,.67rem); }
+        .d-ftr strong { color:var(--blue); }
+        .d-email { direction:ltr; text-align:right; color:var(--gray3); font-size:clamp(.65rem,1.15vw,.73rem); }
 
-        /* ─── Search ──────────────────────────────── */
-        .d-search { flex: 1; min-width: clamp(140px,18vw,200px); position: relative; }
-        .d-search input {
-          width: 100%;
-          padding: clamp(7px,1.2vw,10px) 36px clamp(7px,1.2vw,10px) clamp(10px,1.5vw,14px);
-          border-radius: 9px;
-          border: 1.5px solid var(--gray4);
-          background: var(--bg-flat);
-          color: var(--black);
-          font-family: var(--font);
-          font-size: clamp(0.72rem,1.3vw,0.8rem);
-          outline: none; direction: rtl;
-          transition: border 0.18s, background 0.18s;
+        @media (max-width:1100px) {
+          :root { --sidebar-w:52px; }
+          .d-sb-title,.d-su-info,.d-nav-label,.d-nav-badge,.d-sidebar-footer,.d-nav-label-text { display:none; }
+          .d-sidebar-brand { padding:12px; justify-content:center; }
+          .d-sidebar-user  { padding:10px; justify-content:center; }
+          .d-sidebar-nav   { padding:8px 6px; }
+          .d-nav-btn { justify-content:center; padding:10px 7px; }
+          .d-sb-logo,.d-su-av { width:28px; height:28px; }
         }
-        .d-search input::placeholder { color: var(--gray3); }
-        .d-search input:focus { border-color: var(--blue); background: #fff; }
-        .d-search::after { content: '🔍'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; pointer-events: none; opacity: 0.5; }
-
-        /* ─── Export button ───────────────────────── */
-        .d-expw { position: relative; }
-        .d-expbtn {
-          display: flex; align-items: center; gap: 6px;
-          padding: clamp(7px,1.2vw,10px) clamp(12px,2vw,18px);
-          background: var(--orange);
-          color: #fff;
-          border: none; border-radius: 9px;
-          font-family: var(--font);
-          font-size: clamp(0.72rem,1.3vw,0.8rem);
-          font-weight: 700; cursor: pointer;
-          white-space: nowrap;
-          transition: all 0.18s;
-          box-shadow: 0 3px 12px rgba(245,124,0,0.3);
+        @media (max-width:768px) {
+          .d-stats { grid-template-columns:repeat(3,1fr); }
+          .rf-detail { grid-template-columns:1fr; }
+          .rf-bank-grid { grid-template-columns:1fr; }
+          .d-cert-grid { grid-template-columns:1fr!important; }
+          .d-mc { max-width:100%; }
+          .d-page-hdr { flex-direction:column; }
         }
-        .d-expbtn:hover { background: #e65100; transform: translateY(-1px); box-shadow: 0 5px 18px rgba(245,124,0,0.4); }
-        .d-expbtn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .d-expmenu {
-          position: absolute; top: calc(100% + 6px); left: 0;
-          background: var(--white);
-          border: 1.5px solid var(--card-border);
-          border-radius: 11px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-          overflow: hidden; z-index: 400;
-          min-width: 185px;
-          animation: d-slideIn 0.15s ease;
+        @media (max-width:400px) {
+          .d-stats { grid-template-columns:repeat(2,1fr); }
+          .d-main { padding:10px 8px 28px; }
         }
-        .d-expitem {
-          display: flex; align-items: center; gap: 9px;
-          width: 100%;
-          padding: clamp(9px,1.8vw,12px) clamp(12px,2vw,16px);
-          background: none; border: none;
-          border-bottom: 1px solid var(--gray5);
-          font-family: var(--font);
-          font-size: clamp(0.72rem,1.3vw,0.8rem);
-          font-weight: 700;
-          color: var(--gray1);
-          direction: rtl; cursor: pointer;
-          transition: background 0.12s, color 0.12s;
+        @media (min-width:1920px) {
+          :root { --sidebar-w:220px; }
+          .d-main { padding:36px 44px 72px; }
         }
-        .d-expitem:last-child { border-bottom: none; }
-        .d-expitem:hover { background: var(--blue-lt); color: var(--blue); }
-
-        /* ─── Date filter ─────────────────────────── */
-        .d-filter {
-          display: flex; align-items: center;
-          gap: clamp(6px,1.2vw,12px); flex-wrap: wrap;
-          background: var(--white);
-          border: 1.5px solid var(--card-border);
-          border-radius: var(--radius);
-          padding: clamp(9px,1.5vw,12px) clamp(12px,2vw,16px);
-          margin-bottom: clamp(12px,2vw,18px);
-          box-shadow: var(--shadow);
-        }
-        .d-flbl { font-size: clamp(0.68rem,1.2vw,0.76rem); font-weight: 700; color: var(--gray2); white-space: nowrap; }
-        .d-fsm  { font-size: clamp(0.64rem,1.1vw,0.7rem); color: var(--gray3); }
-        .d-fdate {
-          padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px);
-          border-radius: 8px;
-          border: 1.5px solid var(--gray4);
-          background: var(--bg-flat);
-          color: var(--black);
-          font-family: var(--font);
-          font-size: clamp(0.7rem,1.2vw,0.78rem);
-          outline: none; direction: ltr;
-          transition: border 0.18s;
-        }
-        .d-fdate:focus { border-color: var(--blue); background: #fff; }
-        .d-fsel {
-          padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px);
-          border-radius: 8px;
-          border: 1.5px solid var(--gray4);
-          background: var(--bg-flat);
-          color: var(--black);
-          font-family: var(--font);
-          font-size: clamp(0.7rem,1.2vw,0.78rem);
-          outline: none; cursor: pointer;
-        }
-        .d-fbadge {
-          display: inline-flex; align-items: center; gap: 4px;
-          padding: 3px 10px; border-radius: 20px;
-          background: var(--orng-lt);
-          border: 1px solid rgba(245,124,0,0.3);
-          color: var(--orange);
-          font-size: clamp(0.62rem,1.1vw,0.7rem); font-weight: 700;
-        }
-        .d-fclear {
-          padding: clamp(4px,0.9vw,7px) clamp(9px,1.5vw,12px);
-          border-radius: 8px;
-          background: var(--bg-flat);
-          border: 1.5px solid var(--gray4);
-          font-family: var(--font);
-          font-size: clamp(0.64rem,1.1vw,0.72rem);
-          font-weight: 700; cursor: pointer;
-          color: var(--gray2);
-          transition: all 0.16s;
-        }
-        .d-fclear:hover { border-color: var(--orange); color: var(--orange); background: var(--orng-lt); }
-
-        /* ─── Error ───────────────────────────────── */
-        .d-err {
-          background: #fef2f2;
-          border: 1.5px solid rgba(220,38,38,0.3);
-          color: #dc2626;
-          border-radius: 9px;
-          padding: clamp(8px,1.5vw,11px) clamp(10px,2vw,14px);
-          margin-bottom: 14px;
-          font-size: clamp(0.7rem,1.3vw,0.78rem);
-          display: flex; align-items: center; gap: 9px;
-        }
-
-        /* ─── Card / Table ────────────────────────── */
-        .d-card {
-          background: var(--white);
-          border-radius: var(--radius);
-          border: 1.5px solid var(--card-border);
-          overflow: hidden;
-          box-shadow: var(--shadow);
-        }
-        .d-tscr { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .d-tbl { width: 100%; border-collapse: collapse; min-width: 480px; }
-
-        .d-tbl thead th {
-          background: var(--blue);
-          color: #fff;
-          padding: clamp(10px,1.8vw,14px) clamp(10px,2vw,18px);
-          font-family: var(--font);
-          font-size: clamp(0.68rem,1.2vw,0.76rem);
-          font-weight: 700; text-align: right;
-          white-space: nowrap;
-          border-bottom: 3px solid var(--orange);
-          letter-spacing: 0.3px;
-        }
-        .d-tbl thead th.gr  { background: #16a34a; border-bottom-color: #86efac; }
-        .d-tbl thead th.pu  { background: #7c3aed; border-bottom-color: #c4b5fd; }
-        .d-tbl thead th.c   { text-align: center; }
-
-        .d-tbl tbody tr { border-bottom: 1px solid var(--gray5); transition: background 0.12s; }
-        .d-tbl tbody tr:last-child { border-bottom: none; }
-        .d-tbl tbody tr:hover { background: var(--blue-lt); }
-        .d-tbl tbody tr.xopen { background: var(--blue-lt); }
-        .d-tbl tbody tr:nth-child(even) { background: #fafbfc; }
-        .d-tbl tbody tr:nth-child(even):hover { background: var(--blue-lt); }
-
-        .d-tbl td {
-          padding: clamp(9px,1.6vw,13px) clamp(10px,2vw,18px);
-          font-family: var(--font);
-          font-size: clamp(0.69rem,1.25vw,0.78rem);
-          color: var(--gray1);
-          vertical-align: middle;
-        }
-
-        /* ─── Avatar ──────────────────────────────── */
-        .d-av {
-          width: clamp(28px,3.5vw,36px);
-          height: clamp(28px,3.5vw,36px);
-          border-radius: 9px;
-          background: var(--blue);
-          color: #fff;
-          display: inline-flex; align-items: center; justify-content: center;
-          font-weight: 900;
-          font-size: clamp(0.58rem,1vw,0.66rem);
-          flex-shrink: 0;
-          border: 2px solid rgba(8,101,168,0.2);
-        }
-        .d-av.or { background: var(--orange); border-color: rgba(245,124,0,0.2); }
-        .d-av.sm { width: 24px; height: 24px; border-radius: 7px; font-size: 0.58rem; }
-
-        /* ─── Inline elements ─────────────────────── */
-        .d-uc    { display: flex; align-items: center; gap: 9px; }
-        .d-uname { font-weight: 700; color: var(--black); }
-        .d-cb {
-          display: inline-flex; align-items: center; justify-content: center;
-          min-width: 24px; height: 24px;
-          border-radius: 7px;
-          background: var(--blue-lt);
-          border: 1.5px solid rgba(8,101,168,0.25);
-          color: var(--blue);
-          font-size: clamp(0.62rem,1.1vw,0.7rem); font-weight: 900;
-          padding: 0 6px;
-          font-family: 'Courier New', monospace;
-        }
-        .d-cb.or { background: var(--orng-lt); border-color: rgba(245,124,0,0.3); color: var(--orange); }
-        .d-cb.gr { background: #f0fdf4; border-color: rgba(22,163,74,0.3); color: #16a34a; }
-
-        .d-pill {
-          display: inline-block; padding: 4px 12px;
-          border-radius: 7px;
-          font-size: clamp(0.62rem,1.1vw,0.7rem); font-weight: 700;
-          cursor: pointer;
-          border: 1.5px solid rgba(8,101,168,0.3);
-          color: var(--blue);
-          background: var(--blue-lt);
-          user-select: none;
-          transition: all 0.14s;
-          font-family: var(--font);
-        }
-        .d-pill:hover, .d-pill.op { background: var(--blue-md); border-color: rgba(8,101,168,0.6); }
-        .d-pill.or { border-color: rgba(245,124,0,0.3); color: var(--orange); background: var(--orng-lt); }
-        .d-pill.or:hover, .d-pill.or.op { background: var(--orng-md); border-color: rgba(245,124,0,0.6); }
-
-        .d-cat {
-          display: inline-block; padding: 2px 9px;
-          border-radius: 6px;
-          font-size: clamp(0.6rem,1.05vw,0.68rem); font-weight: 700;
-          background: var(--orng-lt);
-          color: var(--orange);
-          border: 1px solid rgba(245,124,0,0.25);
-        }
-
-        /* ─── Expand row ──────────────────────────── */
-        .d-xrow td { padding: 0 !important; border: none; }
-        .d-xin {
-          padding: clamp(12px,2vw,16px) clamp(14px,2.5vw,22px);
-          display: flex; flex-wrap: wrap;
-          gap: clamp(7px,1.3vw,11px);
-          background: var(--blue-lt);
-          border-top: 2px solid rgba(8,101,168,0.15);
-        }
-        .d-mc {
-          background: var(--white);
-          border-radius: 10px;
-          padding: clamp(9px,1.8vw,13px) clamp(10px,2vw,14px);
-          border: 1.5px solid var(--gray5);
-          min-width: clamp(150px,20vw,200px);
-          flex: 1 1 150px; max-width: 260px;
-          transition: border-color 0.14s;
-          box-shadow: var(--shadow);
-        }
-        .d-mc:hover { border-color: rgba(8,101,168,0.3); }
-        .d-mt { font-size: clamp(0.7rem,1.25vw,0.78rem); font-weight: 700; color: var(--blue); margin-bottom: 2px; }
-        .d-mt.or { color: var(--orange); }
-        .d-ms { font-size: clamp(0.63rem,1.1vw,0.7rem); color: var(--gray2); }
-        .d-md { font-size: clamp(0.6rem,1vw,0.66rem); color: var(--gray3); margin-top: 4px; }
-
-        /* ─── Empty / Loading ─────────────────────── */
-        .d-empty { text-align: center; padding: clamp(40px,8vw,70px) 20px; }
-        .d-emi   { font-size: clamp(1.8rem,4vw,2.5rem); margin-bottom: 12px; opacity: 0.35; }
-        .d-empty p { color: var(--gray3); font-size: clamp(0.74rem,1.4vw,0.82rem); }
-        .d-ld  { text-align: center; padding: clamp(50px,10vw,80px) 20px; }
-        .d-sp  { width: clamp(32px,4.5vw,42px); height: clamp(32px,4.5vw,42px); border: 3px solid var(--gray5); border-top-color: var(--blue); border-radius: 50%; animation: d-spin .7s linear infinite; margin: 0 auto clamp(12px,2vw,18px); }
-        .d-ld p { color: var(--gray3); font-size: clamp(0.72rem,1.3vw,0.8rem); }
-
-        /* ─── Export overlay ──────────────────────── */
-        .d-ovl { position: fixed; inset: 0; background: rgba(245,247,250,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
-        .d-ovlb {
-          background: var(--white);
-          border-radius: 18px;
-          padding: clamp(28px,5vw,44px) clamp(44px,7vw,64px);
-          text-align: center;
-          box-shadow: 0 16px 48px rgba(8,101,168,0.18);
-          border: 2px solid rgba(8,101,168,0.15);
-        }
-        .d-ovlb p { font-size: clamp(0.78rem,1.5vw,0.86rem); margin-top: 14px; color: var(--gray2); font-family: var(--font); }
-
-        /* ─── Attendance ──────────────────────────── */
-        .d-chk {
-          width: 22px; height: 22px; border-radius: 6px;
-          border: 2px solid var(--gray4);
-          background: var(--bg-flat);
-          cursor: pointer;
-          display: inline-flex; align-items: center; justify-content: center;
-          transition: all 0.16s; flex-shrink: 0;
-          font-size: 0.75rem; color: transparent;
-        }
-        .d-chk:hover { border-color: #16a34a; background: #f0fdf4; }
-        .d-chk.on  { background: #f0fdf4; border-color: #16a34a; color: #16a34a; }
-        .d-chk.spin { border-color: #16a34a; border-top-color: transparent; border-radius: 50%; animation: d-spin .6s linear infinite; }
-
-        .d-att-badge {
-          display: inline-flex; align-items: center; gap: 3px;
-          padding: 3px 9px; border-radius: 7px;
-          font-size: clamp(0.62rem,1.1vw,0.7rem); font-weight: 700;
-        }
-        .d-att-badge.on  { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
-        .d-att-badge.off { background: var(--bg-flat); color: var(--gray3); border: 1px solid var(--gray4); }
-
-        .d-att-sum {
-          display: flex; align-items: center;
-          gap: clamp(10px,2vw,20px); flex-wrap: wrap;
-          background: #f0fdf4;
-          border: 1.5px solid #86efac;
-          border-radius: var(--radius);
-          padding: clamp(9px,1.8vw,13px) clamp(12px,2vw,18px);
-          margin-bottom: clamp(12px,2vw,18px);
-          box-shadow: var(--shadow);
-        }
-        .d-att-sum span { font-size: clamp(0.7rem,1.3vw,0.78rem); font-weight: 700; color: #15803d; }
-        .d-prog-wrap { flex: 1; min-width: 100px; height: 6px; background: #bbf7d0; border-radius: 3px; overflow: hidden; }
-        .d-prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #16a34a, #22c55e); transition: width 0.5s ease; }
-
-        /* ─── Certificate grid ────────────────────── */
-        .d-cert-grid { display: grid; gap: clamp(9px,1.8vw,13px); padding: clamp(12px,2vw,18px); grid-template-columns: repeat(auto-fill, minmax(clamp(260px,30vw,320px), 1fr)); }
-        .d-cert-card {
-          background: var(--white);
-          border-radius: 12px;
-          padding: clamp(11px,2vw,15px) clamp(12px,2vw,16px);
-          border: 1.5px solid var(--card-border);
-          display: flex; align-items: center;
-          gap: clamp(9px,1.5vw,12px);
-          transition: border-color 0.16s, box-shadow 0.16s;
-          box-shadow: var(--shadow);
-        }
-        .d-cert-card:hover { border-color: rgba(124,58,237,0.3); box-shadow: 0 4px 16px rgba(124,58,237,0.1); }
-        .d-cert-icon {
-          width: clamp(36px,4.5vw,44px); height: clamp(36px,4.5vw,44px);
-          border-radius: 10px;
-          background: rgba(124,58,237,0.08);
-          border: 1.5px solid rgba(124,58,237,0.2);
-          display: flex; align-items: center; justify-content: center;
-          font-size: clamp(0.95rem,1.8vw,1.2rem); flex-shrink: 0;
-        }
-        .d-cert-icon.has { background: #f0fdf4; border-color: #86efac; }
-        .d-cert-info { flex: 1; min-width: 0; }
-        .d-cert-name { font-weight: 700; font-size: clamp(0.72rem,1.3vw,0.8rem); color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .d-cert-sub  { font-size: clamp(0.62rem,1.1vw,0.7rem); color: var(--gray2); margin-top: 2px; }
-        .d-cert-actions { display: flex; gap: 5px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-        .d-cert-btn {
-          padding: clamp(4px,1vw,6px) clamp(8px,1.5vw,12px);
-          border-radius: 7px;
-          font-family: var(--font);
-          font-size: clamp(0.62rem,1.1vw,0.7rem); font-weight: 700;
-          cursor: pointer; border: none;
-          transition: all 0.14s; white-space: nowrap;
-        }
-        .d-cert-btn.up  { background: rgba(124,58,237,0.1); color: #7c3aed; border: 1.5px solid rgba(124,58,237,0.25); }
-        .d-cert-btn.up:hover { background: rgba(124,58,237,0.2); }
-        .d-cert-btn.dl  { background: var(--blue-lt); color: var(--blue); border: 1.5px solid rgba(8,101,168,0.25); }
-        .d-cert-btn.dl:hover { background: var(--blue-md); }
-        .d-cert-btn.rm  { background: #fef2f2; color: #dc2626; border: 1.5px solid rgba(220,38,38,0.2); }
-        .d-cert-btn.rm:hover { background: #fee2e2; }
-        .d-cert-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-        /* ─── Upload modal ────────────────────────── */
-        .d-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); animation: d-fadeUp 0.16s ease; }
-        .d-modal {
-          background: var(--white);
-          border-radius: 18px;
-          padding: clamp(22px,4vw,32px);
-          max-width: clamp(290px,88vw,440px); width: 100%;
-          box-shadow: 0 16px 48px rgba(0,0,0,0.15);
-          direction: rtl;
-          border: 2px solid rgba(124,58,237,0.2);
-          border-top: 4px solid #7c3aed;
-        }
-        .d-modal h3 { font-size: clamp(0.9rem,1.7vw,1rem); font-weight: 900; color: var(--black); margin-bottom: 4px; }
-        .d-modal p  { font-size: clamp(0.68rem,1.2vw,0.76rem); color: var(--gray2); margin-bottom: 18px; font-family: var(--font); }
-        .d-drop {
-          border: 2px dashed rgba(124,58,237,0.35);
-          border-radius: 12px;
-          padding: clamp(24px,5vw,36px) 16px;
-          text-align: center; cursor: pointer;
-          transition: all 0.16s;
-          background: rgba(124,58,237,0.04);
-        }
-        .d-drop.over { border-color: #7c3aed; background: rgba(124,58,237,0.1); }
-        .d-drop:hover { border-color: rgba(124,58,237,0.6); }
-        .d-drop-icon { font-size: clamp(1.7rem,3.5vw,2.3rem); margin-bottom: 8px; }
-        .d-drop-txt  { font-size: clamp(0.72rem,1.4vw,0.8rem); color: var(--gray1); margin-bottom: 4px; font-family: var(--font); }
-        .d-drop-sub  { font-size: clamp(0.62rem,1.1vw,0.7rem); color: var(--gray3); }
-        .d-modal-actions { display: flex; gap: 7px; margin-top: 18px; justify-content: flex-end; }
-        .d-modal-cancel {
-          padding: clamp(7px,1.3vw,10px) clamp(12px,2vw,18px);
-          border-radius: 9px;
-          background: var(--bg-flat);
-          border: 1.5px solid var(--gray4);
-          font-family: var(--font);
-          font-size: clamp(0.7rem,1.3vw,0.78rem); font-weight: 700;
-          cursor: pointer; color: var(--gray2);
-          transition: all 0.14s;
-        }
-        .d-modal-cancel:hover { border-color: var(--gray2); color: var(--black); background: var(--white); }
-
-        /* ─── Footer ──────────────────────────────── */
-        .d-ftr {
-          text-align: center;
-          margin-top: clamp(20px,3.5vw,32px);
-          padding-top: 18px;
-          border-top: 1.5px solid var(--gray5);
-          color: var(--gray3);
-          font-size: clamp(0.6rem,1vw,0.67rem);
-        }
-        .d-ftr strong { color: var(--blue); }
-
-        .d-email { direction: ltr; text-align: right; color: var(--gray3); font-size: clamp(0.65rem,1.15vw,0.73rem); }
-
-        /* ═══════════════════════════════════════════
-           RESPONSIVE 300px → 2400px+
-        ═══════════════════════════════════════════ */
-
-        /* ── 900–1200px: collapse sidebar text ──── */
-        @media (max-width: 1100px) {
-          :root { --sidebar-w: 52px; }
-          .d-sb-title, .d-su-info, .d-nav-label, .d-nav-badge,
-          .d-sidebar-footer, .d-nav-label-text { display: none; }
-          .d-sidebar-brand { padding: 12px; justify-content: center; }
-          .d-sidebar-user  { padding: 10px; justify-content: center; }
-          .d-sidebar-nav   { padding: 8px 6px; }
-          .d-nav-btn { justify-content: center; padding: 10px 7px; }
-          .d-sb-logo { width: 28px; height: 28px; }
-          .d-su-av   { width: 30px; height: 30px; }
-        }
-
-        /* ── 768px: smaller type adjustments ───── */
-        @media (max-width: 768px) {
-          .d-stats { grid-template-columns: repeat(3, 1fr); }
-          .d-toolbar { padding: 8px 10px; gap: 6px; }
-          .d-cert-grid { grid-template-columns: 1fr !important; }
-          .d-mc { max-width: 100%; }
-          .d-page-hdr { flex-direction: column; }
-          .d-page-actions { width: 100%; }
-        }
-
-        /* ── 600px: hide sidebar completely ─────── */
-        @media (max-width: 200px) {
-          :root { --sidebar-w: 0px; }
-          .d-sidebar { display: none; }
-          .d-main { margin-right: 0; }
-          .d-stats { grid-template-columns: repeat(2, 1fr); }
-          .d-toolbar { padding: 7px 8px; }
-          .d-filter  { padding: 7px 8px; gap: 5px; }
-          .d-tbl { min-width: 380px; }
-        }
-
-        /* ── 400px: tight squeeze ────────────────── */
-        @media (max-width: 400px) {
-          .d-stats { grid-template-columns: repeat(2, 1fr); }
-          .d-sc-val { font-size: 1.4rem; }
-          .d-main { padding: 10px 8px 28px; }
-          ._ovr { font-size: 0.65rem; padding: 6px 10px; }
-        }
-
-        /* ── 300px: absolute minimum ─────────────── */
-        @media (max-width: 320px) {
-          .d-stats { grid-template-columns: 1fr 1fr; }
-          .d-sc { padding: 10px; }
-          .d-sc-val { font-size: 1.25rem; }
-          .d-tbl thead th, .d-tbl td { padding: 7px 8px; font-size: 0.62rem; }
-        }
-
-        /* ── 1920px+: generous spacing ───────────── */
-        @media (min-width: 1920px) {
-          :root { --sidebar-w: 220px; }
-          .d-main { padding: 36px 44px 72px; }
-          .d-tbl thead th, .d-tbl td { padding: 15px 22px; font-size: 0.85rem; }
-          .d-stats { grid-template-columns: repeat(5, 1fr); }
-        }
-
-        /* ── 2200px+ ─────────────────────────────── */
-        @media (min-width: 2200px) {
-          :root { --sidebar-w: 240px; }
-        }
-
-        /* ─── Print ───────────────────────────────── */
         @media print {
-          .d-sidebar, .d-toolbar, .d-filter, .d-mock, ._ovr { display: none !important; }
-          .d-root { background: #fff !important; padding-top: 0 !important; }
-          .d-main { margin-right: 0 !important; padding: 0 !important; }
-          .d-card { box-shadow: none !important; border: 1px solid #ddd; }
-          .d-tbl thead th { background: #0865a8 !important; color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          @page { margin: 15mm; }
+          .d-sidebar,.d-toolbar,.d-filter,.d-mock,._ovr { display:none!important; }
+          .d-root { background:#fff!important; padding-top:0!important; }
+          .d-main { margin-right:0!important; padding:0!important; }
         }
       `}</style>
 
             {/* ── Export overlay ─────────────────────────────────────────────── */}
             {exporting && (
-                <div className="d-ovl">
-                    <div className="d-ovlb">
-                        <div className="d-sp" />
-                        <p>جاري تصدير الملف... يرجى الانتظار</p>
-                    </div>
-                </div>
+                <div className="d-ovl"><div className="d-ovlb"><div className="d-sp" /><p>جاري تصدير الملف... يرجى الانتظار</p></div></div>
             )}
 
             {/* ── Certificate modal ─────────────────────────────────────────── */}
@@ -1035,13 +659,11 @@ const AdminDashboard = () => {
                     <div className="d-modal" onClick={e => e.stopPropagation()}>
                         <h3>📜 رفع شهادة</h3>
                         <p>{certModal.userName} — {certModal.courseTitle}</p>
-                        <div
-                            className={`d-drop${certDragOver ? ' over' : ''}`}
+                        <div className={`d-drop${certDragOver ? ' over' : ''}`}
                             onClick={() => certFileInputRef.current?.click()}
                             onDragOver={e => { e.preventDefault(); setCertDragOver(true); }}
                             onDragLeave={() => setCertDragOver(false)}
-                            onDrop={e => { e.preventDefault(); setCertDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleCertFile(certModal.userId, certModal.courseId, f); }}
-                        >
+                            onDrop={e => { e.preventDefault(); setCertDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleCertFile(certModal.userId, certModal.courseId, f); }}>
                             <div className="d-drop-icon">📂</div>
                             <div className="d-drop-txt">اسحب الملف هنا أو اضغط للاختيار</div>
                             <div className="d-drop-sub">PDF, JPG, PNG — حجم أقصى 10 MB</div>
@@ -1051,12 +673,190 @@ const AdminDashboard = () => {
                         {certUploading[`${certModal.userId}_${certModal.courseId}`] && (
                             <div style={{ textAlign: 'center', marginTop: 12, color: '#7c3aed', fontSize: '.8rem', fontWeight: 700, fontFamily: '"Droid Arabic Kufi",serif' }}>⏳ جاري الرفع...</div>
                         )}
-                        <div className="d-modal-actions">
-                            <button className="d-modal-cancel" onClick={() => setCertModal(null)}>إلغاء</button>
-                        </div>
+                        <div className="d-modal-actions"><button className="d-modal-cancel" onClick={() => setCertModal(null)}>إلغاء</button></div>
                     </div>
                 </div>
             )}
+
+            {/* ══════════════════════════════════════════════════════════════
+                REFUND DETAIL MODAL
+            ══════════════════════════════════════════════════════════════ */}
+            {refundDetailModal && (() => {
+                const r = refunds.find(x => x.id === refundDetailModal.id) || refundDetailModal;
+                const u = MOCK_USERS.find(u => u.id === r.userId);
+                const c = MOCK_COURSES.find(c => c.id === r.courseId);
+                const sm = REFUND_STATUS_META[r.status] || REFUND_STATUS_META.pending;
+                return (
+                    <div className="d-modal-bg" onClick={() => setRefundDetailModal(null)}>
+                        <div className="d-modal rd-modal" style={{ maxWidth: 520, borderTopColor: sm.color }} onClick={e => e.stopPropagation()}>
+                            {/* Header */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                                <div>
+                                    <h3 style={{ fontSize: '.92rem' }}>💳 تفاصيل طلب الاسترداد</h3>
+                                    <div style={{ fontSize: '.62rem', color: 'var(--gray3)', marginTop: 2, fontFamily: '"Droid Arabic Kufi",serif' }}>{r.id}</div>
+                                </div>
+                                <span className="rf-status" style={{ background: sm.bg, color: sm.color, borderColor: sm.border }}>{sm.icon} {sm.label}</span>
+                            </div>
+
+                            <div className="rf-detail">
+                                {/* Basic info */}
+                                <div className="rf-field">
+                                    <div className="rf-field-lbl">رقم الطلب</div>
+                                    <div className="rf-field-val mono">{r.orderId}</div>
+                                </div>
+                                <div className="rf-field">
+                                    <div className="rf-field-lbl">المبلغ المطلوب</div>
+                                    <div className="rf-field-val" style={{ color: '#15803d' }}>
+                                        <span className="rf-amount">{r.amount.toLocaleString()}</span>
+                                        <span style={{ fontSize: '.6rem', color: 'var(--gray3)', marginRight: 3 }}>{r.currency}</span>
+                                    </div>
+                                </div>
+                                <div className="rf-field">
+                                    <div className="rf-field-lbl">المستخدم</div>
+                                    <div className="rf-field-val">{u ? `${u.firstName} ${u.lastName}` : '—'}</div>
+                                </div>
+                                <div className="rf-field">
+                                    <div className="rf-field-lbl">البريد الإلكتروني</div>
+                                    <div className="rf-field-val mono" style={{ fontSize: '.68rem' }}>{u?.email || '—'}</div>
+                                </div>
+                                <div className="rf-field">
+                                    <div className="rf-field-lbl">الدورة</div>
+                                    <div className="rf-field-val">{c?.title || '—'}</div>
+                                </div>
+                                <div className="rf-field">
+                                    <div className="rf-field-lbl">تاريخ الطلب</div>
+                                    <div className="rf-field-val mono">{r.requestedAt}</div>
+                                </div>
+                                <div className="rf-field rf-full">
+                                    <div className="rf-field-lbl">سبب الاسترداد</div>
+                                    <div className="rf-field-val" style={{ fontWeight: 400, fontSize: '.74rem' }}>{r.reason}</div>
+                                </div>
+                                {r.details && (
+                                    <div className="rf-field rf-full">
+                                        <div className="rf-field-lbl">تفاصيل إضافية</div>
+                                        <div className="rf-field-val" style={{ fontWeight: 400, fontSize: '.72rem', color: 'var(--gray1)', lineHeight: 1.5 }}>{r.details}</div>
+                                    </div>
+                                )}
+
+                                <hr className="rf-divider" />
+
+                                {/* Bank info */}
+                                <div className="rf-bank-block">
+                                    <div className="rf-bank-title">🏦 بيانات البنك للتحويل</div>
+                                    <div className="rf-bank-grid">
+                                        {[['اسم البنك', r.bankName || '—', false], ['صاحب الحساب', r.accountHolder || '—', false], ['رقم الحساب', r.accountNumber || '—', true], ['IBAN', r.iban || '—', true]].map(([lbl, val, mono]) => (
+                                            <div className="rf-field" key={lbl}>
+                                                <div className="rf-field-lbl">{lbl}</div>
+                                                <div className={`rf-field-val${mono ? ' mono' : ''}`} style={{ fontSize: '.72rem' }}>{val}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Status timeline */}
+                                {(r.approvedAt || r.sentAt || r.rejectedAt || r.rejectionReason || r.adminNote) && (
+                                    <>
+                                        <hr className="rf-divider" />
+                                        <div className="rf-field rf-full">
+                                            <div className="rf-field-lbl">سجل الإجراءات</div>
+                                            <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                {r.approvedAt && <div style={{ fontSize: '.68rem', color: '#16a34a', fontFamily: '"Droid Arabic Kufi",serif' }}>✅ تمت الموافقة بتاريخ {r.approvedAt}</div>}
+                                                {r.sentAt && <div style={{ fontSize: '.68rem', color: 'var(--blue)', fontFamily: '"Droid Arabic Kufi",serif' }}>🏦 أُرسل للبنك بتاريخ {r.sentAt}</div>}
+                                                {r.rejectedAt && <div style={{ fontSize: '.68rem', color: 'var(--red)', fontFamily: '"Droid Arabic Kufi",serif' }}>❌ رُفض بتاريخ {r.rejectedAt}</div>}
+                                                {r.rejectionReason && <div style={{ fontSize: '.66rem', color: 'var(--gray2)', background: 'var(--red-lt)', padding: '4px 9px', borderRadius: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>سبب الرفض: {r.rejectionReason}</div>}
+                                                {r.adminNote && <div style={{ fontSize: '.66rem', color: 'var(--gray2)', background: 'var(--blue-lt)', padding: '4px 9px', borderRadius: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>ملاحظة: {r.adminNote}</div>}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Action zone inside modal */}
+                            {r.status === 'pending' && (
+                                <div className="rf-action-area">
+                                    <div style={{ fontSize: '.68rem', fontWeight: 700, color: 'var(--gray2)', marginBottom: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>اتخاذ إجراء:</div>
+                                    <div className="rf-action-row">
+                                        <button className="rf-action-btn approve" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'approve' }); }}>✅ موافقة</button>
+                                        <button className="rf-action-btn bank" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'send_to_bank' }); }}>🏦 إرسال للبنك</button>
+                                        <button className="rf-action-btn reject" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'reject' }); }}>❌ رفض</button>
+                                    </div>
+                                </div>
+                            )}
+                            {r.status === 'approved' && (
+                                <div className="rf-action-area">
+                                    <div className="rf-action-row">
+                                        <button className="rf-action-btn bank" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'send_to_bank' }); }}>🏦 إرسال للبنك</button>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="d-modal-actions" style={{ marginTop: 10 }}>
+                                <button className="d-modal-cancel" onClick={() => setRefundDetailModal(null)}>إغلاق</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {/* ══════════════════════════════════════════════════════════════
+                REFUND ACTION CONFIRMATION MODAL
+            ══════════════════════════════════════════════════════════════ */}
+            {refundActionModal && (() => {
+                const { refund: r, action } = refundActionModal;
+                const u = MOCK_USERS.find(u => u.id === r.userId);
+                const actionMeta = {
+                    approve: { title: '✅ تأكيد الموافقة على الاسترداد', color: '#16a34a', cls: 'approve', placeholder: 'ملاحظة للمستخدم (اختياري)...' },
+                    reject: { title: '❌ تأكيد رفض طلب الاسترداد', color: '#dc2626', cls: 'reject', placeholder: 'سبب الرفض (مطلوب)...' },
+                    send_to_bank: { title: '🏦 تأكيد الإرسال للبنك', color: '#0865a8', cls: 'bank', placeholder: 'مرجع التحويل البنكي أو ملاحظة (اختياري)...' },
+                }[action];
+                return (
+                    <div className="d-modal-bg" onClick={() => !refundActionSaving && setRefundActionModal(null)}>
+                        <div className="d-modal rd-modal" style={{ maxWidth: 440, borderTopColor: actionMeta.color }} onClick={e => e.stopPropagation()}>
+                            <h3>{actionMeta.title}</h3>
+                            <p style={{ marginBottom: 12 }}>
+                                طلب <strong>{r.id}</strong> — <strong>{u ? `${u.firstName} ${u.lastName}` : '—'}</strong>
+                                <br />
+                                المبلغ: <strong style={{ color: '#15803d', fontFamily: 'Courier New' }}>{r.amount.toLocaleString()} {r.currency}</strong>
+                                &nbsp;·&nbsp; رقم الطلب: <strong style={{ fontFamily: 'Courier New' }}>{r.orderId}</strong>
+                            </p>
+
+                            {/* Bank summary for send_to_bank */}
+                            {action === 'send_to_bank' && (
+                                <div style={{ background: '#f0f7ff', border: '1.5px solid rgba(8,101,168,.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
+                                    <div style={{ fontSize: '.66rem', fontWeight: 700, color: 'var(--blue)', marginBottom: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>🏦 سيُحوَّل المبلغ إلى:</div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 14px' }}>
+                                        {[['البنك', r.bankName], ['صاحب الحساب', r.accountHolder], ['رقم الحساب', r.accountNumber], ['IBAN', r.iban || '—']].map(([lbl, val]) => (
+                                            <div key={lbl}>
+                                                <div style={{ fontSize: '.58rem', color: 'var(--gray3)', fontFamily: '"Droid Arabic Kufi",serif' }}>{lbl}</div>
+                                                <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--black)', fontFamily: lbl === 'IBAN' || lbl === 'رقم الحساب' ? 'Courier New' : '"Droid Arabic Kufi",serif', direction: 'ltr', textAlign: 'right' }}>{val}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            <textarea
+                                className="rf-textarea"
+                                placeholder={actionMeta.placeholder}
+                                value={refundActionNote}
+                                onChange={e => setRefundActionNote(e.target.value)}
+                                disabled={refundActionSaving}
+                            />
+
+                            <div className="d-modal-actions">
+                                <button className="d-modal-cancel" onClick={() => { setRefundActionModal(null); setRefundActionNote(''); }} disabled={refundActionSaving}>إلغاء</button>
+                                <button
+                                    className={`rf-action-confirm ${actionMeta.cls}`}
+                                    onClick={commitRefundAction}
+                                    disabled={refundActionSaving || (action === 'reject' && !refundActionNote.trim())}
+                                >
+                                    {refundActionSaving ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'd-spin .6s linear infinite', marginLeft: 6, verticalAlign: 'middle' }} />جاري...</> : 'تأكيد'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* ── Breadcrumb ─────────────────────────────────────────────────── */}
             <div className="_ovr">
@@ -1070,7 +870,6 @@ const AdminDashboard = () => {
 
                 {/* ── SIDEBAR ──────────────────────────────────────────────────── */}
                 <aside className="d-sidebar">
-                    {/* Brand */}
                     <div className="d-sidebar-brand">
                         <img src={logoSrc} alt="ICEMT" className="d-sb-logo" />
                         <div className="d-sb-title">
@@ -1078,40 +877,29 @@ const AdminDashboard = () => {
                             <div className="d-sb-sub">لوحة التحكم الإدارية</div>
                         </div>
                     </div>
-
-                    {/* User card */}
                     <div className="d-sidebar-user">
-                        <div className="d-su-av">
-                            {(user?.firstName?.[0] || 'م')}{(user?.lastName?.[0] || '')}
-                        </div>
+                        <div className="d-su-av">{(user?.firstName?.[0] || 'م')}{(user?.lastName?.[0] || '')}</div>
                         <div className="d-su-info">
                             <div className="d-su-name">{user?.firstName} {user?.lastName}</div>
                             <div className="d-su-role">🔐 مدير النظام</div>
                         </div>
                     </div>
-
-                    {/* Nav */}
                     <nav className="d-sidebar-nav">
                         <div className="d-nav-section">
                             <div className="d-nav-label">القائمة</div>
                             {TABS.map(t => (
-                                <button
-                                    key={t.id}
-                                    title={t.label}
-                                    className={`d-nav-btn${activeTab === t.id ? ' active' : ''}${t.color === 'green' ? ' gr' : t.color === 'purple' ? ' pu' : ''}`}
-                                    onClick={() => { setActiveTab(t.id); setExpandedRow(null); setSearchQuery(''); }}
-                                >
+                                <button key={t.id} title={t.label}
+                                    className={`d-nav-btn${activeTab === t.id ? ' active' : ''}${t.color === 'green' ? ' gr' : t.color === 'purple' ? ' pu' : t.color === 'red' ? ' rd' : ''}`}
+                                    onClick={() => { setActiveTab(t.id); setExpandedRow(null); setSearchQuery(''); }}>
                                     <span className="d-nav-icon">{t.icon}</span>
                                     <span className="d-nav-label-text">{t.label}</span>
                                     {t.id === 'certificates' && totalCerts > 0 && <span className="d-nav-badge">{totalCerts}</span>}
+                                    {t.id === 'refunds' && refundStats.pending > 0 && <span className="d-nav-badge rd">{refundStats.pending}</span>}
                                 </button>
                             ))}
                         </div>
                     </nav>
-
-                    <div className="d-sidebar-footer">
-                        ICEMT © {new Date().getFullYear()}
-                    </div>
+                    <div className="d-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
                 </aside>
 
                 {/* ── MAIN ─────────────────────────────────────────────────────── */}
@@ -1125,25 +913,19 @@ const AdminDashboard = () => {
                                 {activeTab === 'users' ? 'المستخدمون والدورات'
                                     : activeTab === 'courses' ? 'الدورات والمستخدمون'
                                         : activeTab === 'attendance' ? 'سجل الحضور'
-                                            : 'الشهادات'}
+                                            : activeTab === 'certificates' ? 'الشهادات'
+                                                : 'طلبات الاسترداد'}
                             </div>
-                            <div className="d-page-sub">
-                                {new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                            </div>
+                            <div className="d-page-sub">{new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                         </div>
-                        {USE_MOCK_DATA && (
-                            <div className="d-mock">
-                                ⚠️ وضع التطوير — <code>USE_MOCK_DATA = true</code>
-                            </div>
-                        )}
+                        {USE_MOCK_DATA && <div className="d-mock">⚠️ وضع التطوير — <code>USE_MOCK_DATA = true</code></div>}
                     </div>
 
                     {/* Stats */}
                     {!loading && !error && (
                         <div className="d-stats">
                             {STATS.map(s => (
-                                <div key={s.label} className="d-sc" data-icon={s.icon}
-                                    style={{ borderColor: s.border }}>
+                                <div key={s.label} className="d-sc" data-icon={s.icon} style={{ borderColor: s.border }}>
                                     <div className="d-sc-val" style={{ color: s.accent }}>{s.value}</div>
                                     <div className="d-sc-lbl">{s.label}</div>
                                     <div className="d-sc-bar" style={{ background: s.accent }} />
@@ -1155,6 +937,138 @@ const AdminDashboard = () => {
                     {exportError && (
                         <div className="d-err">⚠️ {exportError}
                             <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setExportError(null)}>✕</button>
+                        </div>
+                    )}
+
+                    {/* ══════════════════════════════════════════════════════════
+                        REFUNDS TAB
+                    ══════════════════════════════════════════════════════════ */}
+                    {activeTab === 'refunds' && (
+                        <div>
+                            {/* Mini stats */}
+                            <div className="rf-stat-bar">
+                                {[
+                                    { lbl: 'إجمالي الطلبات', val: refundStats.total, icon: '📋', bg: '#f0f4f8', color: 'var(--black)' },
+                                    { lbl: 'قيد المراجعة', val: refundStats.pending, icon: '⏳', bg: '#fff8f0', color: '#b45309' },
+                                    { lbl: 'موافق عليها', val: refundStats.approved, icon: '✅', bg: '#f0fdf4', color: '#16a34a' },
+                                    { lbl: 'أُرسل للبنك', val: refundStats.sent_to_bank, icon: '🏦', bg: '#e8f1f9', color: 'var(--blue)' },
+                                    { lbl: 'مرفوضة', val: refundStats.rejected, icon: '❌', bg: '#fef2f2', color: 'var(--red)' },
+                                    { lbl: 'إجمالي المبالغ', val: `${refundStats.totalAmount.toLocaleString()} EGP`, icon: '💰', bg: '#f0fdf4', color: '#15803d' },
+                                ].map(s => (
+                                    <div key={s.lbl} className="rf-sc">
+                                        <div className="rf-sc-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+                                        <div className="rf-sc-body">
+                                            <div className="rf-sc-val" style={{ color: s.color, fontSize: typeof s.val === 'string' ? '.82rem' : '1.35rem' }}>{s.val}</div>
+                                            <div className="rf-sc-lbl">{s.lbl}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Toolbar */}
+                            <div className="d-filter">
+                                <div className="d-search" style={{ minWidth: 200 }}>
+                                    <input type="text" placeholder="ابحث برقم الطلب، المبلغ، المستخدم..." value={refundSearch} onChange={e => setRefundSearch(e.target.value)} />
+                                </div>
+                                <div className="rf-filter-btns">
+                                    <span className="d-flbl">الحالة:</span>
+                                    {[
+                                        { id: 'all', lbl: 'الكل', cls: '' },
+                                        { id: 'pending', lbl: '⏳ قيد المراجعة', cls: 'pend' },
+                                        { id: 'approved', lbl: '✅ موافق عليه', cls: 'appr' },
+                                        { id: 'sent_to_bank', lbl: '🏦 أُرسل للبنك', cls: 'bank' },
+                                        { id: 'rejected', lbl: '❌ مرفوض', cls: 'rjct' },
+                                    ].map(f => (
+                                        <button key={f.id} className={`rf-fbtn${refundStatusFilter === f.id ? ` active ${f.cls}` : ''}`}
+                                            onClick={() => setRefundStatusFilter(f.id)}>{f.lbl}</button>
+                                    ))}
+                                </div>
+                                {refundSearch && <button className="d-fclear" onClick={() => setRefundSearch('')}>✕</button>}
+                            </div>
+
+                            {/* Table */}
+                            <div className="d-card">
+                                {loading
+                                    ? <div className="d-ld"><div className="d-sp" /><p>جاري التحميل...</p></div>
+                                    : filteredRefunds.length === 0
+                                        ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد طلبات مطابقة</p></div>
+                                        : (
+                                            <div className="d-tscr">
+                                                <table className="d-tbl">
+                                                    <thead>
+                                                        <tr>
+                                                            <th className="rd c" style={{ width: 36 }}>#</th>
+                                                            <th className="rd">رقم الطلب</th>
+                                                            <th className="rd">رقم الأوردر</th>
+                                                            <th className="rd">المستخدم</th>
+                                                            <th className="rd">الدورة</th>
+                                                            <th className="rd c">المبلغ</th>
+                                                            <th className="rd">السبب</th>
+                                                            <th className="rd c">الحالة</th>
+                                                            <th className="rd">تاريخ الطلب</th>
+                                                            <th className="rd c">الإجراءات</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {filteredRefunds.map((r, idx) => {
+                                                            const u = MOCK_USERS.find(u => u.id === r.userId);
+                                                            const c = MOCK_COURSES.find(c => c.id === r.courseId);
+                                                            const sm = REFUND_STATUS_META[r.status] || REFUND_STATUS_META.pending;
+                                                            return (
+                                                                <tr key={r.id}>
+                                                                    <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{idx + 1}</td>
+                                                                    <td>
+                                                                        <span style={{ fontFamily: 'Courier New', fontSize: '.76rem', fontWeight: 700, color: 'var(--blue)' }}>{r.id}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <span style={{ fontFamily: 'Courier New', fontSize: '.76rem', color: 'var(--gray2)' }}>{r.orderId}</span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div className="d-uc">
+                                                                            <div className="d-av rd">{u?.firstName?.[0]}{u?.lastName?.[0]}</div>
+                                                                            <div>
+                                                                                <div style={{ fontWeight: 700, color: 'var(--black)', fontSize: '.78rem' }}>{u ? `${u.firstName} ${u.lastName}` : '—'}</div>
+                                                                                <div className="d-email" style={{ fontSize: '.65rem' }}>{u?.email}</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td style={{ fontSize: '.76rem', color: 'var(--gray1)', maxWidth: 160 }}>
+                                                                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c?.title || '—'}</div>
+                                                                    </td>
+                                                                    <td style={{ textAlign: 'center' }}>
+                                                                        <span className="rf-amount">{r.amount.toLocaleString()}</span>
+                                                                        <span style={{ fontSize: '.6rem', color: 'var(--gray3)', marginRight: 3 }}>{r.currency}</span>
+                                                                    </td>
+                                                                    <td style={{ maxWidth: 150 }}>
+                                                                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.74rem', color: 'var(--gray2)' }} title={r.reason}>{r.reason}</div>
+                                                                    </td>
+                                                                    <td style={{ textAlign: 'center' }}>
+                                                                        <span className="rf-status" style={{ background: sm.bg, color: sm.color, borderColor: sm.border }}>
+                                                                            {sm.icon} {sm.label}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td style={{ fontSize: '.72rem', fontFamily: 'Courier New', color: 'var(--gray3)', whiteSpace: 'nowrap' }}>{r.requestedAt}</td>
+                                                                    <td>
+                                                                        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'center' }}>
+                                                                            <button className="rf-action-btn view" onClick={() => setRefundDetailModal(r)}>🔍 تفاصيل</button>
+                                                                            {r.status === 'pending' && <>
+                                                                                <button className="rf-action-btn approve" onClick={() => setRefundActionModal({ refund: r, action: 'approve' })}>✅</button>
+                                                                                <button className="rf-action-btn bank" onClick={() => setRefundActionModal({ refund: r, action: 'send_to_bank' })}>🏦</button>
+                                                                                <button className="rf-action-btn reject" onClick={() => setRefundActionModal({ refund: r, action: 'reject' })}>❌</button>
+                                                                            </>}
+                                                                            {r.status === 'approved' && (
+                                                                                <button className="rf-action-btn bank" onClick={() => setRefundActionModal({ refund: r, action: 'send_to_bank' })}>🏦 إرسال للبنك</button>
+                                                                            )}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        )}
+                            </div>
                         </div>
                     )}
 
@@ -1172,7 +1086,6 @@ const AdminDashboard = () => {
                                 </div>
                                 {attUserSearch && <button className="d-fclear" onClick={() => setAttUserSearch('')}>✕ مسح</button>}
                             </div>
-
                             <div className="d-att-sum">
                                 <span>✅ {attRows.filter(r => attendance[`${r.user.id}_${r.course.id}`]).length} حضر</span>
                                 <span>❌ {attRows.filter(r => !attendance[`${r.user.id}_${r.course.id}`]).length} غائب</span>
@@ -1186,23 +1099,17 @@ const AdminDashboard = () => {
                                     </>
                                 )}
                             </div>
-
                             <div className="d-card">
                                 {loading ? <div className="d-ld"><div className="d-sp" /><p>جاري التحميل...</p></div>
                                     : attRows.length === 0 ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد نتائج</p></div>
                                         : (
                                             <div className="d-tscr">
                                                 <table className="d-tbl">
-                                                    <thead>
-                                                        <tr>
-                                                            <th className="c" style={{ width: 40 }}>#</th>
-                                                            <th>المستخدم</th>
-                                                            <th>البريد الإلكتروني</th>
-                                                            <th>الدورة</th>
-                                                            <th className="gr c">الحضور</th>
-                                                            <th className="gr c">الحالة</th>
-                                                        </tr>
-                                                    </thead>
+                                                    <thead><tr>
+                                                        <th className="c" style={{ width: 40 }}>#</th>
+                                                        <th>المستخدم</th><th>البريد الإلكتروني</th><th>الدورة</th>
+                                                        <th className="gr c">الحضور</th><th className="gr c">الحالة</th>
+                                                    </tr></thead>
                                                     <tbody>
                                                         {attRows.map((row, idx) => {
                                                             const key = `${row.user.id}_${row.course.id}`;
@@ -1215,8 +1122,7 @@ const AdminDashboard = () => {
                                                                     <td style={{ color: 'var(--blue)', fontWeight: 700 }}>{row.course.title}</td>
                                                                     <td style={{ textAlign: 'center' }}>
                                                                         <div className={`d-chk${saving ? ' spin' : attended ? ' on' : ''}`}
-                                                                            onClick={() => !saving && toggleAttendance(row.user.id, row.course.id)}
-                                                                            title={attended ? 'حضر — اضغط للتغيير' : 'غائب — اضغط للتسجيل'}>
+                                                                            onClick={() => !saving && toggleAttendance(row.user.id, row.course.id)}>
                                                                             {!saving && attended && '✓'}
                                                                         </div>
                                                                     </td>
@@ -1290,14 +1196,11 @@ const AdminDashboard = () => {
                     {/* ── USERS / COURSES TABS ──────────────────────────────────── */}
                     {isExportTab && (
                         <>
-                            {/* Toolbar */}
                             <div className="d-toolbar">
                                 <div className="d-search">
                                     <input type="text"
                                         placeholder={activeTab === 'users' ? 'ابحث باسم المستخدم أو البريد...' : 'ابحث باسم الدورة أو الفئة...'}
-                                        value={searchQuery}
-                                        onChange={e => { setSearchQuery(e.target.value); setExpandedRow(null); }}
-                                    />
+                                        value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setExpandedRow(null); }} />
                                 </div>
                                 <span className="d-flbl">📅</span>
                                 <span className="d-fsm">من</span>
@@ -1305,10 +1208,7 @@ const AdminDashboard = () => {
                                 <span className="d-fsm">إلى</span>
                                 <input type="date" className="d-fdate" value={dateTo} min={dateFrom} onChange={e => { setDateTo(e.target.value); setExpandedRow(null); }} />
                                 {(dateFrom || dateTo) && (
-                                    <>
-                                        <span className="d-fbadge">🔶 فلتر نشط</span>
-                                        <button className="d-fclear" onClick={() => { setDateFrom(''); setDateTo(''); setExpandedRow(null); }}>✕</button>
-                                    </>
+                                    <><span className="d-fbadge">🔶 فلتر نشط</span><button className="d-fclear" onClick={() => { setDateFrom(''); setDateTo(''); setExpandedRow(null); }}>✕</button></>
                                 )}
                                 <div className="d-expw" ref={exportRef}>
                                     <button className="d-expbtn" disabled={exporting} onClick={() => setExportMenuOpen(p => !p)}>
@@ -1324,8 +1224,6 @@ const AdminDashboard = () => {
                                     )}
                                 </div>
                             </div>
-
-                            {/* Table */}
                             <div className="d-card">
                                 {loading ? <div className="d-ld"><div className="d-sp" /><p>جاري تحميل البيانات...</p></div>
                                     : error ? <div className="d-empty"><div className="d-emi">⚠️</div><p>{error}</p></div>
@@ -1337,11 +1235,9 @@ const AdminDashboard = () => {
                                                         <thead>
                                                             <tr>
                                                                 <th className="c" style={{ width: 40 }}>#</th>
-                                                                {activeTab === 'users' ? (
-                                                                    <><th>المستخدم</th><th>البريد الإلكتروني</th><th className="c">الدورات</th><th className="c">تفاصيل</th></>
-                                                                ) : (
-                                                                    <><th>اسم الدورة</th><th>الفئة</th><th className="c">المسجّلون</th><th className="c">تفاصيل</th></>
-                                                                )}
+                                                                {activeTab === 'users'
+                                                                    ? <><th>المستخدم</th><th>البريد الإلكتروني</th><th className="c">الدورات</th><th className="c">تفاصيل</th></>
+                                                                    : <><th>اسم الدورة</th><th>الفئة</th><th className="c">المسجّلون</th><th className="c">تفاصيل</th></>}
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -1397,10 +1293,7 @@ const AdminDashboard = () => {
                                                                                         <div className="d-mc" key={u.id}>
                                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
                                                                                                 <div className="d-av or sm">{(u.firstName?.[0] || '?')}{(u.lastName?.[0] || '')}</div>
-                                                                                                <div>
-                                                                                                    <div className="d-mt or">{u.firstName} {u.lastName}</div>
-                                                                                                    <div className="d-ms">✉ {u.email}</div>
-                                                                                                </div>
+                                                                                                <div><div className="d-mt or">{u.firstName} {u.lastName}</div><div className="d-ms">✉ {u.email}</div></div>
                                                                                             </div>
                                                                                             {u.date && <div className="d-md">📅 {u.date}</div>}
                                                                                             <div style={{ marginTop: 5, display: 'flex', gap: 5 }}>
@@ -1413,8 +1306,7 @@ const AdminDashboard = () => {
                                                                             </td></tr>
                                                                         )}
                                                                     </React.Fragment>
-                                                                ))
-                                                            }
+                                                                ))}
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -1423,7 +1315,6 @@ const AdminDashboard = () => {
                         </>
                     )}
 
-                    {/* Footer */}
                     <div className="d-ftr">
                         تم إنشاء هذا التقرير بتاريخ {new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
                         {' — '}<strong>ICEMT Admin Panel</strong>
