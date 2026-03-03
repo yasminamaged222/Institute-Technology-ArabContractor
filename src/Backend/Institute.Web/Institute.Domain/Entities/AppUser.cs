@@ -22,6 +22,7 @@ namespace Institute.Domain.Entities
         // Navigation
         public ICollection<Cart> Carts { get; set; } = new HashSet<Cart>();
         public ICollection<Order> Orders { get; set; } = new HashSet<Order>();
+        public ICollection<Enrollment> Enrollments { get; set; } = new HashSet<Enrollment>();
 
     }
 }

@@ -44,4 +44,5 @@ public partial class Planwork
     public ICollection<Planwork> Children { get; set; } = new List<Planwork>();
 
     public ICollection<PlanFile> Files { get; set; } = new List<PlanFile>();
+    public ICollection<Enrollment> Enrollments { get; set; } = new HashSet<Enrollment>();
 }
