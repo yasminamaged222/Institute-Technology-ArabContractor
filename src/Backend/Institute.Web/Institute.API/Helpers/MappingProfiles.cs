@@ -7,7 +7,7 @@ using Institute.Domain.Entities;
 namespace Institute.API.Helpers
 
 {
-    public class MappingProfiles:Profile
+    public class MappingProfiles : Profile
     {
         public MappingProfiles()
         {
@@ -25,7 +25,17 @@ namespace Institute.API.Helpers
 
 
             CreateMap<Cart, CartDto>();
-            CreateMap<CartItem, CartItemDto>();
+            CreateMap<CartItem, CartItemDto>()
+                .ForMember(dest => dest.CourseName,
+                    opt => opt.MapFrom(src => src.Planwork != null ? src.Planwork.ServiceTitle : null))
+                .ForMember(dest => dest.CourseImage,
+                    opt => opt.MapFrom(src => src.Planwork != null && src.Planwork.Files.Any()
+                        ? src.Planwork.Files.OrderBy(f => f.FilePeriorty).FirstOrDefault()!.FileName
+                        : null))
+                .ForMember(dest => dest.OriginalPrice,
+                    opt => opt.MapFrom(src => src.Planwork != null
+                        ? (src.Planwork.PlanCost ?? src.Price)
+                        : src.Price));
 
 
             CreateMap<Dailynews, NewsDetailsDto>()

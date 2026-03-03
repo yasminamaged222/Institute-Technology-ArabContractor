@@ -3,6 +3,8 @@ import { ShoppingCart, Trash2, Tag, ArrowRight, BookOpen } from 'lucide-react';
 import { Link } from "react-router-dom";
 import { useAuth } from '@clerk/clerk-react';
 
+const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
+
 const CartItemFull = ({ item, onRemove }) => {
     return (
         <div className="group relative mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-lg md:mb-6">
@@ -81,7 +83,7 @@ const CartItemFull = ({ item, onRemove }) => {
                     <div className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-3 md:flex-row md:items-end md:justify-between md:gap-4 md:pt-4">
                         <div className="flex items-center gap-3 md:gap-4">
                             <button
-                                onClick={() => onRemove(item.id)}
+                                onClick={() => onRemove(item.planworkId || item.id)}
                                 className="flex items-center gap-1.5 text-xs font-medium text-red-600 transition-colors hover:text-red-700 md:gap-2 md:text-sm"
                             >
                                 <Trash2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
@@ -126,123 +128,83 @@ export default function ShoppingCartPage() {
         const loadCart = async () => {
             setLoading(true);
 
-            // ─── Step 1: Get purchased IDs so we never re-show them ──────────
-            const getPurchasedIds = () => {
-                try {
-                    const purchased = JSON.parse(localStorage.getItem('purchasedCourses') || '[]');
-                    return new Set(purchased.map(c => String(c.id)));
-                } catch { return new Set(); }
-            };
-
-            if (!isSignedIn) {
-                // Not signed in: just read localStorage, filter out already purchased
-                const savedCart = localStorage.getItem('cartItems');
-                if (savedCart) {
-                    const purchasedIds = getPurchasedIds();
-                    const parsed = JSON.parse(savedCart)
-                        .filter(item => !purchasedIds.has(String(item.id)));
-                    setItems(parsed);
-                    // Update localStorage to remove purchased items
-                    localStorage.setItem('cartItems', JSON.stringify(parsed));
-                }
-                setLoading(false);
-                return;
-            }
-
             try {
-                const token = await getToken();
-                if (!token) throw new Error('no token');
+                // ✅ لو المستخدم مسجل دخول → API فقط
+                if (isSignedIn) {
+                    const token = await getToken();
+                    if (!token) throw new Error("No token");
 
-                const response = await fetch(
-                    'https://acwebsite-icmet-test.azurewebsites.net/api/cart',
-                    {
-                        method: 'GET',
+                    const response = await fetch(`${API_BASE}/cart`, {
                         headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type": "application/json",
                         },
-                    }
-                );
+                    });
 
-                if (!response.ok) throw new Error('API failed');
+                    if (!response.ok) throw new Error("API failed");
 
-                const data = await response.json();
-                const purchasedIds = getPurchasedIds();
+                    const data = await response.json();
+                    const rawItems = data.items || [];
 
-                // ─── Filter out any courses already purchased ─────────────────
-                const transformedItems = data
-                    .filter(item => !purchasedIds.has(String(item.id || item.courseId)))
-                    .map(item => ({
-                        id: item.id || item.courseId,
-                        title: item.title || item.courseName || 'دورة تدريبية',
-                        instructor: item.place || item.instructor || 'غير محدد',
-                        place: item.place || '',
-                        date: item.date || '',
-                        image: 'book',
-                        rating: item.rating || 4.6,
-                        reviews: item.reviews || 0,
-                        hours: item.hours || 0,
-                        lectures: item.lectures || 0,
-                        level: item.level || 'متوسط',
-                        currentPrice: item.cost || item.price || item.currentPrice || 0,
-                        originalPrice: item.originalPrice || (item.cost ? item.cost / 0.6 : 0),
-                        badge: item.badge || 'الأكثر مبيعاً',
-                        coupon: item.coupon || '',
+                    const transformedItems = rawItems.map(item => ({
+                        id: item.planworkId,
+                        planworkId: item.planworkId,
+                        title: item.title || "دورة تدريبية",
+                        place: item.place || "",
+                        date: item.date || "",
+                        currentPrice: item.price ?? 0,
+                        originalPrice: item.cost ?? item.price ?? 0,
+                        slug: item.slug || "",
                         quantity: 1,
-                        discount: item.discount || 40
                     }));
 
-                setItems(transformedItems);
-                // Sync localStorage with filtered API result
-                localStorage.setItem('cartItems', JSON.stringify(transformedItems));
-
-            } catch (err) {
-                // Fallback: localStorage, still filter purchased
-                const savedCart = localStorage.getItem('cartItems');
-                if (savedCart) {
-                    const purchasedIds = getPurchasedIds();
-                    const parsed = JSON.parse(savedCart)
-                        .filter(item => !purchasedIds.has(String(item.id)));
-                    setItems(parsed);
+                    setItems(transformedItems);
                 }
+
+                // ✅ لو مش مسجل دخول → localStorage فقط
+                else {
+                    const localCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
+                    setItems(localCart);
+                }
+
+            } catch (error) {
+                console.error("Cart load error:", error);
+                setItems([]);
             } finally {
                 setLoading(false);
             }
         };
 
         loadCart();
-
-        // Re-run if purchase completes (e.g. in another tab)
-        window.addEventListener('purchaseCompleted', loadCart);
-        return () => window.removeEventListener('purchaseCompleted', loadCart);
+        window.addEventListener("purchaseCompleted", loadCart);
+        return () => window.removeEventListener("purchaseCompleted", loadCart);
     }, [isSignedIn, getToken]);
 
-    // Sync localStorage whenever items change (after initial load)
+    // ✅ نحدث localStorage دايمًا عشان الكونت يتحدث فورًا
     useEffect(() => {
         if (!loading) {
-            localStorage.setItem('cartItems', JSON.stringify(items));
-            window.dispatchEvent(new Event('cartUpdated'));
+            localStorage.setItem("cartItems", JSON.stringify(items));
+            window.dispatchEvent(new Event("cartUpdated"));
         }
     }, [items, loading]);
 
-    const handleRemove = async (id) => {
+    const handleRemove = async (planworkId) => {
         try {
             if (isSignedIn) {
                 const token = await getToken();
                 if (token) {
-                    await fetch(
-                        `https://acwebsite-icmet-test.azurewebsites.net/api/cart/remove/${id}`,
-                        {
-                            method: 'DELETE',
-                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                        }
-                    );
+                    await fetch(`${API_BASE}/cart/remove/${planworkId}`, {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
                 }
             }
+            setItems(prev =>
+                prev.filter(item => (item.planworkId || item.id) !== planworkId)
+            );
         } catch (error) {
-            console.error('Error removing item:', error);
+            console.error("Remove error:", error);
         }
-        setItems(prev => prev.filter(item => item.id !== id));
     };
 
     const applyCoupon = () => {
@@ -334,7 +296,11 @@ export default function ShoppingCartPage() {
                                 </div>
                             ) : (
                                 items.map(item => (
-                                    <CartItemFull key={item.id} item={item} onRemove={handleRemove} />
+                                    <CartItemFull
+                                        key={item.planworkId || item.id}
+                                        item={item}
+                                        onRemove={handleRemove}
+                                    />
                                 ))
                             )}
                         </div>
@@ -375,7 +341,6 @@ export default function ShoppingCartPage() {
                                         )}
                                     </div>
 
-                                    {/* Coupon input */}
                                     <div className="mb-4">
                                         {!appliedCoupon && (
                                             <div className="flex gap-2">

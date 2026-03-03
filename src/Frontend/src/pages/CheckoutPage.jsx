@@ -1,51 +1,65 @@
 ﻿/**
- * CheckoutPage.jsx
+ * CheckoutPage.jsx — FIXED VERSION
  *
- * CRITICAL FIX APPLIED:
- * Before calling Checkout.showPaymentPage(), we now save:
- *   - localStorage('pendingOrderId')  = orderId from backend
- *   - localStorage('pendingCartItems') = copy of cart items
- *   - localStorage('successIndicator') = successIndicator from backend
+ * المشاكل اللي اتحلت:
+ * 1. الكارت بيتجاب من API مباشرة (مش من localStorage)
+ *    عشان يكون متزامن مع الـ backend دايماً
  *
- * This is because showPaymentPage() does a FULL PAGE REDIRECT.
- * The React state is lost. PaymentReturnPage.jsx reads these localStorage
- * keys to know which courses were purchased.
+ * 2. حسابات الأسعار اتصلحت:
+ *    - item.price      = السعر بعد الخصم  (جاي من CartItemDto.Price)
+ *    - item.cost       = السعر الأصلي     (جاي من CartItemDto.Cost)
  *
- * The gateway redirect URL must be set to:
- *   https://<your-frontend-domain>/payment-return
- * NOT to your backend API URL.
+ * 3. عرض اسم الكورس اتصلح:
+ *    - item.title      = اسم الكورس       (جاي من CartItemDto.Title)
  */
 
 import { useState, useEffect, useRef } from "react";
-import { ArrowRight, ShieldCheck, Lock, Tag, BookOpen, AlertCircle, X, FileText, RotateCcw } from "lucide-react";
+import {
+    ArrowRight, ShieldCheck, Lock, Tag,
+    BookOpen, AlertCircle, X, FileText, RotateCcw
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 
-// ── Your deployed backend URL ─────────────────────────────────────────────────
 const API_BASE = "https://acwebsite-icmet-test.azurewebsites.net";
 
-// ── Terms & Conditions Modal ──────────────────────────────────────────────────
+// ── Helper: normalize item من الـ API response ──────────────────────────────
+// الـ API بيرجع: { planworkId, price, cost, title, place, date, days, slug, courseImage }
+// الـ UI محتاج: currentPrice, originalPrice, title, id
+function normalizeCartItem(item) {
+    return {
+        id: item.planworkId,
+        planworkId: item.planworkId,
+        title: item.title || item.courseName || "دورة تدريبية",
+        currentPrice: item.price ?? 0,
+        originalPrice: item.cost ?? item.price ?? 0,
+        place: item.place,
+        date: item.date,
+        days: item.days,
+        slug: item.slug,
+        courseImage: item.courseImage,
+        quantity: 1,
+    };
+}
+
+// ── Terms & Conditions Modal ─────────────────────────────────────────────────
 function TermsModal({ onClose }) {
     return (
         <div style={{
             position: 'fixed', inset: 0, zIndex: 9999,
             background: 'rgba(0,0,0,0.55)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center',
-            padding: '16px'
+            alignItems: 'center', justifyContent: 'center', padding: '16px'
         }}>
             <div style={{
-                background: '#fff', borderRadius: 18,
-                width: '100%', maxWidth: 600,
+                background: '#fff', borderRadius: 18, width: '100%', maxWidth: 600,
                 maxHeight: '85vh', display: 'flex', flexDirection: 'column',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                overflow: 'hidden'
+                boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden'
             }}>
                 {/* Header */}
                 <div style={{
                     background: 'linear-gradient(90deg,#0865a8,#f57c00)',
-                    padding: '18px 24px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    flexShrink: 0
+                    padding: '18px 24px', display: 'flex',
+                    alignItems: 'center', justifyContent: 'space-between', flexShrink: 0
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <FileText style={{ width: 22, height: 22, color: '#fff' }} />
@@ -69,13 +83,10 @@ function TermsModal({ onClose }) {
                     direction: 'rtl', lineHeight: 1.9,
                     color: '#374151', fontSize: '0.875rem'
                 }}>
-
-                    {/* Refund Policy - highlighted */}
                     <div style={{
                         background: 'linear-gradient(135deg, #fff7ed, #fef3c7)',
-                        border: '2px solid #f57c00',
-                        borderRadius: 14, padding: '18px 20px',
-                        marginBottom: 24
+                        border: '2px solid #f57c00', borderRadius: 14,
+                        padding: '18px 20px', marginBottom: 24
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                             <RotateCcw style={{ width: 22, height: 22, color: '#f57c00', flexShrink: 0 }} />
@@ -85,13 +96,10 @@ function TermsModal({ onClose }) {
                         </div>
                         <p style={{ margin: 0, color: '#78350f', fontWeight: 600, fontSize: '0.9rem' }}>
                             يحق للمتدرب طلب استرداد المبلغ المدفوع خلال مدة تتراوح بين
-                            <span style={{
-                                background: '#f57c00', color: '#fff',
-                                borderRadius: 6, padding: '2px 8px', margin: '0 6px', fontWeight: 700
-                            }}>
+                            <span style={{ background: '#f57c00', color: '#fff', borderRadius: 6, padding: '2px 8px', margin: '0 6px', fontWeight: 700 }}>
                                 3 إلى 7 أيام
                             </span>
-                            من تاريخ الشراء، وذلك في حال عدم الاستفادة من الدورة أو وجود مشكلة تقنية لا يمكن حلها.
+                            من تاريخ الشراء.
                         </p>
                         <ul style={{ marginTop: 12, marginBottom: 0, paddingRight: 20, color: '#92400e' }}>
                             <li style={{ marginBottom: 6 }}>يتم تقديم طلب الاسترداد عبر التواصل مع فريق الدعم الفني.</li>
@@ -101,144 +109,107 @@ function TermsModal({ onClose }) {
                         </ul>
                     </div>
 
-                    {/* T&C Sections */}
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8, marginTop: 0 }}>
-                        ١. القبول بالشروط
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        باستخدامك لمنصة المعهد التكنولوجي لهندسة التشييد والإدارة (ICMET)، فإنك توافق على الالتزام بهذه الشروط والأحكام. إذا كنت لا توافق على أي جزء منها، يُرجى عدم استخدام الخدمة.
-                    </p>
+                    {[
+                        ["١. القبول بالشروط", "باستخدامك لمنصة المعهد التكنولوجي لهندسة التشييد والإدارة (ICMET)، فإنك توافق على الالتزام بهذه الشروط والأحكام."],
+                        ["٢. الاشتراك والوصول", "عند إتمام عملية الشراء، تحصل على حق وصول شخصي وغير قابل للنقل للدورة المشتراة."],
+                        ["٣. حقوق الملكية الفكرية", "جميع المحتويات المقدمة عبر المنصة محمية بموجب قوانين حقوق الملكية الفكرية."],
+                        ["٤. الالتزامات والسلوك", "يلتزم المتدرب باحترام قواعد الأدب والتعامل اللائق مع المدربين وباقي المتدربين."],
+                        ["٥. تعديل الأسعار والمحتوى", "يحتفظ المعهد بحق تعديل أسعار الدورات وتحديث محتواها في أي وقت."],
+                        ["٦. حماية البيانات والخصوصية", "نلتزم بحماية بياناتك الشخصية وفقاً لسياسة الخصوصية المعتمدة لدينا."],
+                        ["٧. تحديد المسؤولية", "لا يتحمل المعهد المسؤولية عن أي خسائر غير مباشرة ناجمة عن استخدام المنصة."],
+                        ["٨. القانون المطبق", "تخضع هذه الشروط والأحكام لأحكام القانون المصري."],
+                    ].map(([title, text]) => (
+                        <div key={title}>
+                            <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>{title}</h3>
+                            <p style={{ marginTop: 0 }}>{text}</p>
+                        </div>
+                    ))}
 
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>
-                        ٢. الاشتراك والوصول
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        عند إتمام عملية الشراء، تحصل على حق وصول شخصي وغير قابل للنقل للدورة المشتراة. يُحظر مشاركة بيانات الدخول مع أي طرف آخر أو إعادة بيع المحتوى بأي شكل من الأشكال.
-                    </p>
-
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>
-                        ٣. حقوق الملكية الفكرية
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        جميع المحتويات المقدمة عبر المنصة — من فيديوهات ومستندات وملاحظات — هي ملك حصري للمعهد أو للمدرب المعني، ومحمية بموجب قوانين حقوق الملكية الفكرية. يُحظر تنزيلها أو نسخها أو توزيعها دون إذن كتابي مسبق.
-                    </p>
-
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>
-                        ٤. الالتزامات والسلوك
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        يلتزم المتدرب باحترام قواعد الأدب والتعامل اللائق مع المدربين وباقي المتدربين، والامتناع عن أي سلوك مسيء أو مزعزع لبيئة التعلم. يحق للمعهد إيقاف الحساب في حال الإخلال بهذه الالتزامات.
-                    </p>
-
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>
-                        ٥. تعديل الأسعار والمحتوى
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        يحتفظ المعهد بحق تعديل أسعار الدورات وتحديث محتواها في أي وقت. لن تؤثر هذه التغييرات على الاشتراكات المدفوعة مسبقاً.
-                    </p>
-
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>
-                        ٦. حماية البيانات والخصوصية
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        نلتزم بحماية بياناتك الشخصية وفقاً لسياسة الخصوصية المعتمدة لدينا. لن تُشارك بياناتك مع أطراف ثالثة إلا بموافقتك أو بموجب القانون.
-                    </p>
-
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>
-                        ٧. تحديد المسؤولية
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        لا يتحمل المعهد المسؤولية عن أي خسائر غير مباشرة أو تبعية ناجمة عن استخدام المنصة أو عدم القدرة على الوصول إليها لأسباب خارجة عن إرادتنا.
-                    </p>
-
-                    <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>
-                        ٨. القانون المطبق
-                    </h3>
-                    <p style={{ marginTop: 0 }}>
-                        تخضع هذه الشروط والأحكام لأحكام القانون المصري، وتختص المحاكم المصرية بالنظر في أي نزاع ينشأ عنها.
-                    </p>
-
-                    <div style={{
-                        background: '#f0f9ff', borderRadius: 10, padding: '12px 16px',
-                        marginTop: 16, borderRight: '4px solid #0865a8'
-                    }}>
+                    <div style={{ background: '#f0f9ff', borderRadius: 10, padding: '12px 16px', marginTop: 16, borderRight: '4px solid #0865a8' }}>
                         <p style={{ margin: 0, fontSize: '0.8rem', color: '#1e40af', fontWeight: 600 }}>
-                            آخر تحديث: يناير 2025 — للاستفسار تواصل مع فريق الدعم عبر البريد الإلكتروني أو الهاتف المُدرج في الموقع.
+                            آخر تحديث: يناير 2025
                         </p>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div style={{
-                    padding: '16px 24px', borderTop: '1px solid #e5e7eb',
-                    display: 'flex', justifyContent: 'flex-end', flexShrink: 0
-                }}>
+                <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
                     <button onClick={onClose} style={{
                         background: 'linear-gradient(90deg,#0865a8,#f57c00)',
                         color: '#fff', border: 'none', borderRadius: 10,
-                        padding: '10px 28px', fontWeight: 700,
-                        fontSize: '0.9rem', cursor: 'pointer'
-                    }}>
-                        فهمت وأوافق
-                    </button>
+                        padding: '10px 28px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer'
+                    }}>فهمت وأوافق</button>
                 </div>
             </div>
         </div>
     );
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
     const navigate = useNavigate();
     const { getToken, isSignedIn } = useAuth();
 
+    // ✅ FIX: cartItems بتيجي من الـ API مش من localStorage
     const [cartItems, setCartItems] = useState([]);
+    const [cartLoading, setCartLoading] = useState(true);
+    const [cartError, setCartError] = useState("");
+
     const [loading, setLoading] = useState(false);
     const [showCoupon, setShowCoupon] = useState(false);
     const [couponCode, setCouponCode] = useState("");
     const [error, setError] = useState("");
 
-    // ── NEW: Terms & Conditions state ─────────────────────────────────────────
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [showTermsModal, setShowTermsModal] = useState(false);
-    const [termsError, setTermsError] = useState(false); // shake animation trigger
+    const [termsError, setTermsError] = useState(false);
 
-    // Load cart from localStorage
-    useEffect(() => {
-        const savedCart = localStorage.getItem("cartItems");
-        if (savedCart) {
-            try { setCartItems(JSON.parse(savedCart)); } catch { }
-        }
-    }, []);
+    const getTokenRef = useRef(getToken);
+    const cartItemsRef = useRef(cartItems);
+    const successIndicatorRef = useRef(null);
+    const orderIdRef = useRef(null);
+    const subtotalRef = useRef(0);
 
+    useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
+    useEffect(() => { cartItemsRef.current = cartItems; }, [cartItems]);
+
+    // ✅ FIX: جلب الكارت من الـ API مباشرة
     useEffect(() => {
         if (isSignedIn === false) {
             alert("يجب تسجيل الدخول أولاً");
             navigate("/sign-in");
+            return;
         }
-    }, [isSignedIn, navigate]);
+        if (!isSignedIn) return; // لسه بيتحقق
 
-    // ─── Keep refs in sync ────────────────────────────────────────────────────
-    useEffect(() => {
-        getTokenRef.current = getToken;
-    }, [getToken]);
+        const fetchCart = async () => {
+            setCartLoading(true);
+            setCartError("");
+            try {
+                const token = await getToken();
+                const res = await fetch(`${API_BASE}/api/cart`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error(`فشل تحميل السلة (${res.status})`);
+                const data = await res.json();
 
-    useEffect(() => {
-        cartItemsRef.current = cartItems;
-    }, [cartItems]);
+                // ✅ normalize الـ items عشان تتوافق مع الـ UI
+                const normalized = (data.items || []).map(normalizeCartItem);
+                setCartItems(normalized);
 
-    // ─── Handle redirect back from bank ──────────────────────────────────────
-    // NOTE: Bank redirects to /payment/result page now (see PaymentResultPage.jsx)
-    // This useEffect is kept as fallback only
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderIdParam = urlParams.get("orderId");
-        const resultIndicator = urlParams.get("resultIndicator");
-        if (orderIdParam && resultIndicator) {
-            verifyAfterRedirect(orderIdParam, resultIndicator);
-        }
-    }, []);
+                // ✅ حفظ في localStorage للـ PaymentReturnPage
+                localStorage.setItem("cartItems", JSON.stringify(normalized));
+            } catch (err) {
+                setCartError(err.message || "حدث خطأ أثناء تحميل السلة");
+            } finally {
+                setCartLoading(false);
+            }
+        };
 
-    // ─── Mastercard global callbacks ──────────────────────────────────────────
+        fetchCart();
+    }, [isSignedIn, getToken]);
+
+    // Mastercard global callbacks
     useEffect(() => {
         window.completeCallback = async (resultIndicator) => {
             if (resultIndicator === successIndicatorRef.current) {
@@ -250,16 +221,9 @@ export default function CheckoutPage() {
                     );
                 } catch (_) { }
 
-                // ✅ Move purchased courses to enrolled AND purchasedCourses BEFORE clearing cart
-                movePurchasedToEnrolled(cartItemsRef.current);
-
-                // ✅ Clear cart
                 localStorage.removeItem("cartItems");
                 window.dispatchEvent(new Event("cartUpdated"));
-
-                setPaymentSuccess(true);
-                setOrderId(orderIdRef.current);
-                setOrderAmount(subtotalRef.current);
+                navigate(`/payment-return?orderId=${orderIdRef.current}&resultIndicator=${resultIndicator}`);
             } else {
                 setLoading(false);
                 setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
@@ -267,7 +231,6 @@ export default function CheckoutPage() {
         };
 
         window.errorCallback = (err) => {
-            console.error("Mastercard error:", JSON.stringify(err));
             setLoading(false);
             setError("حدث خطأ أثناء الدفع: " + (err?.error?.explanation || "يرجى المحاولة مرة أخرى."));
         };
@@ -284,56 +247,18 @@ export default function CheckoutPage() {
         };
     }, []);
 
-    // ─── Totals ───────────────────────────────────────────────────────────────
-    const subtotal = cartItems.reduce(
-        (sum, item) => sum + item.currentPrice * (item.quantity || 1), 0
-    );
-    const totalOriginalPrice = cartItems.reduce(
-        (sum, item) => sum + item.originalPrice * (item.quantity || 1), 0
-    );
+    // ✅ FIX: الحسابات بتستخدم currentPrice و originalPrice الصح
+    const subtotal = cartItems.reduce((sum, item) => sum + (item.currentPrice ?? 0) * (item.quantity || 1), 0);
+    const totalOriginalPrice = cartItems.reduce((sum, item) => sum + (item.originalPrice ?? item.currentPrice ?? 0) * (item.quantity || 1), 0);
     const totalDiscount = totalOriginalPrice - subtotal;
 
-    useEffect(() => {
-        subtotalRef.current = subtotal;
-    }, [subtotal]);
+    useEffect(() => { subtotalRef.current = subtotal; }, [subtotal]);
 
-    // ─── Verify after bank redirect ───────────────────────────────────────────
-    const verifyAfterRedirect = async (oid, resultIndicator) => {
-        setLoading(true);
-        try {
-            const token = await getToken();
-            const res = await fetch(
-                `${API_BASE}/api/checkout/result?orderId=${oid}&resultIndicator=${resultIndicator}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            const data = await res.json();
-            if (data.isSuccess) {
-                // ✅ Move purchased courses to enrolled AND purchasedCourses BEFORE clearing cart
-                const savedCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
-                movePurchasedToEnrolled(savedCart);
-
-                localStorage.removeItem("cartItems");
-                window.dispatchEvent(new Event("cartUpdated"));
-
-                setPaymentSuccess(true);
-                setOrderId(oid);
-                setOrderAmount(subtotalRef.current);
-            } else {
-                setError("فشلت عملية الدفع. يرجى المحاولة مرة أخرى.");
-            }
-        } catch {
-            setError("حدث خطأ أثناء التحقق من حالة الدفع.");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // ─── Main payment handler ─────────────────────────────────────────────────
+    // Main payment handler
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        e?.preventDefault();
         setError("");
 
-        // ── Validate T&C acceptance ────────────────────────────────────────
         if (!termsAccepted) {
             setTermsError(true);
             setTimeout(() => setTermsError(false), 600);
@@ -341,9 +266,12 @@ export default function CheckoutPage() {
             return;
         }
 
-        if (cartItems.length === 0) { setError("السلة فارغة. يرجى إضافة دورات أولاً."); return; }
-        setLoading(true);
+        if (cartItems.length === 0) {
+            setError("السلة فارغة. يرجى إضافة دورات أولاً.");
+            return;
+        }
 
+        setLoading(true);
         try {
             const token = await getToken();
             if (!token) throw new Error("فشل في الحصول على رمز المصادقة");
@@ -369,7 +297,10 @@ export default function CheckoutPage() {
 
             const { sessionId, successIndicator, orderId } = result.data;
 
-            // ── CRITICAL: Save everything to localStorage BEFORE redirecting ──
+            successIndicatorRef.current = successIndicator;
+            orderIdRef.current = orderId;
+
+            // حفظ في localStorage للـ PaymentReturnPage
             localStorage.setItem('pendingOrderId', String(orderId));
             localStorage.setItem('pendingSuccessIndicator', String(successIndicator));
             localStorage.setItem('pendingCartItems', JSON.stringify(cartItems));
@@ -399,7 +330,6 @@ export default function CheckoutPage() {
     const Spinner = () => (
         <svg style={{ width: 20, height: 20, animation: 'spin 1s linear infinite' }}
             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes shake{0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)}}`}</style>
             <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
@@ -419,6 +349,16 @@ export default function CheckoutPage() {
         </svg>
     );
 
+    // ── Loading state ─────────────────────────────────────────────────────────
+    if (cartLoading) {
+        return (
+            <div dir="rtl" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
+                <Spinner />
+                <p style={{ color: '#6b7280' }}>جاري تحميل سلة التسوق...</p>
+            </div>
+        );
+    }
+
     return (
         <>
             {showTermsModal && <TermsModal onClose={() => setShowTermsModal(false)} />}
@@ -432,7 +372,6 @@ export default function CheckoutPage() {
                 @keyframes spin { to { transform: rotate(360deg) } }
                 @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
                 .terms-shake { animation: shake 0.5s ease-in-out; }
-                .terms-checkbox:checked { accent-color: #0865a8; }
             `}</style>
 
             {/* Breadcrumb */}
@@ -449,15 +388,19 @@ export default function CheckoutPage() {
                     <h1 style={{ fontSize: 'clamp(1.4rem,5vw,3rem)', fontWeight: 700 }}>اشترك في دوراتنا</h1>
                 </div>
 
-                {error && (
+                {/* Error banner */}
+                {(error || cartError) && (
                     <div style={{ maxWidth: 900, margin: '0 auto 1.5rem', padding: '0 12px' }}>
                         <div style={{ background: '#fef2f2', borderRadius: 10, padding: '1rem' }}>
                             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                 <AlertCircle style={{ width: 20, height: 20, color: '#dc2626', flexShrink: 0, marginTop: 2 }} />
                                 <div>
-                                    <p style={{ fontWeight: 700, color: '#991b1b' }}>خطأ في الدفع</p>
-                                    <p style={{ fontSize: '0.85rem', color: '#b91c1c', marginTop: 4 }}>{error}</p>
-                                    <button onClick={() => setError("")} style={{ marginTop: 8, fontSize: '0.75rem', color: '#dc2626', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>إغلاق</button>
+                                    <p style={{ fontWeight: 700, color: '#991b1b' }}>خطأ</p>
+                                    <p style={{ fontSize: '0.85rem', color: '#b91c1c', marginTop: 4 }}>{error || cartError}</p>
+                                    <button onClick={() => { setError(""); setCartError(""); }}
+                                        style={{ marginTop: 8, fontSize: '0.75rem', color: '#dc2626', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}>
+                                        إغلاق
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -505,46 +448,30 @@ export default function CheckoutPage() {
                                     </div>
                                 </div>
 
-                                {/* ── Refund Policy Summary ─────────────────────────────────────── */}
-                                <div style={{
-                                    marginTop: 14,
-                                    borderRadius: 12,
-                                    background: 'linear-gradient(135deg, #fff7ed, #fef3c7)',
-                                    border: '1px solid #fed7aa',
-                                    padding: 'clamp(10px,2.5vw,16px)',
-                                    display: 'flex', gap: 10, alignItems: 'flex-start'
-                                }}>
+                                {/* Refund Policy Summary */}
+                                <div style={{ marginTop: 14, borderRadius: 12, background: 'linear-gradient(135deg, #fff7ed, #fef3c7)', border: '1px solid #fed7aa', padding: 'clamp(10px,2.5vw,16px)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                                     <RotateCcw style={{ width: 18, height: 18, color: '#f57c00', flexShrink: 0, marginTop: 2 }} />
                                     <div>
-                                        <p style={{ fontWeight: 700, fontSize: 'clamp(0.78rem,2vw,0.9rem)', color: '#92400e' }}>
-                                            سياسة الاسترداد
-                                        </p>
+                                        <p style={{ fontWeight: 700, fontSize: 'clamp(0.78rem,2vw,0.9rem)', color: '#92400e' }}>سياسة الاسترداد</p>
                                         <p style={{ fontSize: '0.78rem', color: '#78350f', marginTop: 3, lineHeight: 1.7 }}>
-                                            يمكنك استرداد مبلغك خلال مدة تتراوح بين <strong>3 إلى 7 أيام</strong> من تاريخ الشراء في حال وجود مشكلة أو عدم الرضا عن الدورة.
+                                            يمكنك استرداد مبلغك خلال مدة تتراوح بين <strong>3 إلى 7 أيام</strong> من تاريخ الشراء.
                                         </p>
                                     </div>
                                 </div>
 
-                                {/* ── Terms & Conditions Checkbox ───────────────────────────────── */}
+                                {/* Terms & Conditions Checkbox */}
                                 <div
                                     className={termsError ? 'terms-shake' : ''}
                                     style={{
-                                        marginTop: 16,
-                                        borderRadius: 12,
+                                        marginTop: 16, borderRadius: 12,
                                         border: `2px solid ${termsError ? '#dc2626' : termsAccepted ? '#16a34a' : '#e5e7eb'}`,
                                         background: termsError ? '#fef2f2' : termsAccepted ? 'rgba(22,163,74,0.04)' : '#f9fafb',
                                         padding: 'clamp(10px,2.5vw,16px)',
-                                        transition: 'border-color 0.25s, background 0.25s',
-                                        cursor: 'pointer'
+                                        transition: 'border-color 0.25s, background 0.25s', cursor: 'pointer'
                                     }}
-                                    onClick={() => {
-                                        setTermsAccepted(prev => !prev);
-                                        if (termsError) setTermsError(false);
-                                        setError("");
-                                    }}
+                                    onClick={() => { setTermsAccepted(prev => !prev); if (termsError) setTermsError(false); setError(""); }}
                                 >
                                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                                        {/* Custom checkbox */}
                                         <div style={{
                                             width: 22, height: 22, borderRadius: 6, flexShrink: 0,
                                             border: `2px solid ${termsAccepted ? '#16a34a' : '#d1d5db'}`,
@@ -558,22 +485,15 @@ export default function CheckoutPage() {
                                                 </svg>
                                             )}
                                         </div>
-
                                         <p style={{ fontSize: 'clamp(0.78rem,2vw,0.875rem)', lineHeight: 1.7, margin: 0, color: '#374151', userSelect: 'none' }}>
                                             لقد قرأت وأوافق على{' '}
-                                            <span
-                                                onClick={(e) => { e.stopPropagation(); setShowTermsModal(true); }}
-                                                style={{
-                                                    color: '#0865a8', fontWeight: 700, textDecoration: 'underline',
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
+                                            <span onClick={(e) => { e.stopPropagation(); setShowTermsModal(true); }}
+                                                style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}>
                                                 الشروط والأحكام وسياسة الاسترداد
                                             </span>
                                             {' '}الخاصة بالمعهد التكنولوجي لهندسة التشييد والإدارة.
                                         </p>
                                     </div>
-
                                     {termsError && (
                                         <p style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600, marginTop: 8, marginRight: 34 }}>
                                             ⚠️ يجب الموافقة على الشروط والأحكام قبل المتابعة
@@ -582,7 +502,8 @@ export default function CheckoutPage() {
                                 </div>
 
                                 {/* Mobile-only pay button */}
-                                <button onClick={handleSubmit} disabled={loading || cartItems.length === 0}
+                                <button onClick={handleSubmit}
+                                    disabled={loading || cartItems.length === 0}
                                     className="co-mobile-btn"
                                     style={{ marginTop: 16, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12, background: termsAccepted ? 'linear-gradient(90deg,#0865a8,#f57c00)' : '#d1d5db', padding: '0.85rem', fontWeight: 700, color: '#fff', border: 'none', cursor: loading || cartItems.length === 0 || !termsAccepted ? 'not-allowed' : 'pointer', opacity: loading || cartItems.length === 0 ? 0.7 : 1, transition: 'background 0.3s' }}>
                                     {loading ? <><Spinner />جاري المعالجة...</> : <>المتابعة إلى الدفع <ArrowRight style={{ width: 18, height: 18, transform: 'rotate(180deg)' }} /></>}
@@ -603,14 +524,30 @@ export default function CheckoutPage() {
 
                                 <p style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 12 }}>ملخص الطلب</p>
                                 <div style={{ maxHeight: 210, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
-                                    {cartItems.map((item) => (
+                                    {cartItems.length === 0 ? (
+                                        <p style={{ textAlign: 'center', color: '#9ca3af', fontSize: '0.85rem' }}>لا توجد دورات في السلة</p>
+                                    ) : cartItems.map((item) => (
                                         <div key={item.id} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                            <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: 'linear-gradient(135deg,#0865a8,#f57c00)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <BookOpen style={{ width: 22, height: 22, color: '#fff' }} />
+                                            <div style={{ width: 44, height: 44, borderRadius: 10, flexShrink: 0, background: 'linear-gradient(135deg,#0865a8,#f57c00)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                                {item.courseImage
+                                                    ? <img src={item.courseImage} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    : <BookOpen style={{ width: 22, height: 22, color: '#fff' }} />
+                                                }
                                             </div>
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <p style={{ fontSize: 'clamp(0.75rem,2vw,0.875rem)', fontWeight: 500, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{item.title}</p>
-                                                <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f57c00', marginTop: 4 }}>{((item.currentPrice || 0) * (item.quantity || 1)).toFixed(2)} جنيه</p>
+                                                <p style={{ fontSize: 'clamp(0.75rem,2vw,0.875rem)', fontWeight: 500, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                                    {item.title}
+                                                </p>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                                                    <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#f57c00' }}>
+                                                        {((item.currentPrice || 0) * (item.quantity || 1)).toFixed(2)} جنيه
+                                                    </p>
+                                                    {item.originalPrice > item.currentPrice && (
+                                                        <p style={{ fontSize: '0.72rem', color: '#9ca3af', textDecoration: 'line-through' }}>
+                                                            {((item.originalPrice || 0) * (item.quantity || 1)).toFixed(2)}
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -619,11 +556,13 @@ export default function CheckoutPage() {
                                 {/* Totals */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 'clamp(0.78rem,2vw,0.875rem)', marginBottom: 16 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.7 }}>
-                                        <span>المجموع الفرعي</span><span>{totalOriginalPrice.toFixed(2)} جنيه</span>
+                                        <span>المجموع الفرعي</span>
+                                        <span>{totalOriginalPrice.toFixed(2)} جنيه</span>
                                     </div>
                                     {totalDiscount > 0 && (
                                         <div style={{ display: 'flex', justifyContent: 'space-between', color: '#16a34a' }}>
-                                            <span>الخصم</span><span>-{totalDiscount.toFixed(2)} جنيه</span>
+                                            <span>خصم الدورات</span>
+                                            <span>-{totalDiscount.toFixed(2)} جنيه</span>
                                         </div>
                                     )}
                                 </div>
@@ -631,12 +570,14 @@ export default function CheckoutPage() {
                                 {/* Coupon */}
                                 <div style={{ marginBottom: 16 }}>
                                     {!showCoupon ? (
-                                        <button onClick={() => setShowCoupon(true)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, border: '1px solid #d1d5db', padding: '0.6rem', fontSize: '0.85rem', fontWeight: 600, background: '#fff', cursor: 'pointer' }}>
+                                        <button onClick={() => setShowCoupon(true)}
+                                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 10, border: '1px solid #d1d5db', padding: '0.6rem', fontSize: '0.85rem', fontWeight: 600, background: '#fff', cursor: 'pointer' }}>
                                             <Tag style={{ width: 15, height: 15 }} />استخدم كود الخصم
                                         </button>
                                     ) : (
                                         <div style={{ display: 'flex', gap: 8 }}>
-                                            <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)} placeholder="أدخل كود الخصم"
+                                            <input type="text" value={couponCode} onChange={(e) => setCouponCode(e.target.value)}
+                                                placeholder="أدخل كود الخصم"
                                                 style={{ flex: 1, borderRadius: 10, border: '1px solid #d1d5db', padding: '0.5rem 0.75rem', fontSize: '0.85rem', outline: 'none' }} />
                                             <button onClick={() => couponCode.trim() && alert("سيتم تطبيق الكود عند إتمام الدفع")}
                                                 style={{ borderRadius: 10, background: '#0865a8', color: '#fff', padding: '0.5rem 1rem', fontWeight: 700, fontSize: '0.85rem', border: 'none', cursor: 'pointer' }}>
@@ -650,24 +591,22 @@ export default function CheckoutPage() {
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                                     <span style={{ fontWeight: 700, fontSize: 'clamp(0.9rem,2.5vw,1rem)' }}>إجمالي المستحق</span>
-                                    <span style={{ fontWeight: 700, fontSize: 'clamp(1.2rem,3vw,1.5rem)', color: '#f57c00' }}>{subtotal.toFixed(2)} جنيه</span>
+                                    <span style={{ fontWeight: 700, fontSize: 'clamp(1.2rem,3vw,1.5rem)', color: '#f57c00' }}>
+                                        {subtotal.toFixed(2)} جنيه
+                                    </span>
                                 </div>
 
-                                {/* Pay button — visually disabled until T&C accepted */}
+                                {/* Pay button */}
                                 <button onClick={handleSubmit}
                                     disabled={loading || cartItems.length === 0}
                                     style={{
                                         width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         gap: 8, borderRadius: 12,
-                                        background: termsAccepted
-                                            ? 'linear-gradient(90deg,#0865a8,#f57c00)'
-                                            : '#d1d5db',
-                                        padding: '0.9rem', fontWeight: 700, color: '#fff',
-                                        border: 'none',
+                                        background: termsAccepted ? 'linear-gradient(90deg,#0865a8,#f57c00)' : '#d1d5db',
+                                        padding: '0.9rem', fontWeight: 700, color: '#fff', border: 'none',
                                         cursor: loading || cartItems.length === 0 ? 'not-allowed' : 'pointer',
                                         opacity: loading || cartItems.length === 0 ? 0.7 : 1,
-                                        marginBottom: 12,
-                                        transition: 'background 0.3s'
+                                        marginBottom: 12, transition: 'background 0.3s'
                                     }}>
                                     {loading
                                         ? <><Spinner />جاري المعالجة...</>
@@ -677,12 +616,8 @@ export default function CheckoutPage() {
                                     }
                                 </button>
 
-                                {/* Terms reminder under button */}
                                 {!termsAccepted && (
-                                    <p style={{
-                                        textAlign: 'center', fontSize: '0.72rem',
-                                        color: '#9ca3af', marginBottom: 12
-                                    }}>
+                                    <p style={{ textAlign: 'center', fontSize: '0.72rem', color: '#9ca3af', marginBottom: 12 }}>
                                         يرجى الموافقة على الشروط والأحكام في القسم الأيسر أولاً
                                     </p>
                                 )}

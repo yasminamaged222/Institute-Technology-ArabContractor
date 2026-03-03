@@ -9,9 +9,9 @@ namespace Institute.Domain.specifications
 {
     public class BaseSpecification<T> : Ispecification<T> where T : class
     {
-
         public Expression<Func<T, bool>> Criteria { get; set; }
         public List<Expression<Func<T, object>>> Includes { get; set; } = new List<Expression<Func<T, object>>>();
+        public List<string> IncludeStrings { get; set; } = new List<string>();
 
         public Expression<Func<T, object>> OrderBy { get; set; }
         public Expression<Func<T, object>> OrderByDescending { get; set; }
@@ -22,7 +22,6 @@ namespace Institute.Domain.specifications
 
         public BaseSpecification()
         {
-            //Criteria = null;
         }
         public BaseSpecification(Expression<Func<T, bool>> criteria)
         {
@@ -31,6 +30,8 @@ namespace Institute.Domain.specifications
 
         public void AddInclude(Expression<Func<T, object>> includeExpression)
             => Includes.Add(includeExpression);
+        public void AddInclude(string includeString)
+            => IncludeStrings.Add(includeString);
         public void AddOrderBy(Expression<Func<T, object>> orderByExpression)
             => OrderBy = orderByExpression;
         public void AddOrderByDescending(Expression<Func<T, object>> orderByDescExpression)

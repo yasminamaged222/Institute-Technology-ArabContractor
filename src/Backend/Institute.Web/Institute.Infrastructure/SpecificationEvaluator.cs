@@ -27,6 +27,11 @@ namespace Institute.Infrastructure
                 query,
                 (current, include) => current.Include(include));
 
+            // String Includes (for ThenInclude scenarios)
+            query = spec.IncludeStrings.Aggregate(
+                query,
+                (current, include) => current.Include(include));
+
             // OrderBy
             if (spec.OrderBy != null)
             {
@@ -49,5 +54,4 @@ namespace Institute.Infrastructure
             return query;
         }
     }
-
 }

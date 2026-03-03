@@ -8,34 +8,51 @@ using System.Threading.Tasks;
 
 namespace Institute.Infrastructure
 {
-    public class SpecificationEvaluator<TEntity> where TEntity : class
+    public class SpecificationEvaluator<T> where T : class
     {
-        public static IQueryable<TEntity> GetQuery(IQueryable<TEntity> inputQuery, Ispecification<TEntity> spec)
+        public static IQueryable<T> GetQuery(
+            IQueryable<T> inputQuery,
+            Ispecification<T> spec)
         {
             var query = inputQuery;
 
+            // Where
             if (spec.Criteria != null)
             {
                 query = query.Where(spec.Criteria);
             }
 
+            // Include
+            query = spec.Includes.Aggregate(
+                query,
+                (current, include) => current.Include(include));
+
+            // String Includes (for ThenInclude scenarios)
+            query = spec.IncludeStrings.Aggregate(
+                query,
+                (current, include) => current.Include(include));
+
+            // OrderBy
             if (spec.OrderBy != null)
             {
                 query = query.OrderBy(spec.OrderBy);
             }
-
 
             if (spec.OrderByDescending != null)
             {
                 query = query.OrderByDescending(spec.OrderByDescending);
             }
 
+            // Paging
             if (spec.IsPaginationEnabled)
-                query = query.Skip(spec.Skip).Take(spec.Take);
-
-            query = spec.Includes.Aggregate(query, (currentQuery, include) => currentQuery.Include(include));
+            {
+                query = query
+                    .Skip(spec.Skip)
+                    .Take(spec.Take);
+            }
 
             return query;
         }
     }
+
 }

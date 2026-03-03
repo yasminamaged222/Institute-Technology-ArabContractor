@@ -41,6 +41,8 @@ namespace Institute.Application.Services
             // 2️⃣ نجيب الكارت
             var cartSpec = new BaseSpecification<Cart>(c => c.UserId == user.Id && !c.IsCheckedOut);
             cartSpec.AddInclude(c => c.Items);
+            cartSpec.AddInclude("Items.Planwork");
+            cartSpec.AddInclude("Items.Planwork.Files");
 
             var cart = (await _cartRepository.GetAllWithSpecAsync(cartSpec)).FirstOrDefault();
 
@@ -53,7 +55,7 @@ namespace Institute.Application.Services
                 };
 
                 await _cartRepository.AddAsync(cart);
-                await _cartRepository.SaveChangesAsync();   
+                await _cartRepository.SaveChangesAsync();
             }
 
             return cart;
@@ -78,7 +80,7 @@ namespace Institute.Application.Services
             if (planwork == null)
                 throw new Exception("Course not found");
             var cost = planwork.PlanCost ?? 0; // إذا كان null، نعتبره 0
-            
+
             var cartItem = new CartItem
             {
                 CartId = cart.Id,

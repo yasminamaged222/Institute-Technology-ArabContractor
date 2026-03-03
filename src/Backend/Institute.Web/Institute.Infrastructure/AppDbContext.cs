@@ -493,7 +493,16 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.UserLogName).HasMaxLength(50);
             entity.Property(e => e.UserPassword).HasMaxLength(50);
         });
-
+        // CartItem
+        modelBuilder.Entity<CartItem>(entity =>
+        {
+            entity.HasKey(ci => ci.Id);
+            entity.HasIndex(ci => new { ci.CartId, ci.PlanworkId }).IsUnique();
+            entity.HasOne(ci => ci.Planwork)
+                  .WithMany()
+                  .HasForeignKey(ci => ci.PlanworkId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
         modelBuilder.Entity<UsersLog>(entity =>
         {
             entity.HasKey(e => e.LogId);
