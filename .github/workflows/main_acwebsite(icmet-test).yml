@@ -71,8 +71,7 @@ jobs:
           }
           Copy-Item -Path src/Frontend/dist/* -Destination published/wwwroot -Recurse -Force
 
-      # ✅ Copy web.config from public/ (already exists there) — no need to overwrite
-      #    But we ensure it's present as a fallback anyway
+      # ✅ Ensure web.config exists in wwwroot (fallback if not copied from public/)
       - name: Ensure web.config exists in wwwroot
         shell: pwsh
         run: |
@@ -81,34 +80,34 @@ jobs:
             Write-Host "✅ web.config already present (copied from public/)"
           } else {
             Write-Host "⚠️ web.config missing — writing fallback"
-            $content = @'
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <system.webServer>
-    <rewrite>
-      <rules>
-        <rule name="StaticFiles" stopProcessing="true">
-          <match url=".*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map)$" />
-          <action type="None" />
-        </rule>
-        <rule name="API" stopProcessing="true">
-          <match url="^api/.*" />
-          <action type="None" />
-        </rule>
-        <rule name="ReactRoutes" stopProcessing="true">
-          <match url=".*" />
-          <conditions logicalGrouping="MatchAll">
-            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
-            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
-          </conditions>
-          <action type="Rewrite" url="/index.html" />
-        </rule>
-      </rules>
-    </rewrite>
-  </system.webServer>
-</configuration>
-'@
-            $content | Out-File -FilePath $dest -Encoding utf8
+            $lines = @(
+              '<?xml version="1.0" encoding="utf-8"?>',
+              '<configuration>',
+              '  <system.webServer>',
+              '    <rewrite>',
+              '      <rules>',
+              '        <rule name="StaticFiles" stopProcessing="true">',
+              '          <match url=".*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map)$" />',
+              '          <action type="None" />',
+              '        </rule>',
+              '        <rule name="API" stopProcessing="true">',
+              '          <match url="^api/.*" />',
+              '          <action type="None" />',
+              '        </rule>',
+              '        <rule name="ReactRoutes" stopProcessing="true">',
+              '          <match url=".*" />',
+              '          <conditions logicalGrouping="MatchAll">',
+              '            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />',
+              '            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />',
+              '          </conditions>',
+              '          <action type="Rewrite" url="/index.html" />',
+              '        </rule>',
+              '      </rules>',
+              '    </rewrite>',
+              '  </system.webServer>',
+              '</configuration>'
+            )
+            $lines | Out-File -FilePath $dest -Encoding utf8
           }
 
       # ------------------ Verify publish folder ------------------
