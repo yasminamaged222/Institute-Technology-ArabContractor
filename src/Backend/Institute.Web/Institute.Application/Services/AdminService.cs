@@ -37,5 +37,23 @@ namespace Institute.Application.Services
                             .ToList()
             }).ToList();
         }
+        public async Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword)
+        {
+            var spec = new UserSearchSpec(keyword);
+
+            var users = await _userRepository
+                                         .GetAllWithSpecAsync(spec);
+
+            return users.Select(u => new UserWithCoursesDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                Email = u.Email,
+                CoursesCount = u.Enrollments.Count,
+                Courses = u.Enrollments
+                            .Select(e => e.Planwork.ServiceTitle)
+                            .ToList()
+            }).ToList();
+        }
     }
 }

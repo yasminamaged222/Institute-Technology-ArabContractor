@@ -10,5 +10,6 @@ namespace Institute.Application.Interfaces.IService
     public interface IAdminService
     {
         Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync();
+        Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword);
     }
 }
