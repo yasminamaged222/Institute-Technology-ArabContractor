@@ -52,6 +52,8 @@ const styles = {
     addToCartBtnDisabled: { opacity: 0.6, cursor: 'not-allowed', transform: 'none' },
     detailsBtn: { width: '100%', borderRadius: '10px', border: '2px solid #0865a8', backgroundColor: '#ffffff', padding: '10px 20px', fontWeight: 'bold', color: '#0865a8', transition: 'all 0.3s ease', cursor: 'pointer', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif' },
     detailsBtnHover: { backgroundColor: '#0865a8', color: '#ffffff', transform: 'translateY(-2px)', boxShadow: '0 4px 10px rgba(8,101,168,0.25)' },
+    refundBtn: { width: '100%', borderRadius: '10px', border: '2px solid #e53935', backgroundColor: '#ffffff', padding: '10px 20px', fontWeight: 'bold', color: '#e53935', transition: 'all 0.3s ease', cursor: 'pointer', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' },
+    refundBtnHover: { backgroundColor: '#e53935', color: '#ffffff', transform: 'translateY(-2px)', boxShadow: '0 4px 10px rgba(229,57,53,0.25)' },
     emptyState: { textAlign: 'center', padding: '60px 20px', backgroundColor: '#f9f9f9', borderRadius: '16px', border: '2px dashed #0865a8' },
     emptyStateIcon: { width: '80px', height: '80px', margin: '0 auto 20px', color: '#0865a8', opacity: 0.5 },
     emptyStateText: { fontSize: '20px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif', opacity: 0.7 },
@@ -61,6 +63,30 @@ const styles = {
     toastWarning: { borderRight: '4px solid #ff9800' },
     toastIcon: { width: '24px', height: '24px', flexShrink: 0 },
     toastMessage: { fontSize: '14px', color: '#000000', flex: 1 },
+
+    /* ── Modal ── */
+    modalOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', backdropFilter: 'blur(4px)' },
+    modalCard: { backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', width: '100%', maxWidth: '520px', overflow: 'hidden', fontFamily: '"Droid Arabic Kufi", serif' },
+    modalHeader: { background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '16px', color: '#ffffff' },
+    modalHeaderIcon: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '50%', padding: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+    modalTitle: { fontSize: '20px', fontWeight: 'bold', color: '#ffffff', margin: 0, fontFamily: '"Droid Arabic Kufi", serif' },
+    modalSubtitle: { fontSize: '13px', color: 'rgba(255,255,255,0.85)', margin: '4px 0 0', fontFamily: '"Droid Arabic Kufi", serif', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' },
+    modalCloseBtn: { marginRight: 'auto', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', flexShrink: 0 },
+    modalBody: { padding: '28px 24px' },
+    refundInfoBox: { display: 'flex', gap: '12px', alignItems: 'flex-start', backgroundColor: '#e3f2fd', border: '1px solid #90caf9', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px' },
+    refundInfoText: { fontSize: '14px', color: '#1565c0', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
+    formLabel: { display: 'block', fontSize: '15px', fontWeight: 'bold', color: '#000000', marginBottom: '10px', fontFamily: '"Droid Arabic Kufi", serif' },
+    refundTextarea: { width: '100%', padding: '14px 16px', border: '2px solid #e0e0e0', borderRadius: '10px', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif', color: '#000000', resize: 'vertical', outline: 'none', boxSizing: 'border-box', lineHeight: '1.6', direction: 'rtl', transition: 'border-color 0.2s' },
+    charCount: { textAlign: 'left', fontSize: '12px', color: '#999', marginTop: '6px', marginBottom: '16px', fontFamily: '"Droid Arabic Kufi", serif' },
+    errorBox: { display: 'flex', gap: '10px', alignItems: 'center', backgroundColor: '#ffebee', border: '1px solid #ef9a9a', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '14px', color: '#c62828', fontFamily: '"Droid Arabic Kufi", serif' },
+    modalActions: { display: 'flex', gap: '12px', marginTop: '8px' },
+    btnCancelRefund: { flex: 1, padding: '13px 20px', backgroundColor: '#f5f5f5', color: '#555', border: '2px solid #e0e0e0', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif' },
+    btnSubmitRefund: { flex: 2, padding: '13px 20px', background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(229,57,53,0.35)' },
+    successState: { textAlign: 'center', padding: '20px 0' },
+    successIcon: { fontSize: '56px', marginBottom: '16px' },
+    successTitle: { fontSize: '22px', fontWeight: 'bold', color: '#1a7a3c', marginBottom: '12px', fontFamily: '"Droid Arabic Kufi", serif' },
+    successText: { fontSize: '15px', color: '#555', lineHeight: '1.7', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '24px' },
+    btnCloseSuccess: { padding: '13px 40px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif' },
 };
 
 const mediaQueryStyles = `
@@ -86,7 +112,7 @@ const mediaQueryStyles = `
     }
 `;
 
-// Toast Component
+// ── Toast Component ────────────────────────────────────────────────────────────
 const Toast = ({ message, type, onClose }) => {
     useEffect(() => { const t = setTimeout(onClose, 5000); return () => clearTimeout(t); }, [onClose]);
     const colors = { success: '#4caf50', error: '#f44336', warning: '#ff9800' };
@@ -111,10 +137,135 @@ const Toast = ({ message, type, onClose }) => {
     );
 };
 
+// ── Refund Modal Component ─────────────────────────────────────────────────────
+const RefundModal = ({ course, onClose, apiBase }) => {
+    const [refundReason, setRefundReason] = useState('');
+    const [refundSubmitting, setRefundSubmitting] = useState(false);
+    const [refundSuccess, setRefundSuccess] = useState(false);
+    const [refundError, setRefundError] = useState(null);
+
+    const handleSubmit = async () => {
+        if (!refundReason.trim()) {
+            setRefundError('الرجاء كتابة سبب طلب الاسترداد');
+            return;
+        }
+        setRefundSubmitting(true);
+        setRefundError(null);
+        try {
+            const response = await fetch(`${apiBase}/refund/request`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    courseId: course.id,
+                    courseTitle: course.title,
+                    reason: refundReason.trim(),
+                    requestedAt: new Date().toISOString(),
+                }),
+            });
+            if (!response.ok) throw new Error('فشل في إرسال الطلب');
+            setRefundSuccess(true);
+        } catch {
+            setRefundError('حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى');
+        } finally {
+            setRefundSubmitting(false);
+        }
+    };
+
+    return (
+        <div style={styles.modalOverlay} dir="rtl" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+            <div style={styles.modalCard}>
+                {/* Header */}
+                <div style={styles.modalHeader}>
+                    <div style={styles.modalHeaderIcon}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <h2 style={styles.modalTitle}>طلب استرداد المبلغ</h2>
+                        <p style={styles.modalSubtitle}>{course.title}</p>
+                    </div>
+                    <button onClick={onClose} style={styles.modalCloseBtn}>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Body */}
+                <div style={styles.modalBody}>
+                    {refundSuccess ? (
+                        <div style={styles.successState}>
+                            <div style={styles.successIcon}>✅</div>
+                            <h3 style={styles.successTitle}>تم إرسال طلبك بنجاح!</h3>
+                            <p style={styles.successText}>
+                                سيقوم فريق الدعم لدينا بمراجعة طلبك والرد عليك في أقرب وقت ممكن.
+                            </p>
+                            <button style={styles.btnCloseSuccess} onClick={onClose}>حسناً، شكراً</button>
+                        </div>
+                    ) : (
+                        <>
+                            <div style={styles.refundInfoBox}>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0865a8" style={{ flexShrink: 0, marginTop: '2px' }}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p style={styles.refundInfoText}>
+                                    سيتم مراجعة طلبك من قِبل الإدارة وسيتم التواصل معك خلال 3-5 أيام عمل.
+                                </p>
+                            </div>
+
+                            <label style={styles.formLabel}>
+                                سبب طلب الاسترداد <span style={{ color: '#e53935' }}>*</span>
+                            </label>
+                            <textarea
+                                style={styles.refundTextarea}
+                                placeholder="يرجى توضيح سبب رغبتك في استرداد المبلغ..."
+                                value={refundReason}
+                                onChange={e => { setRefundReason(e.target.value); setRefundError(null); }}
+                                rows={5}
+                                maxLength={500}
+                            />
+                            <div style={styles.charCount}>{refundReason.length} / 500</div>
+
+                            {refundError && (
+                                <div style={styles.errorBox}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e53935" style={{ flexShrink: 0 }}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>{refundError}</span>
+                                </div>
+                            )}
+
+                            <div style={styles.modalActions}>
+                                <button style={styles.btnCancelRefund} onClick={onClose}>إلغاء</button>
+                                <button
+                                    style={{ ...styles.btnSubmitRefund, ...(refundSubmitting ? { opacity: 0.7, cursor: 'not-allowed' } : {}) }}
+                                    onClick={handleSubmit}
+                                    disabled={refundSubmitting}
+                                >
+                                    {refundSubmitting ? (
+                                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                                            <svg style={{ width: '18px', height: '18px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                            </svg>
+                                            جاري الإرسال...
+                                        </span>
+                                    ) : 'إرسال الطلب'}
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
 const CoursesPage = () => {
     const navigate = useNavigate();
     const { slug } = useParams();
-    const { getToken, isSignedIn, userId } = useAuth(); // ✅ أضفنا userId
+    const { getToken, isSignedIn, userId } = useAuth();
 
     const [programData, setProgramData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -124,19 +275,16 @@ const CoursesPage = () => {
     const [hoveredCard, setHoveredCard] = useState(null);
     const [hoveredAddBtn, setHoveredAddBtn] = useState(null);
     const [hoveredDetailsBtn, setHoveredDetailsBtn] = useState(null);
+    const [hoveredRefundBtn, setHoveredRefundBtn] = useState(null);
     const [hoveredHeaderCard, setHoveredHeaderCard] = useState(null);
+    const [refundCourse, setRefundCourse] = useState(null); // which course to refund
 
-    // ✅ ownedCourseIds مبدئياً فاضية — هتتملى من الـ API
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
 
     const showToast = (message, type = 'success') => setToast({ message, type });
 
-    // ✅ جيب الـ enrollments من الـ API مربوطة بالـ user الحالي
     const fetchOwnedCourses = useCallback(async () => {
-        if (!isSignedIn) {
-            setOwnedCourseIds(new Set()); // مش مسجل دخول = مفيش كورسات
-            return;
-        }
+        if (!isSignedIn) { setOwnedCourseIds(new Set()); return; }
         try {
             const token = await getToken();
             const res = await fetch(`${API_BASE}/course/my-courses`, {
@@ -144,22 +292,15 @@ const CoursesPage = () => {
             });
             if (!res.ok) return;
             const data = await res.json();
-            // data هو array من { childId, ... }
-            const ids = new Set(data.map(e => e.childId));
-            setOwnedCourseIds(ids);
+            setOwnedCourseIds(new Set(data.map(e => e.childId)));
         } catch {
-            // في حالة error نفضل بـ empty set — مش هنكسر الصفحة
             setOwnedCourseIds(new Set());
         }
     }, [isSignedIn, getToken]);
 
-    // ✅ اجري الـ fetch كل ما يتغير الـ user أو يتحدث الـ enrollment
-    useEffect(() => {
-        fetchOwnedCourses();
-    }, [fetchOwnedCourses, userId]); // userId يتغير عند sign in / sign out
+    useEffect(() => { fetchOwnedCourses(); }, [fetchOwnedCourses, userId]);
 
     useEffect(() => {
-        // بعد كل payment ناجح نحدث الـ owned list
         const onEnrollUpdate = () => fetchOwnedCourses();
         window.addEventListener('enrollUpdated', onEnrollUpdate);
         window.addEventListener('cartUpdated', onEnrollUpdate);
@@ -169,7 +310,6 @@ const CoursesPage = () => {
         };
     }, [fetchOwnedCourses]);
 
-    // جيب كورسات البرنامج
     useEffect(() => {
         if (!slug) return;
         const fetchCourses = async () => {
@@ -198,18 +338,13 @@ const CoursesPage = () => {
             : 'الدورات التدريبية - المعهد التكنولوجي';
     }, [programData]);
 
-    // التسجيل في كورس مجاني
     const handleEnroll = (course) => {
         showToast('تم التسجيل في الدورة بنجاح', 'success');
         setTimeout(() => navigate('/my-courses'), 1000);
     };
 
-    // إضافة للسلة
     const addToCart = async (course) => {
-        if (!isSignedIn) {
-            showToast('الرجاء تسجيل الدخول أولاً', 'warning');
-            return;
-        }
+        if (!isSignedIn) { showToast('الرجاء تسجيل الدخول أولاً', 'warning'); return; }
         setAddingToCart(course.id);
         try {
             const token = await getToken();
@@ -222,7 +357,6 @@ const CoursesPage = () => {
                 const msgs = { 401: 'انتهت الجلسة، سجل دخول مرة أخرى', 404: 'الدورة غير موجودة', 409: 'الدورة موجودة بالفعل في السلة', 500: 'خطأ في الخادم' };
                 throw new Error(msgs[res.status] || 'فشل إضافة الدورة');
             }
-            // sync localStorage للـ cart badge فقط
             const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
             if (!cartItems.some(i => i.id === course.id)) {
                 cartItems.push({ id: course.id, title: course.title, instructor: course.place || 'غير محدد', image: 'book', currentPrice: course.cost || 0, originalPrice: course.cost ? course.cost / 0.6 : 0, quantity: 1, slug: course.slug || '', date: course.date || '', place: course.place || '' });
@@ -237,7 +371,7 @@ const CoursesPage = () => {
         }
     };
 
-    // ─── Loading ───────────────────────────────────────────────────────────────
+    // ── Loading ────────────────────────────────────────────────────────────────
     if (loading) return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
@@ -283,6 +417,15 @@ const CoursesPage = () => {
             <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
+                {/* Refund Modal */}
+                {refundCourse && (
+                    <RefundModal
+                        course={refundCourse}
+                        apiBase={API_BASE}
+                        onClose={() => setRefundCourse(null)}
+                    />
+                )}
+
                 <div style={{ ...styles.overviewBar, top: 70 }} className="overview-bar">
                     <div style={styles.overviewBarText}>
                         <a href="/" style={styles.breadcrumbLink} onMouseEnter={e => e.target.style.color = '#f57c00'} onMouseLeave={e => e.target.style.color = '#0865a8'}>الصفحة الرئيسية</a>
@@ -308,7 +451,7 @@ const CoursesPage = () => {
                         <div style={styles.grid} className="grid">
                             {courses.map((course) => {
                                 const isFree = !course.cost || course.cost === 0;
-                                const isOwned = ownedCourseIds.has(course.id); // ✅ من الـ API
+                                const isOwned = ownedCourseIds.has(course.id);
                                 const isAdding = addingToCart === course.id;
                                 const currentPrice = course.cost;
                                 const originalPrice = course.cost ? course.cost / 0.6 : null;
@@ -370,9 +513,28 @@ const CoursesPage = () => {
                                             {/* Buttons */}
                                             <div style={styles.buttonsContainer}>
                                                 {isOwned ? (
-                                                    <button style={{ ...styles.detailsBtn, ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}) }}
-                                                        onMouseEnter={() => setHoveredDetailsBtn(course.id)} onMouseLeave={() => setHoveredDetailsBtn(null)}
-                                                        onClick={() => navigate(`/course/${course.slug}`)}>عرض التفاصيل</button>
+                                                    <>
+                                                        <button
+                                                            style={{ ...styles.detailsBtn, ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}) }}
+                                                            onMouseEnter={() => setHoveredDetailsBtn(course.id)}
+                                                            onMouseLeave={() => setHoveredDetailsBtn(null)}
+                                                            onClick={() => navigate(`/course/${course.slug}`)}>
+                                                            عرض التفاصيل
+                                                        </button>
+                                                        {/* Refund button — only for paid owned courses */}
+                                                        {!isFree && (
+                                                            <button
+                                                                style={{ ...styles.refundBtn, ...(hoveredRefundBtn === course.id ? styles.refundBtnHover : {}) }}
+                                                                onMouseEnter={() => setHoveredRefundBtn(course.id)}
+                                                                onMouseLeave={() => setHoveredRefundBtn(null)}
+                                                                onClick={() => setRefundCourse(course)}>
+                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                                </svg>
+                                                                طلب استرداد المبلغ
+                                                            </button>
+                                                        )}
+                                                    </>
                                                 ) : isFree ? (
                                                     <>
                                                         <button onClick={() => handleEnroll(course)} style={{ ...styles.enrollBtn, ...(hoveredAddBtn === course.id ? styles.enrollBtnHover : {}) }}
