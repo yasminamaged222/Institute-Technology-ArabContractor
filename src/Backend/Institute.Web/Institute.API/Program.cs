@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Institute.API.DTOs;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;
@@ -51,19 +51,22 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+
 #region (CORS)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost",
         builder => builder
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins(
+                "http://localhost:5173",
+                "https://acwebsite-icmet-test.azurewebsites.net"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
 #endregion
 
-//// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-#region( Dependency Injecton ) 
+#region (Dependency Injection)
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>));
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -93,66 +96,56 @@ builder.Services.AddHttpClient("BankClient", client =>
     client.BaseAddress = new Uri(paymentSettings.BaseUrl);
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 
-    //var authValue = Convert.ToBase64String(
-    //    Encoding.ASCII.GetBytes($"{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}")
-    //);
     var authValue = Convert.ToBase64String(
-    Encoding.ASCII.GetBytes($"merchant.{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}")
-);
+        Encoding.ASCII.GetBytes($"merchant.{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}")
+    );
     client.DefaultRequestHeaders.Authorization =
         new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authValue);
 });
-
-
 #endregion
-#region(Authentication And Authorization)
 
+#region (Authentication And Authorization)
 builder.Services
-.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-.AddJwtBearer(options =>
-{
-    options.Authority = builder.Configuration["Clerk:Authority"];
-    options.RequireHttpsMetadata = true;
-
-    // 🔥 مهم جدًا مع Clerk
-    options.MapInboundClaims = false;
-
-    options.TokenValidationParameters = new TokenValidationParameters
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true, // 🔥 لازم true
-        NameClaimType = "sub"
-    };
+        options.Authority = builder.Configuration["Clerk:Authority"];
+        options.RequireHttpsMetadata = true;
+        options.MapInboundClaims = false;
 
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            Console.WriteLine("❌ AUTH FAILED");
-            Console.WriteLine(context.Exception.Message);
-            return Task.CompletedTask;
-        },
-        OnTokenValidated = context =>
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            NameClaimType = "sub"
+        };
+
+        options.Events = new JwtBearerEvents
         {
-            Console.WriteLine("✅ TOKEN VALIDATED");
-            return Task.CompletedTask;
-        }
-    };
-});
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine("❌ AUTH FAILED");
+                Console.WriteLine(context.Exception.Message);
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("✅ TOKEN VALIDATED");
+                return Task.CompletedTask;
+            }
+        };
+    });
 
 builder.Services.AddAuthorization();
-
 #endregion
-
 
 // ======= AutoMapper =======
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<MappingProfiles>();
 });
-
 
 // ======= Build App =======
 var app = builder.Build();
@@ -163,16 +156,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseStaticFiles();
 app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseRouting();
-app.UseAuthentication();    
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
-app.UseStaticFiles();
-
-
 
 app.Run();
-
