@@ -1,4 +1,5 @@
 ﻿using Institute.API.DTOs.AdminDtos;
+using Institute.Application.DTOs.AdminDtos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,6 @@ namespace Institute.Application.Interfaces.IService
     {
         Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync();
         Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword);
+        Task<AdminStatsDto> GetStatsAsync();
     }
 }

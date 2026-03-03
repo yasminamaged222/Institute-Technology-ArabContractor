@@ -81,5 +81,18 @@ namespace Institute.Infrastructure.Repositories
                 .FirstOrDefaultAsync(u => u.ClerkUserId == clerkUserId);
         }
 
+        public async Task<int> CountAsync()
+        {
+            return await _context.Set<T>().CountAsync();
+        }
+
+        public async Task<int> CountWithSpecAsync(Ispecification<T> spec)
+        {
+            var query = SpecificationEvaluator<T>.GetQuery(
+                _context.Set<T>().AsQueryable(), spec);
+
+            return await query.CountAsync();
+        }
+
     }
 }

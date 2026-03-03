@@ -1,4 +1,5 @@
 ﻿using Institute.API.DTOs.AdminDtos;
+using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces.IService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -58,6 +59,16 @@ namespace Institute.API.Controllers
                 return Ok(await _adminService.SearchUsersAsync(keyword));
 
             return Ok(await _adminService.GetAllUsersAsync());
+        }
+
+
+
+        // GET: api/admin/stats
+        [HttpGet("stats")]
+        public async Task<ActionResult<AdminStatsDto>> GetStatistics()
+        {
+            var stats = await _adminService.GetStatsAsync();
+            return Ok(stats);
         }
     }
 }

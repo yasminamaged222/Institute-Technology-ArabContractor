@@ -1,4 +1,5 @@
 ﻿using Institute.API.DTOs.AdminDtos;
+using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
@@ -14,10 +15,12 @@ namespace Institute.Application.Services
     public class AdminService : IAdminService
     {
         private readonly IRepository<AppUser> _userRepository;
+        private readonly IRepository<Enrollment> _enrollmentRepository;
 
-        public AdminService(IRepository<AppUser> userRepository)
+        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository)
         {
             _userRepository = userRepository;
+            _enrollmentRepository = enrollmentRepository;
         }
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync()
         {
@@ -54,6 +57,19 @@ namespace Institute.Application.Services
                             .Select(e => e.Planwork.ServiceTitle)
                             .ToList()
             }).ToList();
+        }
+
+        public async Task<AdminStatsDto> GetStatsAsync()
+        {
+            return new AdminStatsDto
+            {
+                UsersCount = await _userRepository.CountAsync(),
+                PlanworksCount = await _userRepository.CountAsync(),
+                EnrollmentsCount = await _enrollmentRepository.CountAsync(),
+                //AttendanceCount = await _unitOfWork.Repository<Attendance>().CountAsync(),
+                //CertificatesCount = await _unitOfWork.Repository<Certificate>().CountAsync(),
+                //RefundsCount = await _unitOfWork.Repository<Refund>().CountAsync()
+            };
         }
     }
 }

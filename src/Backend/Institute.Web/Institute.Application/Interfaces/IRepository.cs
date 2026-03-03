@@ -29,7 +29,9 @@ namespace Institute.Application.Interfaces
         Task<IReadOnlyList<T>> GetAllWithSpecAsync(Ispecification<T> spec);
 
         Task<int> GetCountAsync(Ispecification<T> spec);
+        Task<int> CountAsync();
 
+        Task<int> CountWithSpecAsync(Ispecification<T> spec);
 
 
     }
