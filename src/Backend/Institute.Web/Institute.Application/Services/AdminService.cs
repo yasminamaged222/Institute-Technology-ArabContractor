@@ -16,11 +16,13 @@ namespace Institute.Application.Services
     {
         private readonly IRepository<AppUser> _userRepository;
         private readonly IRepository<Enrollment> _enrollmentRepository;
+        private readonly IRepository<Planwork> _planworkRepository;
 
-        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository)
+        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository, IRepository<Planwork> planworkRepository)
         {
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
+            _planworkRepository = planworkRepository;
         }
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync()
         {
@@ -36,7 +38,11 @@ namespace Institute.Application.Services
                 Email = u.Email,
                 CoursesCount = u.Enrollments.Count,
                 Courses = u.Enrollments
-                            .Select(e => e.Planwork.ServiceTitle)
+                            .Select(e => new UserCourseDto
+                            {
+                                Title = e.Planwork.ServiceTitle,
+                                EnrolledAt = e.EnrolledAt
+                            })
                             .ToList()
             }).ToList();
         }
@@ -54,17 +60,21 @@ namespace Institute.Application.Services
                 Email = u.Email,
                 CoursesCount = u.Enrollments.Count,
                 Courses = u.Enrollments
-                            .Select(e => e.Planwork.ServiceTitle)
+                            .Select(e => new UserCourseDto
+                            {
+                                Title = e.Planwork.ServiceTitle,
+                                EnrolledAt = e.EnrolledAt
+                            })
                             .ToList()
             }).ToList();
         }
-
+        
         public async Task<AdminStatsDto> GetStatsAsync()
         {
             return new AdminStatsDto
             {
                 UsersCount = await _userRepository.CountAsync(),
-                PlanworksCount = await _userRepository.CountAsync(),
+                PlanworksCount = await _planworkRepository.CountAsync(),
                 EnrollmentsCount = await _enrollmentRepository.CountAsync(),
                 //AttendanceCount = await _unitOfWork.Repository<Attendance>().CountAsync(),
                 //CertificatesCount = await _unitOfWork.Repository<Certificate>().CountAsync(),
