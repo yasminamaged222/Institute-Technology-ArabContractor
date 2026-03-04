@@ -157,13 +157,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseStaticFiles();
+app.UseDefaultFiles();    // ← line 1
+app.UseStaticFiles();     // ← line 2
 app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapFallbackToFile("index.html");
+app.MapFallbackToFile("index.html");  // ← must be last
 
 app.Run();
