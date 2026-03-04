@@ -64,8 +64,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<OrderItem> OrderItems { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<Enrollment> Enrollments { get; set; }
-    public virtual DbSet<Certificate> Certificate { get; set; }
-    public virtual DbSet<RefundRequest> RefundResult { get; set; }
+    public virtual DbSet<Certificate> Certificates { get; set; }
+    public virtual DbSet<RefundRequest> RefundRequests { get; set; }
 
 
 
@@ -172,6 +172,62 @@ public partial class AppDbContext : DbContext
 
         });
 
+        // Certificate
+        modelBuilder.Entity<Certificate>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+
+            entity.HasIndex(c => new { c.UserId, c.PlanworkId }).IsUnique();
+
+            entity.Property(c => c.FileUrl).HasMaxLength(500);
+            entity.Property(c => c.FileName).HasMaxLength(255);
+
+            entity.HasOne(c => c.User)
+                  .WithMany()
+                  .HasForeignKey(c => c.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.Planwork)
+                  .WithMany()
+                  .HasForeignKey(c => c.PlanworkId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // RefundRequest
+        modelBuilder.Entity<RefundRequest>(entity =>
+        {
+            entity.HasKey(r => r.Id);
+
+            entity.HasIndex(r => r.RefNumber).IsUnique();
+
+            entity.Property(r => r.RefNumber).HasMaxLength(30).IsRequired();
+            entity.Property(r => r.Status).HasMaxLength(20).HasDefaultValue("pending");
+            entity.Property(r => r.Amount).HasColumnType("decimal(18,2)");
+            entity.Property(r => r.Currency).HasMaxLength(5).HasDefaultValue("EGP");
+            entity.Property(r => r.Reason).HasMaxLength(500);
+            entity.Property(r => r.Details).HasMaxLength(2000);
+            entity.Property(r => r.BankName).HasMaxLength(200);
+            entity.Property(r => r.AccountNumber).HasMaxLength(50);
+            entity.Property(r => r.AccountHolder).HasMaxLength(200);
+            entity.Property(r => r.Iban).HasMaxLength(50);
+            entity.Property(r => r.AdminNote).HasMaxLength(1000);
+            entity.Property(r => r.RejectionReason).HasMaxLength(1000);
+
+            entity.HasOne(r => r.User)
+                  .WithMany()
+                  .HasForeignKey(r => r.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.Order)
+                  .WithMany()
+                  .HasForeignKey(r => r.OrderId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.Planwork)
+                  .WithMany()
+                  .HasForeignKey(r => r.PlanworkId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
 
         // OrderItem
         modelBuilder.Entity<OrderItem>(entity =>
