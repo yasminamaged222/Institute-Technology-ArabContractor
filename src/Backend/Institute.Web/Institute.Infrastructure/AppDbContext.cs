@@ -64,6 +64,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<OrderItem> OrderItems { get; set; }
     public virtual DbSet<Payment> Payments { get; set; }
     public virtual DbSet<Enrollment> Enrollments { get; set; }
+    public virtual DbSet<Certificate> Certificate { get; set; }
+    public virtual DbSet<RefundRequest> RefundResult { get; set; }
 
 
 

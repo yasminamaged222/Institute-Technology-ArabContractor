@@ -19,5 +19,6 @@ namespace Institute.Domain.Entities
         public int OrderId { get; set; }
 
         public DateTime EnrolledAt { get; set; } = DateTime.UtcNow;
+        public bool Attended { get; set; }
     }
 }
