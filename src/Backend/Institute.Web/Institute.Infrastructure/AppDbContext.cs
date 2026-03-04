@@ -201,12 +201,12 @@ public partial class AppDbContext : DbContext
                   .IsUnique(); // يمنع تكرار الاشتراك
 
             entity.HasOne(e => e.User)
-                  .WithMany()
+                  .WithMany(u => u.Enrollments)
                   .HasForeignKey(e => e.UserId)
                   .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.Planwork)
-                  .WithMany()
+                  .WithMany(p => p.Enrollments)
                   .HasForeignKey(e => e.PlanworkId)
                   .OnDelete(DeleteBehavior.Restrict);
 
