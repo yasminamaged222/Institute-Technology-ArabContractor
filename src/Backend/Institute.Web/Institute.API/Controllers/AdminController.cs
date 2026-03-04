@@ -39,5 +39,12 @@ namespace Institute.API.Controllers
             var stats = await _adminService.GetStatsAsync();
             return Ok(stats);
         }
+
+        [HttpGet("planworks")]
+        public async Task<ActionResult<IReadOnlyList<PlanworkWithUsersDto>>> GetPlanworks()
+        {
+            var planworks = await _adminService.GetAllPlanworksAsync();
+            return Ok(planworks);
+        }
     }
 }
