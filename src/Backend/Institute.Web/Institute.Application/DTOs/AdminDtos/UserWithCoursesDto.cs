@@ -1,4 +1,6 @@
-﻿namespace Institute.API.DTOs.AdminDtos
+﻿using Institute.Application.DTOs.AdminDtos;
+
+namespace Institute.API.DTOs.AdminDtos
 {
     public class UserWithCoursesDto
     {
@@ -8,6 +10,6 @@
 
         public int CoursesCount { get; set; }
 
-        public List<string> Courses { get; set; }
+        public List<UserCourseDto> Courses { get; set; }
     }
 }
