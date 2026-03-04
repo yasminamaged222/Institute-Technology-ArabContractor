@@ -3,7 +3,7 @@ using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
-using Institute.Domain.specifications.AdminSpec.PlanworkSpec;
+using Institute.Domain.specifications.AdminSpec.Course;
 using Institute.Domain.specifications.AdminSpec.User;
 using System;
 using System.Collections.Generic;
@@ -73,6 +73,25 @@ namespace Institute.Application.Services
         {
             // Load Planworks with Enrollments and Users
             var planworks = await _planworkRepository.GetAllWithSpecAsync(new PlanworksWithEnrollmentsSpec());
+            return planworks.Select(p => new PlanworkWithUsersDto
+            {
+                Id = p.ChildId,
+                ServiceTitle = p.ServiceTitle,
+                Category = p.MainFlag == true ? "Main" : "Other", // example
+                UsersCount = p.Enrollments.Count,
+                Users = p.Enrollments.Select(e => new UserEnrollmentDto
+                {
+                    Username = e.User.Username,
+                    Email = e.User.Email,
+                    EnrolledAt = e.EnrolledAt
+                }).ToList()
+            }).ToList();
+        }
+        public async Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword)
+        {
+            var spec = new PlanworkSearchSpec(keyword);
+
+            var planworks = await _planworkRepository.GetAllWithSpecAsync(spec);
 
             return planworks.Select(p => new PlanworkWithUsersDto
             {

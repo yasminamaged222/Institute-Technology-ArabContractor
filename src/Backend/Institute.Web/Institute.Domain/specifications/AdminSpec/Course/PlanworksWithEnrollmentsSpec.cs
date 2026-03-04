@@ -1,7 +1,7 @@
 ﻿using Institute.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Institute.Domain.specifications.AdminSpec.PlanworkSpec
+namespace Institute.Domain.specifications.AdminSpec.Course
 {
     public class PlanworksWithEnrollmentsSpec : BaseSpecification<Planwork>
     {
