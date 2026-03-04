@@ -3,6 +3,7 @@ using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces.IService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace Institute.API.Controllers
 {
@@ -30,7 +31,14 @@ namespace Institute.API.Controllers
             return Ok(await _adminService.GetAllUsersAsync());
         }
 
-
+        // GET: api/admin/users?keyword=ahmed
+        [HttpGet("planworks")]
+        public async Task<ActionResult<IReadOnlyList<PlanworkWithUsersDto>>> GetPlanworks([FromQuery] string? keyword)
+        {
+            if (!string.IsNullOrWhiteSpace(keyword))
+                return Ok(await _adminService.SearchPlanworksAsync(keyword));
+            return Ok(await _adminService.GetAllPlanworksAsync());
+        }
 
         // GET: api/admin/stats
         [HttpGet("stats")]
@@ -40,11 +48,5 @@ namespace Institute.API.Controllers
             return Ok(stats);
         }
 
-        [HttpGet("planworks")]
-        public async Task<ActionResult<IReadOnlyList<PlanworkWithUsersDto>>> GetPlanworks()
-        {
-            var planworks = await _adminService.GetAllPlanworksAsync();
-            return Ok(planworks);
-        }
     }
 }
