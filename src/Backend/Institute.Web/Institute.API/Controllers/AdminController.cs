@@ -31,7 +31,7 @@ namespace Institute.API.Controllers
             return Ok(await _adminService.GetAllUsersAsync());
         }
 
-        // GET: api/admin/users?keyword=ahmed
+
         [HttpGet("planworks")]
         public async Task<ActionResult<IReadOnlyList<PlanworkWithUsersDto>>> GetPlanworks([FromQuery] string? keyword)
         {
