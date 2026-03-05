@@ -25,34 +25,11 @@ namespace Institute.Application.Services
             _enrollmentRepository = enrollmentRepository;
             _planworkRepository = planworkRepository;
         }
-        public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync()
+        public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(string? keyword, DateTime? fromDate, DateTime? toDate)
         {
-            var spec = new UsersWithEnrollmentsSpec();
+            var spec = new UserSearchSpec(keyword, fromDate, toDate);
 
-            var users = await _userRepository
-                                         .GetAllWithSpecAsync(spec);
-
-            return users.Select(u => new UserWithCoursesDto
-            {
-                Id = u.Id,
-                Username = u.Username,
-                Email = u.Email,
-                CoursesCount = u.Enrollments.Count,
-                Courses = u.Enrollments
-                            .Select(e => new UserCourseDto
-                            {
-                                Title = e.Planwork.ServiceTitle,
-                                EnrolledAt = e.EnrolledAt
-                            })
-                            .ToList()
-            }).ToList();
-        }
-        public async Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword)
-        {
-            var spec = new UserSearchSpec(keyword);
-
-            var users = await _userRepository
-                                         .GetAllWithSpecAsync(spec);
+            var users = await _userRepository.GetAllWithSpecAsync(spec);
 
             return users.Select(u => new UserWithCoursesDto
             {
@@ -61,35 +38,42 @@ namespace Institute.Application.Services
                 Email = u.Email,
                 CoursesCount = u.Enrollments.Count,
                 Courses = u.Enrollments
-                            .Select(e => new UserCourseDto
-                            {
-                                Title = e.Planwork.ServiceTitle,
-                                EnrolledAt = e.EnrolledAt
-                            })
-                            .ToList()
+                    .Where(e =>
+                        (!fromDate.HasValue || e.EnrolledAt >= fromDate) &&
+                        (!toDate.HasValue || e.EnrolledAt <= toDate))
+                    .Select(e => new UserCourseDto
+                    {
+                        Title = e.Planwork.ServiceTitle,
+                        EnrolledAt = e.EnrolledAt
+                    }).ToList()
             }).ToList();
         }
-        public async Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync()
+
+        //public async Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword)
+        //{
+        //    var spec = new UserSearchSpec(keyword);
+
+        //    var users = await _userRepository
+        //                                 .GetAllWithSpecAsync(spec);
+
+        //    return users.Select(u => new UserWithCoursesDto
+        //    {
+        //        Id = u.Id,
+        //        Username = u.Username,
+        //        Email = u.Email,
+        //        CoursesCount = u.Enrollments.Count,
+        //        Courses = u.Enrollments
+        //                    .Select(e => new UserCourseDto
+        //                    {
+        //                        Title = e.Planwork.ServiceTitle,
+        //                        EnrolledAt = e.EnrolledAt
+        //                    })
+        //                    .ToList()
+        //    }).ToList();
+        //}
+        public async Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(string? keyword, DateTime? fromDate, DateTime? toDate)
         {
-            // Load Planworks with Enrollments and Users
-            var planworks = await _planworkRepository.GetAllWithSpecAsync(new PlanworksWithEnrollmentsSpec());
-            return planworks.Select(p => new PlanworkWithUsersDto
-            {
-                Id = p.ChildId,
-                ServiceTitle = p.ServiceTitle,
-                Category = p.MainFlag == true ? "Main" : "Other", // example
-                UsersCount = p.Enrollments.Count,
-                Users = p.Enrollments.Select(e => new UserEnrollmentDto
-                {
-                    Username = e.User.Username,
-                    Email = e.User.Email,
-                    EnrolledAt = e.EnrolledAt
-                }).ToList()
-            }).ToList();
-        }
-        public async Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword)
-        {
-            var spec = new PlanworkSearchSpec(keyword);
+            var spec = new PlanworkSearchSpec(keyword, fromDate, toDate);
 
             var planworks = await _planworkRepository.GetAllWithSpecAsync(spec);
 
@@ -97,16 +81,43 @@ namespace Institute.Application.Services
             {
                 Id = p.ChildId,
                 ServiceTitle = p.ServiceTitle,
-                Category = p.MainFlag == true ? "Main" : "Other", // example
-                UsersCount = p.Enrollments.Count,
-                Users = p.Enrollments.Select(e => new UserEnrollmentDto
-                {
-                    Username = e.User.Username,
-                    Email = e.User.Email,
-                    EnrolledAt = e.EnrolledAt
-                }).ToList()
+                UsersCount = p.Enrollments.Count(e =>
+                    (!fromDate.HasValue || e.EnrolledAt >= fromDate) &&
+                    (!toDate.HasValue || e.EnrolledAt <= toDate)),
+
+                Users = p.Enrollments
+                    .Where(e =>
+                        (!fromDate.HasValue || e.EnrolledAt >= fromDate) &&
+                        (!toDate.HasValue || e.EnrolledAt <= toDate))
+                    .Select(e => new UserEnrollmentDto
+                    {
+                        Username = e.User.Username,
+                        Email = e.User.Email,
+                        EnrolledAt = e.EnrolledAt
+                    }).ToList()
             }).ToList();
         }
+
+        //public async Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword)
+        //{
+        //    var spec = new PlanworkSearchSpec(keyword);
+
+        //    var planworks = await _planworkRepository.GetAllWithSpecAsync(spec);
+
+        //    return planworks.Select(p => new PlanworkWithUsersDto
+        //    {
+        //        Id = p.ChildId,
+        //        ServiceTitle = p.ServiceTitle,
+        //        Category = p.MainFlag == true ? "Main" : "Other", // example
+        //        UsersCount = p.Enrollments.Count,
+        //        Users = p.Enrollments.Select(e => new UserEnrollmentDto
+        //        {
+        //            Username = e.User.Username,
+        //            Email = e.User.Email,
+        //            EnrolledAt = e.EnrolledAt
+        //        }).ToList()
+        //    }).ToList();
+        //}
         public async Task<AdminStatsDto> GetStatsAsync()
         {
             return new AdminStatsDto

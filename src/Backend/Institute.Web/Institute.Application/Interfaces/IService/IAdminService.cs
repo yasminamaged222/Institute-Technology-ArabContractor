@@ -10,10 +10,10 @@ namespace Institute.Application.Interfaces.IService
 {
     public interface IAdminService
     {
-        Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync();
-        Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword);
-        Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword);
-        Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync();
+        Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(string keyword, DateTime? fromDate, DateTime? toDate);
+        //Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword, DateTime? fromDate, DateTime? toDate);
+        //Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword, DateTime? fromDate, DateTime? toDate);
+        Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(string keyword, DateTime? fromDate, DateTime? toDate);
         Task<AdminStatsDto> GetStatsAsync();
     }
 }

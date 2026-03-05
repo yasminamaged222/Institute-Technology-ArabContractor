@@ -23,21 +23,22 @@ namespace Institute.API.Controllers
         // GET: api/admin/users?keyword=ahmed
         [HttpGet("users")]
         public async Task<ActionResult<IReadOnlyList<UserWithCoursesDto>>> GetUsers(
-            [FromQuery] string? keyword)
+            [FromQuery] string? keyword,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate)
         {
-            if (!string.IsNullOrWhiteSpace(keyword))
-                return Ok(await _adminService.SearchUsersAsync(keyword));
-
-            return Ok(await _adminService.GetAllUsersAsync());
+            return Ok(await _adminService.GetAllUsersAsync(keyword, fromDate, toDate));
         }
 
 
         [HttpGet("planworks")]
-        public async Task<ActionResult<IReadOnlyList<PlanworkWithUsersDto>>> GetPlanworks([FromQuery] string? keyword)
+        public async Task<ActionResult<IReadOnlyList<PlanworkWithUsersDto>>> GetPlanworks(
+            [FromQuery] string? keyword,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate)
         {
-            if (!string.IsNullOrWhiteSpace(keyword))
-                return Ok(await _adminService.SearchPlanworksAsync(keyword));
-            return Ok(await _adminService.GetAllPlanworksAsync());
+            return Ok(await _adminService.GetAllPlanworksAsync(keyword, fromDate, toDate));
+
         }
 
         // GET: api/admin/stats
