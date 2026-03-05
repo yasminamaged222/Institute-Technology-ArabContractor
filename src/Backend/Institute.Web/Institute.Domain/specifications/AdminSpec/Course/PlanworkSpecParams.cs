@@ -1,0 +1,28 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Institute.Domain.specifications.AdminSpec.Course
+{
+    public class PlanworkSpecParams
+    {
+        //private const int MaxPageSize = 50;
+
+        //public int PageIndex { get; set; } = 1;
+
+        //private int _pageSize = 10;
+        //public int PageSize
+        //{
+        //    get => _pageSize;
+        //    set => _pageSize = value > MaxPageSize ? MaxPageSize : value;
+        //}
+
+        public string? Search { get; set; }
+
+        public DateTime? FromDate { get; set; }
+
+        public DateTime? ToDate { get; set; }
+    }
+}

@@ -1,6 +1,8 @@
 ﻿using Institute.API.DTOs.AdminDtos;
 using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces.IService;
+using Institute.Domain.specifications.AdminSpec.Course;
+using Institute.Domain.specifications.AdminSpec.User;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -23,24 +25,19 @@ namespace Institute.API.Controllers
         // GET: api/admin/users?keyword=ahmed
         [HttpGet("users")]
         public async Task<ActionResult<IReadOnlyList<UserWithCoursesDto>>> GetUsers(
-            [FromQuery] string? keyword,
-            [FromQuery] DateTime? fromDate,
-            [FromQuery] DateTime? toDate)
+                 [FromQuery] UserSpecParams param)
+
         {
-            return Ok(await _adminService.GetAllUsersAsync(keyword, fromDate, toDate));
+            return Ok(await _adminService.GetAllUsersAsync(param));
         }
 
 
         [HttpGet("planworks")]
         public async Task<ActionResult<IReadOnlyList<PlanworkWithUsersDto>>> GetPlanworks(
-            [FromQuery] string? keyword,
-            [FromQuery] DateTime? fromDate,
-            [FromQuery] DateTime? toDate)
+     [FromQuery] PlanworkSpecParams param)
         {
-            return Ok(await _adminService.GetAllPlanworksAsync(keyword, fromDate, toDate));
-
+            return Ok(await _adminService.GetAllPlanworksAsync(param));
         }
-
         // GET: api/admin/stats
         [HttpGet("stats")]
         public async Task<ActionResult<AdminStatsDto>> GetStatistics()

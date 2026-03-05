@@ -11,15 +11,25 @@ namespace Institute.Domain.specifications.AdminSpec.Course
 {
     public class PlanworkSearchSpec : BaseSpecification<Planwork>
     {
-        public PlanworkSearchSpec(string? keyword, DateTime? fromDate, DateTime? toDate)
-            : base(p =>
-                (string.IsNullOrEmpty(keyword) || EF.Functions.Like(p.ServiceTitle, $"%{keyword}%")) &&
-                (!fromDate.HasValue || p.Enrollments.Any(e => e.EnrolledAt >= fromDate)) &&
-                (!toDate.HasValue || p.Enrollments.Any(e => e.EnrolledAt <= toDate))
-            )
+        public PlanworkSearchSpec(PlanworkSpecParams param)
+        : base(p =>
+            (string.IsNullOrEmpty(param.Search) ||
+             EF.Functions.Like(p.ServiceTitle, $"%{param.Search}%")) &&
+
+            (!param.FromDate.HasValue ||
+             p.Enrollments.Any(e => e.EnrolledAt >= param.FromDate)) &&
+
+            (!param.ToDate.HasValue ||
+             p.Enrollments.Any(e => e.EnrolledAt <= param.ToDate))
+        )
         {
             AddInclude(p => p.Enrollments);
             AddInclude("Enrollments.User");
+
+            //ApplyPaging(
+            //    (param.PageIndex - 1) * param.PageSize,
+            //    param.PageSize
+            //);
         }
     }
 }
