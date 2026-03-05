@@ -25,88 +25,111 @@ namespace Institute.Application.Services
             _enrollmentRepository = enrollmentRepository;
             _planworkRepository = planworkRepository;
         }
-        public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync()
+        public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param)
         {
-            var spec = new UsersWithEnrollmentsSpec();
+            // Spec مع keyword + date filters
+            var spec = new UserSearchSpec(param);
 
-            var users = await _userRepository
-                                         .GetAllWithSpecAsync(spec);
-
-            return users.Select(u => new UserWithCoursesDto
-            {
-                Id = u.Id,
-                Username = u.Username,
-                Email = u.Email,
-                CoursesCount = u.Enrollments.Count,
-                Courses = u.Enrollments
-                            .Select(e => new UserCourseDto
-                            {
-                                Title = e.Planwork.ServiceTitle,
-                                EnrolledAt = e.EnrolledAt
-                            })
-                            .ToList()
-            }).ToList();
-        }
-        public async Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword)
-        {
-            var spec = new UserSearchSpec(keyword);
-
-            var users = await _userRepository
-                                         .GetAllWithSpecAsync(spec);
+            // جلب البيانات من الريبو
+            var users = await _userRepository.GetAllWithSpecAsync(spec);
 
             return users.Select(u => new UserWithCoursesDto
             {
                 Id = u.Id,
                 Username = u.Username,
                 Email = u.Email,
-                CoursesCount = u.Enrollments.Count,
+                CoursesCount = u.Enrollments
+                    .Count(e =>
+                        (!param.FromDate.HasValue || e.EnrolledAt >= param.FromDate.Value) &&
+                        (!param.ToDate.HasValue || e.EnrolledAt <= param.ToDate.Value)),
                 Courses = u.Enrollments
-                            .Select(e => new UserCourseDto
-                            {
-                                Title = e.Planwork.ServiceTitle,
-                                EnrolledAt = e.EnrolledAt
-                            })
-                            .ToList()
+                    .Where(e =>
+                        (!param.FromDate.HasValue || e.EnrolledAt >= param.FromDate.Value) &&
+                        (!param.ToDate.HasValue || e.EnrolledAt <= param.ToDate.Value))
+                    .Select(e => new UserCourseDto
+                    {
+                        Title = e.Planwork.ServiceTitle,
+                        EnrolledAt = e.EnrolledAt
+                    })
+                    .ToList()
             }).ToList();
         }
-        public async Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync()
+
+
+        //public async Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword)
+        //{
+        //    var spec = new UserSearchSpec(keyword);
+
+        //    var users = await _userRepository
+        //                                 .GetAllWithSpecAsync(spec);
+
+        //    return users.Select(u => new UserWithCoursesDto
+        //    {
+        //        Id = u.Id,
+        //        Username = u.Username,
+        //        Email = u.Email,
+        //        CoursesCount = u.Enrollments.Count,
+        //        Courses = u.Enrollments
+        //                    .Select(e => new UserCourseDto
+        //                    {
+        //                        Title = e.Planwork.ServiceTitle,
+        //                        EnrolledAt = e.EnrolledAt
+        //                    })
+        //                    .ToList()
+        //    }).ToList();
+        //}
+        public async Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(PlanworkSpecParams param)
         {
-            // Load Planworks with Enrollments and Users
-            var planworks = await _planworkRepository.GetAllWithSpecAsync(new PlanworksWithEnrollmentsSpec());
-            return planworks.Select(p => new PlanworkWithUsersDto
-            {
-                Id = p.ChildId,
-                ServiceTitle = p.ServiceTitle,
-                Category = p.MainFlag == true ? "Main" : "Other", // example
-                UsersCount = p.Enrollments.Count,
-                Users = p.Enrollments.Select(e => new UserEnrollmentDto
-                {
-                    Username = e.User.Username,
-                    Email = e.User.Email,
-                    EnrolledAt = e.EnrolledAt
-                }).ToList()
-            }).ToList();
-        }
-        public async Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword)
-        {
-            var spec = new PlanworkSearchSpec(keyword);
+            var spec = new PlanworkSearchSpec(param);
 
             var planworks = await _planworkRepository.GetAllWithSpecAsync(spec);
 
-            return planworks.Select(p => new PlanworkWithUsersDto
+            return planworks.Select(p =>
             {
-                Id = p.ChildId,
-                ServiceTitle = p.ServiceTitle,
-                Category = p.MainFlag == true ? "Main" : "Other", // example
-                UsersCount = p.Enrollments.Count,
-                Users = p.Enrollments.Select(e => new UserEnrollmentDto
+                // فلترة الـ enrollments حسب التاريخ
+                var filteredEnrollments = p.Enrollments
+                    .Where(e =>
+                        (!param.FromDate.HasValue || e.EnrolledAt >= param.FromDate.Value) &&
+                        (!param.ToDate.HasValue || e.EnrolledAt <= param.ToDate.Value))
+                    .ToList();
+
+                return new PlanworkWithUsersDto
                 {
-                    Username = e.User.Username,
-                    Email = e.User.Email,
-                    EnrolledAt = e.EnrolledAt
-                }).ToList()
+                    Id = p.ChildId,
+                    ServiceTitle = p.ServiceTitle,
+                    UsersCount = filteredEnrollments.Count,
+                    Users = filteredEnrollments.Select(e => new UserEnrollmentDto
+                    {
+                        Username = e.User.Username,
+                        Email = e.User.Email,
+                        EnrolledAt = e.EnrolledAt
+                    }).ToList()
+                };
             }).ToList();
         }
+
+
+
+        //public async Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword)
+        //{
+        //    var spec = new PlanworkSearchSpec(keyword);
+
+        //    var planworks = await _planworkRepository.GetAllWithSpecAsync(spec);
+
+        //    return planworks.Select(p => new PlanworkWithUsersDto
+        //    {
+        //        Id = p.ChildId,
+        //        ServiceTitle = p.ServiceTitle,
+        //        Category = p.MainFlag == true ? "Main" : "Other", // example
+        //        UsersCount = p.Enrollments.Count,
+        //        Users = p.Enrollments.Select(e => new UserEnrollmentDto
+        //        {
+        //            Username = e.User.Username,
+        //            Email = e.User.Email,
+        //            EnrolledAt = e.EnrolledAt
+        //        }).ToList()
+        //    }).ToList();
+        //}
         public async Task<AdminStatsDto> GetStatsAsync()
         {
             return new AdminStatsDto
