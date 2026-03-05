@@ -110,6 +110,7 @@ namespace Institute.Application.Services
         {
             var spec = new BaseSpecification<Order>(o => o.Id == orderId);
             spec.AddInclude(o => o.Items);
+            spec.AddInclude("Items.Planwork"); // for CourseTitle in refund response
 
             return (await _orderRepository.GetAllWithSpecAsync(spec))
                 .FirstOrDefault();
@@ -222,7 +223,8 @@ namespace Institute.Application.Services
             return payment;
         }
 
-        public async Task<Payment> ProcessPaymentAsync(int orderId,string transactionRef,string gatewayResponse,bool success)
+
+        public async Task<Payment> ProcessPaymentAsync(int orderId, string transactionRef, string gatewayResponse, bool success)
         {
             var order = await _orderRepository.GetByIdAsync(orderId);
             if (order == null)

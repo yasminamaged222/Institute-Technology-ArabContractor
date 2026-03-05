@@ -256,8 +256,9 @@ builder.Services.AddHttpClient<ClerkService>();
 builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<IAdminService, AdminService>();
+
 builder.Services.AddScoped<BankPaymentService>();
+builder.Services.AddScoped<IRefundService, RefundService>();
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
 builder.Services.AddHttpClient("BankClient", client =>
 {
@@ -273,9 +274,6 @@ builder.Services.AddHttpClient("BankClient", client =>
     client.DefaultRequestHeaders.Authorization =
         new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authValue);
 });
-
-// ======= HttpClient for Clerk Proxy =======
-builder.Services.AddHttpClient("ClerkProxy");
 #endregion
 
 #region (Authentication And Authorization)
@@ -300,12 +298,13 @@ builder.Services
         {
             OnAuthenticationFailed = context =>
             {
-                Console.WriteLine("AUTH FAILED: " + context.Exception.Message);
+                Console.WriteLine("❌ AUTH FAILED");
+                Console.WriteLine(context.Exception.Message);
                 return Task.CompletedTask;
             },
             OnTokenValidated = context =>
             {
-                Console.WriteLine("TOKEN VALIDATED");
+                Console.WriteLine("✅ TOKEN VALIDATED");
                 return Task.CompletedTask;
             }
         };
@@ -330,17 +329,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseDefaultFiles();
 app.UseStaticFiles();
 app.UseCors("AllowLocalhost");
 app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
-
-// ======= Clerk Proxy =======
-// Forwards /clerk-proxy/* to Clerk's servers
-// Required because clerk.azurewebsites.net subdomain cannot be DNS-configured
 app.Map("/clerk-proxy", proxyApp =>
 {
     proxyApp.Run(async ctx =>
@@ -387,7 +381,6 @@ app.Map("/clerk-proxy", proxyApp =>
         }
     });
 });
-
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 

@@ -1,52 +1,53 @@
-﻿namespace Institute.Domain.Entities
+﻿using System;
+
+namespace Institute.Domain.Entities
 {
     /// <summary>
-    /// Stores refund requests submitted by users.
-    /// Status values match AdminDashboard.jsx exactly:
-    ///   "pending" | "approved" | "sent_to_bank" | "rejected"
+    /// Mirrors the existing dbo.RefundRequests table exactly.
+    /// A user submits a manual refund request; admin reviews and approves/rejects/sends.
     /// </summary>
     public class RefundRequest
     {
         public int Id { get; set; }
 
-        // Human-readable ref e.g. "REF-2025-001"
-        public string RefNumber { get; set; } = string.Empty;
+        /// <summary>Human-readable reference number, e.g. "REF-20250612-001"</summary>
+        public string RefNumber { get; set; } = null!;
 
-        // Relations
         public int OrderId { get; set; }
-        public Order Order { get; set; } = null!;
-
         public int UserId { get; set; }
-        public AppUser User { get; set; } = null!;
-
-        // The specific course the user wants a refund for
         public int PlanworkId { get; set; }
-        public Planwork Planwork { get; set; } = null!;
 
-        // Amount
         public decimal Amount { get; set; }
         public string Currency { get; set; } = "EGP";
 
-        // Reason (submitted by user)
-        public string Reason { get; set; } = string.Empty;
+        /// <summary>Short reason selected by the user.</summary>
+        public string Reason { get; set; } = null!;
+
+        /// <summary>Optional detailed description from the user.</summary>
         public string? Details { get; set; }
 
-        // Status: "pending" | "approved" | "sent_to_bank" | "rejected"
-        public string Status { get; set; } = "pending";
+        /// <summary>Pending | Approved | Rejected | Sent</summary>
+        public string Status { get; set; } = "Pending";
 
-        // Bank info (submitted by user)
+        // ── Bank account info (filled by user) ──────────────────────────
         public string? BankName { get; set; }
         public string? AccountNumber { get; set; }
         public string? AccountHolder { get; set; }
         public string? Iban { get; set; }
 
-        // Admin audit
+        // ── Admin fields ────────────────────────────────────────────────
         public string? AdminNote { get; set; }
         public string? RejectionReason { get; set; }
 
+        // ── Timestamps ──────────────────────────────────────────────────
         public DateTime RequestedAt { get; set; } = DateTime.UtcNow;
         public DateTime? ApprovedAt { get; set; }
         public DateTime? SentAt { get; set; }
         public DateTime? RejectedAt { get; set; }
+
+        // ── Navigation ───────────────────────────────────────────────────
+        public AppUser User { get; set; } = null!;
+        public Order Order { get; set; } = null!;
+        public Planwork Planwork { get; set; } = null!;
     }
 }
