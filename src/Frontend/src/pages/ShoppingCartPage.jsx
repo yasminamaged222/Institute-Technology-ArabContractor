@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { ShoppingCart, Trash2, Tag, ArrowRight, BookOpen } from 'lucide-react';
+import { ShoppingCart, Trash2, ArrowRight, BookOpen } from 'lucide-react';
 import { Link } from "react-router-dom";
 import { useAuth } from '@clerk/clerk-react';
 
@@ -47,7 +47,7 @@ const CartItemFull = ({ item, onRemove }) => {
                         {item.lectures && item.lectures > 0 && (
                             <span className="flex items-center gap-1">
                                 <svg className="h-4 w-4 text-[#0865a8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2-2v8a2 2 0 002 2z" />
                                 </svg>
                                 <span className="font-semibold text-black">{item.lectures}</span> محاضرة
                             </span>
@@ -81,30 +81,18 @@ const CartItemFull = ({ item, onRemove }) => {
                     )}
 
                     <div className="mt-auto flex flex-col gap-3 border-t border-gray-100 pt-3 md:flex-row md:items-end md:justify-between md:gap-4 md:pt-4">
-                        <div className="flex items-center gap-3 md:gap-4">
-                            <button
-                                onClick={() => onRemove(item.planworkId || item.id)}
-                                className="flex items-center gap-1.5 text-xs font-medium text-red-600 transition-colors hover:text-red-700 md:gap-2 md:text-sm"
-                            >
-                                <Trash2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                                حذف
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => onRemove(item.planworkId || item.id)}
+                            className="flex items-center gap-1.5 text-xs font-medium text-red-600 transition-colors hover:text-red-700 md:gap-2 md:text-sm"
+                        >
+                            <Trash2 className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                            حذف
+                        </button>
 
                         <div className="text-left md:text-right">
-                            <div className="mb-1 flex items-center gap-2">
-                                <span className="text-xl font-bold text-[#f57c00] md:text-2xl">
-                                    {(item.currentPrice || 0).toFixed(2)} ج.م
-                                </span>
-                                {item.coupon && (
-                                    <Tag className="h-3.5 w-3.5 text-emerald-600 md:h-4 md:w-4" title={item.coupon} />
-                                )}
-                            </div>
-                            {item.originalPrice && item.originalPrice > 0 && item.originalPrice !== item.currentPrice && (
-                                <p className="text-xs font-medium text-gray-400 line-through md:text-sm">
-                                    {(item.originalPrice || 0).toFixed(2)} ج.م
-                                </p>
-                            )}
+                            <span className="text-xl font-bold text-[#f57c00] md:text-2xl">
+                                {(item.currentPrice || 0).toFixed(2)} ج.م
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -117,8 +105,6 @@ export default function ShoppingCartPage() {
     const { getToken, isSignedIn } = useAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [couponCode, setCouponCode] = useState('');
-    const [appliedCoupon, setAppliedCoupon] = useState(null);
 
     useEffect(() => {
         document.title = 'سلة التسوق - المعهد التكنولوجي لهندسة التشييد والإدارة';
@@ -127,9 +113,7 @@ export default function ShoppingCartPage() {
     useEffect(() => {
         const loadCart = async () => {
             setLoading(true);
-
             try {
-                // ✅ لو المستخدم مسجل دخول → API فقط
                 if (isSignedIn) {
                     const token = await getToken();
                     if (!token) throw new Error("No token");
@@ -159,14 +143,10 @@ export default function ShoppingCartPage() {
                     }));
 
                     setItems(transformedItems);
-                }
-
-                // ✅ لو مش مسجل دخول → localStorage فقط
-                else {
+                } else {
                     const localCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
                     setItems(localCart);
                 }
-
             } catch (error) {
                 console.error("Cart load error:", error);
                 setItems([]);
@@ -180,7 +160,6 @@ export default function ShoppingCartPage() {
         return () => window.removeEventListener("purchaseCompleted", loadCart);
     }, [isSignedIn, getToken]);
 
-    // ✅ نحدث localStorage دايمًا عشان الكونت يتحدث فورًا
     useEffect(() => {
         if (!loading) {
             localStorage.setItem("cartItems", JSON.stringify(items));
@@ -199,38 +178,20 @@ export default function ShoppingCartPage() {
                     });
                 }
             }
-            setItems(prev =>
-                prev.filter(item => (item.planworkId || item.id) !== planworkId)
-            );
+            setItems(prev => prev.filter(item => (item.planworkId || item.id) !== planworkId));
         } catch (error) {
             console.error("Remove error:", error);
         }
     };
 
-    const applyCoupon = () => {
-        if (couponCode.toUpperCase() === 'DISCOUNT2025') {
-            setAppliedCoupon({ code: 'DISCOUNT2025', discount: 50 });
-        } else if (couponCode.toUpperCase() === 'WELCOME10') {
-            setAppliedCoupon({ code: 'WELCOME10', discount: 25 });
-        } else {
-            alert('كود الخصم غير صالح');
-        }
-    };
-
-    const subtotal = items.reduce((sum, item) => sum + ((item.currentPrice || 0) * (item.quantity || 1)), 0);
-    const totalOriginalPrice = items.reduce((sum, item) => sum + ((item.originalPrice || 0) * (item.quantity || 1)), 0);
-    const baseDiscount = totalOriginalPrice - subtotal;
-    const couponDiscount = appliedCoupon ? appliedCoupon.discount : 0;
-    const totalPrice = subtotal - couponDiscount;
-    const totalSavings = totalOriginalPrice - totalPrice;
-    const discountPercent = totalOriginalPrice > 0 ? Math.round((totalSavings / totalOriginalPrice) * 100) : 0;
+    const totalPrice = items.reduce((sum, item) => sum + ((item.currentPrice || 0) * (item.quantity || 1)), 0);
 
     if (loading) {
         return (
             <>
                 <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
                 <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } @media (max-width: 640px) { .cart-main { padding-top: 100px !important; } } @media (min-width: 641px) and (max-width: 1024px) { .cart-main { padding-top: 120px !important; } } @media (min-width: 1025px) { .cart-main { padding-top: 130px !important; } }`}</style>
-                <div className="fixed left-0 top-16 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: 70 }}>
+                <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: 70 }}>
                     <div className="text-center">
                         <span className="text-sm">
                             <a href="/" className="ml-3 text-gray-700">الصفحة الرئيسية</a>
@@ -310,52 +271,18 @@ export default function ShoppingCartPage() {
                                 <div className="sticky top-28 rounded-2xl bg-white p-5 shadow-lg ring-1 ring-gray-200 md:top-32 md:p-6">
                                     <h2 className="mb-4 text-lg font-bold text-black md:mb-6 md:text-xl">ملخص الطلب</h2>
 
-                                    <div className="mb-4 space-y-2 border-b border-gray-200 pb-4 md:mb-6 md:space-y-3 md:pb-6">
+                                    <div className="mb-4 border-b border-gray-200 pb-4 md:mb-6 md:pb-6">
                                         <div className="flex items-center justify-between text-sm text-black opacity-70 md:text-base">
-                                            <span>المجموع الفرعي</span>
-                                            <span className="font-semibold">{totalOriginalPrice.toFixed(2)} ج.م</span>
+                                            <span>عدد الدورات</span>
+                                            <span className="font-semibold">{items.length}</span>
                                         </div>
-                                        {baseDiscount > 0 && (
-                                            <div className="flex items-center justify-between text-sm text-emerald-600 md:text-base">
-                                                <span className="font-medium">خصم الدورات</span>
-                                                <span className="font-semibold">-{baseDiscount.toFixed(2)} ج.م</span>
-                                            </div>
-                                        )}
-                                        {appliedCoupon && (
-                                            <div className="flex items-center justify-between text-sm text-emerald-600 md:text-base">
-                                                <span className="font-medium">كود الخصم ({appliedCoupon.code})</span>
-                                                <span className="font-semibold">-{couponDiscount.toFixed(2)} ج.م</span>
-                                            </div>
-                                        )}
                                     </div>
 
-                                    <div className="mb-4 md:mb-6">
+                                    <div className="mb-6">
                                         <p className="mb-1 text-xs text-black opacity-60 md:text-sm">الإجمالي:</p>
-                                        <p className="mb-3 text-3xl font-bold text-[#f57c00] md:text-4xl">
+                                        <p className="text-3xl font-bold text-[#f57c00] md:text-4xl">
                                             {totalPrice.toFixed(2)} ج.م
                                         </p>
-                                        {discountPercent > 0 && (
-                                            <div className="inline-block rounded-full bg-gradient-to-r from-emerald-100 to-green-100 px-3 py-1.5 text-xs font-bold text-emerald-700 md:px-4 md:py-2 md:text-sm">
-                                                🎉 وفرت {discountPercent}% ({totalSavings.toFixed(2)} ج.م)
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="mb-4">
-                                        {!appliedCoupon && (
-                                            <div className="flex gap-2">
-                                                <input
-                                                    type="text"
-                                                    value={couponCode}
-                                                    onChange={e => setCouponCode(e.target.value)}
-                                                    placeholder="كود الخصم"
-                                                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none"
-                                                />
-                                                <button onClick={applyCoupon} className="rounded-xl bg-[#0865a8] px-4 py-2 text-sm font-bold text-white">
-                                                    تطبيق
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <Link to="/checkout" className="mb-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0865a8] to-[#f57c00] py-3 font-bold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl md:py-4">

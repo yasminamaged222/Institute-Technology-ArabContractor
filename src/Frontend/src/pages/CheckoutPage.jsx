@@ -1,16 +1,7 @@
 ﻿/**
- * CheckoutPage.jsx — FIXED VERSION
+ * CheckoutPage.jsx — UPDATED TERMS & REFUND POLICY
  *
- * المشاكل اللي اتحلت:
- * 1. الكارت بيتجاب من API مباشرة (مش من localStorage)
- *    عشان يكون متزامن مع الـ backend دايماً
- *
- * 2. حسابات الأسعار اتصلحت:
- *    - item.price      = السعر بعد الخصم  (جاي من CartItemDto.Price)
- *    - item.cost       = السعر الأصلي     (جاي من CartItemDto.Cost)
- *
- * 3. عرض اسم الكورس اتصلح:
- *    - item.title      = اسم الكورس       (جاي من CartItemDto.Title)
+ * الشروط والأحكام وسياسة الاسترجاع محدّثة من الوثيقة الرسمية للمعهد.
  */
 
 import { useState, useEffect, useRef } from "react";
@@ -24,8 +15,6 @@ import { useAuth } from "@clerk/clerk-react";
 const API_BASE = "https://acwebsite-icmet-test.azurewebsites.net";
 
 // ── Helper: normalize item من الـ API response ──────────────────────────────
-// الـ API بيرجع: { planworkId, price, cost, title, place, date, days, slug, courseImage }
-// الـ UI محتاج: currentPrice, originalPrice, title, id
 function normalizeCartItem(item) {
     return {
         id: item.planworkId,
@@ -43,7 +32,7 @@ function normalizeCartItem(item) {
 }
 
 // ── Terms & Conditions Modal ─────────────────────────────────────────────────
-function TermsModal({ onClose }) {
+function TermsModal({ onClose, onAccept }) {
     return (
         <div style={{
             position: 'fixed', inset: 0, zIndex: 9999,
@@ -51,9 +40,10 @@ function TermsModal({ onClose }) {
             alignItems: 'center', justifyContent: 'center', padding: '16px'
         }}>
             <div style={{
-                background: '#fff', borderRadius: 18, width: '100%', maxWidth: 600,
-                maxHeight: '85vh', display: 'flex', flexDirection: 'column',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden'
+                background: '#fff', borderRadius: 18, width: '100%', maxWidth: 640,
+                maxHeight: '88vh', display: 'flex', flexDirection: 'column',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.3)', overflow: 'hidden',
+                fontFamily: '"Droid Arabic Kufi", serif'
             }}>
                 {/* Header */}
                 <div style={{
@@ -64,7 +54,7 @@ function TermsModal({ onClose }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <FileText style={{ width: 22, height: 22, color: '#fff' }} />
                         <h2 style={{ color: '#fff', fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>
-                            الشروط والأحكام وسياسة الاسترداد
+                            الشروط والأحكام وسياسة الاسترجاع
                         </h2>
                     </div>
                     <button onClick={onClose} style={{
@@ -77,68 +67,166 @@ function TermsModal({ onClose }) {
                     </button>
                 </div>
 
-                {/* Content */}
+                {/* Scrollable Content */}
                 <div style={{
                     overflowY: 'auto', padding: '24px',
-                    direction: 'rtl', lineHeight: 1.9,
+                    direction: 'rtl', lineHeight: 2,
                     color: '#374151', fontSize: '0.875rem'
                 }}>
+
+                    {/* Legal Notice */}
                     <div style={{
-                        background: 'linear-gradient(135deg, #fff7ed, #fef3c7)',
-                        border: '2px solid #f57c00', borderRadius: 14,
-                        padding: '18px 20px', marginBottom: 24
+                        background: '#f0f9ff', border: '1px solid #bae6fd',
+                        borderRadius: 12, padding: '14px 18px', marginBottom: 24
                     }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                            <RotateCcw style={{ width: 22, height: 22, color: '#f57c00', flexShrink: 0 }} />
-                            <h3 style={{ fontWeight: 700, fontSize: '1rem', color: '#92400e', margin: 0 }}>
-                                سياسة الاسترداد
-                            </h3>
-                        </div>
-                        <p style={{ margin: 0, color: '#78350f', fontWeight: 600, fontSize: '0.9rem' }}>
-                            يحق للمتدرب طلب استرداد المبلغ المدفوع خلال مدة تتراوح بين
-                            <span style={{ background: '#f57c00', color: '#fff', borderRadius: 6, padding: '2px 8px', margin: '0 6px', fontWeight: 700 }}>
-                                3 إلى 7 أيام
-                            </span>
-                            من تاريخ الشراء.
+                        <p style={{ margin: 0, color: '#0c4a6e', fontSize: '0.85rem', lineHeight: 1.9 }}>
+                            <strong>تنويه قانوني: </strong>
+                            باستخدامكم لموقع المعهد التكنولوجي لهندسة التشييد والإدارة أو تسجيلكم في أي من الدورات التدريبية أو برامج التدريب الصيفي، فإنكم تقرّون وتوافقون على الالتزام التام بالشروط والأحكام الآتية، والتي تمثل اتفاقًا قانونيًا ملزمًا بين المتقدم والمعهد.
                         </p>
-                        <ul style={{ marginTop: 12, marginBottom: 0, paddingRight: 20, color: '#92400e' }}>
-                            <li style={{ marginBottom: 6 }}>يتم تقديم طلب الاسترداد عبر التواصل مع فريق الدعم الفني.</li>
-                            <li style={{ marginBottom: 6 }}>لا يسري الاسترداد بعد انتهاء مدة 7 أيام من تاريخ الشراء.</li>
-                            <li style={{ marginBottom: 6 }}>يُعالَج الاسترداد خلال 3 إلى 7 أيام عمل بعد الموافقة على الطلب.</li>
-                            <li>لا ينطبق الاسترداد على الدورات التي استُكملت بنسبة تزيد عن 20%.</li>
+                    </div>
+
+                    {/* ══ TERMS & CONDITIONS ══ */}
+                    <h3 style={{
+                        fontWeight: 700, color: '#0865a8', fontSize: '1rem',
+                        borderRight: '4px solid #0865a8', paddingRight: 12, marginBottom: 16
+                    }}>
+                        الشروط والأحكام للدورات التدريبية وبرامج التدريب الصيفي
+                    </h3>
+
+                    {/* 1. التسجيل */}
+                    <div style={{ marginBottom: 20 }}>
+                        <h4 style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 10 }}>١. التسجيل</h4>
+                        <ul style={{ paddingRight: 20, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <li>يتعين على المتدرب تقديم بيانات صحيحة وكاملة عند التسجيل.</li>
+                            <li>يعتبر التسجيل أوليًا ولا يُعد مؤكدًا إلا بعد سداد الرسوم كاملة من خلال بوابة الدفع المعتمدة.</li>
+                            <li>يحتفظ المعهد بالحق في قبول أو رفض أي طلب تسجيل دون إبداء أسباب ودون أي مسؤولية قانونية.</li>
                         </ul>
                     </div>
 
-                    {[
-                        ["١. القبول بالشروط", "باستخدامك لمنصة المعهد التكنولوجي لهندسة التشييد والإدارة (ICMET)، فإنك توافق على الالتزام بهذه الشروط والأحكام."],
-                        ["٢. الاشتراك والوصول", "عند إتمام عملية الشراء، تحصل على حق وصول شخصي وغير قابل للنقل للدورة المشتراة."],
-                        ["٣. حقوق الملكية الفكرية", "جميع المحتويات المقدمة عبر المنصة محمية بموجب قوانين حقوق الملكية الفكرية."],
-                        ["٤. الالتزامات والسلوك", "يلتزم المتدرب باحترام قواعد الأدب والتعامل اللائق مع المدربين وباقي المتدربين."],
-                        ["٥. تعديل الأسعار والمحتوى", "يحتفظ المعهد بحق تعديل أسعار الدورات وتحديث محتواها في أي وقت."],
-                        ["٦. حماية البيانات والخصوصية", "نلتزم بحماية بياناتك الشخصية وفقاً لسياسة الخصوصية المعتمدة لدينا."],
-                        ["٧. تحديد المسؤولية", "لا يتحمل المعهد المسؤولية عن أي خسائر غير مباشرة ناجمة عن استخدام المنصة."],
-                        ["٨. القانون المطبق", "تخضع هذه الشروط والأحكام لأحكام القانون المصري."],
-                    ].map(([title, text]) => (
-                        <div key={title}>
-                            <h3 style={{ fontWeight: 700, color: '#0865a8', fontSize: '0.95rem', marginBottom: 8 }}>{title}</h3>
-                            <p style={{ marginTop: 0 }}>{text}</p>
-                        </div>
-                    ))}
+                    {/* 2. الدفع الإلكتروني */}
+                    <div style={{ marginBottom: 20 }}>
+                        <h4 style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 10 }}>٢. الدفع الإلكتروني</h4>
+                        <ul style={{ paddingRight: 20, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <li>تتم عمليات الدفع من خلال بوابة الدفع الخاصة ببنك مصر وفقًا للمعايير الأمنية المعتمدة.</li>
+                            <li>يعتبر إتمام عملية الدفع قبولًا نهائيًا لهذه الشروط والأحكام وسياسة الاسترجاع.</li>
+                        </ul>
+                    </div>
 
-                    <div style={{ background: '#f0f9ff', borderRadius: 10, padding: '12px 16px', marginTop: 16, borderRight: '4px solid #0865a8' }}>
-                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#1e40af', fontWeight: 600 }}>
-                            آخر تحديث: يناير 2025
+                    {/* 3. تعديل أو إلغاء الدورات */}
+                    <div style={{ marginBottom: 20 }}>
+                        <h4 style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 10 }}>٣. تعديل أو إلغاء الدورات</h4>
+                        <ul style={{ paddingRight: 20, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <li>يحتفظ المعهد بالحق في تعديل مواعيد الدورات أو مكونات برامج التدريب الصيفي أو محاضريها أو محاورها التدريبية وفقًا للظروف التنظيمية دون تحمل أي مسؤولية قانونية.</li>
+                            <li>في حال إلغاء أي دورة تدريبية أو برنامج تدريب صيفي قبل بدايته من جانب المعهد، يتم رد كامل الرسوم للمتقدم.</li>
+                        </ul>
+                    </div>
+
+                    {/* 4. استخدام المواد التعليمية */}
+                    <div style={{ marginBottom: 20 }}>
+                        <h4 style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 10 }}>٤. استخدام المواد التعليمية</h4>
+                        <p style={{ margin: 0, paddingRight: 4, lineHeight: 1.9 }}>
+                            جميع المواد التدريبية ووسائل الشرح والمحتوى العلمي المتاح ضمن الدورات التدريبية أو التدريب الصيفي ملك للمعهد، ولا يجوز إعادة استخدامها، أو نشرها، أو تصويرها، أو تداولها بأي وسيلة دون إذن كتابي مسبق.
+                        </p>
+                    </div>
+
+                    {/* 5. حماية البيانات */}
+                    <div style={{ marginBottom: 28 }}>
+                        <h4 style={{ fontWeight: 700, color: '#111', fontSize: '0.95rem', marginBottom: 10 }}>٥. حماية البيانات</h4>
+                        <p style={{ margin: 0, paddingRight: 4, lineHeight: 1.9 }}>
+                            يلتزم المعهد بالحفاظ على سرية بيانات المتدربين وعدم مشاركتها مع أي طرف خارجي إلا بالقدر الضروري لإتمام عمليات الدفع أو تنفيذ المتطلبات القانونية.
+                        </p>
+                    </div>
+
+                    {/* Divider */}
+                    <div style={{ borderTop: '2px dashed #e5e7eb', marginBottom: 24 }} />
+
+                    {/* ══ REFUND POLICY ══ */}
+                    <div style={{
+                        background: 'linear-gradient(135deg, #fff7ed, #fef3c7)',
+                        border: '2px solid #f57c00', borderRadius: 14,
+                        padding: '18px 20px', marginBottom: 20
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                            <RotateCcw style={{ width: 22, height: 22, color: '#f57c00', flexShrink: 0 }} />
+                            <h3 style={{ fontWeight: 700, fontSize: '1rem', color: '#92400e', margin: 0 }}>
+                                سياسة الاسترجاع — Refund Policy
+                            </h3>
+                        </div>
+                        <p style={{ margin: '0 0 12px', color: '#78350f', fontSize: '0.85rem', lineHeight: 1.8 }}>
+                            تنطبق السياسة التالية على: <strong>الدورات التدريبية</strong> وكذلك <strong>برامج التدريب الصيفي لطلبة الجامعات</strong>.
+                        </p>
+
+                        {/* Case 1 */}
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 16px', marginBottom: 10, borderRight: '4px solid #16a34a' }}>
+                            <p style={{ margin: '0 0 6px', fontWeight: 700, color: '#14532d', fontSize: '0.88rem' }}>
+                                ١. الاسترجاع قبل بدء البرنامج بـ 7 أيام عمل أو أكثر
+                            </p>
+                            <ul style={{ margin: 0, paddingRight: 20, color: '#166534', fontSize: '0.82rem', lineHeight: 1.8 }}>
+                                <li>يحق للمتقدم استرداد <strong>كامل الرسوم المدفوعة</strong>.</li>
+                                <li>قد يتم خصم رسوم إدارية أو مصاريف تحويل بنكي (إن وجدت).</li>
+                            </ul>
+                        </div>
+
+                        {/* Case 2 */}
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 16px', marginBottom: 10, borderRight: '4px solid #f59e0b' }}>
+                            <p style={{ margin: '0 0 6px', fontWeight: 700, color: '#78350f', fontSize: '0.88rem' }}>
+                                ٢. الاسترجاع قبل بدء البرنامج بيومي عمل
+                            </p>
+                            <ul style={{ margin: 0, paddingRight: 20, color: '#92400e', fontSize: '0.82rem', lineHeight: 1.8 }}>
+                                <li>يحق للمتقدم طلب استرجاع المبلغ، لكن يتم <strong>خصم نسبة 25% من إجمالي قيمة الرسوم</strong>.</li>
+                                <li>نظرًا لحجز مكان واستهلاك موارد تنظيمية وإدارية.</li>
+                            </ul>
+                        </div>
+
+                        {/* Case 3 */}
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 16px', marginBottom: 10, borderRight: '4px solid #dc2626' }}>
+                            <p style={{ margin: '0 0 6px', fontWeight: 700, color: '#7f1d1d', fontSize: '0.88rem' }}>
+                                ٣. الاسترجاع بعد بدء البرنامج
+                            </p>
+                            <ul style={{ margin: 0, paddingRight: 20, color: '#991b1b', fontSize: '0.82rem', lineHeight: 1.8 }}>
+                                <li><strong>لا يحق للمتقدم استرجاع أي مبالغ</strong> بعد بدء الدورة تحت أي ظرف.</li>
+                            </ul>
+                        </div>
+
+                        {/* Case 4 */}
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 16px', marginBottom: 10, borderRight: '4px solid #0865a8' }}>
+                            <p style={{ margin: '0 0 6px', fontWeight: 700, color: '#1e3a5f', fontSize: '0.88rem' }}>
+                                ٤. إلغاء الدورة من قبل المعهد
+                            </p>
+                            <ul style={{ margin: 0, paddingRight: 20, color: '#1e40af', fontSize: '0.82rem', lineHeight: 1.8 }}>
+                                <li>في حال قيام المعهد بإلغاء البرنامج قبل بدايته، يتم رد <strong>كامل قيمة الرسوم دون أي خصومات</strong>.</li>
+                            </ul>
+                        </div>
+
+                        {/* Case 5 — Process */}
+                        <div style={{ background: '#fff', borderRadius: 10, padding: '12px 16px', borderRight: '4px solid #7c3aed' }}>
+                            <p style={{ margin: '0 0 6px', fontWeight: 700, color: '#4c1d95', fontSize: '0.88rem' }}>
+                                ٥. آلية استرجاع المبالغ
+                            </p>
+                            <ul style={{ margin: 0, paddingRight: 20, color: '#5b21b6', fontSize: '0.82rem', lineHeight: 1.8 }}>
+                                <li>تتم عملية الاسترجاع باستخدام <strong>نفس وسيلة الدفع</strong> التي استخدمها المتدرب عند التسجيل.</li>
+                                <li>تستغرق عملية رد المبلغ مدة تتراوح بين <strong>7 إلى 14 يوم عمل</strong> وفقًا للإجراءات البنكية.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style={{ background: '#f0f9ff', borderRadius: 10, padding: '12px 16px', borderRight: '4px solid #0865a8' }}>
+                        <p style={{ margin: 0, fontSize: '0.78rem', color: '#1e40af', fontWeight: 600 }}>
+                            آخر تحديث: يناير 2025 — المعهد التكنولوجي لهندسة التشييد والإدارة (ICMET)
                         </p>
                     </div>
                 </div>
 
                 {/* Footer */}
                 <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-                    <button onClick={onClose} style={{
+                    <button onClick={() => { onAccept(); onClose(); }} style={{
                         background: 'linear-gradient(90deg,#0865a8,#f57c00)',
                         color: '#fff', border: 'none', borderRadius: 10,
-                        padding: '10px 28px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer'
-                    }}>فهمت وأوافق</button>
+                        padding: '10px 28px', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer',
+                        fontFamily: '"Droid Arabic Kufi", serif'
+                    }}>
+                        فهمت وأوافق
+                    </button>
                 </div>
             </div>
         </div>
@@ -150,7 +238,6 @@ export default function CheckoutPage() {
     const navigate = useNavigate();
     const { getToken, isSignedIn } = useAuth();
 
-    // ✅ FIX: cartItems بتيجي من الـ API مش من localStorage
     const [cartItems, setCartItems] = useState([]);
     const [cartLoading, setCartLoading] = useState(true);
     const [cartError, setCartError] = useState("");
@@ -173,14 +260,14 @@ export default function CheckoutPage() {
     useEffect(() => { getTokenRef.current = getToken; }, [getToken]);
     useEffect(() => { cartItemsRef.current = cartItems; }, [cartItems]);
 
-    // ✅ FIX: جلب الكارت من الـ API مباشرة
+    // Fetch cart from API
     useEffect(() => {
         if (isSignedIn === false) {
             alert("يجب تسجيل الدخول أولاً");
             navigate("/sign-in");
             return;
         }
-        if (!isSignedIn) return; // لسه بيتحقق
+        if (!isSignedIn) return;
 
         const fetchCart = async () => {
             setCartLoading(true);
@@ -192,12 +279,8 @@ export default function CheckoutPage() {
                 });
                 if (!res.ok) throw new Error(`فشل تحميل السلة (${res.status})`);
                 const data = await res.json();
-
-                // ✅ normalize الـ items عشان تتوافق مع الـ UI
                 const normalized = (data.items || []).map(normalizeCartItem);
                 setCartItems(normalized);
-
-                // ✅ حفظ في localStorage للـ PaymentReturnPage
                 localStorage.setItem("cartItems", JSON.stringify(normalized));
             } catch (err) {
                 setCartError(err.message || "حدث خطأ أثناء تحميل السلة");
@@ -220,7 +303,6 @@ export default function CheckoutPage() {
                         { method: "GET", headers: { Authorization: `Bearer ${token}` } }
                     );
                 } catch (_) { }
-
                 localStorage.removeItem("cartItems");
                 window.dispatchEvent(new Event("cartUpdated"));
                 navigate(`/payment-return?orderId=${orderIdRef.current}&resultIndicator=${resultIndicator}`);
@@ -229,17 +311,14 @@ export default function CheckoutPage() {
                 setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
             }
         };
-
         window.errorCallback = (err) => {
             setLoading(false);
             setError("حدث خطأ أثناء الدفع: " + (err?.error?.explanation || "يرجى المحاولة مرة أخرى."));
         };
-
         window.cancelCallback = () => {
             setLoading(false);
             setError("تم إلغاء عملية الدفع.");
         };
-
         return () => {
             delete window.completeCallback;
             delete window.errorCallback;
@@ -247,14 +326,12 @@ export default function CheckoutPage() {
         };
     }, []);
 
-    // ✅ FIX: الحسابات بتستخدم currentPrice و originalPrice الصح
     const subtotal = cartItems.reduce((sum, item) => sum + (item.currentPrice ?? 0) * (item.quantity || 1), 0);
     const totalOriginalPrice = cartItems.reduce((sum, item) => sum + (item.originalPrice ?? item.currentPrice ?? 0) * (item.quantity || 1), 0);
     const totalDiscount = totalOriginalPrice - subtotal;
 
     useEffect(() => { subtotalRef.current = subtotal; }, [subtotal]);
 
-    // Main payment handler
     const handleSubmit = async (e) => {
         e?.preventDefault();
         setError("");
@@ -262,10 +339,9 @@ export default function CheckoutPage() {
         if (!termsAccepted) {
             setTermsError(true);
             setTimeout(() => setTermsError(false), 600);
-            setError("يجب الموافقة على الشروط والأحكام وسياسة الاسترداد أولاً.");
+            setError("يجب الموافقة على الشروط والأحكام وسياسة الاسترجاع أولاً.");
             return;
         }
-
         if (cartItems.length === 0) {
             setError("السلة فارغة. يرجى إضافة دورات أولاً.");
             return;
@@ -296,11 +372,9 @@ export default function CheckoutPage() {
             }
 
             const { sessionId, successIndicator, orderId } = result.data;
-
             successIndicatorRef.current = successIndicator;
             orderIdRef.current = orderId;
 
-            // حفظ في localStorage للـ PaymentReturnPage
             localStorage.setItem('pendingOrderId', String(orderId));
             localStorage.setItem('pendingSuccessIndicator', String(successIndicator));
             localStorage.setItem('pendingCartItems', JSON.stringify(cartItems));
@@ -349,19 +423,18 @@ export default function CheckoutPage() {
         </svg>
     );
 
-    // ── Loading state ─────────────────────────────────────────────────────────
     if (cartLoading) {
         return (
             <div dir="rtl" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 16 }}>
                 <Spinner />
-                <p style={{ color: '#6b7280' }}>جاري تحميل سلة التسوق...</p>
+                <p style={{ color: '#6b7280', fontFamily: '"Droid Arabic Kufi", serif' }}>جاري تحميل سلة التسوق...</p>
             </div>
         );
     }
 
     return (
         <>
-            {showTermsModal && <TermsModal onClose={() => setShowTermsModal(false)} />}
+            {showTermsModal && <TermsModal onClose={() => setShowTermsModal(false)} onAccept={() => setTermsAccepted(true)} />}
 
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
             <style>{`
@@ -448,15 +521,26 @@ export default function CheckoutPage() {
                                     </div>
                                 </div>
 
-                                {/* Refund Policy Summary */}
-                                <div style={{ marginTop: 14, borderRadius: 12, background: 'linear-gradient(135deg, #fff7ed, #fef3c7)', border: '1px solid #fed7aa', padding: 'clamp(10px,2.5vw,16px)', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                    <RotateCcw style={{ width: 18, height: 18, color: '#f57c00', flexShrink: 0, marginTop: 2 }} />
-                                    <div>
-                                        <p style={{ fontWeight: 700, fontSize: 'clamp(0.78rem,2vw,0.9rem)', color: '#92400e' }}>سياسة الاسترداد</p>
-                                        <p style={{ fontSize: '0.78rem', color: '#78350f', marginTop: 3, lineHeight: 1.7 }}>
-                                            يمكنك استرداد مبلغك خلال مدة تتراوح بين <strong>3 إلى 7 أيام</strong> من تاريخ الشراء.
-                                        </p>
+                                {/* ── Updated Refund Policy Summary ── */}
+                                <div style={{ marginTop: 14, borderRadius: 12, background: 'linear-gradient(135deg, #fff7ed, #fef3c7)', border: '1px solid #fed7aa', padding: 'clamp(10px,2.5vw,16px)' }}>
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
+                                        <RotateCcw style={{ width: 18, height: 18, color: '#f57c00', flexShrink: 0, marginTop: 2 }} />
+                                        <p style={{ fontWeight: 700, fontSize: 'clamp(0.78rem,2vw,0.9rem)', color: '#92400e', margin: 0 }}>ملخص سياسة الاسترجاع</p>
                                     </div>
+                                    <ul style={{ margin: 0, paddingRight: 20, color: '#78350f', fontSize: '0.78rem', lineHeight: 1.9, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        <li>
+                                            <strong>قبل 7 أيام عمل أو أكثر من بدء البرنامج:</strong> استرداد كامل الرسوم.
+                                        </li>
+                                        <li>
+                                            <strong>قبل يومي عمل من بدء البرنامج:</strong> خصم 25% من إجمالي الرسوم.
+                                        </li>
+                                        <li>
+                                            <strong>بعد بدء البرنامج:</strong> لا يحق استرجاع أي مبالغ.
+                                        </li>
+                                        <li>
+                                            <strong>مدة رد المبلغ:</strong> من 7 إلى 14 يوم عمل عبر نفس وسيلة الدفع.
+                                        </li>
+                                    </ul>
                                 </div>
 
                                 {/* Terms & Conditions Checkbox */}
@@ -489,9 +573,9 @@ export default function CheckoutPage() {
                                             لقد قرأت وأوافق على{' '}
                                             <span onClick={(e) => { e.stopPropagation(); setShowTermsModal(true); }}
                                                 style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' }}>
-                                                الشروط والأحكام وسياسة الاسترداد
+                                                الشروط والأحكام وسياسة الاسترجاع
                                             </span>
-                                            {' '}الخاصة بالمعهد التكنولوجي لهندسة التشييد والإدارة.
+                                            {' '}الخاصة بالمعهد التكنولوجي لهندسة التشييد والإدارة (ICMET).
                                         </p>
                                     </div>
                                     {termsError && (

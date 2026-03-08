@@ -55,7 +55,6 @@ const styles = {
     refundBtn: { width: '100%', borderRadius: '10px', border: '2px solid #e53935', backgroundColor: '#ffffff', padding: '10px 20px', fontWeight: 'bold', color: '#e53935', transition: 'all 0.3s ease', cursor: 'pointer', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' },
     refundBtnHover: { backgroundColor: '#e53935', color: '#ffffff', transform: 'translateY(-2px)', boxShadow: '0 4px 10px rgba(229,57,53,0.25)' },
     emptyState: { textAlign: 'center', padding: '60px 20px', backgroundColor: '#f9f9f9', borderRadius: '16px', border: '2px dashed #0865a8' },
-    emptyStateIcon: { width: '80px', height: '80px', margin: '0 auto 20px', color: '#0865a8', opacity: 0.5 },
     emptyStateText: { fontSize: '20px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif', opacity: 0.7 },
     toast: { position: 'fixed', top: '100px', right: '20px', backgroundColor: '#ffffff', padding: '16px 24px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(0,0,0,0.15)', zIndex: 1000, display: 'flex', alignItems: 'center', gap: '12px', maxWidth: '400px', animation: 'slideIn 0.3s ease-out', fontFamily: '"Droid Arabic Kufi", serif' },
     toastSuccess: { borderRight: '4px solid #4caf50' },
@@ -76,9 +75,11 @@ const styles = {
     refundInfoBox: { display: 'flex', gap: '12px', alignItems: 'flex-start', backgroundColor: '#e3f2fd', border: '1px solid #90caf9', borderRadius: '10px', padding: '14px 16px', marginBottom: '20px' },
     refundInfoText: { fontSize: '14px', color: '#1565c0', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
     formLabel: { display: 'block', fontSize: '15px', fontWeight: 'bold', color: '#000000', marginBottom: '10px', fontFamily: '"Droid Arabic Kufi", serif' },
+    formInput: { width: '100%', padding: '12px 16px', border: '2px solid #e0e0e0', borderRadius: '10px', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif', color: '#000000', outline: 'none', boxSizing: 'border-box', direction: 'rtl', transition: 'border-color 0.2s', marginBottom: '16px' },
     refundTextarea: { width: '100%', padding: '14px 16px', border: '2px solid #e0e0e0', borderRadius: '10px', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif', color: '#000000', resize: 'vertical', outline: 'none', boxSizing: 'border-box', lineHeight: '1.6', direction: 'rtl', transition: 'border-color 0.2s' },
     charCount: { textAlign: 'left', fontSize: '12px', color: '#999', marginTop: '6px', marginBottom: '16px', fontFamily: '"Droid Arabic Kufi", serif' },
     errorBox: { display: 'flex', gap: '10px', alignItems: 'center', backgroundColor: '#ffebee', border: '1px solid #ef9a9a', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '14px', color: '#c62828', fontFamily: '"Droid Arabic Kufi", serif' },
+    warningBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', backgroundColor: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '14px', color: '#795548', fontFamily: '"Droid Arabic Kufi", serif' },
     modalActions: { display: 'flex', gap: '12px', marginTop: '8px' },
     btnCancelRefund: { flex: 1, padding: '13px 20px', backgroundColor: '#f5f5f5', color: '#555', border: '2px solid #e0e0e0', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif' },
     btnSubmitRefund: { flex: 2, padding: '13px 20px', background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 4px 12px rgba(229,57,53,0.35)' },
@@ -87,6 +88,7 @@ const styles = {
     successTitle: { fontSize: '22px', fontWeight: 'bold', color: '#1a7a3c', marginBottom: '12px', fontFamily: '"Droid Arabic Kufi", serif' },
     successText: { fontSize: '15px', color: '#555', lineHeight: '1.7', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '24px' },
     btnCloseSuccess: { padding: '13px 40px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif' },
+    statusBadge: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
 };
 
 const mediaQueryStyles = `
@@ -111,6 +113,14 @@ const mediaQueryStyles = `
         .grid { grid-template-columns: repeat(4, 1fr) !important; gap: 28px !important; }
     }
 `;
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const REFUND_STATUS_MAP = {
+    Pending: { label: 'قيد المراجعة', bg: '#fff8e1', color: '#f59e0b', icon: '⏳' },
+    Approved: { label: 'تمت الموافقة', bg: '#e3f2fd', color: '#0865a8', icon: '✅' },
+    Rejected: { label: 'مرفوض', bg: '#ffebee', color: '#e53935', icon: '❌' },
+    Sent: { label: 'تم التحويل', bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
+};
 
 // ── Toast Component ────────────────────────────────────────────────────────────
 const Toast = ({ message, type, onClose }) => {
@@ -138,11 +148,37 @@ const Toast = ({ message, type, onClose }) => {
 };
 
 // ── Refund Modal Component ─────────────────────────────────────────────────────
-const RefundModal = ({ course, onClose, apiBase }) => {
+const RefundModal = ({ course, onClose, getToken }) => {
     const [refundReason, setRefundReason] = useState('');
+    const [bankName, setBankName] = useState('');
+    const [iban, setIban] = useState('');
     const [refundSubmitting, setRefundSubmitting] = useState(false);
     const [refundSuccess, setRefundSuccess] = useState(false);
     const [refundError, setRefundError] = useState(null);
+    const [existingRefund, setExistingRefund] = useState(null); // existing request for this course
+    const [loadingCheck, setLoadingCheck] = useState(true);
+
+    // ── On mount: check if a refund already exists for this course ─────────────
+    useEffect(() => {
+        const checkExisting = async () => {
+            try {
+                const token = await getToken();
+                const res = await fetch(`${API_BASE}/refund/my`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                // data is an array of RefundRequest objects
+                const match = data.find(r => r.planworkId === course.id || r.courseId === course.id);
+                if (match) setExistingRefund(match);
+            } catch {
+                // silently ignore — let user proceed
+            } finally {
+                setLoadingCheck(false);
+            }
+        };
+        checkExisting();
+    }, [course.id, getToken]);
 
     const handleSubmit = async () => {
         if (!refundReason.trim()) {
@@ -152,24 +188,70 @@ const RefundModal = ({ course, onClose, apiBase }) => {
         setRefundSubmitting(true);
         setRefundError(null);
         try {
-            const response = await fetch(`${apiBase}/refund/request`, {
+            const token = await getToken();
+            const response = await fetch(`${API_BASE}/refund`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
                 body: JSON.stringify({
-                    courseId: course.id,
+                    planworkId: course.id,
                     courseTitle: course.title,
                     reason: refundReason.trim(),
+                    bankName: bankName.trim() || null,
+                    iban: iban.trim() || null,
                     requestedAt: new Date().toISOString(),
                 }),
             });
-            if (!response.ok) throw new Error('فشل في إرسال الطلب');
+            if (response.status === 409) {
+                setRefundError('لديك طلب استرداد قيد المراجعة بالفعل لهذه الدورة');
+                return;
+            }
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || 'فشل في إرسال الطلب');
+            }
             setRefundSuccess(true);
-        } catch {
-            setRefundError('حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى');
+        } catch (err) {
+            setRefundError(err.message || 'حدث خطأ أثناء إرسال الطلب، يرجى المحاولة مرة أخرى');
         } finally {
             setRefundSubmitting(false);
         }
     };
+
+    // ── Loading check ─────────────────────────────────────────────────────────
+    if (loadingCheck) {
+        return (
+            <div style={styles.modalOverlay} dir="rtl">
+                <div style={styles.modalCard}>
+                    <div style={styles.modalHeader}>
+                        <div style={styles.modalHeaderIcon}>
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <h2 style={styles.modalTitle}>طلب استرداد المبلغ</h2>
+                            <p style={styles.modalSubtitle}>{course.title}</p>
+                        </div>
+                        <button onClick={onClose} style={styles.modalCloseBtn}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div style={{ ...styles.modalBody, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '160px' }}>
+                        <svg style={{ width: '40px', height: '40px', color: '#0865a8', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const statusInfo = existingRefund ? REFUND_STATUS_MAP[existingRefund.status] : null;
 
     return (
         <div style={styles.modalOverlay} dir="rtl" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -194,7 +276,48 @@ const RefundModal = ({ course, onClose, apiBase }) => {
 
                 {/* Body */}
                 <div style={styles.modalBody}>
-                    {refundSuccess ? (
+                    {/* ── Existing refund status view ── */}
+                    {existingRefund && !refundSuccess ? (
+                        <div style={{ textAlign: 'center', padding: '10px 0' }}>
+                            <div style={{ fontSize: '52px', marginBottom: '16px' }}>{statusInfo?.icon}</div>
+                            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#000', marginBottom: '12px', fontFamily: '"Droid Arabic Kufi", serif' }}>
+                                لديك طلب استرداد مسبق
+                            </h3>
+                            <div style={{ ...styles.statusBadge, ...{ backgroundColor: statusInfo?.bg, color: statusInfo?.color }, margin: '0 auto 16px', display: 'inline-flex' }}>
+                                {statusInfo?.label}
+                            </div>
+                            {existingRefund.status === 'Rejected' && existingRefund.rejectionReason && (
+                                <div style={{ ...styles.warningBox, textAlign: 'right', marginTop: '12px' }}>
+                                    <div>
+                                        <strong style={{ display: 'block', marginBottom: '4px' }}>سبب الرفض:</strong>
+                                        {existingRefund.rejectionReason}
+                                    </div>
+                                </div>
+                            )}
+                            {existingRefund.status === 'Sent' && (
+                                <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.7', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '20px' }}>
+                                    تم تحويل المبلغ بنجاح. سيصلك على نفس وسيلة الدفع الأصلية.
+                                </p>
+                            )}
+                            {existingRefund.status === 'Pending' && (
+                                <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.7', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '20px' }}>
+                                    طلبك قيد المراجعة. سنتواصل معك خلال 3-5 أيام عمل.
+                                </p>
+                            )}
+                            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px', marginTop: '8px', textAlign: 'right' }}>
+                                <div style={{ fontSize: '13px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif' }}>
+                                    رقم الطلب: <strong style={{ color: '#0865a8' }}>{existingRefund.refNumber || `#${existingRefund.id}`}</strong>
+                                </div>
+                                {existingRefund.requestedAt && (
+                                    <div style={{ fontSize: '13px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif', marginTop: '4px' }}>
+                                        تاريخ الطلب: {new Date(existingRefund.requestedAt).toLocaleDateString('ar-EG')}
+                                    </div>
+                                )}
+                            </div>
+                            <button style={{ ...styles.btnCancelRefund, width: '100%', marginTop: '20px' }} onClick={onClose}>إغلاق</button>
+                        </div>
+                    ) : refundSuccess ? (
+                        /* ── Success state ── */
                         <div style={styles.successState}>
                             <div style={styles.successIcon}>✅</div>
                             <h3 style={styles.successTitle}>تم إرسال طلبك بنجاح!</h3>
@@ -204,16 +327,18 @@ const RefundModal = ({ course, onClose, apiBase }) => {
                             <button style={styles.btnCloseSuccess} onClick={onClose}>حسناً، شكراً</button>
                         </div>
                     ) : (
+                        /* ── New refund form ── */
                         <>
                             <div style={styles.refundInfoBox}>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0865a8" style={{ flexShrink: 0, marginTop: '2px' }}>
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <p style={styles.refundInfoText}>
-                                    سيتم مراجعة طلبك من قِبل الإدارة وسيتم التواصل معك خلال 3-5 أيام عمل.
+                                    سيتم مراجعة طلبك من قِبل الإدارة وسيتم التواصل معك خلال 3-5 أيام عمل. يمكنك إضافة بيانات بنكية للتحويل اليدوي في حال تعذّر الاسترداد التلقائي.
                                 </p>
                             </div>
 
+                            {/* Reason */}
                             <label style={styles.formLabel}>
                                 سبب طلب الاسترداد <span style={{ color: '#e53935' }}>*</span>
                             </label>
@@ -222,10 +347,36 @@ const RefundModal = ({ course, onClose, apiBase }) => {
                                 placeholder="يرجى توضيح سبب رغبتك في استرداد المبلغ..."
                                 value={refundReason}
                                 onChange={e => { setRefundReason(e.target.value); setRefundError(null); }}
-                                rows={5}
+                                rows={4}
                                 maxLength={500}
                             />
                             <div style={styles.charCount}>{refundReason.length} / 500</div>
+
+                            {/* Bank details — optional fallback */}
+                            <div style={{ borderTop: '1px dashed #e0e0e0', paddingTop: '16px', marginBottom: '4px' }}>
+                                <p style={{ fontSize: '13px', color: '#888', marginBottom: '12px', fontFamily: '"Droid Arabic Kufi", serif' }}>
+                                    بيانات بنكية (اختياري — للاسترداد اليدوي في حال فشل التحويل التلقائي)
+                                </p>
+                                <label style={styles.formLabel}>اسم البنك</label>
+                                <input
+                                    style={styles.formInput}
+                                    type="text"
+                                    placeholder="مثال: بنك مصر"
+                                    value={bankName}
+                                    onChange={e => setBankName(e.target.value)}
+                                    maxLength={100}
+                                />
+                                <label style={styles.formLabel}>رقم الـ IBAN أو الحساب</label>
+                                <input
+                                    style={styles.formInput}
+                                    type="text"
+                                    placeholder="EG00 0000 0000 0000 0000 0000 0000"
+                                    value={iban}
+                                    onChange={e => setIban(e.target.value)}
+                                    maxLength={34}
+                                    dir="ltr"
+                                />
+                            </div>
 
                             {refundError && (
                                 <div style={styles.errorBox}>
@@ -277,7 +428,7 @@ const CoursesPage = () => {
     const [hoveredDetailsBtn, setHoveredDetailsBtn] = useState(null);
     const [hoveredRefundBtn, setHoveredRefundBtn] = useState(null);
     const [hoveredHeaderCard, setHoveredHeaderCard] = useState(null);
-    const [refundCourse, setRefundCourse] = useState(null); // which course to refund
+    const [refundCourse, setRefundCourse] = useState(null);
 
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
 
@@ -417,11 +568,11 @@ const CoursesPage = () => {
             <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-                {/* Refund Modal */}
+                {/* Refund Modal — passes getToken instead of apiBase */}
                 {refundCourse && (
                     <RefundModal
                         course={refundCourse}
-                        apiBase={API_BASE}
+                        getToken={getToken}
                         onClose={() => setRefundCourse(null)}
                     />
                 )}
