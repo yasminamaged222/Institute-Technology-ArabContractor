@@ -53,20 +53,43 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) { cons
 // DATA NORMALIZERS
 // ════════════════════════════════════════════════════════════════════════════
 function normalizeUser(u) {
+    // Backend returns { username, email, courses:[{title, enrolledAt}] }
+    // Split username into firstName / lastName for the UI
+    const rawName = u.firstName
+        ? `${u.firstName} ${u.lastName ?? ''}`.trim()
+        : (u.username ?? u.name ?? '');
+    const parts = rawName.trim().split(' ');
     return {
         id: u.id ?? u.userId ?? u.user_id,
-        firstName: u.firstName ?? u.first_name ?? u.name?.split(' ')[0] ?? '',
-        lastName: u.lastName ?? u.last_name ?? u.name?.split(' ').slice(1).join(' ') ?? '',
+        firstName: u.firstName ?? u.first_name ?? parts[0] ?? '',
+        lastName: u.lastName ?? u.last_name ?? parts.slice(1).join(' ') ?? '',
         email: u.email ?? u.emailAddress ?? u.email_address ?? '',
-        enrolledCourses: [],
+        enrolledCourses: (u.courses ?? u.enrolledCourses ?? []).map(c => ({
+            id: c.id ?? c.planworkId ?? c.courseId ?? null,
+            title: c.title ?? c.serviceTitle ?? c.courseName ?? '—',
+            date: c.enrolledAt ?? c.date ?? '',
+        })),
     };
 }
 function normalizeCourse(c) {
+    // Backend returns { id, serviceTitle, users:[{username, email, enrolledAt}] }
     return {
         id: c.id ?? c.courseId ?? c.planWorkId ?? c.planwork_id,
-        title: c.title ?? c.name ?? c.planWorkTitle ?? c.planwork_title ?? c.courseName ?? '—',
+        title: c.title ?? c.serviceTitle ?? c.name ?? c.planWorkTitle ?? c.planwork_title ?? '—',
         category: c.category ?? c.type ?? c.courseType ?? c.planwork_category ?? '',
-        enrolledUsers: [],
+        enrolledUsers: (c.users ?? c.enrolledUsers ?? []).map(u => {
+            const rawName2 = u.firstName
+                ? `${u.firstName} ${u.lastName ?? ''}`.trim()
+                : (u.username ?? u.name ?? '');
+            const parts2 = rawName2.trim().split(' ');
+            return {
+                id: u.id ?? u.userId ?? null,
+                firstName: u.firstName ?? u.first_name ?? parts2[0] ?? '',
+                lastName: u.lastName ?? u.last_name ?? parts2.slice(1).join(' ') ?? '',
+                email: u.email ?? '',
+                date: u.enrolledAt ?? u.date ?? '',
+            };
+        }),
     };
 }
 
@@ -302,6 +325,11 @@ const AdminDashboard = () => {
         const load = async () => {
             setLoading(true); setError(null);
             try {
+                // ── DEBUG: confirm token is present before firing requests ─
+                const _dbgToken = await getToken().catch(() => null);
+                console.log('[AdminDashboard] token present:', !!_dbgToken,
+                    _dbgToken ? `(${_dbgToken.slice(0, 24)}...)` : '(null — will call API without auth)');
+
                 // ── FIX: use authFetch for all three calls ────────────────
                 const [usersRes, coursesRes, statsRes] = await Promise.all([
                     authFetch(`${API_BASE}/Admin/users`),
@@ -315,66 +343,36 @@ const AdminDashboard = () => {
                     const j = await usersRes.json();
                     usersRaw = Array.isArray(j) ? j : j?.data ?? j?.users ?? j?.result ?? [];
                 } else {
-                    console.error('Users API failed:', usersRes.status);
+                    const errText = await usersRes.text().catch(() => '');
+                    console.error('Users API failed:', usersRes.status, errText);
+                    setError(`Users API ${usersRes.status}: ${errText.slice(0, 200)}`);
                 }
                 if (coursesRes.ok) {
                     const j = await coursesRes.json();
                     coursesRaw = Array.isArray(j) ? j : j?.data ?? j?.planWorks ?? j?.planworks ?? j?.courses ?? j?.result ?? [];
                 } else {
-                    console.error('Planworks API failed:', coursesRes.status);
+                    const errText = await coursesRes.text().catch(() => '');
+                    console.error('Planworks API failed:', coursesRes.status, errText);
                 }
                 if (statsRes.ok) {
                     statsRaw = await statsRes.json();
                 } else {
-                    console.error('Stats API failed:', statsRes.status);
+                    const errText = await statsRes.text().catch(() => '');
+                    console.error('Stats API failed:', statsRes.status, errText);
                 }
 
-                const usersMap = {};
-                usersRaw.forEach(u => {
-                    const n = normalizeUser(u);
-                    if (n.id == null) return;
-                    usersMap[n.id] = n;
-                    (u.enrolledCourses ?? u.courses ?? u.planWorks ?? u.registrations ?? []).forEach(ec => {
-                        usersMap[n.id].enrolledCourses.push({
-                            id: ec.courseId ?? ec.planWorkId ?? ec.id,
-                            title: ec.title ?? ec.courseName ?? ec.planWorkTitle ?? '—',
-                            date: ec.enrolledAt ?? ec.date ?? '',
-                        });
-                    });
-                });
+                // normalizeUser/normalizeCourse already handle nested courses/users arrays
+                // No extra cross-joining needed — backend returns fully nested data
+                const normalizedUsers = usersRaw
+                    .map(u => normalizeUser(u))
+                    .filter(u => u.id != null);
 
-                const coursesMap = {};
-                coursesRaw.forEach(c => {
-                    const n = normalizeCourse(c);
-                    if (n.id == null) return;
-                    coursesMap[n.id] = n;
-                    (c.enrolledUsers ?? c.users ?? c.registrants ?? c.participants ?? []).forEach(eu => {
-                        coursesMap[n.id].enrolledUsers.push({
-                            id: eu.id ?? eu.userId ?? eu.user_id,
-                            firstName: eu.firstName ?? eu.first_name ?? eu.name?.split(' ')[0] ?? '',
-                            lastName: eu.lastName ?? eu.last_name ?? eu.name?.split(' ').slice(1).join(' ') ?? '',
-                            email: eu.email ?? eu.emailAddress ?? '',
-                            date: eu.enrolledAt ?? eu.date ?? '',
-                        });
-                    });
-                });
+                const normalizedCourses = coursesRaw
+                    .map(c => normalizeCourse(c))
+                    .filter(c => c.id != null);
 
-                usersRaw.forEach(u => {
-                    const uid = u.id ?? u.userId ?? u.user_id;
-                    if (uid == null || !usersMap[uid]) return;
-                    (u.registrations ?? u.enrollments ?? []).forEach(e => {
-                        const cid = e.courseId ?? e.planWorkId ?? e.course_id;
-                        const course = coursesMap[cid];
-                        if (!course) return;
-                        if (!usersMap[uid].enrolledCourses.find(ec => ec.id === cid))
-                            usersMap[uid].enrolledCourses.push({ id: cid, title: course.title, date: e.enrolledAt ?? e.date ?? '' });
-                        if (!course.enrolledUsers.find(eu => eu.id === uid))
-                            course.enrolledUsers.push({ id: uid, firstName: usersMap[uid].firstName, lastName: usersMap[uid].lastName, email: usersMap[uid].email, date: e.enrolledAt ?? e.date ?? '' });
-                    });
-                });
-
-                setUsersData(Object.values(usersMap));
-                setCoursesData(Object.values(coursesMap));
+                setUsersData(normalizedUsers);
+                setCoursesData(normalizedCourses);
                 setApiStats(statsRaw);
             } catch (err) {
                 setError(err.message || 'حدث خطأ أثناء تحميل البيانات');
@@ -1389,7 +1387,7 @@ const AdminDashboard = () => {
                                                                 <th className="c" style={{ width: 40 }}>#</th>
                                                                 {activeTab === 'users'
                                                                     ? <><th>المستخدم</th><th>البريد الإلكتروني</th><th className="c">الدورات</th><th className="c">تفاصيل</th></>
-                                                                    : <><th>اسم الدورة</th><th>الفئة</th><th className="c">المسجّلون</th><th className="c">تفاصيل</th></>}
+                                                                    : <><th>اسم الدورة</th><th className="c">المسجّلون</th><th className="c">تفاصيل</th></>}
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -1430,7 +1428,6 @@ const AdminDashboard = () => {
                                                                         <tr className={expandedRow === c.id ? 'xopen' : ''}>
                                                                             <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{idx + 1}</td>
                                                                             <td style={{ fontWeight: 700, color: 'var(--blue)' }}>📚 {c.title}</td>
-                                                                            <td>{c.category && <span className="d-cat">{c.category}</span>}</td>
                                                                             <td style={{ textAlign: 'center' }}><span className="d-cb or">{c.enrolledUsers.length}</span></td>
                                                                             <td style={{ textAlign: 'center' }}>
                                                                                 {c.enrolledUsers.length > 0
