@@ -53,8 +53,10 @@ namespace Institute.Application.Services
                         (!param.ToDate.HasValue || e.EnrolledAt <= param.ToDate.Value))
                     .Select(e => new UserCourseDto
                     {
+                        EnrollmentId = e.Id,           // ← أضف
                         Title = e.Planwork.ServiceTitle,
-                        EnrolledAt = e.EnrolledAt
+                        EnrolledAt = e.EnrolledAt,
+                        Attended = e.Attended
                     })
                     .ToList()
             }).ToList();

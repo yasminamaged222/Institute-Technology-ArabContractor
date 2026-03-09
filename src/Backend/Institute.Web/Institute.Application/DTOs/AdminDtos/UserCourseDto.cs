@@ -8,7 +8,9 @@ namespace Institute.Application.DTOs.AdminDtos
 {
     public class UserCourseDto
     {
-        public string Title { get; set; } = null!;
+        public int EnrollmentId { get; set; } 
+        public string Title { get; set; }
         public DateTime EnrolledAt { get; set; }
+        public bool Attended { get; set; } 
     }
 }
