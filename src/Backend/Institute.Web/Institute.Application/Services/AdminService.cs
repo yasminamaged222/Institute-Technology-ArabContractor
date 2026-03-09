@@ -134,6 +134,7 @@ namespace Institute.Application.Services
         //}
         public async Task<AdminStatsDto> GetStatsAsync()
         {
+
             return new AdminStatsDto
             {
                 UsersCount = await _userRepository.CountAsync(),

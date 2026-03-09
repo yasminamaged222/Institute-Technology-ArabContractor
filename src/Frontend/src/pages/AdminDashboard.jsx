@@ -485,7 +485,7 @@ const AdminDashboard = () => {
         courses: gs(['totalCourses', 'coursesCount', 'courses', 'courseCount', 'totalPlanWorks', 'planWorksCount'], coursesData.length),
         enrollments: gs(['totalEnrollments', 'enrollmentsCount', 'enrollments', 'registrations', 'totalRegistrations'], totalEnrollments),
         attended: gs(['totalAttended', 'attendedCount', 'attended'], attCount),
-        certificates: gs(['totalCertificates', 'certificatesCount', 'certificates'], totalCerts),
+        certificates: gs(['certificatesCount'], 0),
         refundsPending: gs(['pendingRefunds', 'refundsPending', 'pendingRefundsCount'], refunds.filter(r => r.status === 'Pending').length),
     };
 
