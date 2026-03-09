@@ -28,7 +28,6 @@ const ToastNotification = ({ message, type, onClose }) => {
         return () => clearTimeout(t);
     }, [onClose]);
 
-    const colors = { success: '#4caf50', error: '#f44336', warning: '#ff9800' };
     const borderColors = { success: '#4caf50', error: '#f44336', warning: '#ff9800' };
 
     return (
@@ -77,11 +76,12 @@ const DynamicCoursesSection = () => {
     const [hoveredCourse, setHoveredCourse] = useState(null);
     const [addingToCart, setAddingToCart] = useState(null);
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
+    const [certificates, setCertificates] = useState({});
     const [toast, setToast] = useState(null);
 
     const showToast = (message, type = 'success') => setToast({ message, type });
 
-    // ── Fetch owned courses (exact same pattern as CoursesPage) ──────────────
+    // ── Fetch owned courses ───────────────────────────────────────────────────
     const fetchOwnedCourses = useCallback(async () => {
         if (!isSignedIn) { setOwnedCourseIds(new Set()); return; }
         try {
@@ -97,18 +97,34 @@ const DynamicCoursesSection = () => {
         }
     }, [isSignedIn, getToken]);
 
-    useEffect(() => { fetchOwnedCourses(); }, [fetchOwnedCourses, userId]);
+    // ── Fetch certificates ────────────────────────────────────────────────────
+    const fetchCertificates = useCallback(async () => {
+        if (!isSignedIn || !userId) return;
+        try {
+            const token = await getToken();
+            const res = await fetch(`${API_BASE}/admin/certificates/user/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            const map = {};
+            (Array.isArray(data) ? data : []).forEach(c => { if (c.courseId) map[c.courseId] = c; });
+            setCertificates(map);
+        } catch { /* certs optional */ }
+    }, [isSignedIn, getToken, userId]);
 
-    // Re-run when cart/enroll events fire
+    useEffect(() => { fetchOwnedCourses(); }, [fetchOwnedCourses, userId]);
+    useEffect(() => { fetchCertificates(); }, [fetchCertificates, userId]);
+
     useEffect(() => {
-        const handler = () => fetchOwnedCourses();
+        const handler = () => { fetchOwnedCourses(); fetchCertificates(); };
         window.addEventListener('enrollUpdated', handler);
         window.addEventListener('cartUpdated', handler);
         return () => {
             window.removeEventListener('enrollUpdated', handler);
             window.removeEventListener('cartUpdated', handler);
         };
-    }, [fetchOwnedCourses]);
+    }, [fetchOwnedCourses, fetchCertificates]);
 
     // ── Fetch latest courses ──────────────────────────────────────────────────
     useEffect(() => {
@@ -150,7 +166,7 @@ const DynamicCoursesSection = () => {
         })();
     }, []);
 
-    // ── Add to cart (exact same pattern as CoursesPage) ───────────────────────
+    // ── Add to cart ───────────────────────────────────────────────────────────
     const addToCart = async (course) => {
         if (!isSignedIn) {
             showToast('الرجاء تسجيل الدخول أولاً', 'warning');
@@ -174,7 +190,6 @@ const DynamicCoursesSection = () => {
                 throw new Error(msgs[res.status] || 'فشل إضافة الدورة');
             }
 
-            // sync localStorage for cart badge
             const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
             if (!cartItems.some(i => i.id === course.id)) {
                 cartItems.push({
@@ -288,8 +303,8 @@ const DynamicCoursesSection = () => {
                         const isOwned = ownedCourseIds.has(course.id);
                         const isAdding = addingToCart === course.id;
                         const isHovered = hoveredCourse === course.id;
+                        const cert = certificates[course.id] || null;
 
-                        // Card gradient matches CoursesPage logic
                         const headerGradient = isOwned
                             ? 'linear-gradient(135deg, #4a4a8a 0%, #7b5ea7 100%)'
                             : course.isFree
@@ -305,8 +320,7 @@ const DynamicCoursesSection = () => {
                                     onMouseEnter={() => setHoveredCourse(course.id)}
                                     onMouseLeave={() => setHoveredCourse(null)}
                                     sx={{
-                                        // ── Fixed height so all cards are the same ──
-                                        height: 390,
+                                        height: cert && isOwned ? 440 : 390,
                                         display: 'flex',
                                         flexDirection: 'column',
                                         borderRadius: 3,
@@ -325,18 +339,12 @@ const DynamicCoursesSection = () => {
                                     onClick={() => navigate(`/course/${course.slug}`)}
                                 >
                                     {/* ── Card header banner ── */}
-                                    <Box
-                                        sx={{
-                                            height: 110,
-                                            flexShrink: 0,
-                                            background: headerGradient,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            position: 'relative',
-                                        }}
-                                    >
-                                        {/* Icon */}
+                                    <Box sx={{
+                                        height: 110, flexShrink: 0,
+                                        background: headerGradient,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        position: 'relative',
+                                    }}>
                                         <Box sx={{
                                             borderRadius: '50%',
                                             backgroundColor: 'rgba(255,255,255,0.15)',
@@ -376,101 +384,88 @@ const DynamicCoursesSection = () => {
                                         }}>
                                             {badgeText}
                                         </Box>
+
+                                        {/* Cert ribbon */}
+                                        {isOwned && cert && (
+                                            <Box sx={{
+                                                position: 'absolute', top: 10, left: 10, zIndex: 4,
+                                                backgroundColor: 'rgba(124,58,237,0.88)',
+                                                backdropFilter: 'blur(6px)',
+                                                borderRadius: '8px',
+                                                padding: '3px 8px',
+                                                fontSize: '12px',
+                                                fontWeight: 700,
+                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                color: '#fff',
+                                                boxShadow: '0 2px 6px rgba(124,58,237,0.4)',
+                                                border: '1px solid rgba(255,255,255,0.3)',
+                                            }}>
+                                                📜 شهادة
+                                            </Box>
+                                        )}
                                     </Box>
 
-                                    {/* ── Card content — flexGrow fills remaining space ── */}
+                                    {/* ── Card content ── */}
                                     <CardContent sx={{
-                                        flexGrow: 1,
-                                        p: '14px 14px 8px',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '6px',
+                                        flexGrow: 1, p: '14px 14px 8px',
+                                        display: 'flex', flexDirection: 'column', gap: '6px',
                                         overflow: 'hidden',
                                     }}>
 
-                                        {/* Title — clamped to 2 lines */}
                                         <Tooltip title={course.title} arrow placement="top">
                                             <Typography sx={{
-                                                fontWeight: 700,
-                                                fontFamily: '"Droid Arabic Kufi", serif',
-                                                fontSize: '0.875rem',
-                                                lineHeight: 1.5,
-                                                color: '#111',
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden',
-                                                minHeight: '2.6em',
-                                                direction: 'ltr',
+                                                fontWeight: 700, fontFamily: '"Droid Arabic Kufi", serif',
+                                                fontSize: '0.875rem', lineHeight: 1.5, color: '#111',
+                                                display: '-webkit-box', WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                                                minHeight: '2.6em', direction: 'ltr',
                                             }}>
                                                 {course.title}
                                             </Typography>
                                         </Tooltip>
 
-                                        {/* Description — clamped to 2 lines */}
                                         {course.description && (
                                             <Typography sx={{
                                                 fontFamily: '"Droid Arabic Kufi", serif',
-                                                fontSize: '0.7rem',
-                                                color: '#666',
-                                                lineHeight: 1.45,
-                                                display: '-webkit-box',
-                                                WebkitLineClamp: 2,
-                                                WebkitBoxOrient: 'vertical',
-                                                overflow: 'hidden',
+                                                fontSize: '0.7rem', color: '#666', lineHeight: 1.45,
+                                                display: '-webkit-box', WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical', overflow: 'hidden',
                                                 direction: 'ltr',
                                             }}>
                                                 {course.description}
                                             </Typography>
                                         )}
 
-                                        {/* Spacer */}
                                         <Box sx={{ flexGrow: 1 }} />
 
                                         {/* Price */}
                                         <Box sx={{ borderTop: '1px solid #f0f0f0', pt: '8px' }}>
                                             {isOwned ? (
-                                                <Typography sx={{
-                                                    fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif',
-                                                    fontSize: '0.95rem', color: '#4a4a8a',
-                                                }}>
+                                                <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.95rem', color: '#4a4a8a' }}>
                                                     مسجل ✓
                                                 </Typography>
                                             ) : course.isFree ? (
-                                                <Typography sx={{
-                                                    fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif',
-                                                    fontSize: '0.95rem', color: '#1a7a3c',
-                                                }}>
+                                                <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.95rem', color: '#1a7a3c' }}>
                                                     مجاناً
                                                 </Typography>
                                             ) : (
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    <Typography sx={{
-                                                        fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif',
-                                                        fontSize: '1rem', color: '#f57c00',
-                                                    }}>
+                                                    <Typography sx={{ fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem', color: '#f57c00' }}>
                                                         {course.currentPrice.toFixed(2)} ج.م
                                                     </Typography>
-                                                    <Typography sx={{
-                                                        fontFamily: '"Droid Arabic Kufi", serif',
-                                                        fontSize: '0.75rem', color: '#999',
-                                                        textDecoration: 'line-through',
-                                                    }}>
+                                                    <Typography sx={{ fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.75rem', color: '#999', textDecoration: 'line-through' }}>
                                                         {course.originalPrice.toFixed(2)}
                                                     </Typography>
                                                 </Box>
                                             )}
                                         </Box>
 
-                                        {/* Place */}
                                         {course.place && (
                                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '4px', direction: 'ltr' }}>
                                                 <LocationOnIcon sx={{ fontSize: '0.8rem', color: '#0865a8', mt: '2px', flexShrink: 0 }} />
                                                 <Typography variant="caption" sx={{
-                                                    color: '#555', fontSize: '0.65rem',
-                                                    fontFamily: '"Droid Arabic Kufi", serif',
-                                                    lineHeight: 1.3,
-                                                    display: '-webkit-box', WebkitLineClamp: 1,
+                                                    color: '#555', fontSize: '0.65rem', fontFamily: '"Droid Arabic Kufi", serif',
+                                                    lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1,
                                                     WebkitBoxOrient: 'vertical', overflow: 'hidden',
                                                 }}>
                                                     {course.place}
@@ -478,13 +473,11 @@ const DynamicCoursesSection = () => {
                                             </Box>
                                         )}
 
-                                        {/* Date */}
                                         {course.date && (
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', direction: 'ltr' }}>
                                                 <AccessTimeIcon sx={{ fontSize: '0.8rem', color: '#0865a8', flexShrink: 0 }} />
                                                 <Typography variant="caption" sx={{
-                                                    color: '#555', fontSize: '0.65rem',
-                                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                                    color: '#555', fontSize: '0.65rem', fontFamily: '"Droid Arabic Kufi", serif',
                                                     display: '-webkit-box', WebkitLineClamp: 1,
                                                     WebkitBoxOrient: 'vertical', overflow: 'hidden',
                                                 }}>
@@ -494,8 +487,49 @@ const DynamicCoursesSection = () => {
                                         )}
                                     </CardContent>
 
-                                    {/* ── Action button ── */}
-                                    <CardActions sx={{ p: '0 14px 14px', flexShrink: 0 }}>
+                                    {/* ── Action buttons ── */}
+                                    <CardActions sx={{ p: '0 14px 14px', flexShrink: 0, flexDirection: 'column', gap: '8px' }}>
+
+                                        {/* Certificate download button — only if cert exists and owned */}
+                                        {isOwned && cert && (
+                                            <Box
+                                                component="a"
+                                                href={cert.url}
+                                                download={cert.name}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={e => e.stopPropagation()}
+                                                sx={{
+                                                    width: '100%',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '6px',
+                                                    py: '7px',
+                                                    px: '12px',
+                                                    background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)',
+                                                    color: '#fff',
+                                                    borderRadius: '8px',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 700,
+                                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                                    textDecoration: 'none',
+                                                    boxShadow: '0 2px 8px rgba(124,58,237,0.35)',
+                                                    transition: 'all 0.25s ease',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: '0 4px 14px rgba(124,58,237,0.45)',
+                                                    },
+                                                }}
+                                            >
+                                                <span>📜</span>
+                                                <span>شهادتك جاهزة — تحميل</span>
+                                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                                                </svg>
+                                            </Box>
+                                        )}
+
                                         {isOwned ? (
                                             <Button
                                                 fullWidth
