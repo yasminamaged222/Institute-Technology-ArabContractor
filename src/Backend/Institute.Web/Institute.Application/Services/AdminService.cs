@@ -18,12 +18,14 @@ namespace Institute.Application.Services
         private readonly IRepository<AppUser> _userRepository;
         private readonly IRepository<Enrollment> _enrollmentRepository;
         private readonly IRepository<Planwork> _planworkRepository;
+        private readonly IRepository<Certificate> _certificateRepository;
 
-        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository, IRepository<Planwork> planworkRepository)
+        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository, IRepository<Planwork> planworkRepository ,IRepository<Certificate> certificateRepository)
         {
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
             _planworkRepository = planworkRepository;
+            _certificateRepository = certificateRepository;
         }
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param)
         {
@@ -138,9 +140,50 @@ namespace Institute.Application.Services
                 PlanworksCount = await _planworkRepository.CountAsync(),
                 EnrollmentsCount = await _enrollmentRepository.CountAsync(),
                 //AttendanceCount = await _unitOfWork.Repository<Attendance>().CountAsync(),
-                //CertificatesCount = await _unitOfWork.Repository<Certificate>().CountAsync(),
+                CertificatesCount = await _certificateRepository.CountAsync(),
                 //RefundsCount = await _unitOfWork.Repository<Refund>().CountAsync()
             };
         }
+
+        public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto)
+        {
+            if (dto.File == null || dto.File.Length == 0)
+                return false;
+
+            var exists = await _certificateRepository
+                .AnyAsync(x => x.UserId == dto.UserId && x.PlanworkId == dto.PlanworkId);
+
+            if (exists)
+                return false;
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/certificates");
+
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
+
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await dto.File.CopyToAsync(stream);
+            }
+
+            var certificate = new Certificate
+            {
+                UserId = dto.UserId,
+                PlanworkId = dto.PlanworkId,
+                FileUrl = "/certificates/" + fileName,
+                FileName = dto.File.FileName,
+                FileSizeBytes = dto.File.Length,
+                UploadedAt = DateTime.UtcNow
+            };
+
+            await _certificateRepository.AddAsync(certificate);
+            await _certificateRepository.SaveChangesAsync();
+            return true;
+        }
+
     }
 }

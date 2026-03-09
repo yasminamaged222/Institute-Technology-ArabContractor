@@ -1,6 +1,8 @@
-﻿using Institute.API.DTOs.AdminDtos;
+﻿using Institute.API.DTOs;
+using Institute.API.DTOs.AdminDtos;
 using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces.IService;
+using Institute.Domain.Entities;
 using Institute.Domain.specifications.AdminSpec.Course;
 using Institute.Domain.specifications.AdminSpec.User;
 using Microsoft.AspNetCore.Http;
@@ -44,6 +46,59 @@ namespace Institute.API.Controllers
         {
             var stats = await _adminService.GetStatsAsync();
             return Ok(stats);
+        }
+
+        //[HttpPost("upload")]
+        //public async Task<IActionResult> UploadCertificate([FromForm] UploadCertificateDto dto)
+        //{
+        //    if (dto.File == null || dto.File.Length == 0)
+        //        return BadRequest("File is required");
+
+        //    var exists = await _context.Certificates
+        //        .AnyAsync(x => x.UserId == dto.UserId && x.PlanworkId == dto.PlanworkId);
+
+        //    if (exists)
+        //        return BadRequest("Certificate already uploaded");
+
+        //    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/certificates");
+
+        //    if (!Directory.Exists(uploadsFolder))
+        //        Directory.CreateDirectory(uploadsFolder);
+
+        //    var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
+
+        //    var filePath = Path.Combine(uploadsFolder, fileName);
+
+        //    using (var stream = new FileStream(filePath, FileMode.Create))
+        //    {
+        //        await dto.File.CopyToAsync(stream);
+        //    }
+
+        //    var certificate = new Certificate
+        //    {
+        //        UserId = dto.UserId,
+        //        PlanworkId = dto.PlanworkId,
+        //        FileUrl = "/certificates/" + fileName,
+        //        FileName = dto.File.FileName,
+        //        FileSizeBytes = dto.File.Length,
+        //        UploadedAt = DateTime.UtcNow
+        //    };
+
+        //    _context.Certificates.Add(certificate);
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(new { message = "Certificate uploaded successfully" });
+        //}
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadCertificate([FromForm] UploadCertificateDto dto)
+        {
+            var result = await _adminService.UploadCertificateAsync(dto);
+
+            if (!result)
+                return BadRequest("Certificate already uploaded");
+
+            return Ok(new { message = "Certificate uploaded successfully" });
         }
 
     }

@@ -17,5 +17,7 @@ namespace Institute.Application.Interfaces.IService
         //Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword, DateTime? fromDate, DateTime? toDate);
         Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(PlanworkSpecParams param);
         Task<AdminStatsDto> GetStatsAsync();
+        Task<bool> UploadCertificateAsync(UploadCertificateDto dto);
+
     }
 }
