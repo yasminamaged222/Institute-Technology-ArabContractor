@@ -101,5 +101,14 @@ namespace Institute.API.Controllers
             return Ok(new { message = "Certificate uploaded successfully" });
         }
 
+        [HttpPatch("enrollments/{id}/attendance")]
+        public async Task<IActionResult> UpdateAttendance(int id, [FromBody] bool attended)
+        {
+            var result = await _adminService.UpdateAttendanceAsync(id, attended);
+            if (!result)
+                return NotFound(new { message = "Enrollment not found" });
+
+            return Ok(new { message = "Attendance updated successfully" });
+        }
     }
 }

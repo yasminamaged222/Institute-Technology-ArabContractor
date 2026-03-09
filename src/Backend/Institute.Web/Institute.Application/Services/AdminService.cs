@@ -58,28 +58,7 @@ namespace Institute.Application.Services
         }
 
 
-        //public async Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword)
-        //{
-        //    var spec = new UserSearchSpec(keyword);
-
-        //    var users = await _userRepository
-        //                                 .GetAllWithSpecAsync(spec);
-
-        //    return users.Select(u => new UserWithCoursesDto
-        //    {
-        //        Id = u.Id,
-        //        Username = u.Username,
-        //        Email = u.Email,
-        //        CoursesCount = u.Enrollments.Count,
-        //        Courses = u.Enrollments
-        //                    .Select(e => new UserCourseDto
-        //                    {
-        //                        Title = e.Planwork.ServiceTitle,
-        //                        EnrolledAt = e.EnrolledAt
-        //                    })
-        //                    .ToList()
-        //    }).ToList();
-        //}
+      
         public async Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(PlanworkSpecParams param)
         {
             var spec = new PlanworkSearchSpec(param);
@@ -112,26 +91,7 @@ namespace Institute.Application.Services
 
 
 
-        //public async Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword)
-        //{
-        //    var spec = new PlanworkSearchSpec(keyword);
-
-        //    var planworks = await _planworkRepository.GetAllWithSpecAsync(spec);
-
-        //    return planworks.Select(p => new PlanworkWithUsersDto
-        //    {
-        //        Id = p.ChildId,
-        //        ServiceTitle = p.ServiceTitle,
-        //        Category = p.MainFlag == true ? "Main" : "Other", // example
-        //        UsersCount = p.Enrollments.Count,
-        //        Users = p.Enrollments.Select(e => new UserEnrollmentDto
-        //        {
-        //            Username = e.User.Username,
-        //            Email = e.User.Email,
-        //            EnrolledAt = e.EnrolledAt
-        //        }).ToList()
-        //    }).ToList();
-        //}
+        
         public async Task<AdminStatsDto> GetStatsAsync()
         {
 
@@ -185,6 +145,22 @@ namespace Institute.Application.Services
             await _certificateRepository.SaveChangesAsync();
             return true;
         }
+
+        public async Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended)
+        {
+            // جلب الـ enrollment
+            var enrollment = await _enrollmentRepository.GetByIdAsync(enrollmentId);
+            if (enrollment == null)
+                return false;
+
+            // تحديث الحضور
+            enrollment.Attended = attended;
+
+            // حفظ التغييرات
+            await _enrollmentRepository.SaveChangesAsync();
+            return true;
+        }
+
 
     }
 }

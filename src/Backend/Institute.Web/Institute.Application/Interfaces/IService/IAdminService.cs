@@ -18,6 +18,6 @@ namespace Institute.Application.Interfaces.IService
         Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(PlanworkSpecParams param);
         Task<AdminStatsDto> GetStatsAsync();
         Task<bool> UploadCertificateAsync(UploadCertificateDto dto);
-
+        Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended);
     }
 }
