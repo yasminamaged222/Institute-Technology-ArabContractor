@@ -53,8 +53,6 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) { cons
 // DATA NORMALIZERS
 // ════════════════════════════════════════════════════════════════════════════
 function normalizeUser(u) {
-    // Backend returns { username, email, courses:[{title, enrolledAt}] }
-    // Split username into firstName / lastName for the UI
     const rawName = u.firstName
         ? `${u.firstName} ${u.lastName ?? ''}`.trim()
         : (u.username ?? u.name ?? '');
@@ -67,12 +65,12 @@ function normalizeUser(u) {
         enrolledCourses: (u.courses ?? u.enrolledCourses ?? []).map(c => ({
             id: c.id ?? c.planworkId ?? c.courseId ?? null,
             title: c.title ?? c.serviceTitle ?? c.courseName ?? '—',
-            date: c.enrolledAt ?? c.date ?? '',
+            // ── FIX: strip time component so date comparisons are date-only ──
+            date: fmtDate(c.enrolledAt ?? c.date ?? ''),
         })),
     };
 }
 function normalizeCourse(c) {
-    // Backend returns { id, serviceTitle, users:[{username, email, enrolledAt}] }
     return {
         id: c.id ?? c.courseId ?? c.planWorkId ?? c.planwork_id,
         title: c.title ?? c.serviceTitle ?? c.name ?? c.planWorkTitle ?? c.planwork_title ?? '—',
@@ -87,7 +85,8 @@ function normalizeCourse(c) {
                 firstName: u.firstName ?? u.first_name ?? parts2[0] ?? '',
                 lastName: u.lastName ?? u.last_name ?? parts2.slice(1).join(' ') ?? '',
                 email: u.email ?? '',
-                date: u.enrolledAt ?? u.date ?? '',
+                // ── FIX: strip time component so date comparisons are date-only ──
+                date: fmtDate(u.enrolledAt ?? u.date ?? ''),
             };
         }),
     };
@@ -129,9 +128,16 @@ function toStatusKey(s) {
     return map[String(s).toLowerCase()] ?? s;
 }
 
+// ── FIX: returns YYYY-MM-DD only — no time component ────────────────────────
 function fmtDate(val) {
     if (!val) return '';
-    try { return new Date(val).toISOString().split('T')[0]; } catch { return String(val); }
+    try {
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return String(val);
+        return d.toISOString().split('T')[0]; // always "YYYY-MM-DD"
+    } catch {
+        return String(val);
+    }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -139,7 +145,6 @@ function fmtDate(val) {
 // ════════════════════════════════════════════════════════════════════════════
 const AdminDashboard = () => {
     const { user, isLoaded } = useUser();
-    // ── FIX: destructure getToken from useAuth ────────────────────────────
     const { getToken } = useAuth();
     const navigate = useNavigate();
     const exportRef = useRef(null);
@@ -187,34 +192,24 @@ const AdminDashboard = () => {
     const [bankResultBanner, setBankResultBanner] = useState(null);
 
     // ════════════════════════════════════════════════════════════════════════
-    // ── FIX: AUTH-AWARE FETCH HELPERS ────────────────────────────────────
+    // AUTH-AWARE FETCH HELPERS
     // ════════════════════════════════════════════════════════════════════════
-
-    /**
-     * JSON fetch with Clerk Bearer token automatically attached.
-     * Usage: authFetch(url)  or  authFetch(url, { method:'PUT', body: JSON.stringify(data) })
-     */
     const authFetch = useCallback(async (url, options = {}) => {
         let token = null;
-        try { token = await getToken(); } catch (_) { /* not signed in yet */ }
+        try { token = await getToken(); } catch (_) { }
         return fetch(url, {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                // caller can still override individual headers if needed
                 ...options.headers,
             },
         });
     }, [getToken]);
 
-    /**
-     * FormData (multipart) fetch with Clerk Bearer token.
-     * Do NOT set Content-Type — browser sets it with the correct boundary.
-     */
     const authFetchForm = useCallback(async (url, formData) => {
         let token = null;
-        try { token = await getToken(); } catch (_) { /* not signed in yet */ }
+        try { token = await getToken(); } catch (_) { }
         return fetch(url, {
             method: 'POST',
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -225,13 +220,11 @@ const AdminDashboard = () => {
     // ════════════════════════════════════════════════════════════════════════
     // REFUND API HELPERS
     // ════════════════════════════════════════════════════════════════════════
-
     const fetchRefunds = useCallback(async (statusFilter = 'all') => {
         setRefundsLoading(true);
         setRefundsError(null);
         try {
             const qs = statusFilter !== 'all' ? `?status=${statusFilter}` : '';
-            // ── FIX: use authFetch ────────────────────────────────────────
             const res = await authFetch(`${API_BASE}/refund/admin/all${qs}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const json = await res.json();
@@ -269,7 +262,6 @@ const AdminDashboard = () => {
             if (action === 'approve') body.adminNote = refundActionNote.trim();
             if (action === 'send_to_bank') body.adminNote = refundActionNote.trim();
 
-            // ── FIX: use authFetch ────────────────────────────────────────
             const res = await authFetch(endpoint, {
                 method: 'PUT',
                 body: JSON.stringify(body),
@@ -325,12 +317,10 @@ const AdminDashboard = () => {
         const load = async () => {
             setLoading(true); setError(null);
             try {
-                // ── DEBUG: confirm token is present before firing requests ─
                 const _dbgToken = await getToken().catch(() => null);
                 console.log('[AdminDashboard] token present:', !!_dbgToken,
-                    _dbgToken ? `(${_dbgToken.slice(0, 24)}...)` : '(null — will call API without auth)');
+                    _dbgToken ? `(${_dbgToken.slice(0, 24)}...)` : '(null)');
 
-                // ── FIX: use authFetch for all three calls ────────────────
                 const [usersRes, coursesRes, statsRes] = await Promise.all([
                     authFetch(`${API_BASE}/Admin/users`),
                     authFetch(`${API_BASE}/Admin/planworks`),
@@ -361,8 +351,6 @@ const AdminDashboard = () => {
                     console.error('Stats API failed:', statsRes.status, errText);
                 }
 
-                // normalizeUser/normalizeCourse already handle nested courses/users arrays
-                // No extra cross-joining needed — backend returns fully nested data
                 const normalizedUsers = usersRaw
                     .map(u => normalizeUser(u))
                     .filter(u => u.id != null);
@@ -380,7 +368,6 @@ const AdminDashboard = () => {
                 setLoading(false);
             }
         };
-        // Only load once authFetch is ready (i.e. after isLoaded)
         if (isLoaded && user) load();
     }, [isLoaded, user, authFetch]);
 
@@ -409,7 +396,6 @@ const AdminDashboard = () => {
         setAttendance(p => ({ ...p, [key]: newVal }));
         setAttendanceSaving(p => ({ ...p, [key]: true }));
         try {
-            // ── FIX: use authFetch ────────────────────────────────────────
             await authFetch(`${API_BASE}/admin/attendance`, {
                 method: 'POST',
                 body: JSON.stringify({ userId, courseId, attended: newVal }),
@@ -434,7 +420,6 @@ const AdminDashboard = () => {
             fd.append('userId', userId);
             fd.append('courseId', courseId);
             try {
-                // ── FIX: use authFetchForm (no Content-Type override) ─────
                 const res = await authFetchForm(`${API_BASE}/admin/certificates`, fd);
                 const data = await res.json();
                 setCertificates(p => ({ ...p, [key]: { name: file.name, url: data.url, size: file.size } }));
@@ -457,17 +442,58 @@ const AdminDashboard = () => {
     // ════════════════════════════════════════════════════════════════════════
     // DERIVED DATA
     // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * ── FIX: inRange ─────────────────────────────────────────────────────────
+     * Rules:
+     *  1. No filter active → show everything (with or without date).
+     *  2. Filter active + record has no date → EXCLUDE (was the bug: used to include).
+     *  3. Filter active + record has date → compare date-only strings (YYYY-MM-DD).
+     *     "dateTo" is inclusive, so we extend it to end-of-day by advancing one day.
+     */
     const inRange = d => {
-        if (!dateFrom && !dateTo) return true; if (!d) return false;
+        // No filter active — show all records regardless of date
+        if (!dateFrom && !dateTo) return true;
+
+        // Filter is active but record has no date → exclude
+        if (!d) return false;
+
         const dt = new Date(d);
+        if (isNaN(dt.getTime())) return false;
+
+        // "From" boundary — record must be >= dateFrom
         if (dateFrom && dt < new Date(dateFrom)) return false;
-        if (dateTo && dt > new Date(dateTo)) return false;
+
+        // "To" boundary — record must be <= dateTo (inclusive)
+        // new Date('2026-02-23') = midnight UTC = start of that day
+        // so we add 1 day to make the entire chosen day inclusive
+        if (dateTo) {
+            const toEnd = new Date(dateTo);
+            toEnd.setDate(toEnd.getDate() + 1); // advance to start of next day
+            if (dt >= toEnd) return false;
+        }
+
         return true;
     };
 
     const q = searchQuery.toLowerCase();
-    const filteredUsers = usersData.map(u => ({ ...u, enrolledCourses: u.enrolledCourses.filter(c => inRange(c.date)) })).filter(u => `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(q));
-    const filteredCourses = coursesData.map(c => ({ ...c, enrolledUsers: c.enrolledUsers.filter(u => inRange(u.date)) })).filter(c => `${c.title} ${c.category}`.toLowerCase().includes(q));
+    const filteredUsers = usersData
+        .map(u => ({ ...u, enrolledCourses: u.enrolledCourses.filter(c => inRange(c.date)) }))
+        .filter(u => {
+            const matchSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(q);
+            // When a date filter is active, only show users who have at least one matching course
+            if ((dateFrom || dateTo) && u.enrolledCourses.length === 0) return false;
+            return matchSearch;
+        });
+
+    const filteredCourses = coursesData
+        .map(c => ({ ...c, enrolledUsers: c.enrolledUsers.filter(u => inRange(u.date)) }))
+        .filter(c => {
+            const matchSearch = `${c.title} ${c.category}`.toLowerCase().includes(q);
+            // When a date filter is active, only show courses that have at least one matching user
+            if ((dateFrom || dateTo) && c.enrolledUsers.length === 0) return false;
+            return matchSearch;
+        });
 
     const attRows = usersData.flatMap(u => u.enrolledCourses.map(c => ({ user: u, course: c }))).filter(r => {
         const mc = attCourseFilter === 'all' || r.course.id === Number(attCourseFilter);
