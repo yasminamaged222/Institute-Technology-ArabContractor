@@ -20,13 +20,15 @@ namespace Institute.Application.Services
         private readonly IRepository<Enrollment> _enrollmentRepository;
         private readonly IRepository<Planwork> _planworkRepository;
         private readonly IRepository<Certificate> _certificateRepository;
+        private readonly IRepository<RefundRequest> _refundRepository;
 
-        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository, IRepository<Planwork> planworkRepository ,IRepository<Certificate> certificateRepository)
+        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository, IRepository<Planwork> planworkRepository ,IRepository<Certificate> certificateRepository,IRepository<RefundRequest> refundRepository)
         {
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
             _planworkRepository = planworkRepository;
             _certificateRepository = certificateRepository;
+            _refundRepository = refundRepository;
         }
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param)
         {
@@ -104,7 +106,7 @@ namespace Institute.Application.Services
                 AttendanceCount = await _enrollmentRepository
                                                 .GetCountAsync(attendedSpec), // <-- count only attended enrollments,
                 CertificatesCount = await _certificateRepository.CountAsync(),
-                //RefundsCount = await _unitOfWork.Repository<Refund>().CountAsync()
+                RefundsCount = await _refundRepository.CountAsync()
             };
         }
 
