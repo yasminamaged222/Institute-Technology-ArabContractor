@@ -13,8 +13,7 @@ namespace Institute.Application.Interfaces.IService
     public interface IAdminService
     {
         Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param);
-        //Task<IReadOnlyList<UserWithCoursesDto>> SearchUsersAsync(string keyword, DateTime? fromDate, DateTime? toDate);
-        //Task<IReadOnlyList<PlanworkWithUsersDto>> SearchPlanworksAsync(string keyword, DateTime? fromDate, DateTime? toDate);
+       
         Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(PlanworkSpecParams param);
         Task<AdminStatsDto> GetStatsAsync();
         Task<bool> UploadCertificateAsync(UploadCertificateDto dto);

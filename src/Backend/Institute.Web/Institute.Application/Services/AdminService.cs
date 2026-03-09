@@ -3,6 +3,7 @@ using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
+using Institute.Domain.specifications.AdminSpec;
 using Institute.Domain.specifications.AdminSpec.Course;
 using Institute.Domain.specifications.AdminSpec.User;
 using System;
@@ -94,13 +95,14 @@ namespace Institute.Application.Services
         
         public async Task<AdminStatsDto> GetStatsAsync()
         {
-
+            var attendedSpec = new AttendedEnrollmentsSpec();
             return new AdminStatsDto
             {
                 UsersCount = await _userRepository.CountAsync(),
                 PlanworksCount = await _planworkRepository.CountAsync(),
                 EnrollmentsCount = await _enrollmentRepository.CountAsync(),
-                //AttendanceCount = await _unitOfWork.Repository<Attendance>().CountAsync(),
+                AttendanceCount = await _enrollmentRepository
+                                                .GetCountAsync(attendedSpec), // <-- count only attended enrollments,
                 CertificatesCount = await _certificateRepository.CountAsync(),
                 //RefundsCount = await _unitOfWork.Repository<Refund>().CountAsync()
             };
