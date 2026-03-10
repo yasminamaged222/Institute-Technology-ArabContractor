@@ -10,6 +10,7 @@ import logoSrc from '../assets/logo-removebg-preview.png';
 // ════════════════════════════════════════════════════════════════════════════
 const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com', 'amrshamy91@gmail.com', 'abdelmawla1642@gmail.com'];
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
+const API_HOST = 'https://acwebsite-icmet-test.azurewebsites.net'; // for resolving relative cert URLs
 
 const NAVBAR_H = 70;
 const OVERVIEW_H = 36;
@@ -50,86 +51,102 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') { 
 async function exportWord(filename, reportTitle, subtitle, headers, rows) { const logoDataUrl = await getLogoBase64(); const reportDate = new Date().toLocaleDateString('ar-EG'); let logoBase64Raw = null, LOGO_W_EMU = 900000, LOGO_H_EMU = 600000; if (logoDataUrl) { logoBase64Raw = logoDataUrl.split(',')[1]; await new Promise(res => { const img = new Image(); img.onload = () => { const H = 600000; LOGO_H_EMU = H; LOGO_W_EMU = img.naturalHeight > 0 ? Math.round((img.naturalWidth / img.naturalHeight) * H) : 900000; res(); }; img.onerror = res; img.src = logoDataUrl; }); } try { const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign, PageOrientation, ImageRun } = await import('docx'); const CB = { top: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, left: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, right: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' } }; const totalDxa = 13440; const cw = Math.floor(totalDxa / headers.length); const colWidths = headers.map(() => cw); const mkTC = (text, isHdr, width, center = false) => new TableCell({ width: { size: width, type: WidthType.DXA }, shading: { fill: isHdr ? '0865a8' : 'FFFFFF', type: ShadingType.CLEAR }, borders: CB, margins: { top: 80, bottom: 80, left: 120, right: 120 }, verticalAlign: VerticalAlign.CENTER, children: [new Paragraph({ bidirectional: true, alignment: center ? AlignmentType.CENTER : AlignmentType.RIGHT, children: [new TextRun({ text: String(text ?? ''), bold: isHdr, color: isHdr ? 'FFFFFF' : '1A1A1A', size: isHdr ? 22 : 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA', eastAsiaValue: 'ar-SA' } })] })] }); const logoRuns = []; if (logoBase64Raw && ImageRun) { try { logoRuns.push(new ImageRun({ data: logoBase64Raw, type: 'png', transformation: { width: 90, height: 60 } })); logoRuns.push(new TextRun({ text: '  ', size: 28 })); } catch (_) { } } const arabicPara = (text, opts = {}) => new Paragraph({ bidirectional: true, alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT, spacing: opts.spacing, border: opts.border, shading: opts.shading, children: [new TextRun({ text, bold: opts.bold || false, color: opts.color || '111111', size: opts.size || 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' }, ...(opts.italic ? { italics: true } : {}) })] }); const doc = new Document({ sections: [{ properties: { page: { size: { width: 12240, height: 15840, orientation: PageOrientation.LANDSCAPE }, margin: { top: 720, right: 720, bottom: 900, left: 720 } } }, children: [new Paragraph({ bidirectional: true, alignment: AlignmentType.CENTER, shading: { fill: '0865a8', type: ShadingType.CLEAR }, border: { bottom: { style: BorderStyle.THICK, size: 18, color: 'f57c00', space: 6 } }, spacing: { before: 0, after: 80 }, children: [...logoRuns, new TextRun({ text: reportTitle, color: 'FFFFFF', bold: true, size: 28, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' } }), subtitle ? new TextRun({ text: `  —  ${subtitle}`, color: 'D0E8FF', size: 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' } }) : new TextRun({ text: '' })] }), arabicPara(`تاريخ التقرير: ${reportDate}   |   إجمالي السجلات: ${rows.length}`, { size: 18, color: '555555', italic: true, spacing: { before: 100, after: 100 } }), new Table({ width: { size: totalDxa, type: WidthType.DXA }, columnWidths: colWidths, rows: [new TableRow({ tableHeader: true, children: headers.map((h, i) => mkTC(h, true, colWidths[i], i === 0)) }), ...rows.map((row, ri) => new TableRow({ children: row.map((cell, ci) => new TableCell({ width: { size: colWidths[ci], type: WidthType.DXA }, shading: { fill: ri % 2 === 0 ? 'FFFFFF' : 'F0F6FB', type: ShadingType.CLEAR }, borders: CB, margins: { top: 70, bottom: 70, left: 110, right: 110 }, verticalAlign: VerticalAlign.CENTER, children: [new Paragraph({ bidirectional: true, alignment: ci === 0 ? AlignmentType.CENTER : AlignmentType.RIGHT, children: [new TextRun({ text: String(cell ?? ''), size: 19, color: '222222', rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' } })] })] })) }))] })] }] }); const buffer = await Packer.toBuffer(doc); triggerDownload(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), filename); return; } catch (docxError) { console.warn('docx package not available:', docxError); } }
 
 // ════════════════════════════════════════════════════════════════════════════
-// DATA NORMALIZERS
+// HELPERS
 // ════════════════════════════════════════════════════════════════════════════
+/** Convert a relative certificate path like /certificates/xxx.png into a full URL */
+function resolveCertUrl(url) {
+    if (!url) return null;
+    if (url === 'uploaded') return url;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return API_HOST + url;
+    return url;
+}
+
+function fmtDate(val) {
+    if (!val) return '';
+    try {
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return String(val);
+        return d.toISOString().split('T')[0];
+    } catch {
+        return String(val);
+    }
+}
+
+function toStatusKey(s) {
+    if (!s) return 'Pending';
+    const map = {
+        pending: 'Pending', approved: 'Approved',
+        sent: 'Sent', sent_to_bank: 'Sent',
+        rejected: 'Rejected',
+    };
+    return map[String(s).toLowerCase()] ?? s;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// DATA NORMALIZERS — fixed to match actual API response shapes
+//
+// GET /api/Admin/users response shape (Image 1):
+//   { id, username, email, coursesCount, courses: [{ enrollmentId, title, enrolledAt, attended }] }
+//
+// GET /api/Admin/planworks response shape (Image 2):
+//   { id, serviceTitle, usersCount, users: [{ username, email, enrolledAt }] }
+//
+// GET /api/Admin/stats response shape (Image 3):
+//   { usersCount, planworksCount, enrollmentsCount, attendanceCount, certificatesCount, refundsCount }
+//
+// POST /api/Admin/upload (Image 4):
+//   FormData fields: UserId (int), PlanworkId (int), File (binary)
+//
+// PATCH /api/Admin/enrollments/{id}/attendance (Image 5):
+//   Body: raw boolean (true / false)
+// ════════════════════════════════════════════════════════════════════════════
+
 function normalizeUser(u) {
-    const rawName = u.firstName
-        ? `${u.firstName} ${u.lastName ?? ''}`.trim()
-        : (u.username ?? u.name ?? '');
-    const parts = rawName.trim().split(' ');
-    const userId = u.id ?? u.userId ?? u.user_id;
-    const username = u.username ?? u.email ?? u.emailAddress ?? '';
+    // API returns: id, username, email, coursesCount, courses[]
+    // courses[] shape: { enrollmentId, title, enrolledAt, attended }
     return {
-        id: userId,
-        username,
-        firstName: u.firstName ?? u.first_name ?? parts[0] ?? '',
-        lastName: u.lastName ?? u.last_name ?? parts.slice(1).join(' ') ?? '',
-        email: u.email ?? u.emailAddress ?? u.email_address ?? '',
-        enrolledCourses: (u.courses ?? u.enrolledCourses ?? []).map(c => {
-            // ── API currently returns NO enrollment ID — only title + enrolledAt ──
-            // enrollmentId will be null until backend adds it to the response.
-            // We store username + title so toggleAttendance can pass them to the API.
-            const enrollmentId =
-                c.enrollmentId ?? c.EnrollmentId ?? c.enrollment_id ??
-                c.enroll_id ?? c.enrollId ??
-                c.registrationId ?? c.RegistrationId ?? c.registration_id ??
-                c.regId ?? c.RegId ??
-                null;
-
-            const courseId =
-                c.planworkId ?? c.PlanworkId ?? c.planwork_id ??
-                c.courseId ?? c.CourseId ?? c.course_id ??
-                c.serviceId ?? c.ServiceId ??
-                null;
-
-            const title = c.title ?? c.serviceTitle ?? c.courseName ?? c.planworkTitle ?? c.planwork_title ?? '—';
-
-            return {
-                enrollmentId,
-                id: courseId,
-                title,
-                date: fmtDate(c.enrolledAt ?? c.date ?? ''),
-                attended: !!(c.attended ?? c.isAttended ?? c.hasAttended ?? c.IsAttended ?? false),
-                certificateUrl: c.certificateUrl ?? c.CertificateUrl ?? c.certificate_url ?? null,
-                certificateName: c.certificateName ?? c.CertificateName ?? c.certificate_name ?? null,
-                // Store for fallback API call when enrollmentId is missing
-                _username: username,
-                _title: title,
-                _enrolledAt: c.enrolledAt ?? c.date ?? null,
-            };
-        }),
+        id: u.id,
+        username: u.username ?? u.email ?? '',
+        firstName: u.firstName ?? u.first_name ?? (u.username ?? '').split(' ')[0] ?? '',
+        lastName: u.lastName ?? u.last_name ?? (u.username ?? '').split(' ').slice(1).join(' ') ?? '',
+        email: u.email ?? '',
+        enrolledCourses: (u.courses ?? []).map(c => ({
+            enrollmentId: c.enrollmentId,
+            // planworkId may not be in the users API response (Image 1 doesn't show it)
+            id: c.planworkId ?? c.PlanworkId ?? c.planwork_id ?? c.courseId ?? c.serviceId ?? null,
+            title: c.title ?? c.serviceTitle ?? '\u2014',
+            date: fmtDate(c.enrolledAt),
+            attended: !!(c.attended),
+            certificateUrl: c.certificateUrl ?? null,
+            certificateName: c.certificateName ?? null,
+            _userId: u.id,
+            // store raw title for cross-referencing coursesData to find planworkId at upload time
+            _titleRaw: c.title ?? c.serviceTitle ?? '',
+        })),
     };
 }
+
 function normalizeCourse(c) {
+    // API returns: id, serviceTitle, usersCount, users[]
+    // users[] shape: { username, email, enrolledAt }
     return {
-        id: c.id ?? c.courseId ?? c.planWorkId ?? c.planwork_id,
-        title: c.title ?? c.serviceTitle ?? c.name ?? c.planWorkTitle ?? c.planwork_title ?? '—',
-        category: c.category ?? c.type ?? c.courseType ?? c.planwork_category ?? '',
-        enrolledUsers: (c.users ?? c.enrolledUsers ?? []).map(u => {
-            const rawName2 = u.firstName
-                ? `${u.firstName} ${u.lastName ?? ''}`.trim()
-                : (u.username ?? u.name ?? '');
-            const parts2 = rawName2.trim().split(' ');
-            // API currently returns: username, email, enrolledAt — no enrollment ID
-            const enrollmentId =
-                c.enrollmentId ?? c.EnrollmentId ?? c.enrollment_id ?? null;
-                u.enroll_id ?? u.enrollId ??
-                u.registrationId ?? u.RegistrationId ?? u.registration_id ??
-                u.regId ?? u.RegId ?? null;
-            // في normalizeUser، فوق الـ enrolledCourses map أضف:
-            console.log('RAW courses from API:', u.courses ?? u.enrolledCourses);
-             return {
-                enrollmentId,
-                id: u.id ?? u.userId ?? u.user_id ?? null,
+        id: c.id,
+        title: c.serviceTitle ?? c.title ?? '—',   // ← exact field from API: serviceTitle
+        category: c.category ?? c.type ?? '',
+        enrolledUsers: (c.users ?? []).map(u => {
+            const nameParts = (u.username ?? '').trim().split(' ');
+            return {
+                enrollmentId: u.enrollmentId ?? null,
+                id: u.id ?? u.userId ?? null,
                 username: u.username ?? u.email ?? '',
-                firstName: u.firstName ?? u.first_name ?? parts2[0] ?? '',
-                lastName: u.lastName ?? u.last_name ?? parts2.slice(1).join(' ') ?? '',
+                firstName: u.firstName ?? nameParts[0] ?? '',
+                lastName: u.lastName ?? nameParts.slice(1).join(' ') ?? '',
                 email: u.email ?? '',
-                date: fmtDate(u.enrolledAt ?? u.date ?? ''),
-                attended: !!(u.attended ?? u.isAttended ?? u.hasAttended ?? u.IsAttended ?? false),
-                certificateUrl: u.certificateUrl ?? u.CertificateUrl ?? u.certificate_url ?? null,
-                certificateName: u.certificateName ?? u.CertificateName ?? u.certificate_name ?? null,
-                _enrolledAt: u.enrolledAt ?? u.date ?? null,
+                date: fmtDate(u.enrolledAt),        // ← exact field from API: enrolledAt
+                attended: !!(u.attended ?? false),
+                certificateUrl: u.certificateUrl ?? null,
+                certificateName: u.certificateName ?? null,
             };
         }),
     };
@@ -161,28 +178,6 @@ function normalizeRefund(r) {
     };
 }
 
-function toStatusKey(s) {
-    if (!s) return 'Pending';
-    const map = {
-        pending: 'Pending', approved: 'Approved',
-        sent: 'Sent', sent_to_bank: 'Sent',
-        rejected: 'Rejected',
-    };
-    return map[String(s).toLowerCase()] ?? s;
-}
-
-// ── FIX: returns YYYY-MM-DD only — no time component ────────────────────────
-function fmtDate(val) {
-    if (!val) return '';
-    try {
-        const d = new Date(val);
-        if (isNaN(d.getTime())) return String(val);
-        return d.toISOString().split('T')[0]; // always "YYYY-MM-DD"
-    } catch {
-        return String(val);
-    }
-}
-
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════════════════
@@ -199,6 +194,8 @@ const AdminDashboard = () => {
     const [dateTo, setDateTo] = useState('');
     const [usersData, setUsersData] = useState([]);
     const [coursesData, setCoursesData] = useState([]);
+    // Keep ref in sync
+    React.useEffect(() => { coursesDataRef.current = coursesData; }, [coursesData]);
     const [apiStats, setApiStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -208,7 +205,6 @@ const AdminDashboard = () => {
     const [exportError, setExportError] = useState(null);
 
     // ── attendance — keyed by enrollmentId ───────────────────────────────────
-    // { [enrollmentId]: boolean }  — seeded from API data, toggled via PUT
     const [attendance, setAttendance] = useState({});
     const [attendanceSaving, setAttendanceSaving] = useState({});
     const [attError, setAttError] = useState(null);
@@ -216,14 +212,15 @@ const AdminDashboard = () => {
     const [attUserSearch, setAttUserSearch] = useState('');
 
     // ── certificates — keyed by enrollmentId ─────────────────────────────────
-    // { [enrollmentId]: { name, url, size } }  — seeded from API, updated on upload
     const [certificates, setCertificates] = useState({});
     const [certUploading, setCertUploading] = useState({});
     const [certError, setCertError] = useState(null);
     const [certModal, setCertModal] = useState(null);
     const [certDragOver, setCertDragOver] = useState(false);
     const certFileInputRef = useRef(null);
+    const coursesDataRef = useRef([]); // always holds latest coursesData for use inside callbacks
     const [certSearch, setCertSearch] = useState('');
+    const [certStatusFilter, setCertStatusFilter] = useState('all'); // 'all' | 'uploaded' | 'pending'
 
     // ── REFUND STATE ──────────────────────────────────────────────────────────
     const [refunds, setRefunds] = useState([]);
@@ -254,6 +251,7 @@ const AdminDashboard = () => {
         });
     }, [getToken]);
 
+    // ── FormData fetch — does NOT set Content-Type (browser sets multipart boundary) ──
     const authFetchForm = useCallback(async (url, formData) => {
         let token = null;
         try { token = await getToken(); } catch (_) { }
@@ -291,39 +289,27 @@ const AdminDashboard = () => {
     const commitRefundAction = async () => {
         if (!refundActionModal) return;
         const { refund: r, action } = refundActionModal;
-
         if (action === 'reject' && !refundActionNote.trim()) return;
-
         setRefundActionSaving(true);
         setRefundActionError('');
-
         try {
             const endpoint = {
                 approve: `${API_BASE}/refund/${r.id}/approve`,
                 reject: `${API_BASE}/refund/${r.id}/reject`,
                 send_to_bank: `${API_BASE}/refund/${r.id}/sent`,
             }[action];
-
             const body = {};
             if (action === 'reject') body.rejectionReason = refundActionNote.trim();
             if (action === 'approve') body.adminNote = refundActionNote.trim();
             if (action === 'send_to_bank') body.adminNote = refundActionNote.trim();
-
-            const res = await authFetch(endpoint, {
-                method: 'PUT',
-                body: JSON.stringify(body),
-            });
-
+            const res = await authFetch(endpoint, { method: 'PUT', body: JSON.stringify(body) });
             if (!res.ok) {
                 const errJson = await res.json().catch(() => ({}));
                 throw new Error(errJson?.message ?? errJson?.error ?? `HTTP ${res.status}`);
             }
-
             const updated = await res.json();
             const normalized = normalizeRefund(updated);
-
             setRefunds(prev => prev.map(x => x.id === r.id ? normalized : x));
-
             if (action === 'send_to_bank') {
                 const bankRes = normalized.bankResult ?? updated?.bankResult ?? updated?.BankResult ?? null;
                 if (bankRes === 'SUCCESS' || bankRes === 'success') {
@@ -333,12 +319,9 @@ const AdminDashboard = () => {
                 }
                 setTimeout(() => setBankResultBanner(null), 12000);
             }
-
             setRefundActionModal(null);
             setRefundActionNote('');
-
             if (refundDetailModal?.id === r.id) setRefundDetailModal(normalized);
-
         } catch (err) {
             console.error('Refund action error:', err);
             setRefundActionError(err.message || 'حدث خطأ أثناء تنفيذ الإجراء');
@@ -364,10 +347,6 @@ const AdminDashboard = () => {
         const load = async () => {
             setLoading(true); setError(null);
             try {
-                const _dbgToken = await getToken().catch(() => null);
-                console.log('[AdminDashboard] token present:', !!_dbgToken,
-                    _dbgToken ? `(${_dbgToken.slice(0, 24)}...)` : '(null)');
-
                 const [usersRes, coursesRes, statsRes] = await Promise.all([
                     authFetch(`${API_BASE}/Admin/users`),
                     authFetch(`${API_BASE}/Admin/planworks`),
@@ -378,20 +357,26 @@ const AdminDashboard = () => {
 
                 if (usersRes.ok) {
                     const j = await usersRes.json();
+                    // API returns array directly
                     usersRaw = Array.isArray(j) ? j : j?.data ?? j?.users ?? j?.result ?? [];
                 } else {
                     const errText = await usersRes.text().catch(() => '');
                     console.error('Users API failed:', usersRes.status, errText);
                     setError(`Users API ${usersRes.status}: ${errText.slice(0, 200)}`);
                 }
+
                 if (coursesRes.ok) {
                     const j = await coursesRes.json();
+                    // API returns array directly
                     coursesRaw = Array.isArray(j) ? j : j?.data ?? j?.planWorks ?? j?.planworks ?? j?.courses ?? j?.result ?? [];
                 } else {
                     const errText = await coursesRes.text().catch(() => '');
                     console.error('Planworks API failed:', coursesRes.status, errText);
                 }
+
                 if (statsRes.ok) {
+                    // Stats response shape (Image 3):
+                    // { usersCount, planworksCount, enrollmentsCount, attendanceCount, certificatesCount, refundsCount }
                     statsRaw = await statsRes.json();
                 } else {
                     const errText = await statsRes.text().catch(() => '');
@@ -410,7 +395,7 @@ const AdminDashboard = () => {
                 setCoursesData(normalizedCourses);
                 setApiStats(statsRaw);
 
-                // ── Seed attendance & certificates from API data ──────────
+                // Seed attendance & certificates from API data
                 seedAttendance(normalizedUsers);
                 seedCertificates(normalizedUsers);
             } catch (err) {
@@ -422,68 +407,60 @@ const AdminDashboard = () => {
         if (isLoaded && user) load();
     }, [isLoaded, user, authFetch]);
 
-    // ── Load refunds when tab opens ──────────────────────────────────────────
+    // Load refunds when tab opens
     useEffect(() => {
         if (activeTab === 'refunds') fetchRefunds();
     }, [activeTab, fetchRefunds]);
 
-    // ── Re-fetch when status filter changes ──────────────────────────────────
+    // Re-fetch when status filter changes
     useEffect(() => {
         if (activeTab === 'refunds') fetchRefunds(refundStatusFilter);
     }, [refundStatusFilter]); // eslint-disable-line
 
-    // ── Close export menu on outside click ──────────────────────────────────
+    // Close export menu on outside click
     useEffect(() => {
         const h = e => { if (exportRef.current && !exportRef.current.contains(e.target)) setExportMenuOpen(false); };
         document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
     }, []);
 
     // ════════════════════════════════════════════════════════════════════════
-    // ATTENDANCE — PUT /api/Admin/enrollments/{enrollmentId}/attendance
-    // NOTE: The API currently does NOT return enrollmentId in enrollment objects.
-    // Until the backend adds it, we use a composite key (username|title) to track
-    // local state, and pass username+title in the request body as identifiers.
+    // ATTENDANCE
+    // PATCH /api/Admin/enrollments/{enrollmentId}/attendance
+    // Body: raw JSON boolean  (Image 5 shows: -d 'true')
     // ════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Build a stable key for the attendance/cert maps.
-     * Prefers enrollmentId, falls back to "username|title".
-     */
-    const attKey = (enrollmentId, username, title) =>
-        enrollmentId != null ? String(enrollmentId) : `${username}|${title}`;
-
-    /**
-     * Seed attendance map from already-loaded usersData.
-     */
     const seedAttendance = useCallback((users) => {
         const map = {};
         users.forEach(u => {
             u.enrolledCourses.forEach(c => {
-                const k = attKey(c.enrollmentId, c._username ?? u.username ?? u.email, c.title);
-                map[k] = !!c.attended;
+                if (c.enrollmentId != null) {
+                    map[String(c.enrollmentId)] = !!c.attended;
+                }
             });
         });
         setAttendance(map);
     }, []);
 
-    const toggleAttendance = async (enrollmentId, username, title, currentVal) => {
-        const k = attKey(enrollmentId, username, title);
+    const toggleAttendance = async (enrollmentId, currentVal) => {
+        if (enrollmentId == null) {
+            setAttError('لا يوجد enrollmentId لهذا التسجيل');
+            return;
+        }
+        const k = String(enrollmentId);
         const newVal = !currentVal;
 
+        // Optimistic update
         setAttendance(p => ({ ...p, [k]: newVal }));
         setAttendanceSaving(p => ({ ...p, [k]: true }));
         setAttError(null);
 
         try {
-            if (enrollmentId == null) {
-                throw new Error('enrollmentId غير موجود');
-            }
-
             const res = await authFetch(
                 `${API_BASE}/Admin/enrollments/${enrollmentId}/attendance`,
                 {
-                    method: 'PATCH',           // ← PATCH مش PUT
-                    body: JSON.stringify(newVal) // ← boolean مباشرة مش object
+                    method: 'PATCH',
+                    // Body is a raw JSON boolean, exactly as the API expects (Image 5: -d 'true')
+                    body: JSON.stringify(newVal),
                 }
             );
 
@@ -492,103 +469,305 @@ const AdminDashboard = () => {
                 throw new Error(errJson?.message ?? `HTTP ${res.status}`);
             }
         } catch (err) {
+            // Rollback on failure
             setAttendance(p => ({ ...p, [k]: currentVal }));
             setAttError('فشل تحديث الحضور: ' + err.message);
         } finally {
             setAttendanceSaving(p => ({ ...p, [k]: false }));
         }
     };
+
     // ════════════════════════════════════════════════════════════════════════
-    // CERTIFICATES — POST /api/Admin/upload
-    // Seed cert map from usersData after load
+    // CERTIFICATES
+    // POST /api/Admin/upload
+    // FormData fields (Image 4): UserId (int), PlanworkId (int), File (binary)
     // ════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Seed certificates map from already-loaded usersData.
-     * Each enrollment that already has a certificateUrl is pre-populated.
-     */
+    // Re-fetch the full users list and re-seed certificates from fresh API data.
+    // Called on initial load AND after any upload to pick up certs already in the DB.
+    const refreshCertificates = useCallback(async () => {
+        try {
+            // Fetch users to build a lookup: "userId-planworkId" → enrollmentId
+            const usersRes = await authFetch(`${API_BASE}/Admin/users`);
+            if (!usersRes.ok) return;
+            const usersJson = await usersRes.json();
+            const rawUsers = Array.isArray(usersJson) ? usersJson : usersJson?.data ?? usersJson?.users ?? [];
+
+            // Build two lookup maps from users data:
+            // 1. uid_pid → enrollmentId  (to match DB records UserId+PlanworkId → enrollmentId)
+            // 2. enrollmentId → direct cert data (if users API returns certificateUrl)
+            const upToEid = {};   // "userId-planworkId" → enrollmentId string
+            const map = {};       // enrollmentId string → cert object
+
+            // Also build planworkId lookup by title from coursesData (already in state)
+            // We'll use window.__coursesForCerts as a side-channel set by the data load
+            // Build title→planworkId from coursesData
+            const titleToPid = {};
+            coursesDataRef.current.forEach(cd => { if (cd.title && cd.id) titleToPid[cd.title] = cd.id; });
+
+            rawUsers.forEach(u => {
+                (u.courses ?? []).forEach(c => {
+                    const eid = c.enrollmentId;
+                    if (eid == null) return;
+                    const k = String(eid);
+
+                    // Try to get planworkId from course object, then from title lookup
+                    const pid = c.planworkId ?? c.PlanworkId ?? c.planwork_id ?? c.courseId ?? c.serviceId
+                        ?? titleToPid[c.title ?? c.serviceTitle ?? ''] ?? null;
+                    if (pid != null) {
+                        upToEid[`${u.id}-${pid}`] = k;
+                    }
+
+                    // If users API returns certificateUrl directly — use it
+                    if (c.certificateUrl) {
+                        map[k] = {
+                            name: c.certificateName || c.certificateUrl.split('/').pop() || 'certificate',
+                            url: resolveCertUrl(c.certificateUrl),
+                            size: c.fileSizeBytes ?? null,
+                            fromDb: true,
+                        };
+                    }
+                });
+            });
+
+            // Try GET /Admin/certificates — returns DB rows: { id, userId, planworkId, fileUrl, fileName, fileSizeBytes, uploadedAt }
+            try {
+                const certsRes = await authFetch(`${API_BASE}/Admin/certificates`);
+                if (certsRes.ok) {
+                    const certsJson = await certsRes.json();
+                    const certsArr = Array.isArray(certsJson) ? certsJson
+                        : certsJson?.data ?? certsJson?.certificates ?? certsJson?.result ?? [];
+
+                    certsArr.forEach(cert => {
+                        const uid = cert.userId ?? cert.UserId;
+                        const pid = cert.planworkId ?? cert.PlanworkId;
+                        const furl = cert.fileUrl ?? cert.FileUrl ?? cert.url;
+                        const fname = cert.fileName ?? cert.FileName ?? (furl ? furl.split('/').pop() : 'certificate');
+                        const fsz = cert.fileSizeBytes ?? cert.FileSizeBytes ?? null;
+
+                        // Map to enrollmentId key using our lookup
+                        const lookupKey = `${uid}-${pid}`;
+                        const eid = upToEid[lookupKey];
+
+                        if (eid) {
+                            map[eid] = { name: fname, url: resolveCertUrl(furl), size: fsz, fromDb: true };
+                        } else {
+                            // enrollmentId not found — store under userId-planworkId as fallback key
+                            // so it still shows up if certKey falls back to that format
+                            map[lookupKey] = { name: fname, url: resolveCertUrl(furl), size: fsz, fromDb: true };
+                            console.warn('[Certs] no enrollmentId found for userId:', uid, 'planworkId:', pid, '— stored under fallback key', lookupKey);
+                        }
+                    });
+                    console.log('[Certs] loaded', certsArr.length, 'certs from /Admin/certificates');
+                }
+            } catch { /* /Admin/certificates may not exist — silently skip */ }
+
+            // MERGE into existing state — never wipe out certs that were just uploaded
+            // (DB-sourced entries take priority over local placeholders)
+            setCertificates(prev => {
+                const merged = { ...prev };
+                Object.entries(map).forEach(([k, v]) => {
+                    // Only overwrite if new value has a real URL, or slot was empty
+                    if (!merged[k] || (v.fromDb && v.url && v.url !== 'uploaded')) {
+                        merged[k] = v;
+                    }
+                });
+                return merged;
+            });
+            console.log('[Certs] refreshed — DB map keys:', Object.keys(map));
+        } catch (err) {
+            console.warn('[Certs] refresh failed:', err.message);
+        }
+    }, [authFetch]);
+
     const seedCertificates = useCallback((users) => {
+        // Seed synchronously from already-loaded users data (fast path on initial load)
         const map = {};
         users.forEach(u => {
-            u.enrolledCourses.forEach(c => {
+            (u.enrolledCourses ?? []).forEach(c => {
                 if (c.enrollmentId != null && c.certificateUrl) {
-                    map[c.enrollmentId] = {
-                        name: c.certificateName || 'certificate',
-                        url: c.certificateUrl,
+                    const resolvedUrl = resolveCertUrl(c.certificateUrl);
+                    map[String(c.enrollmentId)] = {
+                        name: c.certificateName || c.certificateUrl.split('/').pop() || 'certificate',
+                        url: resolvedUrl,
                         size: null,
+                        fromDb: true,
                     };
                 }
             });
         });
-        setCertificates(map);
-    }, []);
+        setCertificates(map); // initial seed from users data
+    }, [refreshCertificates]);
 
-    const handleCertFile = async (enrollmentId, certKey, file) => {
+    const handleCertFile = async (enrollmentId, userId, planworkId, file) => {
         if (!file) return;
-        setCertUploading(p => ({ ...p, [certKey]: true }));
+        const k = String(enrollmentId ?? `${userId}-${planworkId}`);
+        setCertUploading(p => ({ ...p, [k]: true }));
         setCertError(null);
         try {
             const fd = new FormData();
-            fd.append('file', file);
-            if (enrollmentId != null) fd.append('enrollmentId', enrollmentId);
+            // Swagger shows: UserId (int), PlanworkId (int), File (binary with mime type)
+            if (userId != null) fd.append('UserId', Number(userId));
+            if (planworkId != null) fd.append('PlanworkId', Number(planworkId));
+            if (enrollmentId != null) fd.append('EnrollmentId', Number(enrollmentId));
+            // Append file with explicit mime type (swagger curl shows ;type=image/png)
+            fd.append('File', file, file.name);
+
+            console.log('[CertUpload] sending → enrollmentId:', enrollmentId, '| userId:', userId, '| planworkId:', planworkId, '| file:', file.name, file.type, file.size);
 
             const res = await authFetchForm(`${API_BASE}/Admin/upload`, fd);
+
+            // Always read as text first to capture real server message
+            const rawText = await res.text();
+            console.log('[CertUpload] status:', res.status, '| raw response:', rawText);
+
             if (!res.ok) {
-                const errJson = await res.json().catch(() => ({}));
-                throw new Error(errJson?.message ?? errJson?.error ?? `HTTP ${res.status}`);
+                let msg = `HTTP ${res.status}`;
+                let rawMsg = '';
+                try { const j = JSON.parse(rawText); rawMsg = j?.message ?? j?.error ?? j?.title ?? j?.detail ?? ''; msg = rawMsg || msg; } catch { rawMsg = rawText.trim(); if (rawMsg && rawMsg.length < 400) msg = rawMsg; }
+
+                // If backend says cert already exists → treat as success, refresh from DB
+                const alreadyUploaded = rawMsg.toLowerCase().includes('already') || rawMsg.toLowerCase().includes('exist') || rawMsg.toLowerCase().includes('duplicate');
+                if (alreadyUploaded) {
+                    console.warn('[CertUpload] Backend says already uploaded — refreshing from DB');
+                    await refreshCertificates();
+                    return; // exit try block cleanly — finally will close modal
+                }
+
+                throw new Error(msg);
             }
-            const data = await res.json();
-            const url = data.url ?? data.certificateUrl ?? data.fileUrl ?? data.path ?? null;
-            const name = data.name ?? data.fileName ?? data.filename ?? file.name;
-            if (!url) throw new Error('لم يُعَد رابط الشهادة من السيرفر');
-            setCertificates(p => ({ ...p, [certKey]: { name, url, size: file.size } }));
+
+            // The server might return:
+            //   1. JSON object: { url, certificateUrl, fileUrl, path, fileName, ... }
+            //   2. A plain URL string: "https://..."
+            //   3. A JSON string (quoted URL): "\"https://...\""
+            //   4. Empty body (upload succeeded, no URL needed — store file locally)
+            let url = null;
+            let name = file.name;
+
+            if (rawText && rawText.trim()) {
+                // Try parse as JSON first
+                try {
+                    const data = JSON.parse(rawText);
+                    if (typeof data === 'string') {
+                        // JSON-encoded string — could be a plain URL or relative path
+                        url = resolveCertUrl(data);
+                    } else if (data && typeof data === 'object') {
+                        // Handle exact DB row shape: { id, userId, planworkId, fileUrl, fileName, fileSizeBytes, uploadedAt }
+                        const rawUrl = data.fileUrl ?? data.FileUrl
+                            ?? data.url ?? data.certificateUrl ?? data.filePath
+                            ?? data.path ?? data.link ?? null;
+                        url = resolveCertUrl(rawUrl);
+                        name = data.fileName ?? data.FileName
+                            ?? data.name ?? data.filename ?? data.originalName ?? file.name;
+                    }
+                } catch {
+                    // Not JSON — treat the whole body as a plain URL
+                    const trimmed = rawText.trim().replace(/^"+|"+$/g, ''); // strip surrounding quotes
+                    if (trimmed.startsWith('http') || trimmed.startsWith('/')) {
+                        url = resolveCertUrl(trimmed);
+                    }
+                }
+            }
+
+            // If the server returned 200 but no URL, store a placeholder so the UI updates
+            // (some backends just save and return 200 with empty body)
+            if (!url) {
+                console.warn('[CertUpload] Server returned 200 but no URL in response. Using placeholder.');
+                url = 'uploaded'; // non-null sentinel so the card shows as "has cert"
+            }
+
+            // Store immediately with what we have (url may be 'uploaded' placeholder)
+            const certEntry = { name, url, size: file.size, fromDb: false };
+            setCertificates(p => {
+                const next = { ...p };
+                next[k] = certEntry;
+                if (userId != null && planworkId != null) next[`${userId}-${planworkId}`] = certEntry;
+                return next;
+            });
+            console.log('[CertUpload] stored under key:', k);
+
+            // Now try to fetch the real URL back from the server
+            // Try 1: GET /api/Admin/certificates?userId=X&planworkId=Y
+            // Try 2: GET /api/Admin/users (find this user's course cert URL)
+            try {
+                let realUrl = null, realName = name;
+
+                // Try dedicated endpoint first
+                const certFetch = await authFetch(`${API_BASE}/Admin/certificates?userId=${userId}&planworkId=${planworkId}`).catch(() => null);
+                if (certFetch?.ok) {
+                    const cj = await certFetch.json().catch(() => null);
+                    const arr = Array.isArray(cj) ? cj : (cj ? [cj] : []);
+                    const found = arr.find(x => (x.userId ?? x.UserId) == userId && (x.planworkId ?? x.PlanworkId) == planworkId);
+                    if (found) {
+                        realUrl = resolveCertUrl(found.fileUrl ?? found.FileUrl ?? found.url);
+                        realName = found.fileName ?? found.FileName ?? name;
+                    }
+                }
+
+                // Fallback: re-fetch just this user
+                if (!realUrl) {
+                    const uFetch = await authFetch(`${API_BASE}/Admin/users`).catch(() => null);
+                    if (uFetch?.ok) {
+                        const uj = await uFetch.json().catch(() => null);
+                        const rawU = Array.isArray(uj) ? uj : (uj?.data ?? uj?.users ?? []);
+                        const thisUser = rawU.find(u2 => u2.id == userId);
+                        if (thisUser) {
+                            const thisCourse = (thisUser.courses ?? []).find(c2 =>
+                                c2.enrollmentId == enrollmentId ||
+                                (c2.planworkId ?? c2.PlanworkId) == planworkId
+                            );
+                            if (thisCourse?.certificateUrl) {
+                                realUrl = resolveCertUrl(thisCourse.certificateUrl);
+                                realName = thisCourse.certificateName ?? thisCourse.certificateUrl.split('/').pop() ?? name;
+                            }
+                        }
+                    }
+                }
+
+                if (realUrl) {
+                    console.log('[CertUpload] resolved real URL:', realUrl);
+                    const realEntry = { name: realName, url: realUrl, size: file.size, fromDb: true };
+                    setCertificates(p => {
+                        const next = { ...p };
+                        next[k] = realEntry;
+                        if (userId != null && planworkId != null) next[`${userId}-${planworkId}`] = realEntry;
+                        return next;
+                    });
+                } else {
+                    console.log('[CertUpload] no real URL found — keeping placeholder');
+                }
+            } catch (fetchErr) {
+                console.warn('[CertUpload] post-upload fetch failed:', fetchErr.message);
+            }
         } catch (err) {
-            console.error('Certificate upload failed:', err);
-            setCertError('فشل رفع الشهادة: ' + err.message);
+            console.error('[CertUpload] failed:', err);
+            setCertError('\u0641\u0634\u0644 \u0631\u0641\u0639 \u0627\u0644\u0634\u0647\u0627\u062f\u0629: ' + err.message);
         } finally {
-            setCertUploading(p => ({ ...p, [certKey]: false }));
+            setCertUploading(p => ({ ...p, [k]: false }));
             setCertModal(null);
         }
     };
 
-    const removeCert = (certKey) => {
-        setCertificates(p => { const n = { ...p }; delete n[certKey]; return n; });
+    const removeCert = (k) => {
+        setCertificates(p => { const n = { ...p }; delete n[k]; return n; });
     };
 
     // ════════════════════════════════════════════════════════════════════════
     // DERIVED DATA
     // ════════════════════════════════════════════════════════════════════════
 
-    /**
-     * ── FIX: inRange ─────────────────────────────────────────────────────────
-     * Rules:
-     *  1. No filter active → show everything (with or without date).
-     *  2. Filter active + record has no date → EXCLUDE (was the bug: used to include).
-     *  3. Filter active + record has date → compare date-only strings (YYYY-MM-DD).
-     *     "dateTo" is inclusive, so we extend it to end-of-day by advancing one day.
-     */
     const inRange = d => {
-        // No filter active — show all records regardless of date
         if (!dateFrom && !dateTo) return true;
-
-        // Filter is active but record has no date → exclude
         if (!d) return false;
-
         const dt = new Date(d);
         if (isNaN(dt.getTime())) return false;
-
-        // "From" boundary — record must be >= dateFrom
         if (dateFrom && dt < new Date(dateFrom)) return false;
-
-        // "To" boundary — record must be <= dateTo (inclusive)
-        // new Date('2026-02-23') = midnight UTC = start of that day
-        // so we add 1 day to make the entire chosen day inclusive
         if (dateTo) {
             const toEnd = new Date(dateTo);
-            toEnd.setDate(toEnd.getDate() + 1); // advance to start of next day
+            toEnd.setDate(toEnd.getDate() + 1);
             if (dt >= toEnd) return false;
         }
-
         return true;
     };
 
@@ -596,8 +775,7 @@ const AdminDashboard = () => {
     const filteredUsers = usersData
         .map(u => ({ ...u, enrolledCourses: u.enrolledCourses.filter(c => inRange(c.date)) }))
         .filter(u => {
-            const matchSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(q);
-            // When a date filter is active, only show users who have at least one matching course
+            const matchSearch = `${u.firstName} ${u.lastName} ${u.email} ${u.username}`.toLowerCase().includes(q);
             if ((dateFrom || dateTo) && u.enrolledCourses.length === 0) return false;
             return matchSearch;
         });
@@ -606,41 +784,75 @@ const AdminDashboard = () => {
         .map(c => ({ ...c, enrolledUsers: c.enrolledUsers.filter(u => inRange(u.date)) }))
         .filter(c => {
             const matchSearch = `${c.title} ${c.category}`.toLowerCase().includes(q);
-            // When a date filter is active, only show courses that have at least one matching user
             if ((dateFrom || dateTo) && c.enrolledUsers.length === 0) return false;
             return matchSearch;
         });
 
-    const attRows = usersData.flatMap(u => u.enrolledCourses.map(c => ({ user: u, course: c }))).filter(r => {
+    // Attendance rows — key is always String(enrollmentId)
+    const attRows = usersData.flatMap(u =>
+        u.enrolledCourses
+            .filter(c => c.enrollmentId != null)
+            .map(c => ({ user: u, course: c }))
+    ).filter(r => {
         const mc = attCourseFilter === 'all' || r.course.id === Number(attCourseFilter);
-        const mu = `${r.user.firstName} ${r.user.lastName} ${r.user.email}`.toLowerCase().includes(attUserSearch.toLowerCase());
+        const mu = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username}`
+            .toLowerCase().includes(attUserSearch.toLowerCase());
         return mc && mu;
     });
-    // Use composite key (enrollmentId or username|title) for attendance lookup
-    const attCount = attRows.filter(r => {
-        const k = attKey(r.course.enrollmentId, r.course._username ?? r.user.username ?? r.user.email, r.course.title);
-        return attendance[k];
-    }).length;
-    // certRows uses composite key (enrollmentId or username|title)
-    const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => ({
-        user: u,
-        course: c,
-        enrollmentId: c.enrollmentId,
-        certKey: attKey(c.enrollmentId, c._username ?? u.username ?? u.email, c.title),
-    }))).filter(r =>
-        `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.course.title}`.toLowerCase().includes(certSearch.toLowerCase())
-    );
+
+    const attCount = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length;
+
+    // Cert rows — key is String(enrollmentId)
+    // planworkId: users API (Image 1) doesn't include planworkId per course,
+    // so we cross-reference coursesData by title to resolve it.
+    const certRows = usersData.flatMap(u =>
+        u.enrolledCourses.map(c => {
+            const matchedCourse = coursesData.find(cd => cd.title === (c._titleRaw || c.title));
+            const resolvedPlanworkId = c.id ?? matchedCourse?.id ?? null;
+            const eidKey = c.enrollmentId != null ? String(c.enrollmentId) : null;
+            const upidKey = resolvedPlanworkId != null ? `${u.id}-${resolvedPlanworkId}` : null;
+            // certKey: prefer enrollmentId, fall back to userId-planworkId
+            // But ALSO check if a cert was stored under the fallback key (from refreshCertificates)
+            const certKey = eidKey ?? upidKey ?? `${u.id}-unknown`;
+            return {
+                user: u,
+                course: c,
+                certKey,
+                altKey: eidKey ? upidKey : null, // secondary key to check in certificates map
+                enrollmentId: c.enrollmentId,
+                userId: u.id,
+                planworkId: resolvedPlanworkId,
+            };
+        })
+    ).filter(r => {
+        const matchSearch = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username} ${r.course.title}`
+            .toLowerCase().includes(certSearch.toLowerCase());
+        const hasCert = !!(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined));
+        const isAtt = !!attendance[r.certKey];
+        const matchStatus = certStatusFilter === 'all' ? true
+            : certStatusFilter === 'uploaded' ? hasCert
+                : certStatusFilter === 'pending' ? (!hasCert && isAtt)
+                    : certStatusFilter === 'not-attended' ? !isAtt
+                        : true;
+        return matchSearch && matchStatus;
+    });
+
     const totalCerts = Object.keys(certificates).length;
     const totalEnrollments = usersData.reduce((s, u) => s + u.enrolledCourses.length, 0);
 
-    const gs = (fields, fb) => { if (!apiStats) return fb; for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; } return fb; };
+    // Stats — field names from Image 3: usersCount, planworksCount, enrollmentsCount, attendanceCount, certificatesCount, refundsCount
+    const gs = (fields, fb) => {
+        if (!apiStats) return fb;
+        for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; }
+        return fb;
+    };
     const displayStats = {
-        users: gs(['totalUsers', 'usersCount', 'users', 'userCount'], usersData.length),
-        courses: gs(['totalCourses', 'coursesCount', 'courses', 'courseCount', 'totalPlanWorks', 'planWorksCount'], coursesData.length),
-        enrollments: gs(['totalEnrollments', 'enrollmentsCount', 'enrollments', 'registrations', 'totalRegistrations'], totalEnrollments),
-        attended: gs(['totalAttended', 'attendedCount', 'attended'], attCount),
+        users: gs(['usersCount'], usersData.length),
+        courses: gs(['planworksCount'], coursesData.length),
+        enrollments: gs(['enrollmentsCount'], totalEnrollments),
+        attended: gs(['attendanceCount'], attCount),
         certificates: gs(['certificatesCount'], totalCerts),
-        refundsPending: gs(['pendingRefunds', 'refundsPending', 'pendingRefundsCount'], refunds.filter(r => r.status === 'Pending').length),
+        refundsPending: gs(['refundsCount'], refunds.filter(r => r.status === 'Pending').length),
     };
 
     const refundSearch_q = refundSearch.toLowerCase();
@@ -914,7 +1126,7 @@ const AdminDashboard = () => {
         .rf-bank-banner.failed{background:#fff8f0;border:1.5px solid rgba(245,124,0,.4);color:#b45309;}
         .rf-bank-banner-close{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:inherit;opacity:.6;}
         .rf-bank-banner-close:hover{opacity:1;}
-        .rf-refresh-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--gray4);background:var(--bg-flat);font-family:var(--font);font-size:.7rem;font-weight:700;cursor:pointer;color:var(--gray2);transition:all .14s;display:flex;align-items:center;gap:5px;}
+        .rf-refresh-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--gray4);background:var(--bg-flat);font-family:var(--font);font-size:.7rem;font-weight:700;cursor:pointer;color:var(--gray2);transition:all .14px;display:flex;align-items:center;gap:5px;}
         .rf-refresh-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt);}
 
         .d-api-info{display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:8px 14px;margin-bottom:clamp(12px,2vw,20px);font-size:clamp(.68rem,1.3vw,.76rem);color:#15803d;}
@@ -941,12 +1153,11 @@ const AdminDashboard = () => {
         @media print{.d-sidebar,.d-toolbar,.d-filter,.d-api-info,._ovr{display:none!important;}.d-root{background:#fff!important;padding-top:0!important;}.d-main{margin-right:0!important;padding:0!important;}}
       `}</style>
 
-            {/* ── Export overlay ─────────────────────────────────────────────── */}
             {exporting && (
                 <div className="d-ovl"><div className="d-ovlb"><div className="d-sp" /><p>جاري تصدير الملف... يرجى الانتظار</p></div></div>
             )}
 
-            {/* ── Certificate modal ─────────────────────────────────────────── */}
+            {/* ── Certificate upload modal ──────────────────────────────── */}
             {certModal && (
                 <div className="d-modal-bg" onClick={() => setCertModal(null)}>
                     <div className="d-modal" onClick={e => e.stopPropagation()}>
@@ -954,15 +1165,22 @@ const AdminDashboard = () => {
                         <p>{certModal.userName} — {certModal.courseTitle}</p>
                         <div className={`d-drop${certDragOver ? ' over' : ''}`}
                             onClick={() => certFileInputRef.current?.click()}
-                            style={{ cursor: 'pointer' }}
                             onDragOver={e => { e.preventDefault(); setCertDragOver(true); }}
                             onDragLeave={() => setCertDragOver(false)}
-                            onDrop={e => { e.preventDefault(); setCertDragOver(false); const f = e.dataTransfer.files[0]; if (f) handleCertFile(certModal.enrollmentId, certModal.certKey, f); }}>
+                            onDrop={e => {
+                                e.preventDefault(); setCertDragOver(false);
+                                const f = e.dataTransfer.files[0];
+                                if (f) handleCertFile(certModal.enrollmentId, certModal.userId, certModal.planworkId, f);
+                            }}>
                             <div className="d-drop-icon">📂</div>
                             <div className="d-drop-txt">اسحب الملف هنا أو اضغط للاختيار</div>
                             <div className="d-drop-sub">PDF, JPG, PNG — حجم أقصى 10 MB</div>
                             <input ref={certFileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }}
-                                onChange={e => { const f = e.target.files[0]; if (f) handleCertFile(certModal.enrollmentId, certModal.certKey, f); e.target.value = ''; }} />
+                                onChange={e => {
+                                    const f = e.target.files[0];
+                                    if (f) handleCertFile(certModal.enrollmentId, certModal.userId, certModal.planworkId, f);
+                                    e.target.value = '';
+                                }} />
                         </div>
                         {certUploading[certModal.certKey] && (
                             <div style={{ textAlign: 'center', marginTop: 12, color: '#7c3aed', fontSize: '.8rem', fontWeight: 700, fontFamily: '"Droid Arabic Kufi",serif' }}>⏳ جاري الرفع على السيرفر...</div>
@@ -972,9 +1190,7 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════════════════════════════
-                REFUND DETAIL MODAL
-            ══════════════════════════════════════════════════════════════ */}
+            {/* ── Refund detail modal ─────────────────────────────────────── */}
             {refundDetailModal && (() => {
                 const r = refunds.find(x => x.id === refundDetailModal.id) || refundDetailModal;
                 const u = refundUserLookup(r.userId);
@@ -986,94 +1202,31 @@ const AdminDashboard = () => {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
                                 <div>
                                     <h3 style={{ fontSize: '.92rem' }}>💳 تفاصيل طلب الاسترداد</h3>
-                                    <div style={{ fontSize: '.62rem', color: 'var(--gray3)', marginTop: 2, fontFamily: '"Droid Arabic Kufi",serif' }}>
-                                        {r.refNumber || r.id}
-                                    </div>
+                                    <div style={{ fontSize: '.62rem', color: 'var(--gray3)', marginTop: 2, fontFamily: '"Droid Arabic Kufi",serif' }}>{r.refNumber || r.id}</div>
                                 </div>
                                 <span className="rf-status" style={{ background: sm.bg, color: sm.color, borderColor: sm.border }}>{sm.icon} {sm.label}</span>
                             </div>
-
                             <div className="rf-detail">
-                                <div className="rf-field">
-                                    <div className="rf-field-lbl">رقم الأوردر</div>
-                                    <div className="rf-field-val mono">{r.orderId || '—'}</div>
-                                </div>
-                                <div className="rf-field">
-                                    <div className="rf-field-lbl">المبلغ</div>
-                                    <div className="rf-field-val" style={{ color: '#15803d' }}>
-                                        <span className="rf-amount">{Number(r.amount || 0).toLocaleString()}</span>
-                                        <span style={{ fontSize: '.6rem', color: 'var(--gray3)', marginRight: 3 }}>{r.currency}</span>
-                                    </div>
-                                </div>
-                                <div className="rf-field">
-                                    <div className="rf-field-lbl">المستخدم</div>
-                                    <div className="rf-field-val">{`${u.firstName} ${u.lastName}`.trim() || '—'}</div>
-                                </div>
-                                <div className="rf-field">
-                                    <div className="rf-field-lbl">البريد الإلكتروني</div>
-                                    <div className="rf-field-val mono" style={{ fontSize: '.68rem' }}>{u.email || '—'}</div>
-                                </div>
-                                <div className="rf-field">
-                                    <div className="rf-field-lbl">الدورة</div>
-                                    <div className="rf-field-val">{c.title || '—'}</div>
-                                </div>
-                                <div className="rf-field">
-                                    <div className="rf-field-lbl">تاريخ الطلب</div>
-                                    <div className="rf-field-val mono">{r.requestedAt || '—'}</div>
-                                </div>
-                                <div className="rf-field rf-full">
-                                    <div className="rf-field-lbl">سبب الاسترداد</div>
-                                    <div className="rf-field-val" style={{ fontWeight: 400, fontSize: '.74rem' }}>{r.reason || '—'}</div>
-                                </div>
-                                {r.details && (
-                                    <div className="rf-field rf-full">
-                                        <div className="rf-field-lbl">تفاصيل إضافية</div>
-                                        <div className="rf-field-val" style={{ fontWeight: 400, fontSize: '.72rem', color: 'var(--gray1)', lineHeight: 1.5 }}>{r.details}</div>
-                                    </div>
-                                )}
+                                <div className="rf-field"><div className="rf-field-lbl">رقم الأوردر</div><div className="rf-field-val mono">{r.orderId || '—'}</div></div>
+                                <div className="rf-field"><div className="rf-field-lbl">المبلغ</div><div className="rf-field-val" style={{ color: '#15803d' }}><span className="rf-amount">{Number(r.amount || 0).toLocaleString()}</span><span style={{ fontSize: '.6rem', color: 'var(--gray3)', marginRight: 3 }}>{r.currency}</span></div></div>
+                                <div className="rf-field"><div className="rf-field-lbl">المستخدم</div><div className="rf-field-val">{`${u.firstName} ${u.lastName}`.trim() || '—'}</div></div>
+                                <div className="rf-field"><div className="rf-field-lbl">البريد الإلكتروني</div><div className="rf-field-val mono" style={{ fontSize: '.68rem' }}>{u.email || '—'}</div></div>
+                                <div className="rf-field"><div className="rf-field-lbl">الدورة</div><div className="rf-field-val">{c.title || '—'}</div></div>
+                                <div className="rf-field"><div className="rf-field-lbl">تاريخ الطلب</div><div className="rf-field-val mono">{r.requestedAt || '—'}</div></div>
+                                <div className="rf-field rf-full"><div className="rf-field-lbl">سبب الاسترداد</div><div className="rf-field-val" style={{ fontWeight: 400, fontSize: '.74rem' }}>{r.reason || '—'}</div></div>
+                                {r.details && <div className="rf-field rf-full"><div className="rf-field-lbl">تفاصيل إضافية</div><div className="rf-field-val" style={{ fontWeight: 400, fontSize: '.72rem', color: 'var(--gray1)', lineHeight: 1.5 }}>{r.details}</div></div>}
                                 <hr className="rf-divider" />
                                 <div className="rf-bank-block">
-                                    <div className="rf-bank-title">🏦 بيانات البنك (Fallback IBAN)</div>
+                                    <div className="rf-bank-title">🏦 بيانات البنك</div>
                                     <div className="rf-bank-grid">
                                         {[['اسم البنك', r.bankName || '—', false], ['صاحب الحساب', r.accountHolder || '—', false], ['رقم الحساب', r.accountNumber || '—', true], ['IBAN', r.iban || '—', true]].map(([lbl, val, mono]) => (
-                                            <div key={lbl}>
-                                                <div className="rf-field-lbl">{lbl}</div>
-                                                <div className={`rf-field-val${mono ? ' mono' : ''}`} style={{ fontSize: '.72rem' }}>{val}</div>
-                                            </div>
+                                            <div key={lbl}><div className="rf-field-lbl">{lbl}</div><div className={`rf-field-val${mono ? ' mono' : ''}`} style={{ fontSize: '.72rem' }}>{val}</div></div>
                                         ))}
                                     </div>
                                 </div>
-                                {r.bankResult && (
-                                    <>
-                                        <hr className="rf-divider" />
-                                        <div className="rf-field rf-full">
-                                            <div className="rf-field-lbl">نتيجة البنك</div>
-                                            {r.bankResult === 'SUCCESS' || r.bankResult === 'success'
-                                                ? <div style={{ fontSize: '.72rem', color: '#16a34a', fontWeight: 700 }}>✅ SUCCESS — تم التحويل على الكارت تلقائياً</div>
-                                                : <div style={{ fontSize: '.72rem', color: '#dc2626', fontWeight: 700 }}>❌ FAILED — يتم التحويل يدوياً على IBAN</div>}
-                                        </div>
-                                    </>
-                                )}
-                                {(r.approvedAt || r.sentAt || r.rejectedAt || r.rejectionReason || r.adminNote) && (
-                                    <>
-                                        <hr className="rf-divider" />
-                                        <div className="rf-field rf-full">
-                                            <div className="rf-field-lbl">سجل الإجراءات</div>
-                                            <div style={{ marginTop: 4, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                                {r.approvedAt && <div style={{ fontSize: '.68rem', color: '#16a34a', fontFamily: '"Droid Arabic Kufi",serif' }}>✅ تمت الموافقة بتاريخ {r.approvedAt}</div>}
-                                                {r.sentAt && <div style={{ fontSize: '.68rem', color: 'var(--blue)', fontFamily: '"Droid Arabic Kufi",serif' }}>🏦 أُرسل للبنك بتاريخ {r.sentAt}</div>}
-                                                {r.rejectedAt && <div style={{ fontSize: '.68rem', color: 'var(--red)', fontFamily: '"Droid Arabic Kufi",serif' }}>❌ رُفض بتاريخ {r.rejectedAt}</div>}
-                                                {r.rejectionReason && <div style={{ fontSize: '.66rem', color: 'var(--gray2)', background: 'var(--red-lt)', padding: '4px 9px', borderRadius: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>سبب الرفض: {r.rejectionReason}</div>}
-                                                {r.adminNote && <div style={{ fontSize: '.66rem', color: 'var(--gray2)', background: 'var(--blue-lt)', padding: '4px 9px', borderRadius: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>ملاحظة: {r.adminNote}</div>}
-                                            </div>
-                                        </div>
-                                    </>
-                                )}
                             </div>
-
                             {r.status === 'Pending' && (
                                 <div className="rf-action-area">
-                                    <div style={{ fontSize: '.68rem', fontWeight: 700, color: 'var(--gray2)', marginBottom: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>اتخاذ إجراء:</div>
                                     <div className="rf-action-row">
                                         <button className="rf-action-btn approve" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'approve' }); }}>✅ موافقة</button>
                                         <button className="rf-action-btn bank" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'send_to_bank' }); }}>🏦 إرسال للبنك</button>
@@ -1084,11 +1237,10 @@ const AdminDashboard = () => {
                             {r.status === 'Approved' && (
                                 <div className="rf-action-area">
                                     <div className="rf-action-row">
-                                        <button className="rf-action-btn bank" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'send_to_bank' }); }}>🏦 إرسال للبنك (كلّم بنك مصر)</button>
+                                        <button className="rf-action-btn bank" onClick={() => { setRefundDetailModal(null); setRefundActionModal({ refund: r, action: 'send_to_bank' }); }}>🏦 إرسال للبنك</button>
                                     </div>
                                 </div>
                             )}
-
                             <div className="d-modal-actions" style={{ marginTop: 10 }}>
                                 <button className="d-modal-cancel" onClick={() => setRefundDetailModal(null)}>إغلاق</button>
                             </div>
@@ -1097,16 +1249,14 @@ const AdminDashboard = () => {
                 );
             })()}
 
-            {/* ══════════════════════════════════════════════════════════════
-                REFUND ACTION CONFIRMATION MODAL
-            ══════════════════════════════════════════════════════════════ */}
+            {/* ── Refund action confirmation modal ────────────────────────── */}
             {refundActionModal && (() => {
                 const { refund: r, action } = refundActionModal;
                 const u = refundUserLookup(r.userId);
                 const am = {
                     approve: { title: '✅ تأكيد الموافقة', color: '#16a34a', cls: 'approve', placeholder: 'ملاحظة للمستخدم (اختياري)...' },
                     reject: { title: '❌ تأكيد الرفض', color: '#dc2626', cls: 'reject', placeholder: 'سبب الرفض (مطلوب)...' },
-                    send_to_bank: { title: '🏦 تأكيد الإرسال لبنك مصر', color: '#0865a8', cls: 'bank', placeholder: 'مرجع التحويل البنكي (اختياري)...' },
+                    send_to_bank: { title: '🏦 تأكيد الإرسال للبنك', color: '#0865a8', cls: 'bank', placeholder: 'مرجع التحويل البنكي (اختياري)...' },
                 }[action];
                 return (
                     <div className="d-modal-bg" onClick={() => !refundActionSaving && setRefundActionModal(null)}>
@@ -1115,53 +1265,17 @@ const AdminDashboard = () => {
                             <p style={{ marginBottom: 12 }}>
                                 طلب <strong>{r.refNumber || r.id}</strong> — <strong>{`${u.firstName} ${u.lastName}`.trim() || '—'}</strong><br />
                                 المبلغ: <strong style={{ color: '#15803d', fontFamily: 'Courier New' }}>{Number(r.amount || 0).toLocaleString()} {r.currency}</strong>
-                                &nbsp;·&nbsp; أوردر: <strong style={{ fontFamily: 'Courier New' }}>{r.orderId || '—'}</strong>
                             </p>
-
-                            {action === 'send_to_bank' && (
-                                <div style={{ background: '#f0f7ff', border: '1.5px solid rgba(8,101,168,.2)', borderRadius: 10, padding: '10px 14px', marginBottom: 14 }}>
-                                    <div style={{ fontSize: '.66rem', fontWeight: 700, color: 'var(--blue)', marginBottom: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>
-                                        🏦 سيتم استدعاء RefundPaymentAsync ببنك مصر:
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 14px' }}>
-                                        {[['البنك', r.bankName || '—'], ['صاحب الحساب', r.accountHolder || '—'], ['رقم الحساب', r.accountNumber || '—'], ['IBAN (Fallback)', r.iban || '—']].map(([lbl, val]) => (
-                                            <div key={lbl}>
-                                                <div style={{ fontSize: '.58rem', color: 'var(--gray3)', fontFamily: '"Droid Arabic Kufi",serif' }}>{lbl}</div>
-                                                <div style={{ fontSize: '.72rem', fontWeight: 700, color: 'var(--black)', fontFamily: lbl.includes('IBAN') || lbl.includes('حساب') ? 'Courier New' : '"Droid Arabic Kufi",serif', direction: 'ltr', textAlign: 'right' }}>{val}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div style={{ marginTop: 8, fontSize: '.62rem', color: '#555', fontFamily: '"Droid Arabic Kufi",serif', borderTop: '1px dashed #cce', paddingTop: 6 }}>
-                                        ⚡ إذا نجح البنك (SUCCESS) → ترجع الفلوس على الكارت تلقائياً<br />
-                                        ⚠️ إذا فشل (FAILED) → يُحوَّل يدوياً على IBAN
-                                    </div>
-                                </div>
-                            )}
-
                             {refundActionError && (
                                 <div style={{ background: '#fef2f2', border: '1.5px solid rgba(220,38,38,.3)', color: '#dc2626', borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: '.72rem', fontFamily: '"Droid Arabic Kufi",serif' }}>
                                     ⚠️ {refundActionError}
                                 </div>
                             )}
-
-                            <textarea
-                                className="rf-textarea"
-                                placeholder={am.placeholder}
-                                value={refundActionNote}
-                                onChange={e => setRefundActionNote(e.target.value)}
-                                disabled={refundActionSaving}
-                            />
-
+                            <textarea className="rf-textarea" placeholder={am.placeholder} value={refundActionNote} onChange={e => setRefundActionNote(e.target.value)} disabled={refundActionSaving} />
                             <div className="d-modal-actions">
                                 <button className="d-modal-cancel" onClick={() => { setRefundActionModal(null); setRefundActionNote(''); setRefundActionError(''); }} disabled={refundActionSaving}>إلغاء</button>
-                                <button
-                                    className={`rf-action-confirm ${am.cls}`}
-                                    onClick={commitRefundAction}
-                                    disabled={refundActionSaving || (action === 'reject' && !refundActionNote.trim())}
-                                >
-                                    {refundActionSaving
-                                        ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'd-spin .6s linear infinite', marginLeft: 6, verticalAlign: 'middle' }} />جاري...</>
-                                        : 'تأكيد'}
+                                <button className={`rf-action-confirm ${am.cls}`} onClick={commitRefundAction} disabled={refundActionSaving || (action === 'reject' && !refundActionNote.trim())}>
+                                    {refundActionSaving ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'd-spin .6s linear infinite', marginLeft: 6, verticalAlign: 'middle' }} />جاري...</> : 'تأكيد'}
                                 </button>
                             </div>
                         </div>
@@ -1169,7 +1283,7 @@ const AdminDashboard = () => {
                 );
             })()}
 
-            {/* ── Breadcrumb ─────────────────────────────────────────────────── */}
+            {/* ── Breadcrumb ─────────────────────────────────────────────── */}
             <div className="_ovr">
                 <a href="/">الصفحة الرئيسية</a>
                 <span className="sep">›</span>
@@ -1177,7 +1291,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className="d-root">
-                {/* ── SIDEBAR ─────────────────────────────────────────────── */}
+                {/* ── SIDEBAR ──────────────────────────────────────────── */}
                 <aside className="d-sidebar">
                     <div className="d-sidebar-brand">
                         <img src={logoSrc} alt="ICEMT" className="d-sb-logo" />
@@ -1208,13 +1322,17 @@ const AdminDashboard = () => {
                     <div className="d-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
                 </aside>
 
-                {/* ── MAIN ────────────────────────────────────────────────── */}
+                {/* ── MAIN ─────────────────────────────────────────────── */}
                 <main className="d-main">
                     <div className="d-page-hdr">
                         <div>
                             <div className="d-page-title">
                                 <span style={{ color: '#f57c00' }}>{TABS.find(t => t.id === activeTab)?.icon}</span>{' '}
-                                {activeTab === 'users' ? 'المستخدمون والدورات' : activeTab === 'courses' ? 'الدورات والمستخدمون' : activeTab === 'attendance' ? 'سجل الحضور' : activeTab === 'certificates' ? 'الشهادات' : 'طلبات الاسترداد'}
+                                {activeTab === 'users' ? 'المستخدمون والدورات'
+                                    : activeTab === 'courses' ? 'الدورات والمستخدمون'
+                                        : activeTab === 'attendance' ? 'سجل الحضور'
+                                            : activeTab === 'certificates' ? 'الشهادات'
+                                                : 'طلبات الاسترداد'}
                             </div>
                             <div className="d-page-sub">{new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                         </div>
@@ -1250,7 +1368,6 @@ const AdminDashboard = () => {
                                     <button className="rf-bank-banner-close" onClick={() => setBankResultBanner(null)}>✕</button>
                                 </div>
                             )}
-
                             <div className="rf-stat-bar">
                                 {[
                                     { lbl: 'إجمالي', val: refundStats.total, icon: '📋', bg: '#f0f4f8', color: 'var(--black)' },
@@ -1269,7 +1386,6 @@ const AdminDashboard = () => {
                                     </div>
                                 ))}
                             </div>
-
                             <div className="d-filter">
                                 <div className="d-search" style={{ minWidth: 200 }}>
                                     <input type="text" placeholder="ابحث برقم الطلب، المبلغ، المستخدم..." value={refundSearch} onChange={e => setRefundSearch(e.target.value)} />
@@ -1283,11 +1399,7 @@ const AdminDashboard = () => {
                                         { id: 'Sent', lbl: '🏦 أُرسل للبنك', cls: 'bank' },
                                         { id: 'Rejected', lbl: '❌ مرفوض', cls: 'rjct' },
                                     ].map(f => (
-                                        <button key={f.id}
-                                            className={`rf-fbtn${refundStatusFilter === f.id ? ` active ${f.cls}` : ''}`}
-                                            onClick={() => setRefundStatusFilter(f.id)}>
-                                            {f.lbl}
-                                        </button>
+                                        <button key={f.id} className={`rf-fbtn${refundStatusFilter === f.id ? ` active ${f.cls}` : ''}`} onClick={() => setRefundStatusFilter(f.id)}>{f.lbl}</button>
                                     ))}
                                 </div>
                                 {refundSearch && <button className="d-fclear" onClick={() => setRefundSearch('')}>✕</button>}
@@ -1296,13 +1408,11 @@ const AdminDashboard = () => {
                                     تحديث
                                 </button>
                             </div>
-
                             {refundsError && (
                                 <div className="d-err">⚠️ {refundsError}
                                     <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setRefundsError(null)}>✕</button>
                                 </div>
                             )}
-
                             <div className="d-card">
                                 {refundsLoading
                                     ? <div className="d-ld"><div className="d-sp" /><p>جاري تحميل طلبات الاسترداد...</p></div>
@@ -1315,9 +1425,7 @@ const AdminDashboard = () => {
                                                         <tr>
                                                             <th className="rd c" style={{ width: 36 }}>#</th>
                                                             <th className="rd">رقم الطلب</th>
-                                                            <th className="rd">رقم الأوردر</th>
                                                             <th className="rd">المستخدم</th>
-                                                            <th className="rd">الدورة</th>
                                                             <th className="rd c">المبلغ</th>
                                                             <th className="rd">السبب</th>
                                                             <th className="rd c">الحالة</th>
@@ -1328,13 +1436,11 @@ const AdminDashboard = () => {
                                                     <tbody>
                                                         {filteredRefunds.map((r, idx) => {
                                                             const u = refundUserLookup(r.userId);
-                                                            const c = refundCourseLookup(r.courseId);
                                                             const sm = REFUND_STATUS_META[r.status] || REFUND_STATUS_META.Pending;
                                                             return (
                                                                 <tr key={r.id}>
                                                                     <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{idx + 1}</td>
                                                                     <td><span style={{ fontFamily: 'Courier New', fontSize: '.76rem', fontWeight: 700, color: 'var(--blue)' }}>{r.refNumber || r.id}</span></td>
-                                                                    <td><span style={{ fontFamily: 'Courier New', fontSize: '.76rem', color: 'var(--gray2)' }}>{r.orderId || '—'}</span></td>
                                                                     <td>
                                                                         <div className="d-uc">
                                                                             <div className="d-av rd">{u.firstName?.[0]}{u.lastName?.[0]}</div>
@@ -1343,9 +1449,6 @@ const AdminDashboard = () => {
                                                                                 <div className="d-email" style={{ fontSize: '.65rem' }}>{u.email}</div>
                                                                             </div>
                                                                         </div>
-                                                                    </td>
-                                                                    <td style={{ fontSize: '.76rem', maxWidth: 160 }}>
-                                                                        <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</div>
                                                                     </td>
                                                                     <td style={{ textAlign: 'center' }}>
                                                                         <span className="rf-amount">{Number(r.amount || 0).toLocaleString()}</span>
@@ -1382,7 +1485,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── ATTENDANCE TAB ──────────────────────────────────── */}
+                    {/* ── ATTENDANCE TAB ────────────────────────────────── */}
                     {activeTab === 'attendance' && (
                         <div>
                             <div className="d-filter">
@@ -1397,10 +1500,14 @@ const AdminDashboard = () => {
                                 {attUserSearch && <button className="d-fclear" onClick={() => setAttUserSearch('')}>✕ مسح</button>}
                             </div>
                             <div className="d-att-sum">
-                                <span>✅ {attRows.filter(r => { const k = attKey(r.course.enrollmentId, r.course._username ?? r.user.username ?? r.user.email, r.course.title); return attendance[k]; }).length} حضر</span>
-                                <span>❌ {attRows.filter(r => { const k = attKey(r.course.enrollmentId, r.course._username ?? r.user.username ?? r.user.email, r.course.title); return !attendance[k]; }).length} غائب</span>
+                                <span>✅ {attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length} حضر</span>
+                                <span>❌ {attRows.filter(r => !attendance[String(r.course.enrollmentId)]).length} غائب</span>
                                 <span>📋 {attRows.length} إجمالي</span>
-                                {attRows.length > 0 && (() => { const cnt = attRows.filter(r => { const k = attKey(r.course.enrollmentId, r.course._username ?? r.user.username ?? r.user.email, r.course.title); return attendance[k]; }).length; const pct = Math.round(cnt / attRows.length * 100); return (<><span>{pct}٪ حضور</span><div className="d-prog-wrap"><div className="d-prog-fill" style={{ width: `${pct}%` }} /></div></>); })()}
+                                {attRows.length > 0 && (() => {
+                                    const cnt = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length;
+                                    const pct = Math.round(cnt / attRows.length * 100);
+                                    return (<><span>{pct}٪ حضور</span><div className="d-prog-wrap"><div className="d-prog-fill" style={{ width: `${pct}%` }} /></div></>);
+                                })()}
                             </div>
                             {attError && (
                                 <div className="d-err">⚠️ {attError}
@@ -1415,25 +1522,35 @@ const AdminDashboard = () => {
                                                 <table className="d-tbl">
                                                     <thead><tr>
                                                         <th className="c" style={{ width: 40 }}>#</th>
-                                                        <th>المستخدم</th><th>البريد الإلكتروني</th><th>الدورة</th>
-                                                        <th className="gr c">الحضور</th><th className="gr c">الحالة</th>
+                                                        <th>المستخدم</th>
+                                                        <th>البريد الإلكتروني</th>
+                                                        <th>الدورة</th>
+                                                        <th className="gr c">تسجيل الحضور</th>
+                                                        <th className="gr c">الحالة</th>
                                                     </tr></thead>
                                                     <tbody>
                                                         {attRows.map((row, idx) => {
                                                             const eid = row.course.enrollmentId;
-                                                            const uname = row.course._username ?? row.user.username ?? row.user.email;
-                                                            const k = attKey(eid, uname, row.course.title);
+                                                            const k = String(eid);
                                                             const attended = !!attendance[k];
                                                             const saving = !!attendanceSaving[k];
                                                             return (
-                                                                <tr key={k}>
+                                                                <tr key={k + idx}>
                                                                     <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{idx + 1}</td>
-                                                                    <td><div className="d-uc"><div className="d-av">{row.user.firstName?.[0]}{row.user.lastName?.[0]}</div><span className="d-uname">{row.user.firstName} {row.user.lastName}</span></div></td>
+                                                                    <td>
+                                                                        <div className="d-uc">
+                                                                            <div className="d-av">{(row.user.firstName || row.user.username || '?')[0]}{(row.user.lastName || '')[0]}</div>
+                                                                            <span className="d-uname">{row.user.firstName || row.user.username} {row.user.lastName}</span>
+                                                                        </div>
+                                                                    </td>
                                                                     <td className="d-email">{row.user.email}</td>
                                                                     <td style={{ color: 'var(--blue)', fontWeight: 700 }}>{row.course.title}</td>
                                                                     <td style={{ textAlign: 'center' }}>
-                                                                        <div className={`d-chk${saving ? ' spin' : attended ? ' on' : ''}`}
-                                                                            onClick={() => !saving && toggleAttendance(eid, uname, row.course.title, attended)}>
+                                                                        <div
+                                                                            className={`d-chk${saving ? ' spin' : attended ? ' on' : ''}`}
+                                                                            onClick={() => !saving && toggleAttendance(eid, attended)}
+                                                                            title={eid == null ? 'لا يوجد enrollmentId' : ''}
+                                                                        >
                                                                             {!saving && attended && '✓'}
                                                                         </div>
                                                                     </td>
@@ -1451,18 +1568,73 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── CERTIFICATES TAB ────────────────────────────────── */}
+                    {/* ── CERTIFICATES TAB ─────────────────────────────── */}
                     {activeTab === 'certificates' && (
                         <div>
+                            {/* Search + filter bar */}
                             <div className="d-filter">
                                 <span className="d-flbl">📜 البحث:</span>
                                 <div className="d-search" style={{ minWidth: 210 }}>
                                     <input type="text" placeholder="ابحث باسم المستخدم أو الدورة..." value={certSearch} onChange={e => setCertSearch(e.target.value)} />
                                 </div>
-                                <span style={{ fontSize: '.74rem', color: 'var(--gray3)', marginRight: 6, fontFamily: '"Droid Arabic Kufi",serif' }}>
-                                    {Object.keys(certificates).length} شهادة من أصل {certRows.length}
-                                </span>
+                                {certSearch && <button className="d-fclear" onClick={() => setCertSearch('')}>✕</button>}
+                                <div style={{ display: 'flex', gap: 5, marginRight: 'auto' }}>
+                                    {[
+                                        { id: 'all', label: 'الكل', icon: '📋' },
+                                        { id: 'uploaded', label: 'مرفوعة', icon: '✅' },
+                                        { id: 'pending', label: 'حضر / لم تُرفع', icon: '📄' },
+                                        { id: 'not-attended', label: 'لم يحضر', icon: '🚫' },
+                                    ].map(f => (
+                                        <button key={f.id}
+                                            style={{
+                                                padding: '5px 12px', borderRadius: 8, border: '1.5px solid', fontFamily: '"Droid Arabic Kufi",serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', transition: 'all .14s',
+                                                background: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#f0fdf4' : f.id === 'pending' ? 'rgba(156,163,175,.1)' : 'var(--blue-lt)') : 'var(--bg-flat)',
+                                                borderColor: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#86efac' : f.id === 'pending' ? 'var(--gray4)' : 'rgba(8,101,168,.3)') : 'var(--gray4)',
+                                                color: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#15803d' : f.id === 'pending' ? 'var(--gray2)' : 'var(--blue)') : 'var(--gray2)',
+                                            }}
+                                            onClick={() => setCertStatusFilter(f.id)}>
+                                            {f.icon} {f.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
+
+                            {/* Summary bar */}
+                            {!loading && (() => {
+                                const uploaded = certRows.filter(r => !!certificates[r.certKey]).length;
+                                const withUrl = certRows.filter(r => { const c = certificates[r.certKey]; return c && c.url && c.url !== 'uploaded'; }).length;
+                                const attendedTotal = certRows.filter(r => !!attendance[r.certKey]).length;
+                                const pendingUpload = certRows.filter(r => !certificates[r.certKey] && !!attendance[r.certKey]).length;
+                                const notAttended = certRows.filter(r => !attendance[r.certKey]).length;
+                                const pct = attendedTotal > 0 ? Math.round(uploaded / attendedTotal * 100) : 0;
+                                return (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: '#fff', border: '1.5px solid var(--card-border)', borderRadius: 'var(--radius)', padding: '11px 18px', marginBottom: 16, boxShadow: 'var(--shadow)', fontFamily: '"Droid Arabic Kufi",serif' }}>
+                                        <span style={{ fontSize: '.76rem', fontWeight: 900, color: 'var(--black)' }}>📜 الشهادات</span>
+                                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: '#f0fdf4', border: '1.5px solid #86efac', color: '#15803d', fontSize: '.7rem', fontWeight: 700 }}>
+                                                ✅ مرفوعة: {uploaded}
+                                                {withUrl > 0 && <span style={{ fontSize: '.62rem', color: '#16a34a', fontWeight: 400 }}>({withUrl} قابلة للعرض)</span>}
+                                            </span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'rgba(124,58,237,.06)', border: '1.5px solid rgba(124,58,237,.2)', color: '#7c3aed', fontSize: '.7rem', fontWeight: 700 }}>
+                                                📄 حضر ولم تُرفع: {pendingUpload}
+                                            </span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'rgba(156,163,175,.08)', border: '1.5px solid var(--gray4)', color: 'var(--gray3)', fontSize: '.7rem', fontWeight: 700 }}>
+                                                🚫 لم يحضر: {notAttended}
+                                            </span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'var(--blue-lt)', border: '1.5px solid rgba(8,101,168,.2)', color: 'var(--blue)', fontSize: '.7rem', fontWeight: 700 }}>
+                                                📋 الإجمالي: {certRows.length}
+                                            </span>
+                                        </div>
+                                        {/* Progress bar */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140 }}>
+                                            <div style={{ flex: 1, height: 7, background: 'var(--gray5)', borderRadius: 4, overflow: 'hidden' }}>
+                                                <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#16a34a,#22c55e)', borderRadius: 4, transition: 'width .5s ease' }} />
+                                            </div>
+                                            <span style={{ fontSize: '.68rem', fontWeight: 700, color: '#15803d', minWidth: 32 }} title="من إجمالي الحاضرين">{pct}٪</span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
                             {certError && (
                                 <div className="d-err">⚠️ {certError}
                                     <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setCertError(null)}>✕</button>
@@ -1474,37 +1646,110 @@ const AdminDashboard = () => {
                                         : (
                                             <div className="d-cert-grid">
                                                 {certRows.map(row => {
-                                                    const eid = row.enrollmentId;
                                                     const ck = row.certKey;
-                                                    const cert = certificates[ck];
+                                                    // Check primary key first, then fallback userId-planworkId key
+                                                    const cert = certificates[ck] ?? (row.altKey ? certificates[row.altKey] : undefined);
                                                     const uploading = certUploading[ck];
-                                                    const attended = attendance[ck];
+
+                                                    // attended is keyed by String(enrollmentId) same as certKey
+                                                    const isAttended = !!attendance[ck];
+                                                    const canUpload = isAttended; // only attended users can get a cert
+
+                                                    const hasRealUrl = cert && cert.url && cert.url !== 'uploaded';
+                                                    const hasPlaceholder = cert && (!cert.url || cert.url === 'uploaded');
+
+                                                    // Visual state
+                                                    let cardBorder, cardBg, iconBg, iconBorder;
+                                                    if (cert) {
+                                                        cardBorder = '#86efac'; cardBg = '#f8fffe';
+                                                        iconBg = '#f0fdf4'; iconBorder = '#86efac';
+                                                    } else if (!canUpload) {
+                                                        cardBorder = 'var(--gray5)'; cardBg = '#fafafa';
+                                                        iconBg = 'rgba(156,163,175,.06)'; iconBorder = 'rgba(156,163,175,.15)';
+                                                    } else {
+                                                        cardBorder = 'rgba(124,58,237,.2)'; cardBg = 'var(--white)';
+                                                        iconBg = 'rgba(124,58,237,.06)'; iconBorder = 'rgba(124,58,237,.2)';
+                                                    }
+
                                                     return (
-                                                        <div className="d-cert-card" key={ck}>
-                                                            <div className={`d-cert-icon${cert ? ' has' : ''}`}>{cert ? '📜' : '📄'}</div>
-                                                            <div className="d-cert-info">
-                                                                <div className="d-cert-name">{row.user.firstName} {row.user.lastName}</div>
-                                                                <div className="d-cert-sub">📚 {row.course.title}</div>
-                                                                {cert && <div style={{ fontSize: '.65rem', color: '#16a34a', marginTop: 2, fontWeight: 700 }}>✅ {cert.name}{cert.size ? ` · ${(cert.size / 1024).toFixed(0)} KB` : ''}</div>}
-                                                                {!cert && !attended && <div style={{ fontSize: '.65rem', color: 'var(--orange)', marginTop: 2 }}>⚠️ لم يُسجَّل الحضور</div>}
+                                                        <div className="d-cert-card" key={ck}
+                                                            style={{ borderColor: cardBorder, background: cardBg, opacity: !canUpload && !cert ? 0.72 : 1 }}>
+
+                                                            {/* ── Status icon ── */}
+                                                            <div className="d-cert-icon"
+                                                                style={{ background: iconBg, borderColor: iconBorder }}>
+                                                                {cert ? '📜' : canUpload ? '📄' : '🚫'}
                                                             </div>
+
+                                                            {/* ── Info ── */}
+                                                            <div className="d-cert-info">
+                                                                <div className="d-cert-name">
+                                                                    {row.user.firstName || row.user.username} {row.user.lastName}
+                                                                </div>
+                                                                <div className="d-cert-sub">📚 {row.course.title}</div>
+
+                                                                {/* Attendance badge */}
+                                                                <div style={{ marginTop: 3, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
+                                                                    <span style={{
+                                                                        fontSize: '.6rem', fontWeight: 700, padding: '1px 7px', borderRadius: 6,
+                                                                        background: isAttended ? '#f0fdf4' : 'rgba(156,163,175,.08)',
+                                                                        color: isAttended ? '#15803d' : 'var(--gray3)',
+                                                                        border: `1px solid ${isAttended ? '#86efac' : 'var(--gray4)'}`
+                                                                    }}>
+                                                                        {isAttended ? '✅ حضر' : '❌ غائب'}
+                                                                    </span>
+
+                                                                    {/* Cert status */}
+                                                                    {hasRealUrl && (
+                                                                        <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '1px 7px', borderRadius: 6, background: '#f0fdf4', color: '#15803d', border: '1px solid #86efac' }}>
+                                                                            📜 مرفوعة
+                                                                            {cert.name && cert.name !== 'uploaded' ? ` · ${cert.name}` : ''}
+                                                                        </span>
+                                                                    )}
+                                                                    {hasPlaceholder && (
+                                                                        <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '1px 7px', borderRadius: 6, background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac' }}>
+                                                                            ✅ مرفوعة على السيرفر
+                                                                        </span>
+                                                                    )}
+                                                                    {!cert && canUpload && (
+                                                                        <span style={{ fontSize: '.6rem', color: 'var(--gray3)', padding: '1px 7px', borderRadius: 6, background: 'rgba(124,58,237,.05)', border: '1px solid rgba(124,58,237,.15)' }}>
+                                                                            📄 لم تُرفع بعد
+                                                                        </span>
+                                                                    )}
+                                                                    {!cert && !canUpload && (
+                                                                        <span style={{ fontSize: '.6rem', color: 'var(--gray3)', padding: '1px 7px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>
+                                                                            غير متاح — لم يحضر
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* ── Actions ── */}
                                                             <div className="d-cert-actions">
                                                                 {cert ? (
                                                                     <>
-                                                                        <a href={cert.url} download={cert.name} target="_blank" rel="noreferrer">
-                                                                            <button className="d-cert-btn dl">⬇ تحميل</button>
-                                                                        </a>
-                                                                        <button className="d-cert-btn up"
-                                                                            onClick={() => setCertModal({ enrollmentId: eid, certKey: ck, userName: `${row.user.firstName} ${row.user.lastName}`, courseTitle: row.course.title })}>
-                                                                            🔄
+                                                                        {hasRealUrl && (
+                                                                            <a href={cert.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                                                                                <button className="d-cert-btn dl">👁 عرض</button>
+                                                                            </a>
+                                                                        )}
+                                                                        <button className="d-cert-btn up" disabled={uploading}
+                                                                            onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>
+                                                                            {uploading ? '⏳' : '🔄 تحديث'}
                                                                         </button>
                                                                         <button className="d-cert-btn rm" onClick={() => removeCert(ck)}>🗑</button>
                                                                     </>
-                                                                ) : (
+                                                                ) : canUpload ? (
+                                                                    /* Upload only allowed if attended */
                                                                     <button className="d-cert-btn up" disabled={uploading}
-                                                                        onClick={() => setCertModal({ enrollmentId: eid, certKey: ck, userName: `${row.user.firstName} ${row.user.lastName}`, courseTitle: row.course.title })}>
-                                                                        {uploading ? '⏳ جاري...' : '⬆ رفع'}
+                                                                        onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>
+                                                                        {uploading ? '⏳ جاري...' : '⬆ رفع شهادة'}
                                                                     </button>
+                                                                ) : (
+                                                                    /* Not attended — no upload */
+                                                                    <span style={{ fontSize: '.62rem', color: 'var(--gray4)', fontFamily: '"Droid Arabic Kufi",serif', padding: '4px 6px' }}>
+                                                                        يجب تسجيل الحضور أولاً
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         </div>
@@ -1516,7 +1761,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── USERS / COURSES TABS ────────────────────────────── */}
+                    {/* ── USERS / COURSES TABS ─────────────────────────── */}
                     {isExportTab && (
                         <>
                             <div className="d-toolbar">
@@ -1569,7 +1814,12 @@ const AdminDashboard = () => {
                                                                     <React.Fragment key={u.id}>
                                                                         <tr className={expandedRow === u.id ? 'xopen' : ''}>
                                                                             <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{idx + 1}</td>
-                                                                            <td><div className="d-uc"><div className="d-av">{u.firstName?.[0] || '?'}{u.lastName?.[0] || ''}</div><span className="d-uname">{u.firstName} {u.lastName}</span></div></td>
+                                                                            <td>
+                                                                                <div className="d-uc">
+                                                                                    <div className="d-av">{(u.firstName || u.username || '?')[0]}{(u.lastName || '')[0]}</div>
+                                                                                    <span className="d-uname">{u.firstName || u.username} {u.lastName}</span>
+                                                                                </div>
+                                                                            </td>
                                                                             <td className="d-email">{u.email}</td>
                                                                             <td style={{ textAlign: 'center' }}><span className="d-cb">{u.enrolledCourses.length}</span></td>
                                                                             <td style={{ textAlign: 'center' }}>
@@ -1581,16 +1831,21 @@ const AdminDashboard = () => {
                                                                         {expandedRow === u.id && (
                                                                             <tr className="d-xrow"><td colSpan={5}>
                                                                                 <div className="d-xin">
-                                                                                    {u.enrolledCourses.map(c => (
-                                                                                        <div className="d-mc" key={c.enrollmentId ?? c._title ?? c.title}>
-                                                                                            <div className="d-mt">📚 {c.title}</div>
-                                                                                            {c.date && <div className="d-md">📅 {c.date}</div>}
-                                                                                            <div style={{ marginTop: 5, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                                                                                                {(() => { const k = attKey(c.enrollmentId, c._username ?? u.username ?? u.email, c.title); return <span className={`d-att-badge ${attendance[k] ? 'on' : 'off'}`} style={{ fontSize: '.62rem' }}>{attendance[k] ? '✅ حضر' : '❌ غائب'}</span>; })()}
-                                                                                                {(() => { const k = attKey(c.enrollmentId, c._username ?? u.username ?? u.email, c.title); return certificates[k] ? <span style={{ fontSize: '.62rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span> : null; })()}
+                                                                                    {u.enrolledCourses.map(c => {
+                                                                                        const ck = String(c.enrollmentId ?? `${u.id}-${c._planworkId}`);
+                                                                                        return (
+                                                                                            <div className="d-mc" key={ck}>
+                                                                                                <div className="d-mt">📚 {c.title}</div>
+                                                                                                {c.date && <div className="d-md">📅 {c.date}</div>}
+                                                                                                <div style={{ marginTop: 5, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                                                                                                    <span className={`d-att-badge ${attendance[String(c.enrollmentId)] ? 'on' : 'off'}`} style={{ fontSize: '.62rem' }}>
+                                                                                                        {attendance[String(c.enrollmentId)] ? '✅ حضر' : '❌ غائب'}
+                                                                                                    </span>
+                                                                                                    {certificates[ck] ? <span style={{ fontSize: '.62rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span> : null}
+                                                                                                </div>
                                                                                             </div>
-                                                                                        </div>
-                                                                                    ))}
+                                                                                        );
+                                                                                    })}
                                                                                 </div>
                                                                             </td></tr>
                                                                         )}
@@ -1614,14 +1869,13 @@ const AdminDashboard = () => {
                                                                                     {c.enrolledUsers.map(u => (
                                                                                         <div className="d-mc" key={u.enrollmentId ?? u.username ?? u.email}>
                                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
-                                                                                                <div className="d-av or sm">{u.firstName?.[0] || '?'}{u.lastName?.[0] || ''}</div>
-                                                                                                <div><div className="d-mt or">{u.firstName || u.username} {u.lastName}</div><div className="d-ms">✉ {u.email}</div></div>
+                                                                                                <div className="d-av or sm">{(u.firstName || u.username || '?')[0]}{(u.lastName || '')[0]}</div>
+                                                                                                <div>
+                                                                                                    <div className="d-mt or">{u.firstName || u.username} {u.lastName}</div>
+                                                                                                    <div className="d-ms">✉ {u.email}</div>
+                                                                                                </div>
                                                                                             </div>
                                                                                             {u.date && <div className="d-md">📅 {u.date}</div>}
-                                                                                            <div style={{ marginTop: 5, display: 'flex', gap: 5 }}>
-                                                                                                {(() => { const k = attKey(u.enrollmentId, u.username ?? u.email, c.title); return <span className={`d-att-badge ${attendance[k] ? 'on' : 'off'}`} style={{ fontSize: '.62rem' }}>{attendance[k] ? '✅ حضر' : '❌ غائب'}</span>; })()}
-                                                                                                {(() => { const k = attKey(u.enrollmentId, u.username ?? u.email, c.title); return certificates[k] ? <span style={{ fontSize: '.62rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span> : null; })()}
-                                                                                            </div>
                                                                                         </div>
                                                                                     ))}
                                                                                 </div>
