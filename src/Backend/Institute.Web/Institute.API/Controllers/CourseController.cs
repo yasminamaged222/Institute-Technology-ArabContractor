@@ -224,7 +224,9 @@ namespace Institute.API.Controllers
                 e.Planwork.CourseDate,
                 e.Planwork.ServiceTitle,
                 e.Planwork.Slug,
-                e.EnrolledAt
+                e.EnrolledAt,
+                OrderId = e.OrderId,
+                Cost = e.Planwork.PlanCost
             });
 
             return Ok(courses);
