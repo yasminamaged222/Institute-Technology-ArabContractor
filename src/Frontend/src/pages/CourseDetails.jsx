@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
+const FILES_BASE = 'http://www.arabcont.com/icemt/assets/pdf/planpdf/';
 
 const mediaQueryStyles = `
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -144,14 +145,12 @@ async function parseServerError(res) {
     let body = '';
     try { body = await res.text(); } catch (_) { /* ignore */ }
 
-    // try JSON first
     try {
         const j = JSON.parse(body);
         const msg = j.message || j.Message || j.error || j.Error || j.title || j.Title;
         if (msg) return `${msg} (${status})`;
     } catch (_) { /* not json */ }
 
-    // plain text
     if (body && body.length < 300 && !body.trim().startsWith('<'))
         return `${body.trim()} (${status})`;
 
@@ -244,12 +243,10 @@ const CourseDetails = () => {
             const token = await safeGetToken();
             if (!token) return;
             const res = await fetch(`${API_BASE}/refund/my`, { headers: { Authorization: `Bearer ${token}` } });
-            // 404 just means no refunds yet — treat as empty
             if (res.status === 404 || res.status === 204) { setExistingRefund(null); return; }
             if (!res.ok) { setExistingRefund(null); return; }
             const data = await res.json();
             const list = Array.isArray(data) ? data : (data?.data ?? data?.items ?? data?.result ?? []);
-            // coerce both sides to string to avoid number/string mismatch
             const cid = String(courseId);
             const match = list.find(r =>
                 String(r.planworkId ?? '') === cid ||
@@ -288,6 +285,7 @@ const CourseDetails = () => {
         return { startDate: p[0]?.trim() || '', endDate: p[1]?.trim() || p[0]?.trim() || '' };
     };
 
+    // ── UPDATED transform: builds full file URLs from partial paths ──────────
     const transform = (a) => {
         const { startDate, endDate } = extractDates(a.date);
         const isFree = !a.cost || a.cost === 0;
@@ -312,11 +310,23 @@ const CourseDetails = () => {
             programDates: extractList(a.content, 'تاريخ انعقاد البرنامج'),
             startDate, endDate, date: a.date,
             image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800',
-            files: (a.files || []).map(f => ({
-                id: f.id ?? null,
-                title: f.title || f.name || 'ملف',
-                url: f.url || f.link || f.path || f.fileUrl || f.downloadUrl || null,
-            })),
+            files: (a.files || []).map(f => {
+                // Pick whichever field the API uses for the path/filename
+                const rawUrl =
+                    f.url || f.link || f.path || f.fileUrl ||
+                    f.downloadUrl || f.fileName || f.filename || null;
+
+                // If it's already a full URL leave it alone; otherwise prepend FILES_BASE
+                const url = rawUrl
+                    ? (rawUrl.startsWith('http') ? rawUrl : `${FILES_BASE}${rawUrl}`)
+                    : null;
+
+                return {
+                    id: f.id ?? null,
+                    title: f.title || f.name || 'ملف',
+                    url,
+                };
+            }),
         };
     };
 
@@ -397,10 +407,7 @@ const CourseDetails = () => {
             const token = await safeGetToken();
             if (!token) { setRefundError('يجب تسجيل الدخول أولاً'); return; }
 
-            // ── KEY FIX: look up the enrollment record to get the real planWorkId ──
-            // The backend refund endpoint needs the ENROLLMENT row ID, not the course ID.
-            // GET /course/my-courses returns objects with .id = the planWorkId
-            let planWorkId = course.id; // fallback
+            let planWorkId = course.id;
             try {
                 const myCoursesRes = await fetch(`${API_BASE}/course/my-courses`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -416,7 +423,6 @@ const CourseDetails = () => {
                         String(e.planworkId) === cid
                     );
                     if (enrollment) {
-                        // enrollment.id IS the planWorkId the backend expects
                         planWorkId = enrollment.id ?? enrollment.planWorkId ?? enrollment.planworkId ?? course.id;
                     }
                 }
