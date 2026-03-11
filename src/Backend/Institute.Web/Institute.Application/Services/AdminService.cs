@@ -4,6 +4,7 @@ using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.AdminSpec;
+using Institute.Domain.specifications.AdminSpec.Certificates;
 using Institute.Domain.specifications.AdminSpec.Course;
 using Institute.Domain.specifications.AdminSpec.User;
 using System;
@@ -106,7 +107,7 @@ namespace Institute.Application.Services
                 PlanworksCount = await _planworkRepository.CountAsync(),
                 EnrollmentsCount = await _enrollmentRepository.CountAsync(),
                 AttendanceCount = await _enrollmentRepository
-                                                .GetCountAsync(attendedSpec), // <-- count only attended enrollments,
+                                                .GetCountAsync(attendedSpec), 
                 CertificatesCount = await _certificateRepository.CountAsync(),
                 RefundsCount = await _refundRepository.CountAsync()
             };
@@ -166,7 +167,28 @@ namespace Institute.Application.Services
             await _enrollmentRepository.SaveChangesAsync();
             return true;
         }
+        public async Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync()
+        {
+            var spec = new CertificateWithUserAndPlanworkSpec();
 
+            var certificates = await _certificateRepository.GetAllWithSpecAsync(spec);
+
+
+            return certificates.Select(c => new CertificateDto
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                Username = c.User.Username,
+
+                PlanworkId = c.PlanworkId,
+                PlanworkTitle = c.Planwork.ServiceTitle,
+
+                FileUrl = c.FileUrl,
+                FileName = c.FileName,
+
+                UploadedAt = c.UploadedAt
+            }).ToList();
+        }
 
     }
 }
