@@ -39,7 +39,7 @@ namespace Institute.API.Controllers
             _categoryService = categoryService;
         }
 
-        
+
         [HttpGet("programs/{slug}/courses")]
         public async Task<IActionResult> GetProgramCourses(string slug)
         {
@@ -115,7 +115,7 @@ namespace Institute.API.Controllers
                     Date = c.CourseDate,
                     Description = c.CourseDesc,
                     Cost = c.PlanCost
-                    
+
                 })
                 .ToList();
 
@@ -230,6 +230,57 @@ namespace Institute.API.Controllers
             });
 
             return Ok(courses);
+        }
+
+        // ─── تسجيل في كورس مجاني مباشرة بدون Cart/Payment ───────────────
+        [HttpPost("enroll-free/{planworkId}")]
+        [Authorize]
+        public async Task<IActionResult> EnrollInFreeCourse(int planworkId)
+        {
+            // 1️⃣ جيب الـ User الحالي
+            var clerkUserId = _clerkService.GetAuthenticatedUserId(User);
+            if (clerkUserId == null)
+                return Unauthorized();
+
+            var appUser = await _userRepo.GetByClerkIdAsync(clerkUserId);
+            if (appUser == null)
+                return NotFound("المستخدم غير موجود.");
+
+            // 2️⃣ تحقق إن الكورس موجود ومجاني فعلاً
+            var planworks = (await _planRepo.GetAllAsync()).ToList();
+            var course = planworks.FirstOrDefault(p =>
+                p.ChildId == planworkId &&
+                p.CourseDate != null &&
+                p.DetailsFlag == false &&
+                (p.PlanCost == null || p.PlanCost == 0));
+
+            if (course == null)
+                return BadRequest(new { message = "الكورس غير موجود أو غير مجاني." });
+
+            // 3️⃣ منع التكرار
+            var alreadyEnrolled = await _enrollmentRepo.AnyAsync(
+                e => e.UserId == appUser.Id && e.PlanworkId == planworkId);
+
+            if (alreadyEnrolled)
+                return Ok(new { message = "أنت مسجل في هذا الكورس بالفعل.", alreadyEnrolled = true });
+
+            // 4️⃣ أنشئ الـ Enrollment مباشرة (بدون Order)
+            await _enrollmentRepo.AddAsync(new Enrollment
+            {
+                UserId = appUser.Id,
+                PlanworkId = planworkId,
+                OrderId = null,   // الكورسات المجانية مفيهاش Order
+                EnrolledAt = DateTime.UtcNow
+            });
+            await _enrollmentRepo.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "تم تسجيلك في الكورس المجاني بنجاح.",
+                alreadyEnrolled = false,
+                courseTitle = course.ServiceTitle,
+                courseSlug = course.Slug
+            });
         }
 
     }

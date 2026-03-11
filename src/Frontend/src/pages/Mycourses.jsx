@@ -12,7 +12,22 @@ const BookIcon = () => (
     </svg>
 );
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Helper: enroll in free course ──────────────────────────────────────────
+export const enrollFreeCourse = async (planworkId, getToken) => {
+    const token = await getToken();
+    const res = await fetch(`${API_BASE}/course/enroll-free/${planworkId}`, {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.message || 'فشل التسجيل في الكورس');
+    return data; // { message, alreadyEnrolled, courseTitle, courseSlug }
+};
+
+// ─── Main Component ──────────────────────────────────────────────────────────
 const MyCourses = () => {
     const navigate = useNavigate();
     const { user } = useUser();
@@ -47,7 +62,8 @@ const MyCourses = () => {
                 instructor: e.coursePlace || e.place || 'غير محدد',
                 date: e.courseDate || e.date || '',
                 enrolledAt: e.enrolledAt || '',
-                _type: 'purchased',
+                // ✅ لو orderId مش موجود (null) → كورس مجاني
+                isFree: e.orderId === null || e.orderId === undefined || e.cost === 0 || e.cost === null,
             }));
             setCourses(mapped);
         } catch (err) {
@@ -213,7 +229,7 @@ const MyCourses = () => {
     );
 };
 
-// ─── Course Card ──────────────────────────────────────────────────────────────
+// ─── Course Card ─────────────────────────────────────────────────────────────
 const CourseCard = ({ course, hovered, onHover, onLeave, navigate, cert }) => {
     const goToCourse = () => {
         if (course.slug) navigate(`/course/${course.slug}`);
@@ -229,11 +245,22 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate, cert }) => {
             <div style={styles.cardHeader}>
                 <div style={{
                     ...styles.cardImgPlaceholder,
-                    background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
+                    // ✅ الكورسات المجانية ليها gradient أخضر مختلف
+                    background: course.isFree
+                        ? 'linear-gradient(135deg, #1a7a4a 0%, #34c77b 100%)'
+                        : 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)',
                 }}>
                     <div style={styles.iconWrapper}><BookIcon /></div>
                 </div>
-                <span style={{ ...styles.badge, ...styles.badgePaid }}>✅ مسجل</span>
+
+                {/* ✅ Badge: مسجل (أزرق للمدفوع، أخضر للمجاني) */}
+                <span style={{
+                    ...styles.badge,
+                    ...(course.isFree ? styles.badgeFree : styles.badgePaid)
+                }}>
+                    ✅ {course.isFree ? 'مجاني - مسجل' : 'مسجل'}
+                </span>
+
                 {cert && (
                     <div style={styles.certRibbon} title="شهادتك جاهزة للتحميل">📜</div>
                 )}
@@ -271,7 +298,6 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate, cert }) => {
                     </div>
                 )}
 
-                {/* ── Certificate download ── */}
                 {cert && (
                     <a
                         href={cert.url}
@@ -307,7 +333,7 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate, cert }) => {
     );
 };
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
+// ─── Empty State ─────────────────────────────────────────────────────────────
 const EmptyState = ({ search, navigate }) => (
     <div style={styles.emptyWrap}>
         <div style={styles.emptyIcon}>{search ? '🔍' : '📭'}</div>
@@ -323,7 +349,7 @@ const EmptyState = ({ search, navigate }) => (
     </div>
 );
 
-// ─── Styles ───────────────────────────────────────────────────────────────────
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = {
     page: { minHeight: '100vh', backgroundColor: '#f7f8fc', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' },
     overviewBar: { position: 'fixed', right: 0, left: 0, top: 70, zIndex: 40, backgroundColor: '#f5f5f5', padding: '12px 24px', boxShadow: '0 2px 4px rgba(0,0,0,0.08)', borderBottom: '1px solid #e0e0e0' },
@@ -368,7 +394,10 @@ const styles = {
     cardImgPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     iconWrapper: { borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', padding: '24px', backdropFilter: 'blur(10px)', border: '2px solid rgba(255,255,255,0.3)' },
     badge: { position: 'absolute', top: '12px', right: '12px', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
+    // ✅ badge للمدفوع: أزرق
     badgePaid: { backgroundColor: '#0865a8', color: '#fff', boxShadow: '0 2px 8px rgba(8,101,168,0.35)' },
+    // ✅ badge للمجاني: أخضر
+    badgeFree: { backgroundColor: '#1a7a4a', color: '#fff', boxShadow: '0 2px 8px rgba(26,122,74,0.35)' },
     certRibbon: { position: 'absolute', bottom: '12px', left: '12px', backgroundColor: 'rgba(124,58,237,0.88)', backdropFilter: 'blur(6px)', borderRadius: '8px', padding: '4px 10px', fontSize: '16px', boxShadow: '0 2px 8px rgba(124,58,237,0.4)', border: '1.5px solid rgba(255,255,255,0.3)', cursor: 'default' },
 
     cardBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 },

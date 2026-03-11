@@ -89,6 +89,7 @@ const styles = {
     successText: { fontSize: '14px', color: '#555', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '20px' },
     btnCloseSuccess: { padding: '11px 36px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif' },
     statusBadge: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
+    policyBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif' },
 };
 
 const mediaQueryStyles = `
@@ -115,22 +116,42 @@ const mediaQueryStyles = `
 `;
 
 const REFUND_STATUS_MAP = {
-    Pending: { label: 'قيد المراجعة', bg: '#fff8e1', color: '#f59e0b', icon: '⏳' },
+    Pending:  { label: 'قيد المراجعة', bg: '#fff8e1', color: '#f59e0b', icon: '⏳' },
     Approved: { label: 'تمت الموافقة', bg: '#e3f2fd', color: '#0865a8', icon: '✅' },
-    Rejected: { label: 'مرفوض', bg: '#ffebee', color: '#e53935', icon: '❌' },
-    Sent: { label: 'تم التحويل', bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
+    Rejected: { label: 'مرفوض',        bg: '#ffebee', color: '#e53935', icon: '❌' },
+    Sent:     { label: 'تم التحويل',   bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
 };
+
+// ── حساب سياسة الاسترداد بناءً على تاريخ بدء الكورس ────────────────────────
+function getRefundPolicy(courseDateStr, coursePrice) {
+    if (!courseDateStr) return { type: 'unknown' };
+    const raw    = courseDateStr.split(' - ')[0].trim();
+    const parts  = raw.split(/[\/\-]/);
+    let startDate = null;
+    if (parts.length === 3) {
+        startDate = parts[0].length === 4
+            ? new Date(+parts[0], +parts[1] - 1, +parts[2])
+            : new Date(+parts[2], +parts[1] - 1, +parts[0]);
+    }
+    if (!startDate || isNaN(startDate.getTime())) return { type: 'unknown' };
+    const today = new Date(); today.setHours(0,0,0,0);
+    startDate.setHours(0,0,0,0);
+    const daysLeft = Math.round((startDate - today) / (1000 * 60 * 60 * 24));
+    if (daysLeft < 2)  return { type: 'blocked', daysLeft };
+    if (daysLeft <= 7) return { type: 'partial',  daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
+    return              { type: 'full',    daysLeft };
+}
 
 // ── helper: parse any server error into a readable Arabic string ──────────────
 async function parseServerError(res) {
     const status = res.status;
     let body = '';
-    try { body = await res.text(); } catch (_) { /* ignore */ }
+    try { body = await res.text(); } catch (_) { }
     try {
         const j = JSON.parse(body);
         const msg = j.message || j.Message || j.error || j.Error || j.title || j.Title;
         if (msg) return `${msg} (${status})`;
-    } catch (_) { /* not json */ }
+    } catch (_) { }
     if (body && body.length < 300 && !body.trim().startsWith('<'))
         return `${body.trim()} (${status})`;
     const defaults = {
@@ -151,7 +172,7 @@ const Toast = ({ message, type, onClose }) => {
     const colors = { success: '#4caf50', error: '#f44336', warning: '#ff9800' };
     const paths = {
         success: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-        error: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
+        error:   'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z',
         warning: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
     };
     const borderMap = { success: styles.toastSuccess, error: styles.toastError, warning: styles.toastWarning };
@@ -171,20 +192,19 @@ const Toast = ({ message, type, onClose }) => {
 // ── RefundModal ───────────────────────────────────────────────────────────────
 const RefundModal = ({ course, onClose, getToken }) => {
     const [refundReason, setRefundReason] = useState('');
-    const [bankName, setBankName] = useState('');
-    const [iban, setIban] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [error, setError] = useState(null);
+    const [bankName, setBankName]         = useState('');
+    const [iban, setIban]                 = useState('');
+    const [submitting, setSubmitting]     = useState(false);
+    const [success, setSuccess]           = useState(false);
+    const [error, setError]               = useState(null);
     const [existingRefund, setExistingRefund] = useState(null);
     const [loadingCheck, setLoadingCheck] = useState(true);
 
-    // safe token
     const safeToken = useCallback(async () => {
         try { return await getToken(); } catch (_) { return null; }
     }, [getToken]);
 
-    // check for existing refund on mount
+    // ── check for existing refund on mount ───────────────────────────────────
     useEffect(() => {
         (async () => {
             try {
@@ -195,80 +215,80 @@ const RefundModal = ({ course, onClose, getToken }) => {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                // 404 / 204 = no refunds at all — that's fine
                 if (res.status === 404 || res.status === 204) { setLoadingCheck(false); return; }
                 if (!res.ok) { setLoadingCheck(false); return; }
 
                 const data = await res.json();
                 const list = Array.isArray(data) ? data : (data?.data ?? data?.items ?? data?.result ?? []);
-                const cid = String(course.id);
 
                 const match = list.find(r =>
-                    String(r.planworkId ?? '') === cid ||
-                    String(r.planWorkId ?? '') === cid ||
-                    String(r.PlanworkId ?? '') === cid ||
-                    String(r.courseId ?? '') === cid ||
-                    String(r.CourseId ?? '') === cid
+                    String(r.planworkId ?? r.planWorkId ?? r.PlanworkId ?? '') === String(course.id) &&
+                    (r.status === 'Pending' || r.status === 'Approved')
                 );
                 if (match) setExistingRefund(match);
             } catch {
-                // silently ignore — just show the form
+                // silently ignore
             } finally {
                 setLoadingCheck(false);
             }
         })();
     }, [course.id, safeToken]);
 
+    // ── submit ───────────────────────────────────────────────────────────────
     const handleSubmit = async () => {
         if (!refundReason.trim()) { setError('الرجاء كتابة سبب طلب الاسترداد'); return; }
         setSubmitting(true); setError(null);
+
         try {
             const token = await safeToken();
-            if (!token) { setError('يجب تسجيل الدخول أولاً'); return; }
+            if (!token) { setError('يجب تسجيل الدخول أولاً'); setSubmitting(false); return; }
 
-            // ── KEY FIX: look up the enrollment record to get the real planWorkId ──
-            let planWorkId = course.id; // fallback
+            // ── جيب الـ orderId والـ planworkId الصحيحين من my-courses ──────
+            let planworkId = course.id;
+            let orderId    = null;
+
             try {
                 const myCoursesRes = await fetch(`${API_BASE}/course/my-courses`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 if (myCoursesRes.ok) {
                     const myList = await myCoursesRes.json();
-                    const cid = String(course.id);
                     const enrollment = myList.find(e =>
-                        String(e.childId) === cid ||
-                        String(e.courseId) === cid ||
-                        String(e.CourseId) === cid ||
-                        String(e.planWorkId) === cid ||
-                        String(e.planworkId) === cid
+                        String(e.childId) === String(course.id)
                     );
                     if (enrollment) {
-                        planWorkId = enrollment.id ?? enrollment.planWorkId ?? enrollment.planworkId ?? course.id;
+                        planworkId = enrollment.childId ?? course.id;
+                        orderId    = enrollment.orderId ?? null;
                     }
                 }
             } catch { /* use fallback */ }
 
+            // ── لازم يكون عندنا orderId عشان الـ Backend يقبل الطلب ─────────
+            if (!orderId) {
+                setError('لم يتم العثور على بيانات الطلب الأصلي. يرجى التواصل مع الدعم.');
+                setSubmitting(false);
+                return;
+            }
+
             const payload = {
-                planworkId: planWorkId,
-                planWorkId: planWorkId,
-                PlanworkId: planWorkId,
-                courseId: course.id,
-                CourseId: course.id,
-                courseTitle: course.title,
-                reason: refundReason.trim(),
-                bankName: bankName.trim() || null,
-                iban: iban.trim() || null,
-                requestedAt: new Date().toISOString(),
+                orderId:       orderId,
+                planworkId:    planworkId,
+                reason:        refundReason.trim(),
+                details:       null,
+                bankName:      bankName.trim()  || null,
+                accountNumber: null,
+                accountHolder: null,
+                iban:          iban.trim()      || null,
             };
 
             const res = await fetch(`${API_BASE}/refund`, {
-                method: 'POST',
+                method:  'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify(payload),
+                body:    JSON.stringify(payload),
             });
 
             if (res.status === 409) { setError('لديك طلب استرداد قيد المراجعة بالفعل لهذه الدورة'); return; }
-            if (!res.ok) { setError(await parseServerError(res)); return; }
+            if (!res.ok)            { setError(await parseServerError(res)); return; }
 
             setSuccess(true);
         } catch (err) {
@@ -283,6 +303,7 @@ const RefundModal = ({ course, onClose, getToken }) => {
     return (
         <div style={styles.modalOverlay} dir="rtl" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
             <div style={styles.modalCard}>
+
                 {/* header */}
                 <div style={styles.modalHeader}>
                     <div style={styles.modalHeaderIcon}>💸</div>
@@ -291,38 +312,60 @@ const RefundModal = ({ course, onClose, getToken }) => {
                         <p style={styles.modalSubtitle}>{course.title}</p>
                     </div>
                     <button onClick={onClose} style={styles.modalCloseBtn}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
                 </div>
 
                 {/* body */}
                 <div style={styles.modalBody}>
+
+                    {/* loading */}
                     {loadingCheck ? (
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '120px' }}>
-                            <svg style={{ width: '36px', height: '36px', color: '#0865a8', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                            <svg style={{ width: '36px', height: '36px', color: '#0865a8', animation: 'spin 1s linear infinite' }}
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
                                 <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                             </svg>
                         </div>
 
+                    /* existing refund */
                     ) : existingRefund && !success ? (
                         <div style={{ textAlign: 'center', padding: '8px 0' }}>
                             <div style={{ fontSize: '44px', marginBottom: '12px' }}>{statusInfo?.icon}</div>
-                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#000', marginBottom: '10px', fontFamily: '"Droid Arabic Kufi", serif' }}>لديك طلب استرداد مسبق</h3>
-                            <div style={{ ...styles.statusBadge, backgroundColor: statusInfo?.bg, color: statusInfo?.color, margin: '0 auto 14px', display: 'inline-flex' }}>{statusInfo?.label}</div>
+                            <h3 style={{ fontSize: '18px', fontWeight: 'bold', color: '#000', marginBottom: '10px', fontFamily: '"Droid Arabic Kufi", serif' }}>
+                                لديك طلب استرداد مسبق
+                            </h3>
+                            <div style={{ ...styles.statusBadge, backgroundColor: statusInfo?.bg, color: statusInfo?.color, margin: '0 auto 14px', display: 'inline-flex' }}>
+                                {statusInfo?.label}
+                            </div>
+
                             {existingRefund.status === 'Rejected' && existingRefund.rejectionReason && (
                                 <div style={{ ...styles.warningBox, textAlign: 'right', marginTop: '10px' }}>
-                                    <div><strong style={{ display: 'block', marginBottom: '4px' }}>سبب الرفض:</strong>{existingRefund.rejectionReason}</div>
+                                    <div>
+                                        <strong style={{ display: 'block', marginBottom: '4px' }}>سبب الرفض:</strong>
+                                        {existingRefund.rejectionReason}
+                                    </div>
                                 </div>
                             )}
-                            {existingRefund.status === 'Sent' && <p style={{ fontSize: '13px', color: '#555', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '16px' }}>تم تحويل المبلغ بنجاح.</p>}
+                            {existingRefund.status === 'Sent'    && <p style={{ fontSize: '13px', color: '#555', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '16px' }}>تم تحويل المبلغ بنجاح.</p>}
                             {existingRefund.status === 'Pending' && <p style={{ fontSize: '13px', color: '#555', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif', marginBottom: '16px' }}>طلبك قيد المراجعة. سنتواصل معك خلال 3-5 أيام عمل.</p>}
+
                             <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '12px', marginTop: '6px', textAlign: 'right' }}>
-                                <div style={{ fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif' }}>رقم الطلب: <strong style={{ color: '#0865a8' }}>{existingRefund.refNumber || `#${existingRefund.id}`}</strong></div>
-                                {existingRefund.requestedAt && <div style={{ fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif', marginTop: '4px' }}>تاريخ الطلب: {new Date(existingRefund.requestedAt).toLocaleDateString('ar-EG')}</div>}
+                                <div style={{ fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif' }}>
+                                    رقم الطلب: <strong style={{ color: '#0865a8' }}>{existingRefund.refNumber || `#${existingRefund.id}`}</strong>
+                                </div>
+                                {existingRefund.requestedAt && (
+                                    <div style={{ fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif', marginTop: '4px' }}>
+                                        تاريخ الطلب: {new Date(existingRefund.requestedAt).toLocaleDateString('ar-EG')}
+                                    </div>
+                                )}
                             </div>
                             <button style={{ ...styles.btnCancelRefund, width: '100%', marginTop: '16px' }} onClick={onClose}>إغلاق</button>
                         </div>
 
+                    /* success */
                     ) : success ? (
                         <div style={styles.successState}>
                             <div style={styles.successIcon}>✅</div>
@@ -331,14 +374,43 @@ const RefundModal = ({ course, onClose, getToken }) => {
                             <button style={styles.btnCloseSuccess} onClick={onClose}>حسناً، شكراً</button>
                         </div>
 
+                    /* form */
                     ) : (
                         <>
+                            {/* ── بانر سياسة الاسترداد ── */}
+                            {(() => {
+                                const policy = getRefundPolicy(course.date, course.cost || 0);
+                                if (policy.type === 'blocked') return (
+                                    <div style={{ ...styles.policyBox, backgroundColor: '#ffebee', border: '1px solid #ef9a9a', color: '#c62828' }}>
+                                        <span style={{ fontSize: '18px', flexShrink: 0 }}>🚫</span>
+                                        <span>عذراً، لا يمكن طلب الاسترداد. تبقى أقل من يومين على بدء الكورس ({policy.daysLeft} يوم).</span>
+                                    </div>
+                                );
+                                if (policy.type === 'partial') return (
+                                    <div style={{ ...styles.policyBox, backgroundColor: '#fff8e1', border: '1px solid #ffe082', color: '#795548' }}>
+                                        <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
+                                        <span>تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس — سيُخصم 25% وستسترد <strong>{policy.refundAmount} جنيه</strong> فقط.</span>
+                                    </div>
+                                );
+                                if (policy.type === 'full') return (
+                                    <div style={{ ...styles.policyBox, backgroundColor: '#f0fff4', border: '1px solid #a7f3d0', color: '#1a7a3c' }}>
+                                        <span style={{ fontSize: '18px', flexShrink: 0 }}>✅</span>
+                                        <span>مؤهل لاسترداد كامل — تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس.</span>
+                                    </div>
+                                );
+                                return null;
+                            })()}
                             <div style={styles.refundInfoBox}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2"
+                                    strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}>
+                                    <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                                 <p style={styles.refundInfoText}>سيتم مراجعة طلبك من قِبل الإدارة خلال 3-5 أيام عمل.</p>
                             </div>
 
-                            <label style={styles.formLabel}>سبب طلب الاسترداد <span style={{ color: '#e53935' }}>*</span></label>
+                            <label style={styles.formLabel}>
+                                سبب طلب الاسترداد <span style={{ color: '#e53935' }}>*</span>
+                            </label>
                             <textarea
                                 style={styles.refundTextarea}
                                 placeholder="يرجى توضيح سبب رغبتك في استرداد المبلغ..."
@@ -350,7 +422,9 @@ const RefundModal = ({ course, onClose, getToken }) => {
                             <div style={styles.charCount}>{refundReason.length} / 500</div>
 
                             <div style={{ borderTop: '1px dashed #e0e0e0', paddingTop: '12px', marginBottom: '4px' }}>
-                                <p style={{ fontSize: '12px', color: '#888', marginBottom: '10px', fontFamily: '"Droid Arabic Kufi", serif' }}>بيانات بنكية (اختياري)</p>
+                                <p style={{ fontSize: '12px', color: '#888', marginBottom: '10px', fontFamily: '"Droid Arabic Kufi", serif' }}>
+                                    بيانات بنكية (اختياري)
+                                </p>
                                 <label style={styles.formLabel}>اسم البنك</label>
                                 <input style={styles.formInput} type="text" placeholder="مثال: بنك مصر" value={bankName} onChange={e => setBankName(e.target.value)} maxLength={100} />
                                 <label style={styles.formLabel}>رقم الـ IBAN أو الحساب</label>
@@ -359,7 +433,10 @@ const RefundModal = ({ course, onClose, getToken }) => {
 
                             {error && (
                                 <div style={styles.errorBox}>
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53935" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53935" strokeWidth="2"
+                                        strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                        <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                     <span>{error}</span>
                                 </div>
                             )}
@@ -367,13 +444,15 @@ const RefundModal = ({ course, onClose, getToken }) => {
                             <div style={styles.modalActions}>
                                 <button style={styles.btnCancelRefund} onClick={onClose}>إلغاء</button>
                                 <button
-                                    style={{ ...styles.btnSubmitRefund, ...(submitting ? { opacity: 0.7, cursor: 'not-allowed' } : {}) }}
+                                    style={{ ...styles.btnSubmitRefund, ...((submitting || getRefundPolicy(course.date, course.cost || 0).type === 'blocked') ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }}
                                     onClick={handleSubmit}
-                                    disabled={submitting}
+                                    disabled={submitting || getRefundPolicy(course.date, course.cost || 0).type === 'blocked'}
                                 >
                                     {submitting ? (
                                         <>
-                                            <svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }}
+                                                fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"
+                                                strokeLinecap="round" strokeLinejoin="round">
                                                 <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                             </svg>
                                             جاري الإرسال...
@@ -395,23 +474,22 @@ const CoursesPage = () => {
     const { slug } = useParams();
     const { getToken, isSignedIn, userId } = useAuth();
 
-    const [programData, setProgramData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [addingToCart, setAddingToCart] = useState(null);
-    const [toast, setToast] = useState(null);
-    const [hoveredCard, setHoveredCard] = useState(null);
-    const [hoveredAddBtn, setHoveredAddBtn] = useState(null);
+    const [programData, setProgramData]       = useState(null);
+    const [loading, setLoading]               = useState(true);
+    const [error, setError]                   = useState(null);
+    const [addingToCart, setAddingToCart]     = useState(null);
+    const [toast, setToast]                   = useState(null);
+    const [hoveredCard, setHoveredCard]       = useState(null);
+    const [hoveredAddBtn, setHoveredAddBtn]   = useState(null);
     const [hoveredDetailsBtn, setHoveredDetailsBtn] = useState(null);
-    const [hoveredRefundBtn, setHoveredRefundBtn] = useState(null);
+    const [hoveredRefundBtn, setHoveredRefundBtn]   = useState(null);
     const [hoveredHeaderCard, setHoveredHeaderCard] = useState(null);
-    const [refundCourse, setRefundCourse] = useState(null);
+    const [refundCourse, setRefundCourse]     = useState(null);
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
-    const [certificates, setCertificates] = useState({});
+    const [certificates, setCertificates]     = useState({});
 
     const showToast = (message, type = 'success') => setToast({ message, type });
 
-    // ── safe token getter ────────────────────────────────────────────────────
     const safeGetToken = useCallback(async () => {
         try { return await getToken(); } catch (_) { return null; }
     }, [getToken]);
@@ -441,7 +519,7 @@ const CoursesPage = () => {
             const map = {};
             (Array.isArray(data) ? data : []).forEach(c => { if (c.courseId) map[c.courseId] = c; });
             setCertificates(map);
-        } catch { /* optional */ }
+        } catch { }
     }, [isSignedIn, safeGetToken, userId]);
 
     useEffect(() => { fetchOwnedCourses(); }, [fetchOwnedCourses]);
@@ -508,7 +586,7 @@ const CoursesPage = () => {
         finally { setAddingToCart(null); }
     };
 
-    // ── loading / error states ────────────────────────────────────────────────
+    // ── loading ───────────────────────────────────────────────────────────────
     if (loading) return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
@@ -530,6 +608,7 @@ const CoursesPage = () => {
         </>
     );
 
+    // ── error ─────────────────────────────────────────────────────────────────
     if (error) return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
@@ -550,7 +629,6 @@ const CoursesPage = () => {
             <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-                {/* refund modal — passes safeGetToken wrapper */}
                 {refundCourse && (
                     <RefundModal
                         course={refundCourse}
@@ -583,10 +661,10 @@ const CoursesPage = () => {
                     ) : (
                         <div style={styles.grid} className="grid">
                             {courses.map((course) => {
-                                const isFree = !course.cost || course.cost === 0;
-                                const isOwned = ownedCourseIds.has(course.id);
-                                const isAdding = addingToCart === course.id;
-                                const currentPrice = course.cost;
+                                const isFree    = !course.cost || course.cost === 0;
+                                const isOwned   = ownedCourseIds.has(course.id);
+                                const isAdding  = addingToCart === course.id;
+                                const currentPrice  = course.cost;
                                 const originalPrice = course.cost ? course.cost / 0.6 : null;
                                 const cert = certificates[course.id] || null;
 

@@ -129,41 +129,47 @@ const S = {
     successText: { fontSize: '14px', color: '#555', lineHeight: '1.6', marginBottom: '20px' },
     btnDone: { padding: '11px 36px', background: 'linear-gradient(135deg,#1a7a3c 0%,#27ae60 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif' },
     statusBadge: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi",serif' },
+    policyBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi",serif' },
+    // ✅ جديد: enroll feedback banner
+    enrollMsgBox: { padding: '12px 16px', borderRadius: '10px', fontSize: '14px', fontFamily: '"Droid Arabic Kufi",serif', lineHeight: '1.6', marginBottom: '12px', display: 'flex', alignItems: 'flex-start', gap: '8px' },
 };
 
 const REFUND_STATUS_MAP = {
-    Pending: { label: 'قيد المراجعة', bg: '#fff8e1', color: '#f59e0b', icon: '⏳' },
+    Pending:  { label: 'قيد المراجعة', bg: '#fff8e1', color: '#f59e0b', icon: '⏳' },
     Approved: { label: 'تمت الموافقة', bg: '#e3f2fd', color: '#0865a8', icon: '✅' },
-    Rejected: { label: 'مرفوض', bg: '#ffebee', color: '#e53935', icon: '❌' },
-    Sent: { label: 'تم التحويل', bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
+    Rejected: { label: 'مرفوض',        bg: '#ffebee', color: '#e53935', icon: '❌' },
+    Sent:     { label: 'تم التحويل',   bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
 };
 
-// ── helper: parse any server error into a readable Arabic string ──────────────
+function getRefundPolicy(courseDateStr, coursePrice) {
+    if (!courseDateStr) return { type: 'unknown' };
+    const raw = courseDateStr.split(' - ')[0].trim();
+    let startDate = null;
+    const parts = raw.split(/[\/\-]/);
+    if (parts.length === 3) {
+        if (parts[0].length === 4) startDate = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+        else startDate = new Date(+parts[2], +parts[1] - 1, +parts[0]);
+    }
+    if (!startDate || isNaN(startDate.getTime())) return { type: 'unknown' };
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    startDate.setHours(0, 0, 0, 0);
+    const daysLeft = Math.round((startDate - today) / (1000 * 60 * 60 * 24));
+    if (daysLeft < 2)  return { type: 'blocked', daysLeft };
+    if (daysLeft <= 7) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
+    return { type: 'full', daysLeft };
+}
+
 async function parseServerError(res) {
     const status = res.status;
     let body = '';
-    try { body = await res.text(); } catch (_) { /* ignore */ }
-
-    // try JSON first
+    try { body = await res.text(); } catch (_) { }
     try {
         const j = JSON.parse(body);
         const msg = j.message || j.Message || j.error || j.Error || j.title || j.Title;
         if (msg) return `${msg} (${status})`;
-    } catch (_) { /* not json */ }
-
-    // plain text
-    if (body && body.length < 300 && !body.trim().startsWith('<'))
-        return `${body.trim()} (${status})`;
-
-    const defaults = {
-        400: 'بيانات الطلب غير صحيحة (400)',
-        401: 'غير مصرح — يرجى تسجيل الدخول مجدداً (401)',
-        403: 'ليس لديك صلاحية تنفيذ هذا الإجراء (403)',
-        404: 'الطلب غير موجود أو الخدمة غير متاحة (404)',
-        409: 'لديك طلب استرداد قيد المراجعة بالفعل',
-        422: 'البيانات المدخلة غير مقبولة (422)',
-        500: 'خطأ في الخادم، يرجى المحاولة لاحقاً (500)',
-    };
+    } catch (_) { }
+    if (body && body.length < 300 && !body.trim().startsWith('<')) return `${body.trim()} (${status})`;
+    const defaults = { 400: 'بيانات الطلب غير صحيحة (400)', 401: 'غير مصرح — يرجى تسجيل الدخول مجدداً (401)', 403: 'ليس لديك صلاحية تنفيذ هذا الإجراء (403)', 404: 'الطلب غير موجود أو الخدمة غير متاحة (404)', 409: 'لديك طلب استرداد قيد المراجعة بالفعل', 422: 'البيانات المدخلة غير مقبولة (422)', 500: 'خطأ في الخادم، يرجى المحاولة لاحقاً (500)' };
     return defaults[status] || `حدث خطأ غير متوقع (${status})`;
 }
 
@@ -172,31 +178,32 @@ const CourseDetails = () => {
     const navigate = useNavigate();
     const { getToken, isSignedIn, userId } = useAuth();
 
-    const [course, setCourse] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [course, setCourse]             = useState(null);
+    const [loading, setLoading]           = useState(true);
+    const [error, setError]               = useState(null);
     const [otherCourses, setOtherCourses] = useState([]);
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
     const [certificates, setCertificates] = useState({});
 
+    // ✅ حالة التسجيل المجاني
+    const [enrolling, setEnrolling]       = useState(false);
+    const [enrollMsg, setEnrollMsg]       = useState(null); // { type: 'success'|'error'|'info', text }
+
     // refund state
-    const [showRefund, setShowRefund] = useState(false);
-    const [refundReason, setRefundReason] = useState('');
-    const [bankName, setBankName] = useState('');
-    const [iban, setIban] = useState('');
-    const [refundSending, setRefundSending] = useState(false);
-    const [refundSuccess, setRefundSuccess] = useState(false);
-    const [refundError, setRefundError] = useState(null);
-    const [existingRefund, setExistingRefund] = useState(null);
+    const [showRefund, setShowRefund]               = useState(false);
+    const [refundReason, setRefundReason]           = useState('');
+    const [bankName, setBankName]                   = useState('');
+    const [iban, setIban]                           = useState('');
+    const [refundSending, setRefundSending]         = useState(false);
+    const [refundSuccess, setRefundSuccess]         = useState(false);
+    const [refundError, setRefundError]             = useState(null);
+    const [existingRefund, setExistingRefund]       = useState(null);
     const [loadingRefundCheck, setLoadingRefundCheck] = useState(false);
 
-    // ── safe token getter ────────────────────────────────────────────────────
     const safeGetToken = useCallback(async () => {
-        try { return await getToken(); }
-        catch (_) { return null; }
+        try { return await getToken(); } catch (_) { return null; }
     }, [getToken]);
 
-    // ── ownership ────────────────────────────────────────────────────────────
     const fetchOwnedCourses = useCallback(async () => {
         if (!isSignedIn) { setOwnedCourseIds(new Set()); return; }
         try {
@@ -209,7 +216,6 @@ const CourseDetails = () => {
         } catch { setOwnedCourseIds(new Set()); }
     }, [isSignedIn, safeGetToken]);
 
-    // ── certificates ─────────────────────────────────────────────────────────
     const fetchCertificates = useCallback(async () => {
         if (!isSignedIn || !userId) return;
         try {
@@ -221,7 +227,7 @@ const CourseDetails = () => {
             const map = {};
             (Array.isArray(data) ? data : []).forEach(c => { if (c.courseId) map[c.courseId] = c; });
             setCertificates(map);
-        } catch { /* optional */ }
+        } catch { }
     }, [isSignedIn, safeGetToken, userId]);
 
     useEffect(() => { fetchOwnedCourses(); }, [fetchOwnedCourses]);
@@ -236,7 +242,6 @@ const CourseDetails = () => {
         };
     }, [fetchOwnedCourses]);
 
-    // ── check existing refund ────────────────────────────────────────────────
     const checkExistingRefund = useCallback(async (courseId) => {
         if (!isSignedIn) return;
         setLoadingRefundCheck(true);
@@ -244,19 +249,14 @@ const CourseDetails = () => {
             const token = await safeGetToken();
             if (!token) return;
             const res = await fetch(`${API_BASE}/refund/my`, { headers: { Authorization: `Bearer ${token}` } });
-            // 404 just means no refunds yet — treat as empty
             if (res.status === 404 || res.status === 204) { setExistingRefund(null); return; }
             if (!res.ok) { setExistingRefund(null); return; }
             const data = await res.json();
             const list = Array.isArray(data) ? data : (data?.data ?? data?.items ?? data?.result ?? []);
-            // coerce both sides to string to avoid number/string mismatch
             const cid = String(courseId);
             const match = list.find(r =>
-                String(r.planworkId ?? '') === cid ||
-                String(r.planWorkId ?? '') === cid ||
-                String(r.PlanworkId ?? '') === cid ||
-                String(r.courseId ?? '') === cid ||
-                String(r.CourseId ?? '') === cid
+                (String(r.planworkId ?? r.planWorkId ?? r.PlanworkId ?? '') === cid) &&
+                (r.status === 'Pending' || r.status === 'Approved')
             );
             setExistingRefund(match || null);
         } catch {
@@ -266,7 +266,6 @@ const CourseDetails = () => {
         }
     }, [isSignedIn, safeGetToken]);
 
-    // ── HTML helpers ─────────────────────────────────────────────────────────
     const extractList = (html, heading) => {
         if (!html) return [];
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -292,19 +291,13 @@ const CourseDetails = () => {
         const { startDate, endDate } = extractDates(a.date);
         const isFree = !a.cost || a.cost === 0;
         return {
-            id: a.id,
-            slug: a.slug,
-            title: a.title,
-            description: a.description,
-            place: a.place,
-            price: a.cost || 0,
+            id: a.id, slug: a.slug, title: a.title, description: a.description,
+            place: a.place, price: a.cost || 0,
             originalPrice: a.onSale || (a.cost ? a.cost * 1.6 : 0),
-            currency: 'جنيه',
-            isFree,
+            currency: 'جنيه', isFree,
             duration: 26, videoDuration: 26,
             articlesCount: a.files?.length || 12,
-            hasCertificate: true,
-            language: 'العربية', level: 'مبتدئ',
+            hasCertificate: true, language: 'العربية', level: 'مبتدئ',
             topics: extractList(a.content, 'محتويات البرنامج'),
             objectives: extractList(a.content, 'فائدة حضور البرنامج'),
             prerequisites: extractList(a.content, 'لمن يعقد البرنامج'),
@@ -320,7 +313,6 @@ const CourseDetails = () => {
         };
     };
 
-    // ── load course ──────────────────────────────────────────────────────────
     useEffect(() => {
         if (!slug) return;
         (async () => {
@@ -346,9 +338,8 @@ const CourseDetails = () => {
     }, [course]);
 
     const isOwned = course ? ownedCourseIds.has(course.id) : false;
-    const cert = course ? (certificates[course.id] || null) : null;
+    const cert    = course ? (certificates[course.id] || null) : null;
 
-    // ── cart ─────────────────────────────────────────────────────────────────
     const addToCart = async (buyNow = false) => {
         if (!course) return;
         try {
@@ -360,7 +351,7 @@ const CourseDetails = () => {
                     body: JSON.stringify({ courseId: course.id, quantity: 1 }),
                 });
             }
-        } catch { /* best effort */ }
+        } catch { }
         const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
         if (!cart.some(i => i.id === course.id)) {
             cart.push({ id: course.id, slug: course.slug, title: course.title, instructor: course.place || 'غير محدد', image: course.image, currentPrice: course.price || 0, originalPrice: course.originalPrice || 0, quantity: 1 });
@@ -370,87 +361,85 @@ const CourseDetails = () => {
         navigate(buyNow ? '/checkout' : '/cart');
     };
 
-    const handleEnroll = () => {
+    // ✅ handleEnroll — بقى API call حقيقي بدل localStorage
+    const handleEnroll = async () => {
         if (!course) return;
-        const existing = JSON.parse(localStorage.getItem('enrolledCourses') || '[]');
-        if (!existing.some(e => String(e.id) === String(course.id))) {
-            existing.push({ id: course.id, slug: course.slug, title: course.title, place: course.place || '', instructor: course.place || 'غير محدد', date: course.date || '', image: course.image, currentPrice: 0, progress: 0 });
-            localStorage.setItem('enrolledCourses', JSON.stringify(existing));
-            window.dispatchEvent(new Event('enrollUpdated'));
+
+        // لو مش مسجل دخول → وجّهه لصفحة تسجيل الدخول
+        if (!isSignedIn) {
+            navigate('/sign-in');
+            return;
         }
-        navigate('/my-courses');
+
+        setEnrolling(true);
+        setEnrollMsg(null);
+
+        try {
+            const token = await safeGetToken();
+            if (!token) {
+                setEnrollMsg({ type: 'error', text: 'يجب تسجيل الدخول أولاً.' });
+                return;
+            }
+
+            const res = await fetch(`${API_BASE}/course/enroll-free/${course.id}`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                setEnrollMsg({ type: 'error', text: data?.message || 'حدث خطأ، حاول مرة أخرى.' });
+                return;
+            }
+
+            if (data.alreadyEnrolled) {
+                setEnrollMsg({ type: 'info', text: '✅ أنت مسجل في هذا الكورس بالفعل.' });
+            } else {
+                setEnrollMsg({ type: 'success', text: '🎉 تم تسجيلك بنجاح! يمكنك الآن متابعة الكورس من دوراتك.' });
+            }
+
+            // ✅ حدّث قائمة الكورسات المملوكة فوراً بدون reload
+            await fetchOwnedCourses();
+            window.dispatchEvent(new Event('enrollUpdated'));
+
+        } catch (err) {
+            setEnrollMsg({ type: 'error', text: err.message || 'حدث خطأ، حاول مرة أخرى.' });
+        } finally {
+            setEnrolling(false);
+        }
     };
 
     const openRefund = () => {
-        setShowRefund(true);
-        setRefundError(null);
-        setRefundSuccess(false);
-        setExistingRefund(null);
+        setShowRefund(true); setRefundError(null);
+        setRefundSuccess(false); setExistingRefund(null);
         if (course) checkExistingRefund(course.id);
     };
 
-    // ── submit refund ────────────────────────────────────────────────────────
     const submitRefund = async () => {
         if (!refundReason.trim()) { setRefundError('الرجاء كتابة سبب طلب الاسترداد'); return; }
         setRefundSending(true); setRefundError(null);
         try {
             const token = await safeGetToken();
-            if (!token) { setRefundError('يجب تسجيل الدخول أولاً'); return; }
-
-            // ── KEY FIX: look up the enrollment record to get the real planWorkId ──
-            // The backend refund endpoint needs the ENROLLMENT row ID, not the course ID.
-            // GET /course/my-courses returns objects with .id = the planWorkId
-            let planWorkId = course.id; // fallback
+            if (!token) { setRefundError('يجب تسجيل الدخول أولاً'); setRefundSending(false); return; }
+            let planworkId = course.id;
+            let orderId    = null;
             try {
-                const myCoursesRes = await fetch(`${API_BASE}/course/my-courses`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const myCoursesRes = await fetch(`${API_BASE}/course/my-courses`, { headers: { Authorization: `Bearer ${token}` } });
                 if (myCoursesRes.ok) {
                     const myList = await myCoursesRes.json();
-                    const cid = String(course.id);
-                    const enrollment = myList.find(e =>
-                        String(e.childId) === cid ||
-                        String(e.courseId) === cid ||
-                        String(e.CourseId) === cid ||
-                        String(e.planWorkId) === cid ||
-                        String(e.planworkId) === cid
-                    );
-                    if (enrollment) {
-                        // enrollment.id IS the planWorkId the backend expects
-                        planWorkId = enrollment.id ?? enrollment.planWorkId ?? enrollment.planworkId ?? course.id;
-                    }
+                    const enrollment = myList.find(e => String(e.childId) === String(course.id));
+                    if (enrollment) { planworkId = enrollment.childId ?? course.id; orderId = enrollment.orderId ?? null; }
                 }
-            } catch { /* use fallback */ }
-
-            const payload = {
-                planworkId: planWorkId,
-                planWorkId: planWorkId,
-                PlanworkId: planWorkId,
-                courseId: course.id,
-                CourseId: course.id,
-                courseTitle: course.title,
-                reason: refundReason.trim(),
-                bankName: bankName.trim() || null,
-                iban: iban.trim() || null,
-                requestedAt: new Date().toISOString(),
-            };
-
-            const res = await fetch(`${API_BASE}/refund`, {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (res.status === 409) {
-                setRefundError('لديك طلب استرداد قيد المراجعة بالفعل لهذه الدورة');
-                return;
-            }
-
-            if (!res.ok) {
-                setRefundError(await parseServerError(res));
-                return;
-            }
-
+            } catch { }
+            if (!orderId) { setRefundError('لم يتم العثور على بيانات الطلب الأصلي. يرجى التواصل مع الدعم.'); setRefundSending(false); return; }
+            const payload = { orderId, planworkId, reason: refundReason.trim(), details: null, bankName: bankName.trim() || null, accountNumber: null, accountHolder: null, iban: iban.trim() || null };
+            const res = await fetch(`${API_BASE}/refund`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (res.status === 409) { setRefundError('لديك طلب استرداد قيد المراجعة بالفعل لهذه الدورة'); return; }
+            if (!res.ok) { setRefundError(await parseServerError(res)); return; }
             setRefundSuccess(true);
             setRefundReason(''); setBankName(''); setIban('');
         } catch (err) {
@@ -461,8 +450,7 @@ const CourseDetails = () => {
     };
 
     const closeRefund = () => {
-        setShowRefund(false);
-        setRefundReason(''); setBankName(''); setIban('');
+        setShowRefund(false); setRefundReason(''); setBankName(''); setIban('');
         setRefundError(null); setRefundSuccess(false); setExistingRefund(null);
     };
 
@@ -473,6 +461,7 @@ const CourseDetails = () => {
             : 'linear-gradient(135deg,#0865a8 0%,#f57c00 100%)';
 
     const font = '"Droid Arabic Kufi",serif';
+    const statusInfo = existingRefund ? REFUND_STATUS_MAP[existingRefund.status] : null;
 
     if (loading) return (
         <>
@@ -515,8 +504,6 @@ const CourseDetails = () => {
         </>
     );
 
-    const statusInfo = existingRefund ? REFUND_STATUS_MAP[existingRefund.status] : null;
-
     return (
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
@@ -524,7 +511,6 @@ const CourseDetails = () => {
 
             <div dir="rtl" style={S.pageWrapper}>
 
-                {/* Breadcrumb */}
                 <div style={{ ...S.overviewBar, top: 70 }} className="overview-bar">
                     <div style={S.overviewBarText} className="breadcrumb-text">
                         <a href="/" style={S.breadcrumbLink}
@@ -535,7 +521,6 @@ const CourseDetails = () => {
                     </div>
                 </div>
 
-                {/* Hero */}
                 <div style={{ ...S.heroSection, background: heroBg }}>
                     <div style={S.heroContainer}>
                         <div style={S.heroContent}>
@@ -561,11 +546,9 @@ const CourseDetails = () => {
                     </div>
                 </div>
 
-                {/* Body */}
                 <div style={S.mainContainer} className="main-container">
                     <div style={S.contentWrapper} className="content-wrapper">
 
-                        {/* LEFT */}
                         <div style={S.leftContent}>
                             {course.topics.length > 0 && (
                                 <div style={S.section}>
@@ -580,7 +563,6 @@ const CourseDetails = () => {
                                     </div>
                                 </div>
                             )}
-
                             {course.objectives.length > 0 && (
                                 <div style={S.section}>
                                     <h2 style={S.sectionHeading}>فائدة حضور البرنامج</h2>
@@ -594,14 +576,12 @@ const CourseDetails = () => {
                                     </div>
                                 </div>
                             )}
-
                             {course.prerequisites.length > 0 && (
                                 <div style={S.section}>
                                     <h2 style={S.sectionHeading}>لمن يعقد البرنامج</h2>
                                     <ul style={S.prereqList}>{course.prerequisites.map((p, i) => <li key={i}>{p}</li>)}</ul>
                                 </div>
                             )}
-
                             {course.implementationMethods.length > 0 && (
                                 <div style={S.section}>
                                     <h2 style={S.sectionHeading}>طريقة تنفيذ البرنامج</h2>
@@ -615,7 +595,6 @@ const CourseDetails = () => {
                                     </div>
                                 </div>
                             )}
-
                             {course.programDates.length > 0 && (
                                 <div style={S.section}>
                                     <h2 style={S.sectionHeading}>تاريخ انعقاد البرنامج</h2>
@@ -629,7 +608,6 @@ const CourseDetails = () => {
                                     </div>
                                 </div>
                             )}
-
                             {course.files.length > 0 && (
                                 <div style={S.section}>
                                     <h2 style={S.sectionHeading}>الملفات المرفقة</h2>
@@ -683,6 +661,7 @@ const CourseDetails = () => {
                                             </>
                                         )}
                                     </div>
+
                                     <div style={S.actionBtns}>
                                         {isOwned ? (
                                             <>
@@ -699,7 +678,27 @@ const CourseDetails = () => {
                                                 )}
                                             </>
                                         ) : course.isFree ? (
-                                            <button className="btnEnroll" style={S.btnEnroll} onClick={handleEnroll}>اشترك الآن</button>
+                                            // ✅ زر اشترك الآن مع feedback
+                                            <>
+                                                {enrollMsg && (
+                                                    <div style={{
+                                                        ...S.enrollMsgBox,
+                                                        backgroundColor: enrollMsg.type === 'success' ? '#e8f5e9' : enrollMsg.type === 'info' ? '#e3f2fd' : '#ffebee',
+                                                        border: `1px solid ${enrollMsg.type === 'success' ? '#4caf50' : enrollMsg.type === 'info' ? '#2196f3' : '#f44336'}`,
+                                                        color: enrollMsg.type === 'success' ? '#2e7d32' : enrollMsg.type === 'info' ? '#1565c0' : '#c62828',
+                                                    }}>
+                                                        {enrollMsg.text}
+                                                    </div>
+                                                )}
+                                                <button
+                                                    className="btnEnroll"
+                                                    style={{ ...S.btnEnroll, opacity: enrolling ? 0.7 : 1, cursor: enrolling ? 'not-allowed' : 'pointer' }}
+                                                    onClick={handleEnroll}
+                                                    disabled={enrolling}
+                                                >
+                                                    {enrolling ? '⏳ جاري التسجيل...' : '🎁 اشترك الآن — مجاناً'}
+                                                </button>
+                                            </>
                                         ) : (
                                             <>
                                                 <button className="btnAddCart" style={S.btnAddCart} onClick={() => addToCart(false)}>إضافة إلى السلة</button>
@@ -707,6 +706,7 @@ const CourseDetails = () => {
                                             </>
                                         )}
                                     </div>
+
                                     <div style={S.includesSec}>
                                         <h3 style={S.includesTitle}>هذه الدورة تتضمن:</h3>
                                         <ul style={S.includesList}>
@@ -742,7 +742,7 @@ const CourseDetails = () => {
                 </div>
             </div>
 
-            {/* ── REFUND MODAL ── */}
+            {/* REFUND MODAL */}
             {showRefund && (
                 <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) closeRefund(); }}>
                     <div style={S.modalCard} dir="rtl">
@@ -759,7 +759,9 @@ const CourseDetails = () => {
                         <div style={S.modalBody}>
                             {loadingRefundCheck ? (
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '160px' }}>
-                                    <svg style={{ width: '40px', height: '40px', color: '#0865a8', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    <svg style={{ width: '40px', height: '40px', color: '#0865a8', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                                        <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
                                 </div>
                             ) : existingRefund && !refundSuccess ? (
                                 <div style={{ textAlign: 'center', padding: '10px 0' }}>
@@ -771,7 +773,6 @@ const CourseDetails = () => {
                                             <div><strong style={{ display: 'block', marginBottom: '4px' }}>سبب الرفض:</strong>{existingRefund.rejectionReason}</div>
                                         </div>
                                     )}
-                                    {existingRefund.status === 'Sent' && <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.7', fontFamily: '"Droid Arabic Kufi",serif', marginBottom: '20px' }}>تم تحويل المبلغ بنجاح.</p>}
                                     {existingRefund.status === 'Pending' && <p style={{ fontSize: '14px', color: '#555', lineHeight: '1.7', fontFamily: '"Droid Arabic Kufi",serif', marginBottom: '20px' }}>طلبك قيد المراجعة. سنتواصل معك خلال 3-5 أيام عمل.</p>}
                                     <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '16px', marginTop: '8px', textAlign: 'right' }}>
                                         <div style={{ fontSize: '13px', color: '#888', fontFamily: '"Droid Arabic Kufi",serif' }}>رقم الطلب: <strong style={{ color: '#0865a8' }}>{existingRefund.refNumber || `#${existingRefund.id}`}</strong></div>
@@ -788,6 +789,28 @@ const CourseDetails = () => {
                                 </div>
                             ) : (
                                 <>
+                                    {(() => {
+                                        const policy = getRefundPolicy(course.date, course.price);
+                                        if (policy.type === 'blocked') return (
+                                            <div style={{ ...S.policyBox, backgroundColor: '#ffebee', border: '1px solid #ef9a9a', color: '#c62828' }}>
+                                                <span style={{ fontSize: '18px', flexShrink: 0 }}>🚫</span>
+                                                <span>عذراً، لا يمكن طلب الاسترداد. تبقى أقل من يومين على بدء الكورس ({policy.daysLeft} يوم).</span>
+                                            </div>
+                                        );
+                                        if (policy.type === 'partial') return (
+                                            <div style={{ ...S.policyBox, backgroundColor: '#fff8e1', border: '1px solid #ffe082', color: '#795548' }}>
+                                                <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
+                                                <span>تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس — سيُخصم 25% وستسترد <strong>{policy.refundAmount} جنيه</strong> فقط.</span>
+                                            </div>
+                                        );
+                                        if (policy.type === 'full') return (
+                                            <div style={{ ...S.policyBox, backgroundColor: '#f0fff4', border: '1px solid #a7f3d0', color: '#1a7a3c' }}>
+                                                <span style={{ fontSize: '18px', flexShrink: 0 }}>✅</span>
+                                                <span>مؤهل لاسترداد كامل — تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس.</span>
+                                            </div>
+                                        );
+                                        return null;
+                                    })()}
                                     <div style={S.infoBox}>
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <p style={S.infoBoxText}>سيتم مراجعة طلبك من قِبل الإدارة خلال 3-5 أيام عمل.</p>
@@ -814,9 +837,9 @@ const CourseDetails = () => {
                                     <div style={S.modalActions}>
                                         <button style={S.btnCancel} onClick={closeRefund}>إلغاء</button>
                                         <button
-                                            style={{ ...S.btnSubmit, ...(refundSending ? { opacity: 0.7, cursor: 'not-allowed' } : {}) }}
+                                            style={{ ...S.btnSubmit, ...((refundSending || getRefundPolicy(course.date, course.price).type === 'blocked') ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }}
                                             onClick={submitRefund}
-                                            disabled={refundSending}>
+                                            disabled={refundSending || getRefundPolicy(course.date, course.price).type === 'blocked'}>
                                             {refundSending
                                                 ? <><svg style={{ width: '18px', height: '18px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>جاري الإرسال...</>
                                                 : 'إرسال الطلب'}
