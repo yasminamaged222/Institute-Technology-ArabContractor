@@ -77,7 +77,7 @@ namespace Institute.Application.Services
             {
                 Id = p.ChildId,
                 ServiceTitle = p.ServiceTitle,
-                Category = p.MainFlag == true ? "Main" : "Other", // example
+                Category = p.MainFlag == true ? "Main" : "Other", // example 
                 UsersCount = p.Enrollments.Count,
                 Users = p.Enrollments.Select(e => new UserEnrollmentDto
                 {
