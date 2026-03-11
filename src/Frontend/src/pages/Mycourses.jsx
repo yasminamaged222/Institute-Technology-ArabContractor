@@ -5,13 +5,6 @@ import { Button } from '@mui/material';
 
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
-// ─── Progress bar ─────────────────────────────────────────────────────────────
-const ProgressBar = ({ value }) => (
-    <div style={styles.progressTrack}>
-        <div style={{ ...styles.progressFill, width: `${value}%` }} />
-    </div>
-);
-
 const BookIcon = () => (
     <svg width="48" height="48" fill="none" stroke="#ffffff" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
@@ -28,13 +21,13 @@ const MyCourses = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [tab, setTab] = useState('all');
     const [hoveredCard, setHoveredCard] = useState(null);
     const [search, setSearch] = useState('');
+    const [certificates, setCertificates] = useState({});
 
     const userName = user?.firstName || user?.fullName?.split(' ')[0] || '';
 
-    // ── Fetch enrollments from API ────────────────────────────────────────────
+    // ── Fetch enrollments ─────────────────────────────────────────────────────
     const fetchMyCourses = useCallback(async () => {
         if (!isSignedIn) return;
         setLoading(true);
@@ -46,8 +39,6 @@ const MyCourses = () => {
             });
             if (!res.ok) throw new Error('فشل تحميل الدورات');
             const data = await res.json();
-
-            // map API response to our card format
             const mapped = data.map(e => ({
                 id: e.childId,
                 slug: e.slug || '',
@@ -56,8 +47,7 @@ const MyCourses = () => {
                 instructor: e.coursePlace || e.place || 'غير محدد',
                 date: e.courseDate || e.date || '',
                 enrolledAt: e.enrolledAt || '',
-                progress: 0,
-                _type: 'purchased', // كل الكورسات اللي جاية من الـ DB هي مدفوعة أو مسجلة
+                _type: 'purchased',
             }));
             setCourses(mapped);
         } catch (err) {
@@ -67,11 +57,27 @@ const MyCourses = () => {
         }
     }, [isSignedIn, getToken]);
 
-    useEffect(() => {
-        fetchMyCourses();
-    }, [fetchMyCourses]);
+    // ── Fetch certificates ────────────────────────────────────────────────────
+    const fetchCertificates = useCallback(async () => {
+        if (!isSignedIn || !user) return;
+        try {
+            const token = await getToken();
+            const res = await fetch(`${API_BASE}/admin/certificates/user/${user.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            const map = {};
+            (Array.isArray(data) ? data : []).forEach(c => {
+                if (c.courseId) map[c.courseId] = c;
+            });
+            setCertificates(map);
+        } catch { /* certs are optional — fail silently */ }
+    }, [isSignedIn, getToken, user]);
 
-    // ── Derived / filtered list ───────────────────────────────────────────────
+    useEffect(() => { fetchMyCourses(); }, [fetchMyCourses]);
+    useEffect(() => { fetchCertificates(); }, [fetchCertificates]);
+
     const filtered = courses.filter(c =>
         search.trim() === '' ||
         (c.title || '').toLowerCase().includes(search.toLowerCase())
@@ -80,6 +86,7 @@ const MyCourses = () => {
     const stats = [
         { label: 'إجمالي الدورات', value: courses.length, icon: '📚' },
         { label: 'الدورات المسجلة', value: courses.length, icon: '🎓' },
+        { label: 'الشهادات', value: Object.keys(certificates).length, icon: '📜' },
     ];
 
     const breadcrumb = (
@@ -100,11 +107,9 @@ const MyCourses = () => {
         <>
             <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
             <style>{css}</style>
-
             <div dir="rtl" style={styles.page}>
                 {breadcrumb}
 
-                {/* ── NOT LOGGED IN ── */}
                 <SignedOut>
                     <div style={styles.authGate}>
                         <div style={styles.authGateCard}>
@@ -128,7 +133,6 @@ const MyCourses = () => {
                     </div>
                 </SignedOut>
 
-                {/* ── LOGGED IN ── */}
                 <SignedIn>
                     {/* Hero */}
                     <div style={styles.hero} className="mc-hero">
@@ -159,7 +163,6 @@ const MyCourses = () => {
 
                     {/* Main */}
                     <div style={styles.main} className="mc-main">
-                        {/* Toolbar */}
                         <div style={styles.toolbar} className="mc-toolbar">
                             <div style={styles.searchWrap}>
                                 <svg style={styles.searchIcon} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -172,12 +175,9 @@ const MyCourses = () => {
                                     onChange={e => setSearch(e.target.value)}
                                 />
                             </div>
-                            <button onClick={fetchMyCourses} style={styles.refreshBtn}>
-                                🔄 تحديث
-                            </button>
+                            <button onClick={fetchMyCourses} style={styles.refreshBtn}>🔄 تحديث</button>
                         </div>
 
-                        {/* Loading */}
                         {loading ? (
                             <div style={styles.loadingWrap}>
                                 <div style={styles.spinner} />
@@ -201,6 +201,7 @@ const MyCourses = () => {
                                         onHover={() => setHoveredCard(course.id)}
                                         onLeave={() => setHoveredCard(null)}
                                         navigate={navigate}
+                                        cert={certificates[course.id] || null}
                                     />
                                 ))}
                             </div>
@@ -213,9 +214,7 @@ const MyCourses = () => {
 };
 
 // ─── Course Card ──────────────────────────────────────────────────────────────
-const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
-    const progress = course.progress ?? 0;
-
+const CourseCard = ({ course, hovered, onHover, onLeave, navigate, cert }) => {
     const goToCourse = () => {
         if (course.slug) navigate(`/course/${course.slug}`);
     };
@@ -235,10 +234,8 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
                     <div style={styles.iconWrapper}><BookIcon /></div>
                 </div>
                 <span style={{ ...styles.badge, ...styles.badgePaid }}>✅ مسجل</span>
-                {progress > 0 && (
-                    <div style={{ ...styles.progressOverlay, opacity: hovered ? 1 : 0 }}>
-                        <span style={styles.progressOverlayText}>{progress}% مكتمل</span>
-                    </div>
+                {cert && (
+                    <div style={styles.certRibbon} title="شهادتك جاهزة للتحميل">📜</div>
                 )}
             </div>
 
@@ -274,19 +271,32 @@ const CourseCard = ({ course, hovered, onHover, onLeave, navigate }) => {
                     </div>
                 )}
 
-                <div style={styles.progressSection}>
-                    <div style={styles.progressHeader}>
-                        <span style={styles.progressLabel}>التقدم</span>
-                        <span style={styles.progressPct}>{progress}%</span>
-                    </div>
-                    <ProgressBar value={progress} />
-                </div>
+                {/* ── Certificate download ── */}
+                {cert && (
+                    <a
+                        href={cert.url}
+                        download={cert.name}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        style={styles.certBtn}
+                    >
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                        </svg>
+                        <span>📜 شهادتك جاهزة — تحميل</span>
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                        </svg>
+                    </a>
+                )}
 
                 <button
                     style={{ ...styles.ctaBtn, ...(hovered ? styles.ctaBtnHover : {}) }}
                     onClick={goToCourse}
                 >
-                    {progress > 0 ? 'متابعة الدورة' : 'ابدأ الدورة'}
+                    ابدأ الدورة
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         style={{ marginRight: '8px', transform: 'rotate(180deg)' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -359,8 +369,7 @@ const styles = {
     iconWrapper: { borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', padding: '24px', backdropFilter: 'blur(10px)', border: '2px solid rgba(255,255,255,0.3)' },
     badge: { position: 'absolute', top: '12px', right: '12px', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
     badgePaid: { backgroundColor: '#0865a8', color: '#fff', boxShadow: '0 2px 8px rgba(8,101,168,0.35)' },
-    progressOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: '8px 14px', background: 'linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 100%)', transition: 'opacity 0.3s', display: 'flex', justifyContent: 'flex-end' },
-    progressOverlayText: { color: '#fff', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
+    certRibbon: { position: 'absolute', bottom: '12px', left: '12px', backgroundColor: 'rgba(124,58,237,0.88)', backdropFilter: 'blur(6px)', borderRadius: '8px', padding: '4px 10px', fontSize: '16px', boxShadow: '0 2px 8px rgba(124,58,237,0.4)', border: '1.5px solid rgba(255,255,255,0.3)', cursor: 'default' },
 
     cardBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 },
     cardTitle: { fontSize: '16px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 },
@@ -368,12 +377,7 @@ const styles = {
     metaIcon: { width: '15px', height: '15px', flexShrink: 0, color: '#0865a8' },
     metaText: { overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' },
 
-    progressSection: { marginTop: '4px' },
-    progressHeader: { display: 'flex', justifyContent: 'space-between', marginBottom: '6px' },
-    progressLabel: { fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif' },
-    progressPct: { fontSize: '12px', fontWeight: 'bold', color: '#0865a8', fontFamily: '"Droid Arabic Kufi", serif' },
-    progressTrack: { height: '7px', borderRadius: '99px', backgroundColor: '#eef0f5', overflow: 'hidden' },
-    progressFill: { height: '100%', borderRadius: '99px', background: 'linear-gradient(90deg, #0865a8 0%, #f57c00 100%)', transition: 'width 0.6s ease' },
+    certBtn: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '7px', padding: '10px 14px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', borderRadius: '10px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', textDecoration: 'none', boxShadow: '0 3px 10px rgba(124,58,237,0.35)', transition: 'all 0.25s ease' },
 
     ctaBtn: { marginTop: 'auto', width: '100%', padding: '12px 20px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' },
     ctaBtnHover: { transform: 'translateY(-2px)', boxShadow: '0 6px 18px rgba(8,101,168,0.32)' },
