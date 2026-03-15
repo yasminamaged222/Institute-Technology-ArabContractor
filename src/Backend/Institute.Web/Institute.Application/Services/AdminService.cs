@@ -100,11 +100,13 @@ namespace Institute.Application.Services
         
         public async Task<AdminStatsDto> GetStatsAsync()
         {
+            var coursesSpec = new PlanworkCount();
             var attendedSpec = new AttendedEnrollmentsSpec();
             return new AdminStatsDto
             {
                 UsersCount = await _userRepository.CountAsync(),
-                PlanworksCount = await _planworkRepository.CountAsync(),
+                PlanworksCount = await _planworkRepository
+                                            .GetCountAsync(coursesSpec),
                 EnrollmentsCount = await _enrollmentRepository.CountAsync(),
                 AttendanceCount = await _enrollmentRepository
                                                 .GetCountAsync(attendedSpec), 
