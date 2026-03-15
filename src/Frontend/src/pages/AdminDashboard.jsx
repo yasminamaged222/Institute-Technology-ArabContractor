@@ -10,7 +10,7 @@ import logoSrc from '../assets/logo-removebg-preview.png';
 // ════════════════════════════════════════════════════════════════════════════
 const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com', 'amrshamy91@gmail.com', 'abdelmawla1642@gmail.com'];
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
-const API_HOST = 'https://acwebsite-icmet-test.azurewebsites.net'; // for resolving relative cert URLs
+const API_HOST = 'https://acwebsite-icmet-test.azurewebsites.net';
 
 const NAVBAR_H = 70;
 const OVERVIEW_H = 36;
@@ -53,12 +53,14 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) { cons
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════════════════════
-/** Convert a relative certificate path like /certificates/xxx.png into a full URL */
+
+// ── FIX: relative paths from API are like /certificates/xxx.png
+// ──      we must prepend API_HOST + /api to get a valid URL
 function resolveCertUrl(url) {
     if (!url) return null;
     if (url === 'uploaded') return url;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return API_HOST + url;
+    if (url.startsWith('/')) return `${API_HOST}/api${url}`;   // ← FIXED (was: API_HOST + url)
     return url;
 }
 
@@ -84,27 +86,9 @@ function toStatusKey(s) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// DATA NORMALIZERS — fixed to match actual API response shapes
-//
-// GET /api/Admin/users response shape (Image 1):
-//   { id, username, email, coursesCount, courses: [{ enrollmentId, title, enrolledAt, attended }] }
-//
-// GET /api/Admin/planworks response shape (Image 2):
-//   { id, serviceTitle, usersCount, users: [{ username, email, enrolledAt }] }
-//
-// GET /api/Admin/stats response shape (Image 3):
-//   { usersCount, planworksCount, enrollmentsCount, attendanceCount, certificatesCount, refundsCount }
-//
-// POST /api/Admin/upload (Image 4):
-//   FormData fields: UserId (int), PlanworkId (int), File (binary)
-//
-// PATCH /api/Admin/enrollments/{id}/attendance (Image 5):
-//   Body: raw boolean (true / false)
+// DATA NORMALIZERS
 // ════════════════════════════════════════════════════════════════════════════
-
 function normalizeUser(u) {
-    // API returns: id, username, email, coursesCount, courses[]
-    // courses[] shape: { enrollmentId, title, enrolledAt, attended }
     return {
         id: u.id,
         username: u.username ?? u.email ?? '',
@@ -113,7 +97,6 @@ function normalizeUser(u) {
         email: u.email ?? '',
         enrolledCourses: (u.courses ?? []).map(c => ({
             enrollmentId: c.enrollmentId,
-            // planworkId may not be in the users API response (Image 1 doesn't show it)
             id: c.planworkId ?? c.PlanworkId ?? c.planwork_id ?? c.courseId ?? c.serviceId ?? null,
             title: c.title ?? c.serviceTitle ?? '\u2014',
             date: fmtDate(c.enrolledAt),
@@ -121,18 +104,15 @@ function normalizeUser(u) {
             certificateUrl: c.certificateUrl ?? null,
             certificateName: c.certificateName ?? null,
             _userId: u.id,
-            // store raw title for cross-referencing coursesData to find planworkId at upload time
             _titleRaw: c.title ?? c.serviceTitle ?? '',
         })),
     };
 }
 
 function normalizeCourse(c) {
-    // API returns: id, serviceTitle, usersCount, users[]
-    // users[] shape: { username, email, enrolledAt }
     return {
         id: c.id,
-        title: c.serviceTitle ?? c.title ?? '—',   // ← exact field from API: serviceTitle
+        title: c.serviceTitle ?? c.title ?? '—',
         category: c.category ?? c.type ?? '',
         enrolledUsers: (c.users ?? []).map(u => {
             const nameParts = (u.username ?? '').trim().split(' ');
@@ -143,7 +123,7 @@ function normalizeCourse(c) {
                 firstName: u.firstName ?? nameParts[0] ?? '',
                 lastName: u.lastName ?? nameParts.slice(1).join(' ') ?? '',
                 email: u.email ?? '',
-                date: fmtDate(u.enrolledAt),        // ← exact field from API: enrolledAt
+                date: fmtDate(u.enrolledAt),
                 attended: !!(u.attended ?? false),
                 certificateUrl: u.certificateUrl ?? null,
                 certificateName: u.certificateName ?? null,
@@ -178,6 +158,19 @@ function normalizeRefund(r) {
     };
 }
 
+function normalizeCert(cert) {
+    return {
+        id: cert.id ?? cert.Id,
+        userId: cert.userId ?? cert.UserId,
+        username: cert.username ?? cert.Username ?? '',
+        planworkId: cert.planworkId ?? cert.PlanworkId,
+        planworkTitle: cert.planworkTitle ?? cert.PlanworkTitle ?? '',
+        fileUrl: resolveCertUrl(cert.fileUrl ?? cert.FileUrl ?? cert.url ?? null),
+        fileName: cert.fileName ?? cert.FileName ?? (cert.fileUrl ? cert.fileUrl.split('/').pop() : 'certificate'),
+        uploadedAt: fmtDate(cert.uploadedAt ?? cert.UploadedAt),
+    };
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════════════════
@@ -194,7 +187,6 @@ const AdminDashboard = () => {
     const [dateTo, setDateTo] = useState('');
     const [usersData, setUsersData] = useState([]);
     const [coursesData, setCoursesData] = useState([]);
-    // Keep ref in sync
     React.useEffect(() => { coursesDataRef.current = coursesData; }, [coursesData]);
     const [apiStats, setApiStats] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -204,23 +196,26 @@ const AdminDashboard = () => {
     const [exporting, setExporting] = useState(false);
     const [exportError, setExportError] = useState(null);
 
-    // ── attendance — keyed by enrollmentId ───────────────────────────────────
+    // ── attendance ───────────────────────────────────────────────────────────
     const [attendance, setAttendance] = useState({});
     const [attendanceSaving, setAttendanceSaving] = useState({});
     const [attError, setAttError] = useState(null);
     const [attCourseFilter, setAttCourseFilter] = useState('all');
     const [attUserSearch, setAttUserSearch] = useState('');
 
-    // ── certificates — keyed by enrollmentId ─────────────────────────────────
+    // ── certificates ─────────────────────────────────────────────────────────
     const [certificates, setCertificates] = useState({});
     const [certUploading, setCertUploading] = useState({});
     const [certError, setCertError] = useState(null);
     const [certModal, setCertModal] = useState(null);
     const [certDragOver, setCertDragOver] = useState(false);
     const certFileInputRef = useRef(null);
-    const coursesDataRef = useRef([]); // always holds latest coursesData for use inside callbacks
+    const coursesDataRef = useRef([]);
+    const usersDataRef = useRef([]);
     const [certSearch, setCertSearch] = useState('');
-    const [certStatusFilter, setCertStatusFilter] = useState('all'); // 'all' | 'uploaded' | 'pending'
+    const [certStatusFilter, setCertStatusFilter] = useState('all');
+
+    React.useEffect(() => { usersDataRef.current = usersData; }, [usersData]);
 
     // ── REFUND STATE ──────────────────────────────────────────────────────────
     const [refunds, setRefunds] = useState([]);
@@ -251,7 +246,6 @@ const AdminDashboard = () => {
         });
     }, [getToken]);
 
-    // ── FormData fetch — does NOT set Content-Type (browser sets multipart boundary) ──
     const authFetchForm = useCallback(async (url, formData) => {
         let token = null;
         try { token = await getToken(); } catch (_) { }
@@ -286,6 +280,9 @@ const AdminDashboard = () => {
         }
     }, [authFetch]);
 
+    // ════════════════════════════════════════════════════════════════════════
+    // COMMIT REFUND ACTION
+    // ════════════════════════════════════════════════════════════════════════
     const commitRefundAction = async () => {
         if (!refundActionModal) return;
         const { refund: r, action } = refundActionModal;
@@ -310,6 +307,7 @@ const AdminDashboard = () => {
             const updated = await res.json();
             const normalized = normalizeRefund(updated);
             setRefunds(prev => prev.map(x => x.id === r.id ? normalized : x));
+            setRefundDetailModal(prev => prev && prev.id === r.id ? normalized : prev);
             if (action === 'send_to_bank') {
                 const bankRes = normalized.bankResult ?? updated?.bankResult ?? updated?.BankResult ?? null;
                 if (bankRes === 'SUCCESS' || bankRes === 'success') {
@@ -321,7 +319,6 @@ const AdminDashboard = () => {
             }
             setRefundActionModal(null);
             setRefundActionNote('');
-            if (refundDetailModal?.id === r.id) setRefundDetailModal(normalized);
         } catch (err) {
             console.error('Refund action error:', err);
             setRefundActionError(err.message || 'حدث خطأ أثناء تنفيذ الإجراء');
@@ -357,7 +354,6 @@ const AdminDashboard = () => {
 
                 if (usersRes.ok) {
                     const j = await usersRes.json();
-                    // API returns array directly
                     usersRaw = Array.isArray(j) ? j : j?.data ?? j?.users ?? j?.result ?? [];
                 } else {
                     const errText = await usersRes.text().catch(() => '');
@@ -367,7 +363,6 @@ const AdminDashboard = () => {
 
                 if (coursesRes.ok) {
                     const j = await coursesRes.json();
-                    // API returns array directly
                     coursesRaw = Array.isArray(j) ? j : j?.data ?? j?.planWorks ?? j?.planworks ?? j?.courses ?? j?.result ?? [];
                 } else {
                     const errText = await coursesRes.text().catch(() => '');
@@ -375,29 +370,21 @@ const AdminDashboard = () => {
                 }
 
                 if (statsRes.ok) {
-                    // Stats response shape (Image 3):
-                    // { usersCount, planworksCount, enrollmentsCount, attendanceCount, certificatesCount, refundsCount }
                     statsRaw = await statsRes.json();
                 } else {
                     const errText = await statsRes.text().catch(() => '');
                     console.error('Stats API failed:', statsRes.status, errText);
                 }
 
-                const normalizedUsers = usersRaw
-                    .map(u => normalizeUser(u))
-                    .filter(u => u.id != null);
-
-                const normalizedCourses = coursesRaw
-                    .map(c => normalizeCourse(c))
-                    .filter(c => c.id != null);
+                const normalizedUsers = usersRaw.map(u => normalizeUser(u)).filter(u => u.id != null);
+                const normalizedCourses = coursesRaw.map(c => normalizeCourse(c)).filter(c => c.id != null);
 
                 setUsersData(normalizedUsers);
                 setCoursesData(normalizedCourses);
                 setApiStats(statsRaw);
 
-                // Seed attendance & certificates from API data
                 seedAttendance(normalizedUsers);
-                seedCertificates(normalizedUsers);
+                await loadCertificatesFromApi(normalizedUsers);
             } catch (err) {
                 setError(err.message || 'حدث خطأ أثناء تحميل البيانات');
             } finally {
@@ -407,28 +394,78 @@ const AdminDashboard = () => {
         if (isLoaded && user) load();
     }, [isLoaded, user, authFetch]);
 
-    // Load refunds when tab opens
     useEffect(() => {
         if (activeTab === 'refunds') fetchRefunds();
     }, [activeTab, fetchRefunds]);
 
-    // Re-fetch when status filter changes
     useEffect(() => {
         if (activeTab === 'refunds') fetchRefunds(refundStatusFilter);
     }, [refundStatusFilter]); // eslint-disable-line
 
-    // Close export menu on outside click
     useEffect(() => {
         const h = e => { if (exportRef.current && !exportRef.current.contains(e.target)) setExportMenuOpen(false); };
         document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
     }, []);
 
     // ════════════════════════════════════════════════════════════════════════
-    // ATTENDANCE
-    // PATCH /api/Admin/enrollments/{enrollmentId}/attendance
-    // Body: raw JSON boolean  (Image 5 shows: -d 'true')
+    // LOAD CERTIFICATES FROM API
     // ════════════════════════════════════════════════════════════════════════
+    const loadCertificatesFromApi = useCallback(async (usersArr) => {
+        try {
+            const res = await authFetch(`${API_BASE}/Admin/certificates`);
+            if (!res.ok) {
+                console.warn('[Certs] GET /Admin/certificates failed:', res.status);
+                return;
+            }
+            const json = await res.json();
+            const certsArr = Array.isArray(json) ? json
+                : json?.data ?? json?.certificates ?? json?.result ?? [];
 
+            console.log('[Certs] loaded', certsArr.length, 'certs from API');
+
+            const upToEid = {};
+            (usersArr ?? usersDataRef.current).forEach(u => {
+                (u.enrolledCourses ?? []).forEach(c => {
+                    if (c.enrollmentId != null && c.id != null) {
+                        upToEid[`${u.id}-${c.id}`] = String(c.enrollmentId);
+                    }
+                });
+            });
+
+            const map = {};
+            certsArr.forEach(raw => {
+                const cert = normalizeCert(raw);
+                if (!cert.fileUrl) return;
+
+                const fallbackKey = `${cert.userId}-${cert.planworkId}`;
+                const eidKey = upToEid[fallbackKey];
+
+                const certEntry = {
+                    name: cert.fileName,
+                    url: cert.fileUrl,
+                    size: null,
+                    fromDb: true,
+                    uploadedAt: cert.uploadedAt,
+                };
+
+                if (eidKey) map[eidKey] = certEntry;
+                map[fallbackKey] = certEntry;
+            });
+
+            setCertificates(map);
+            console.log('[Certs] stored', Object.keys(map).length, 'cert entries');
+        } catch (err) {
+            console.warn('[Certs] loadCertificatesFromApi failed:', err.message);
+        }
+    }, [authFetch]);
+
+    const refreshCertificates = useCallback(async () => {
+        await loadCertificatesFromApi(usersDataRef.current);
+    }, [loadCertificatesFromApi]);
+
+    // ════════════════════════════════════════════════════════════════════════
+    // ATTENDANCE
+    // ════════════════════════════════════════════════════════════════════════
     const seedAttendance = useCallback((users) => {
         const map = {};
         users.forEach(u => {
@@ -448,28 +485,19 @@ const AdminDashboard = () => {
         }
         const k = String(enrollmentId);
         const newVal = !currentVal;
-
-        // Optimistic update
         setAttendance(p => ({ ...p, [k]: newVal }));
         setAttendanceSaving(p => ({ ...p, [k]: true }));
         setAttError(null);
-
         try {
             const res = await authFetch(
                 `${API_BASE}/Admin/enrollments/${enrollmentId}/attendance`,
-                {
-                    method: 'PATCH',
-                    // Body is a raw JSON boolean, exactly as the API expects (Image 5: -d 'true')
-                    body: JSON.stringify(newVal),
-                }
+                { method: 'PATCH', body: JSON.stringify(newVal) }
             );
-
             if (!res.ok) {
                 const errJson = await res.json().catch(() => ({}));
                 throw new Error(errJson?.message ?? `HTTP ${res.status}`);
             }
         } catch (err) {
-            // Rollback on failure
             setAttendance(p => ({ ...p, [k]: currentVal }));
             setAttError('فشل تحديث الحضور: ' + err.message);
         } finally {
@@ -478,271 +506,107 @@ const AdminDashboard = () => {
     };
 
     // ════════════════════════════════════════════════════════════════════════
-    // CERTIFICATES
-    // POST /api/Admin/upload
-    // FormData fields (Image 4): UserId (int), PlanworkId (int), File (binary)
+    // CERTIFICATE UPLOAD
     // ════════════════════════════════════════════════════════════════════════
-
-    // Re-fetch the full users list and re-seed certificates from fresh API data.
-    // Called on initial load AND after any upload to pick up certs already in the DB.
-    const refreshCertificates = useCallback(async () => {
-        try {
-            // Fetch users to build a lookup: "userId-planworkId" → enrollmentId
-            const usersRes = await authFetch(`${API_BASE}/Admin/users`);
-            if (!usersRes.ok) return;
-            const usersJson = await usersRes.json();
-            const rawUsers = Array.isArray(usersJson) ? usersJson : usersJson?.data ?? usersJson?.users ?? [];
-
-            // Build two lookup maps from users data:
-            // 1. uid_pid → enrollmentId  (to match DB records UserId+PlanworkId → enrollmentId)
-            // 2. enrollmentId → direct cert data (if users API returns certificateUrl)
-            const upToEid = {};   // "userId-planworkId" → enrollmentId string
-            const map = {};       // enrollmentId string → cert object
-
-            // Also build planworkId lookup by title from coursesData (already in state)
-            // We'll use window.__coursesForCerts as a side-channel set by the data load
-            // Build title→planworkId from coursesData
-            const titleToPid = {};
-            coursesDataRef.current.forEach(cd => { if (cd.title && cd.id) titleToPid[cd.title] = cd.id; });
-
-            rawUsers.forEach(u => {
-                (u.courses ?? []).forEach(c => {
-                    const eid = c.enrollmentId;
-                    if (eid == null) return;
-                    const k = String(eid);
-
-                    // Try to get planworkId from course object, then from title lookup
-                    const pid = c.planworkId ?? c.PlanworkId ?? c.planwork_id ?? c.courseId ?? c.serviceId
-                        ?? titleToPid[c.title ?? c.serviceTitle ?? ''] ?? null;
-                    if (pid != null) {
-                        upToEid[`${u.id}-${pid}`] = k;
-                    }
-
-                    // If users API returns certificateUrl directly — use it
-                    if (c.certificateUrl) {
-                        map[k] = {
-                            name: c.certificateName || c.certificateUrl.split('/').pop() || 'certificate',
-                            url: resolveCertUrl(c.certificateUrl),
-                            size: c.fileSizeBytes ?? null,
-                            fromDb: true,
-                        };
-                    }
-                });
-            });
-
-            // Try GET /Admin/certificates — returns DB rows: { id, userId, planworkId, fileUrl, fileName, fileSizeBytes, uploadedAt }
-            try {
-                const certsRes = await authFetch(`${API_BASE}/Admin/certificates`);
-                if (certsRes.ok) {
-                    const certsJson = await certsRes.json();
-                    const certsArr = Array.isArray(certsJson) ? certsJson
-                        : certsJson?.data ?? certsJson?.certificates ?? certsJson?.result ?? [];
-
-                    certsArr.forEach(cert => {
-                        const uid = cert.userId ?? cert.UserId;
-                        const pid = cert.planworkId ?? cert.PlanworkId;
-                        const furl = cert.fileUrl ?? cert.FileUrl ?? cert.url;
-                        const fname = cert.fileName ?? cert.FileName ?? (furl ? furl.split('/').pop() : 'certificate');
-                        const fsz = cert.fileSizeBytes ?? cert.FileSizeBytes ?? null;
-
-                        // Map to enrollmentId key using our lookup
-                        const lookupKey = `${uid}-${pid}`;
-                        const eid = upToEid[lookupKey];
-
-                        if (eid) {
-                            map[eid] = { name: fname, url: resolveCertUrl(furl), size: fsz, fromDb: true };
-                        } else {
-                            // enrollmentId not found — store under userId-planworkId as fallback key
-                            // so it still shows up if certKey falls back to that format
-                            map[lookupKey] = { name: fname, url: resolveCertUrl(furl), size: fsz, fromDb: true };
-                            console.warn('[Certs] no enrollmentId found for userId:', uid, 'planworkId:', pid, '— stored under fallback key', lookupKey);
-                        }
-                    });
-                    console.log('[Certs] loaded', certsArr.length, 'certs from /Admin/certificates');
-                }
-            } catch { /* /Admin/certificates may not exist — silently skip */ }
-
-            // MERGE into existing state — never wipe out certs that were just uploaded
-            // (DB-sourced entries take priority over local placeholders)
-            setCertificates(prev => {
-                const merged = { ...prev };
-                Object.entries(map).forEach(([k, v]) => {
-                    // Only overwrite if new value has a real URL, or slot was empty
-                    if (!merged[k] || (v.fromDb && v.url && v.url !== 'uploaded')) {
-                        merged[k] = v;
-                    }
-                });
-                return merged;
-            });
-            console.log('[Certs] refreshed — DB map keys:', Object.keys(map));
-        } catch (err) {
-            console.warn('[Certs] refresh failed:', err.message);
-        }
-    }, [authFetch]);
-
-    const seedCertificates = useCallback((users) => {
-        // Seed synchronously from already-loaded users data (fast path on initial load)
-        const map = {};
-        users.forEach(u => {
-            (u.enrolledCourses ?? []).forEach(c => {
-                if (c.enrollmentId != null && c.certificateUrl) {
-                    const resolvedUrl = resolveCertUrl(c.certificateUrl);
-                    map[String(c.enrollmentId)] = {
-                        name: c.certificateName || c.certificateUrl.split('/').pop() || 'certificate',
-                        url: resolvedUrl,
-                        size: null,
-                        fromDb: true,
-                    };
-                }
-            });
-        });
-        setCertificates(map); // initial seed from users data
-    }, [refreshCertificates]);
-
     const handleCertFile = async (enrollmentId, userId, planworkId, file) => {
         if (!file) return;
-        const k = String(enrollmentId ?? `${userId}-${planworkId}`);
+        const eidKey = enrollmentId != null ? String(enrollmentId) : null;
+        const fallbackKey = `${userId}-${planworkId}`;
+        const k = eidKey ?? fallbackKey;
+
         setCertUploading(p => ({ ...p, [k]: true }));
         setCertError(null);
         try {
             const fd = new FormData();
-            // Swagger shows: UserId (int), PlanworkId (int), File (binary with mime type)
             if (userId != null) fd.append('UserId', Number(userId));
             if (planworkId != null) fd.append('PlanworkId', Number(planworkId));
             if (enrollmentId != null) fd.append('EnrollmentId', Number(enrollmentId));
-            // Append file with explicit mime type (swagger curl shows ;type=image/png)
             fd.append('File', file, file.name);
 
             console.log('[CertUpload] sending → enrollmentId:', enrollmentId, '| userId:', userId, '| planworkId:', planworkId, '| file:', file.name, file.type, file.size);
 
             const res = await authFetchForm(`${API_BASE}/Admin/upload`, fd);
-
-            // Always read as text first to capture real server message
             const rawText = await res.text();
+
             console.log('[CertUpload] status:', res.status, '| raw response:', rawText);
 
             if (!res.ok) {
                 let msg = `HTTP ${res.status}`;
                 let rawMsg = '';
                 try { const j = JSON.parse(rawText); rawMsg = j?.message ?? j?.error ?? j?.title ?? j?.detail ?? ''; msg = rawMsg || msg; } catch { rawMsg = rawText.trim(); if (rawMsg && rawMsg.length < 400) msg = rawMsg; }
-
-                // If backend says cert already exists → treat as success, refresh from DB
                 const alreadyUploaded = rawMsg.toLowerCase().includes('already') || rawMsg.toLowerCase().includes('exist') || rawMsg.toLowerCase().includes('duplicate');
                 if (alreadyUploaded) {
-                    console.warn('[CertUpload] Backend says already uploaded — refreshing from DB');
+                    console.warn('[CertUpload] already uploaded — refreshing from API');
                     await refreshCertificates();
-                    return; // exit try block cleanly — finally will close modal
+                    return;
                 }
-
                 throw new Error(msg);
             }
 
-            // The server might return:
-            //   1. JSON object: { url, certificateUrl, fileUrl, path, fileName, ... }
-            //   2. A plain URL string: "https://..."
-            //   3. A JSON string (quoted URL): "\"https://...\""
-            //   4. Empty body (upload succeeded, no URL needed — store file locally)
-            let url = null;
-            let name = file.name;
-
-            if (rawText && rawText.trim()) {
-                // Try parse as JSON first
-                try {
-                    const data = JSON.parse(rawText);
-                    if (typeof data === 'string') {
-                        // JSON-encoded string — could be a plain URL or relative path
-                        url = resolveCertUrl(data);
-                    } else if (data && typeof data === 'object') {
-                        // Handle exact DB row shape: { id, userId, planworkId, fileUrl, fileName, fileSizeBytes, uploadedAt }
-                        const rawUrl = data.fileUrl ?? data.FileUrl
-                            ?? data.url ?? data.certificateUrl ?? data.filePath
-                            ?? data.path ?? data.link ?? null;
-                        url = resolveCertUrl(rawUrl);
-                        name = data.fileName ?? data.FileName
-                            ?? data.name ?? data.filename ?? data.originalName ?? file.name;
-                    }
-                } catch {
-                    // Not JSON — treat the whole body as a plain URL
-                    const trimmed = rawText.trim().replace(/^"+|"+$/g, ''); // strip surrounding quotes
-                    if (trimmed.startsWith('http') || trimmed.startsWith('/')) {
-                        url = resolveCertUrl(trimmed);
-                    }
-                }
-            }
-
-            // If the server returned 200 but no URL, store a placeholder so the UI updates
-            // (some backends just save and return 200 with empty body)
-            if (!url) {
-                console.warn('[CertUpload] Server returned 200 but no URL in response. Using placeholder.');
-                url = 'uploaded'; // non-null sentinel so the card shows as "has cert"
-            }
-
-            // Store immediately with what we have (url may be 'uploaded' placeholder)
-            const certEntry = { name, url, size: file.size, fromDb: false };
+            const placeholderEntry = { name: file.name, url: 'uploaded', size: file.size, fromDb: false };
             setCertificates(p => {
                 const next = { ...p };
-                next[k] = certEntry;
-                if (userId != null && planworkId != null) next[`${userId}-${planworkId}`] = certEntry;
+                if (eidKey) next[eidKey] = placeholderEntry;
+                next[fallbackKey] = placeholderEntry;
                 return next;
             });
-            console.log('[CertUpload] stored under key:', k);
 
-            // Now try to fetch the real URL back from the server
-            // Try 1: GET /api/Admin/certificates?userId=X&planworkId=Y
-            // Try 2: GET /api/Admin/users (find this user's course cert URL)
-            try {
-                let realUrl = null, realName = name;
+            let resolvedEntry = null;
 
-                // Try dedicated endpoint first
-                const certFetch = await authFetch(`${API_BASE}/Admin/certificates?userId=${userId}&planworkId=${planworkId}`).catch(() => null);
-                if (certFetch?.ok) {
-                    const cj = await certFetch.json().catch(() => null);
-                    const arr = Array.isArray(cj) ? cj : (cj ? [cj] : []);
-                    const found = arr.find(x => (x.userId ?? x.UserId) == userId && (x.planworkId ?? x.PlanworkId) == planworkId);
-                    if (found) {
-                        realUrl = resolveCertUrl(found.fileUrl ?? found.FileUrl ?? found.url);
-                        realName = found.fileName ?? found.FileName ?? name;
+            if (rawText && rawText.trim()) {
+                try {
+                    const data = JSON.parse(rawText);
+                    if (data && typeof data === 'object' && !Array.isArray(data)) {
+                        const cert = normalizeCert(data);
+                        if (cert.fileUrl) {
+                            resolvedEntry = { name: cert.fileName, url: cert.fileUrl, size: file.size, fromDb: true, uploadedAt: cert.uploadedAt };
+                        }
+                    } else if (typeof data === 'string' && (data.startsWith('http') || data.startsWith('/'))) {
+                        resolvedEntry = { name: file.name, url: resolveCertUrl(data), size: file.size, fromDb: true };
+                    }
+                } catch {
+                    const trimmed = rawText.trim().replace(/^"+|"+$/g, '');
+                    if (trimmed.startsWith('http') || trimmed.startsWith('/')) {
+                        resolvedEntry = { name: file.name, url: resolveCertUrl(trimmed), size: file.size, fromDb: true };
                     }
                 }
+            }
 
-                // Fallback: re-fetch just this user
-                if (!realUrl) {
-                    const uFetch = await authFetch(`${API_BASE}/Admin/users`).catch(() => null);
-                    if (uFetch?.ok) {
-                        const uj = await uFetch.json().catch(() => null);
-                        const rawU = Array.isArray(uj) ? uj : (uj?.data ?? uj?.users ?? []);
-                        const thisUser = rawU.find(u2 => u2.id == userId);
-                        if (thisUser) {
-                            const thisCourse = (thisUser.courses ?? []).find(c2 =>
-                                c2.enrollmentId == enrollmentId ||
-                                (c2.planworkId ?? c2.PlanworkId) == planworkId
-                            );
-                            if (thisCourse?.certificateUrl) {
-                                realUrl = resolveCertUrl(thisCourse.certificateUrl);
-                                realName = thisCourse.certificateName ?? thisCourse.certificateUrl.split('/').pop() ?? name;
+            if (!resolvedEntry) {
+                try {
+                    const certRes = await authFetch(`${API_BASE}/Admin/certificates`);
+                    if (certRes.ok) {
+                        const certsJson = await certRes.json();
+                        const certsArr = Array.isArray(certsJson) ? certsJson : certsJson?.data ?? certsJson?.certificates ?? [];
+                        const found = certsArr.find(c =>
+                            (c.userId ?? c.UserId) == userId &&
+                            (c.planworkId ?? c.PlanworkId) == planworkId
+                        );
+                        if (found) {
+                            const cert = normalizeCert(found);
+                            if (cert.fileUrl) {
+                                resolvedEntry = { name: cert.fileName, url: cert.fileUrl, size: file.size, fromDb: true, uploadedAt: cert.uploadedAt };
+                                console.log('[CertUpload] resolved URL from /Admin/certificates:', cert.fileUrl);
                             }
                         }
                     }
+                } catch (fetchErr) {
+                    console.warn('[CertUpload] post-upload certificates fetch failed:', fetchErr.message);
                 }
+            }
 
-                if (realUrl) {
-                    console.log('[CertUpload] resolved real URL:', realUrl);
-                    const realEntry = { name: realName, url: realUrl, size: file.size, fromDb: true };
-                    setCertificates(p => {
-                        const next = { ...p };
-                        next[k] = realEntry;
-                        if (userId != null && planworkId != null) next[`${userId}-${planworkId}`] = realEntry;
-                        return next;
-                    });
-                } else {
-                    console.log('[CertUpload] no real URL found — keeping placeholder');
-                }
-            } catch (fetchErr) {
-                console.warn('[CertUpload] post-upload fetch failed:', fetchErr.message);
+            if (resolvedEntry) {
+                setCertificates(p => {
+                    const next = { ...p };
+                    if (eidKey) next[eidKey] = resolvedEntry;
+                    next[fallbackKey] = resolvedEntry;
+                    return next;
+                });
+                console.log('[CertUpload] stored real entry under keys:', eidKey, fallbackKey);
             }
         } catch (err) {
             console.error('[CertUpload] failed:', err);
-            setCertError('\u0641\u0634\u0644 \u0631\u0641\u0639 \u0627\u0644\u0634\u0647\u0627\u062f\u0629: ' + err.message);
+            setCertError('فشل رفع الشهادة: ' + err.message);
         } finally {
             setCertUploading(p => ({ ...p, [k]: false }));
             setCertModal(null);
@@ -756,7 +620,6 @@ const AdminDashboard = () => {
     // ════════════════════════════════════════════════════════════════════════
     // DERIVED DATA
     // ════════════════════════════════════════════════════════════════════════
-
     const inRange = d => {
         if (!dateFrom && !dateTo) return true;
         if (!d) return false;
@@ -788,7 +651,6 @@ const AdminDashboard = () => {
             return matchSearch;
         });
 
-    // Attendance rows — key is always String(enrollmentId)
     const attRows = usersData.flatMap(u =>
         u.enrolledCourses
             .filter(c => c.enrollmentId != null)
@@ -802,23 +664,18 @@ const AdminDashboard = () => {
 
     const attCount = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length;
 
-    // Cert rows — key is String(enrollmentId)
-    // planworkId: users API (Image 1) doesn't include planworkId per course,
-    // so we cross-reference coursesData by title to resolve it.
     const certRows = usersData.flatMap(u =>
         u.enrolledCourses.map(c => {
             const matchedCourse = coursesData.find(cd => cd.title === (c._titleRaw || c.title));
             const resolvedPlanworkId = c.id ?? matchedCourse?.id ?? null;
             const eidKey = c.enrollmentId != null ? String(c.enrollmentId) : null;
-            const upidKey = resolvedPlanworkId != null ? `${u.id}-${resolvedPlanworkId}` : null;
-            // certKey: prefer enrollmentId, fall back to userId-planworkId
-            // But ALSO check if a cert was stored under the fallback key (from refreshCertificates)
-            const certKey = eidKey ?? upidKey ?? `${u.id}-unknown`;
+            const fallbackKey = resolvedPlanworkId != null ? `${u.id}-${resolvedPlanworkId}` : null;
+            const certKey = eidKey ?? fallbackKey ?? `${u.id}-unknown`;
             return {
                 user: u,
                 course: c,
                 certKey,
-                altKey: eidKey ? upidKey : null, // secondary key to check in certificates map
+                altKey: eidKey ? fallbackKey : null,
                 enrollmentId: c.enrollmentId,
                 userId: u.id,
                 planworkId: resolvedPlanworkId,
@@ -840,7 +697,6 @@ const AdminDashboard = () => {
     const totalCerts = Object.keys(certificates).length;
     const totalEnrollments = usersData.reduce((s, u) => s + u.enrolledCourses.length, 0);
 
-    // Stats — field names from Image 3: usersCount, planworksCount, enrollmentsCount, attendanceCount, certificatesCount, refundsCount
     const gs = (fields, fb) => {
         if (!apiStats) return fb;
         for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; }
@@ -1058,18 +914,51 @@ const AdminDashboard = () => {
         .d-att-sum{display:flex;align-items:center;gap:clamp(10px,2vw,20px);flex-wrap:wrap;background:#f0fdf4;border:1.5px solid #86efac;border-radius:var(--radius);padding:clamp(9px,1.8vw,13px) clamp(12px,2vw,18px);margin-bottom:clamp(12px,2vw,18px);box-shadow:var(--shadow);}
         .d-att-sum span{font-size:clamp(.7rem,1.3vw,.78rem);font-weight:700;color:#15803d;}
         .d-prog-wrap{flex:1;min-width:100px;height:6px;background:#bbf7d0;border-radius:3px;overflow:hidden;}.d-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#16a34a,#22c55e);transition:width .5s ease;}
-        .d-cert-grid{display:grid;gap:clamp(9px,1.8vw,13px);padding:clamp(12px,2vw,18px);grid-template-columns:repeat(auto-fill,minmax(clamp(260px,30vw,320px),1fr));}
-        .d-cert-card{background:var(--white);border-radius:12px;padding:clamp(11px,2vw,15px) clamp(12px,2vw,16px);border:1.5px solid var(--card-border);display:flex;align-items:center;gap:clamp(9px,1.5vw,12px);transition:border-color .16s,box-shadow .16s;box-shadow:var(--shadow);}
-        .d-cert-card:hover{border-color:rgba(124,58,237,.3);box-shadow:0 4px 16px rgba(124,58,237,.1);}
-        .d-cert-icon{width:clamp(36px,4.5vw,44px);height:clamp(36px,4.5vw,44px);border-radius:10px;background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;font-size:clamp(.95rem,1.8vw,1.2rem);flex-shrink:0;}
+
+        /* ── CERTIFICATE CARDS — redesigned ─────────────────────────────── */
+        .d-cert-grid{
+          display:grid;gap:clamp(10px,1.8vw,14px);padding:clamp(12px,2vw,18px);
+          grid-template-columns:repeat(auto-fill,minmax(clamp(240px,28vw,300px),1fr));
+        }
+        .d-cert-card{
+          background:var(--white);border-radius:13px;
+          padding:clamp(12px,2vw,16px);
+          border:1.5px solid var(--card-border);
+          display:flex;flex-direction:column;gap:10px;
+          transition:border-color .16s,box-shadow .16s,transform .16s;
+          box-shadow:var(--shadow);
+        }
+        .d-cert-card:hover{border-color:rgba(124,58,237,.3);box-shadow:0 4px 18px rgba(124,58,237,.1);transform:translateY(-1px);}
+        .d-cert-card-top{display:flex;align-items:flex-start;gap:10px;}
+        .d-cert-icon{
+          width:42px;height:42px;border-radius:10px;
+          background:rgba(124,58,237,.08);border:1.5px solid rgba(124,58,237,.2);
+          display:flex;align-items:center;justify-content:center;
+          font-size:1.15rem;flex-shrink:0;
+        }
         .d-cert-icon.has{background:#f0fdf4;border-color:#86efac;}
-        .d-cert-info{flex:1;min-width:0;}.d-cert-name{font-weight:700;font-size:clamp(.72rem,1.3vw,.8rem);color:var(--black);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.d-cert-sub{font-size:clamp(.62rem,1.1vw,.7rem);color:var(--gray2);margin-top:2px;}
-        .d-cert-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;}
-        .d-cert-btn{padding:clamp(4px,1vw,6px) clamp(8px,1.5vw,12px);border-radius:7px;font-family:var(--font);font-size:clamp(.62rem,1.1vw,.7rem);font-weight:700;cursor:pointer;border:none;transition:all .14s;white-space:nowrap;}
+        .d-cert-icon.grey{background:rgba(156,163,175,.06);border-color:rgba(156,163,175,.15);}
+        .d-cert-info{flex:1;min-width:0;}
+        .d-cert-name{
+          font-weight:700;font-size:.8rem;color:var(--black);
+          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+        }
+        .d-cert-course{
+          font-size:.7rem;color:var(--blue);margin-top:3px;line-height:1.4;
+          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+        }
+        .d-cert-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px;}
+        .d-cert-actions{
+          display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;
+          border-top:1px solid var(--gray5);padding-top:9px;
+        }
+        .d-cert-btn{padding:clamp(5px,1vw,7px) clamp(10px,1.5vw,14px);border-radius:8px;font-family:var(--font);font-size:clamp(.64rem,1.1vw,.72rem);font-weight:700;cursor:pointer;border:none;transition:all .14s;white-space:nowrap;}
         .d-cert-btn.up{background:rgba(124,58,237,.1);color:#7c3aed;border:1.5px solid rgba(124,58,237,.25);}.d-cert-btn.up:hover{background:rgba(124,58,237,.2);}
         .d-cert-btn.dl{background:var(--blue-lt);color:var(--blue);border:1.5px solid rgba(8,101,168,.25);}.d-cert-btn.dl:hover{background:var(--blue-md);}
         .d-cert-btn.rm{background:#fef2f2;color:#dc2626;border:1.5px solid rgba(220,38,38,.2);}.d-cert-btn.rm:hover{background:#fee2e2;}
+        .d-cert-btn.full{width:100%;text-align:center;justify-content:center;}
         .d-cert-btn:disabled{opacity:.45;cursor:not-allowed;}
+
         .d-modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);animation:d-fadeUp .16s ease;}
         .d-modal{background:var(--white);border-radius:14px;padding:clamp(14px,2.5vw,20px);max-width:clamp(290px,88vw,520px);width:100%;box-shadow:0 16px 48px rgba(0,0,0,.15);direction:rtl;border:2px solid rgba(124,58,237,.2);border-top:4px solid #7c3aed;}
         .d-modal.rd-modal{border-color:rgba(220,38,38,.2);border-top-color:#dc2626;max-width:clamp(290px,92vw,540px);max-height:90vh;overflow-y:auto;}
@@ -1126,7 +1015,7 @@ const AdminDashboard = () => {
         .rf-bank-banner.failed{background:#fff8f0;border:1.5px solid rgba(245,124,0,.4);color:#b45309;}
         .rf-bank-banner-close{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:inherit;opacity:.6;}
         .rf-bank-banner-close:hover{opacity:1;}
-        .rf-refresh-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--gray4);background:var(--bg-flat);font-family:var(--font);font-size:.7rem;font-weight:700;cursor:pointer;color:var(--gray2);transition:all .14px;display:flex;align-items:center;gap:5px;}
+        .rf-refresh-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--gray4);background:var(--bg-flat);font-family:var(--font);font-size:.7rem;font-weight:700;cursor:pointer;color:var(--gray2);transition:all .14s;display:flex;align-items:center;gap:5px;}
         .rf-refresh-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt);}
 
         .d-api-info{display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:8px 14px;margin-bottom:clamp(12px,2vw,20px);font-size:clamp(.68rem,1.3vw,.76rem);color:#15803d;}
@@ -1357,9 +1246,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══════════════════════════════════════════════════════
-                        REFUNDS TAB
-                    ══════════════════════════════════════════════════════ */}
+                    {/* ══ REFUNDS TAB ══════════════════════════════════════ */}
                     {activeTab === 'refunds' && (
                         <div>
                             {bankResultBanner && (
@@ -1485,7 +1372,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── ATTENDANCE TAB ────────────────────────────────── */}
+                    {/* ══ ATTENDANCE TAB ═══════════════════════════════════ */}
                     {activeTab === 'attendance' && (
                         <div>
                             <div className="d-filter">
@@ -1546,11 +1433,9 @@ const AdminDashboard = () => {
                                                                     <td className="d-email">{row.user.email}</td>
                                                                     <td style={{ color: 'var(--blue)', fontWeight: 700 }}>{row.course.title}</td>
                                                                     <td style={{ textAlign: 'center' }}>
-                                                                        <div
-                                                                            className={`d-chk${saving ? ' spin' : attended ? ' on' : ''}`}
+                                                                        <div className={`d-chk${saving ? ' spin' : attended ? ' on' : ''}`}
                                                                             onClick={() => !saving && toggleAttendance(eid, attended)}
-                                                                            title={eid == null ? 'لا يوجد enrollmentId' : ''}
-                                                                        >
+                                                                            title={eid == null ? 'لا يوجد enrollmentId' : ''}>
                                                                             {!saving && attended && '✓'}
                                                                         </div>
                                                                     </td>
@@ -1568,17 +1453,16 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── CERTIFICATES TAB ─────────────────────────────── */}
+                    {/* ══ CERTIFICATES TAB ═════════════════════════════════ */}
                     {activeTab === 'certificates' && (
                         <div>
-                            {/* Search + filter bar */}
                             <div className="d-filter">
                                 <span className="d-flbl">📜 البحث:</span>
                                 <div className="d-search" style={{ minWidth: 210 }}>
                                     <input type="text" placeholder="ابحث باسم المستخدم أو الدورة..." value={certSearch} onChange={e => setCertSearch(e.target.value)} />
                                 </div>
                                 {certSearch && <button className="d-fclear" onClick={() => setCertSearch('')}>✕</button>}
-                                <div style={{ display: 'flex', gap: 5, marginRight: 'auto' }}>
+                                <div style={{ display: 'flex', gap: 5, marginRight: 'auto', flexWrap: 'wrap' }}>
                                     {[
                                         { id: 'all', label: 'الكل', icon: '📋' },
                                         { id: 'uploaded', label: 'مرفوعة', icon: '✅' },
@@ -1597,14 +1481,16 @@ const AdminDashboard = () => {
                                         </button>
                                     ))}
                                 </div>
+                                <button className="rf-refresh-btn" onClick={refreshCertificates} title="تحديث الشهادات من السيرفر">
+                                    ↻ تحديث
+                                </button>
                             </div>
 
-                            {/* Summary bar */}
                             {!loading && (() => {
-                                const uploaded = certRows.filter(r => !!certificates[r.certKey]).length;
-                                const withUrl = certRows.filter(r => { const c = certificates[r.certKey]; return c && c.url && c.url !== 'uploaded'; }).length;
+                                const uploaded = certRows.filter(r => !!(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined))).length;
+                                const withUrl = certRows.filter(r => { const c = certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined); return c && c.url && c.url !== 'uploaded'; }).length;
                                 const attendedTotal = certRows.filter(r => !!attendance[r.certKey]).length;
-                                const pendingUpload = certRows.filter(r => !certificates[r.certKey] && !!attendance[r.certKey]).length;
+                                const pendingUpload = certRows.filter(r => !(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined)) && !!attendance[r.certKey]).length;
                                 const notAttended = certRows.filter(r => !attendance[r.certKey]).length;
                                 const pct = attendedTotal > 0 ? Math.round(uploaded / attendedTotal * 100) : 0;
                                 return (
@@ -1625,7 +1511,6 @@ const AdminDashboard = () => {
                                                 📋 الإجمالي: {certRows.length}
                                             </span>
                                         </div>
-                                        {/* Progress bar */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140 }}>
                                             <div style={{ flex: 1, height: 7, background: 'var(--gray5)', borderRadius: 4, overflow: 'hidden' }}>
                                                 <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#16a34a,#22c55e)', borderRadius: 4, transition: 'width .5s ease' }} />
@@ -1635,96 +1520,103 @@ const AdminDashboard = () => {
                                     </div>
                                 );
                             })()}
+
                             {certError && (
                                 <div className="d-err">⚠️ {certError}
                                     <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setCertError(null)}>✕</button>
                                 </div>
                             )}
+
                             <div className="d-card">
-                                {loading ? <div className="d-ld"><div className="d-sp" /><p>جاري التحميل...</p></div>
-                                    : certRows.length === 0 ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد نتائج</p></div>
+                                {loading
+                                    ? <div className="d-ld"><div className="d-sp" /><p>جاري التحميل...</p></div>
+                                    : certRows.length === 0
+                                        ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد نتائج</p></div>
                                         : (
                                             <div className="d-cert-grid">
                                                 {certRows.map(row => {
                                                     const ck = row.certKey;
-                                                    // Check primary key first, then fallback userId-planworkId key
                                                     const cert = certificates[ck] ?? (row.altKey ? certificates[row.altKey] : undefined);
                                                     const uploading = certUploading[ck];
-
-                                                    // attended is keyed by String(enrollmentId) same as certKey
                                                     const isAttended = !!attendance[ck];
-                                                    const canUpload = isAttended; // only attended users can get a cert
-
+                                                    const canUpload = isAttended;
                                                     const hasRealUrl = cert && cert.url && cert.url !== 'uploaded';
                                                     const hasPlaceholder = cert && (!cert.url || cert.url === 'uploaded');
 
-                                                    // Visual state
-                                                    let cardBorder, cardBg, iconBg, iconBorder;
+                                                    // Card colours
+                                                    let cardBorder, cardBg;
                                                     if (cert) {
                                                         cardBorder = '#86efac'; cardBg = '#f8fffe';
-                                                        iconBg = '#f0fdf4'; iconBorder = '#86efac';
                                                     } else if (!canUpload) {
                                                         cardBorder = 'var(--gray5)'; cardBg = '#fafafa';
-                                                        iconBg = 'rgba(156,163,175,.06)'; iconBorder = 'rgba(156,163,175,.15)';
                                                     } else {
                                                         cardBorder = 'rgba(124,58,237,.2)'; cardBg = 'var(--white)';
-                                                        iconBg = 'rgba(124,58,237,.06)'; iconBorder = 'rgba(124,58,237,.2)';
                                                     }
+
+                                                    // Icon variant
+                                                    const iconCls = cert ? 'has' : !canUpload ? 'grey' : '';
 
                                                     return (
                                                         <div className="d-cert-card" key={ck}
-                                                            style={{ borderColor: cardBorder, background: cardBg, opacity: !canUpload && !cert ? 0.72 : 1 }}>
+                                                            style={{ borderColor: cardBorder, background: cardBg, opacity: !canUpload && !cert ? 0.75 : 1 }}>
 
-                                                            {/* ── Status icon ── */}
-                                                            <div className="d-cert-icon"
-                                                                style={{ background: iconBg, borderColor: iconBorder }}>
-                                                                {cert ? '📜' : canUpload ? '📄' : '🚫'}
+                                                            {/* ── top: icon + info ── */}
+                                                            <div className="d-cert-card-top">
+                                                                <div className={`d-cert-icon${iconCls ? ` ${iconCls}` : ''}`}>
+                                                                    {cert ? '📜' : canUpload ? '📄' : '🚫'}
+                                                                </div>
+                                                                <div className="d-cert-info">
+                                                                    <div className="d-cert-name"
+                                                                        title={`${row.user.firstName || row.user.username} ${row.user.lastName}`.trim()}>
+                                                                        {row.user.firstName || row.user.username} {row.user.lastName}
+                                                                    </div>
+                                                                    <div className="d-cert-course" title={row.course.title}>
+                                                                        📚 {row.course.title}
+                                                                    </div>
+                                                                    <div className="d-cert-badges">
+                                                                        {/* Attendance */}
+                                                                        <span style={{
+                                                                            fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                                                                            background: isAttended ? '#f0fdf4' : 'rgba(156,163,175,.08)',
+                                                                            color: isAttended ? '#15803d' : 'var(--gray3)',
+                                                                            border: `1px solid ${isAttended ? '#86efac' : 'var(--gray4)'}`,
+                                                                        }}>
+                                                                            {isAttended ? '✅ حضر' : '❌ غائب'}
+                                                                        </span>
+
+                                                                        {/* Cert status */}
+                                                                        {hasRealUrl && (
+                                                                            <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f0fdf4', color: '#15803d', border: '1px solid #86efac' }}>
+                                                                                📜 {cert.name && cert.name !== 'uploaded'
+                                                                                    ? (cert.name.length > 20 ? cert.name.slice(0, 20) + '…' : cert.name)
+                                                                                    : 'مرفوعة'}
+                                                                            </span>
+                                                                        )}
+                                                                        {hasPlaceholder && (
+                                                                            <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac' }}>
+                                                                                ✅ مرفوعة على السيرفر
+                                                                            </span>
+                                                                        )}
+                                                                        {!cert && canUpload && (
+                                                                            <span style={{ fontSize: '.6rem', color: '#7c3aed', padding: '2px 8px', borderRadius: 6, background: 'rgba(124,58,237,.05)', border: '1px solid rgba(124,58,237,.15)' }}>
+                                                                                لم تُرفع بعد
+                                                                            </span>
+                                                                        )}
+                                                                        {!cert && !canUpload && (
+                                                                            <span style={{ fontSize: '.6rem', color: 'var(--gray4)', padding: '2px 8px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>
+                                                                                يجب تسجيل الحضور أولاً
+                                                                            </span>
+                                                                        )}
+                                                                        {cert?.uploadedAt && (
+                                                                            <span style={{ fontSize: '.58rem', color: 'var(--gray3)', padding: '2px 6px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>
+                                                                                🗓 {cert.uploadedAt}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
 
-                                                            {/* ── Info ── */}
-                                                            <div className="d-cert-info">
-                                                                <div className="d-cert-name">
-                                                                    {row.user.firstName || row.user.username} {row.user.lastName}
-                                                                </div>
-                                                                <div className="d-cert-sub">📚 {row.course.title}</div>
-
-                                                                {/* Attendance badge */}
-                                                                <div style={{ marginTop: 3, display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
-                                                                    <span style={{
-                                                                        fontSize: '.6rem', fontWeight: 700, padding: '1px 7px', borderRadius: 6,
-                                                                        background: isAttended ? '#f0fdf4' : 'rgba(156,163,175,.08)',
-                                                                        color: isAttended ? '#15803d' : 'var(--gray3)',
-                                                                        border: `1px solid ${isAttended ? '#86efac' : 'var(--gray4)'}`
-                                                                    }}>
-                                                                        {isAttended ? '✅ حضر' : '❌ غائب'}
-                                                                    </span>
-
-                                                                    {/* Cert status */}
-                                                                    {hasRealUrl && (
-                                                                        <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '1px 7px', borderRadius: 6, background: '#f0fdf4', color: '#15803d', border: '1px solid #86efac' }}>
-                                                                            📜 مرفوعة
-                                                                            {cert.name && cert.name !== 'uploaded' ? ` · ${cert.name}` : ''}
-                                                                        </span>
-                                                                    )}
-                                                                    {hasPlaceholder && (
-                                                                        <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '1px 7px', borderRadius: 6, background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac' }}>
-                                                                            ✅ مرفوعة على السيرفر
-                                                                        </span>
-                                                                    )}
-                                                                    {!cert && canUpload && (
-                                                                        <span style={{ fontSize: '.6rem', color: 'var(--gray3)', padding: '1px 7px', borderRadius: 6, background: 'rgba(124,58,237,.05)', border: '1px solid rgba(124,58,237,.15)' }}>
-                                                                            📄 لم تُرفع بعد
-                                                                        </span>
-                                                                    )}
-                                                                    {!cert && !canUpload && (
-                                                                        <span style={{ fontSize: '.6rem', color: 'var(--gray3)', padding: '1px 7px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>
-                                                                            غير متاح — لم يحضر
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </div>
-
-                                                            {/* ── Actions ── */}
+                                                            {/* ── bottom: action buttons ── */}
                                                             <div className="d-cert-actions">
                                                                 {cert ? (
                                                                     <>
@@ -1740,15 +1632,13 @@ const AdminDashboard = () => {
                                                                         <button className="d-cert-btn rm" onClick={() => removeCert(ck)}>🗑</button>
                                                                     </>
                                                                 ) : canUpload ? (
-                                                                    /* Upload only allowed if attended */
-                                                                    <button className="d-cert-btn up" disabled={uploading}
+                                                                    <button className="d-cert-btn up full" disabled={uploading}
                                                                         onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>
-                                                                        {uploading ? '⏳ جاري...' : '⬆ رفع شهادة'}
+                                                                        {uploading ? '⏳ جاري الرفع...' : '⬆ رفع شهادة'}
                                                                     </button>
                                                                 ) : (
-                                                                    /* Not attended — no upload */
-                                                                    <span style={{ fontSize: '.62rem', color: 'var(--gray4)', fontFamily: '"Droid Arabic Kufi",serif', padding: '4px 6px' }}>
-                                                                        يجب تسجيل الحضور أولاً
+                                                                    <span style={{ fontSize: '.62rem', color: 'var(--gray4)', width: '100%', textAlign: 'center', fontFamily: '"Droid Arabic Kufi",serif' }}>
+                                                                        سجّل الحضور أولاً لرفع الشهادة
                                                                     </span>
                                                                 )}
                                                             </div>
@@ -1761,7 +1651,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ── USERS / COURSES TABS ─────────────────────────── */}
+                    {/* ══ USERS / COURSES TABS ═════════════════════════════ */}
                     {isExportTab && (
                         <>
                             <div className="d-toolbar">
@@ -1832,7 +1722,7 @@ const AdminDashboard = () => {
                                                                             <tr className="d-xrow"><td colSpan={5}>
                                                                                 <div className="d-xin">
                                                                                     {u.enrolledCourses.map(c => {
-                                                                                        const ck = String(c.enrollmentId ?? `${u.id}-${c._planworkId}`);
+                                                                                        const ck = String(c.enrollmentId ?? `${u.id}-${c.id}`);
                                                                                         return (
                                                                                             <div className="d-mc" key={ck}>
                                                                                                 <div className="d-mt">📚 {c.title}</div>
@@ -1841,7 +1731,7 @@ const AdminDashboard = () => {
                                                                                                     <span className={`d-att-badge ${attendance[String(c.enrollmentId)] ? 'on' : 'off'}`} style={{ fontSize: '.62rem' }}>
                                                                                                         {attendance[String(c.enrollmentId)] ? '✅ حضر' : '❌ غائب'}
                                                                                                     </span>
-                                                                                                    {certificates[ck] ? <span style={{ fontSize: '.62rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span> : null}
+                                                                                                    {(certificates[ck] ?? certificates[`${u.id}-${c.id}`]) ? <span style={{ fontSize: '.62rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span> : null}
                                                                                                 </div>
                                                                                             </div>
                                                                                         );
