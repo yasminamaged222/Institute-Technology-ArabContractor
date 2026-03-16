@@ -53,14 +53,11 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) { cons
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
 // ════════════════════════════════════════════════════════════════════════════
-
-// ── Files are stored at API_HOST + fileUrl  (e.g. /certificates/xxx.png)
-// ── NOT under /api — serve with auth header via viewCert(), never as bare <a href>
 function resolveCertUrl(url) {
     if (!url) return null;
     if (url === 'uploaded') return url;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${API_HOST}${url}`;   // ← correct: no /api prefix
+    if (url.startsWith('/')) return `${API_HOST}${url}`;
     return url;
 }
 
@@ -166,8 +163,8 @@ function normalizeCert(cert) {
         username: cert.username ?? cert.Username ?? '',
         planworkId: cert.planworkId ?? cert.PlanworkId,
         planworkTitle: cert.planworkTitle ?? cert.PlanworkTitle ?? '',
-        fileUrl: resolveCertUrl(rawUrl),   // full URL (needs auth to open)
-        rawFileUrl: rawUrl,                 // original relative path from DB
+        fileUrl: resolveCertUrl(rawUrl),
+        rawFileUrl: rawUrl,
         fileName: cert.fileName ?? cert.FileName ?? (rawUrl ? rawUrl.split('/').pop() : 'certificate'),
         uploadedAt: fmtDate(cert.uploadedAt ?? cert.UploadedAt),
     };
@@ -284,7 +281,7 @@ const AdminDashboard = () => {
     }, [authFetch]);
 
     // ════════════════════════════════════════════════════════════════════════
-    // COMMIT REFUND ACTION
+    // COMMIT REFUND ACTION — auto-refreshes list after success
     // ════════════════════════════════════════════════════════════════════════
     const commitRefundAction = async () => {
         if (!refundActionModal) return;
@@ -309,8 +306,7 @@ const AdminDashboard = () => {
             }
             const updated = await res.json();
             const normalized = normalizeRefund(updated);
-            setRefunds(prev => prev.map(x => x.id === r.id ? normalized : x));
-            setRefundDetailModal(prev => prev && prev.id === r.id ? normalized : prev);
+
             if (action === 'send_to_bank') {
                 const bankRes = normalized.bankResult ?? updated?.bankResult ?? updated?.BankResult ?? null;
                 if (bankRes === 'SUCCESS' || bankRes === 'success') {
@@ -320,8 +316,14 @@ const AdminDashboard = () => {
                 }
                 setTimeout(() => setBankResultBanner(null), 12000);
             }
+
             setRefundActionModal(null);
             setRefundActionNote('');
+            setRefundDetailModal(null);
+
+            // ── Auto-refresh the full list from the API ──
+            await fetchRefunds(refundStatusFilter);
+
         } catch (err) {
             console.error('Refund action error:', err);
             setRefundActionError(err.message || 'حدث خطأ أثناء تنفيذ الإجراء');
@@ -438,17 +440,16 @@ const AdminDashboard = () => {
             const map = {};
             certsArr.forEach(raw => {
                 const cert = normalizeCert(raw);
-                // certId alone is enough to view via /download — don't skip if fileUrl is missing
                 if (!cert.id) return;
 
                 const fallbackKey = `${cert.userId}-${cert.planworkId}`;
                 const eidKey = upToEid[fallbackKey];
 
                 const certEntry = {
-                    certId: cert.id,             // ← primary key for /download and DELETE
+                    certId: cert.id,
                     name: cert.fileName,
-                    url: cert.fileUrl,            // stored but currently 404 (backend issue)
-                    rawUrl: cert.rawFileUrl,      // original DB path e.g. /certificates/xxx.png
+                    url: cert.fileUrl,
+                    rawUrl: cert.rawFileUrl,
                     size: null,
                     fromDb: true,
                     uploadedAt: cert.uploadedAt,
@@ -549,9 +550,6 @@ const AdminDashboard = () => {
                 throw new Error(msg);
             }
 
-            // Upload succeeded — now re-fetch /Admin/certificates to get the certId
-            // (the upload response only says {"message":"Certificate uploaded successfully"}, no certId)
-            // The fileUrl in DB is broken for direct access — we need certId for /download endpoint
             try {
                 const certRes = await authFetch(`${API_BASE}/Admin/certificates`);
                 if (certRes.ok) {
@@ -564,7 +562,7 @@ const AdminDashboard = () => {
                     if (found) {
                         const cert = normalizeCert(found);
                         const resolvedEntry = {
-                            certId: cert.id,          // ← the key piece — enables /download viewing
+                            certId: cert.id,
                             name: cert.fileName || file.name,
                             url: cert.fileUrl,
                             rawUrl: cert.rawFileUrl,
@@ -592,10 +590,7 @@ const AdminDashboard = () => {
         }
     };
 
-    // ── VIEW cert — the file requires auth; fetch with Bearer token → blob → open ──
     // ── VIEW cert ─────────────────────────────────────────────────────────────
-    // CONFIRMED working: GET /api/Admin/certificates/{certId}/download (with auth)
-    // CONFIRMED broken:  /certificates/xxx.png (always 404 — backend never serves it)
     const viewCert = useCallback(async (certId, url, rawUrl, filename = 'certificate') => {
         if (certId == null && !url && !rawUrl) return;
 
@@ -603,13 +598,11 @@ const AdminDashboard = () => {
         try { token = await getToken(); } catch (_) { }
         const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // Order matters — proven working endpoint goes FIRST
         const candidates = [];
         if (certId != null) {
-            candidates.push(`${API_BASE}/Admin/certificates/${certId}/download`); // ✅ confirmed
+            candidates.push(`${API_BASE}/Admin/certificates/${certId}/download`);
             candidates.push(`${API_BASE}/Admin/certificates/${certId}/file`);
         }
-        // Direct URL only as last resort (currently 404 but may work after backend fix)
         if (url && url !== 'uploaded') candidates.push(url);
         if (rawUrl && !rawUrl.startsWith('http')) candidates.push(`${API_HOST}${rawUrl}`);
 
@@ -651,7 +644,6 @@ const AdminDashboard = () => {
 
         try {
             if (certId != null) {
-                // Try DELETE first, fallback to POST …/delete pattern if 405
                 let ok = false;
                 const endpoints = [
                     [`${API_BASE}/Admin/certificates/${certId}`, 'DELETE'],
@@ -665,13 +657,11 @@ const AdminDashboard = () => {
                         const j = await res.json().catch(() => ({}));
                         throw new Error(j?.message ?? j?.title ?? `HTTP ${res.status}`);
                     }
-                    // 405 → try next pattern
                 }
                 if (!ok) throw new Error('لم يُعثر على نقطة نهاية للحذف');
                 console.log('[deleteCert] ✅ certId:', certId);
             }
 
-            // Remove from local state (both keys)
             setCertificates(p => {
                 const n = { ...p };
                 delete n[ck];
@@ -763,7 +753,6 @@ const AdminDashboard = () => {
         return matchSearch && matchStatus;
     });
 
-    // Deduplicate by certId so double-keyed entries don't inflate the count
     const totalCerts = (() => {
         const seen = new Set();
         let n = 0;
@@ -993,7 +982,7 @@ const AdminDashboard = () => {
         .d-att-sum span{font-size:clamp(.7rem,1.3vw,.78rem);font-weight:700;color:#15803d;}
         .d-prog-wrap{flex:1;min-width:100px;height:6px;background:#bbf7d0;border-radius:3px;overflow:hidden;}.d-prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#16a34a,#22c55e);transition:width .5s ease;}
 
-        /* ── CERTIFICATE CARDS — redesigned ─────────────────────────────── */
+        /* ── CERTIFICATE CARDS ─────────────────────────────────────────── */
         .d-cert-grid{
           display:grid;gap:clamp(10px,1.8vw,14px);padding:clamp(12px,2vw,18px);
           grid-template-columns:repeat(auto-fill,minmax(clamp(240px,28vw,300px),1fr));
@@ -1093,8 +1082,6 @@ const AdminDashboard = () => {
         .rf-bank-banner.failed{background:#fff8f0;border:1.5px solid rgba(245,124,0,.4);color:#b45309;}
         .rf-bank-banner-close{position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1rem;color:inherit;opacity:.6;}
         .rf-bank-banner-close:hover{opacity:1;}
-        .rf-refresh-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--gray4);background:var(--bg-flat);font-family:var(--font);font-size:.7rem;font-weight:700;cursor:pointer;color:var(--gray2);transition:all .14s;display:flex;align-items:center;gap:5px;}
-        .rf-refresh-btn:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-lt);}
 
         .d-api-info{display:flex;align-items:center;gap:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:9px;padding:8px 14px;margin-bottom:clamp(12px,2vw,20px);font-size:clamp(.68rem,1.3vw,.76rem);color:#15803d;}
         .d-api-info code{background:#dcfce7;color:#16a34a;padding:1px 5px;border-radius:4px;font-family:'Courier New',monospace;font-size:.86em;}
@@ -1242,7 +1229,9 @@ const AdminDashboard = () => {
                             <div className="d-modal-actions">
                                 <button className="d-modal-cancel" onClick={() => { setRefundActionModal(null); setRefundActionNote(''); setRefundActionError(''); }} disabled={refundActionSaving}>إلغاء</button>
                                 <button className={`rf-action-confirm ${am.cls}`} onClick={commitRefundAction} disabled={refundActionSaving || (action === 'reject' && !refundActionNote.trim())}>
-                                    {refundActionSaving ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'd-spin .6s linear infinite', marginLeft: 6, verticalAlign: 'middle' }} />جاري...</> : 'تأكيد'}
+                                    {refundActionSaving
+                                        ? <><span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid rgba(255,255,255,.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'd-spin .6s linear infinite', marginLeft: 6, verticalAlign: 'middle' }} />جاري...</>
+                                        : 'تأكيد'}
                                 </button>
                             </div>
                         </div>
@@ -1351,6 +1340,8 @@ const AdminDashboard = () => {
                                     </div>
                                 ))}
                             </div>
+
+                            {/* ── Filter bar — refresh button removed ── */}
                             <div className="d-filter">
                                 <div className="d-search" style={{ minWidth: 200 }}>
                                     <input type="text" placeholder="ابحث برقم الطلب، المبلغ، المستخدم..." value={refundSearch} onChange={e => setRefundSearch(e.target.value)} />
@@ -1368,11 +1359,8 @@ const AdminDashboard = () => {
                                     ))}
                                 </div>
                                 {refundSearch && <button className="d-fclear" onClick={() => setRefundSearch('')}>✕</button>}
-                                <button className="rf-refresh-btn" onClick={() => fetchRefunds(refundStatusFilter)} disabled={refundsLoading}>
-                                    {refundsLoading ? <span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid var(--gray3)', borderTopColor: 'var(--blue)', borderRadius: '50%', animation: 'd-spin .6s linear infinite' }} /> : '↻'}
-                                    تحديث
-                                </button>
                             </div>
+
                             {refundsError && (
                                 <div className="d-err">⚠️ {refundsError}
                                     <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setRefundsError(null)}>✕</button>
@@ -1559,7 +1547,11 @@ const AdminDashboard = () => {
                                         </button>
                                     ))}
                                 </div>
-                                <button className="rf-refresh-btn" onClick={refreshCertificates} title="تحديث الشهادات من السيرفر">
+                                <button
+                                    style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid var(--gray4)', background: 'var(--bg-flat)', fontFamily: '"Droid Arabic Kufi",serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', color: 'var(--gray2)', transition: 'all .14s', display: 'flex', alignItems: 'center', gap: 5 }}
+                                    onClick={refreshCertificates}
+                                    title="تحديث الشهادات من السيرفر"
+                                >
                                     ↻ تحديث
                                 </button>
                             </div>
@@ -1619,104 +1611,63 @@ const AdminDashboard = () => {
                                                     const deleting = !!certDeleting[ck];
                                                     const isAttended = !!attendance[ck];
                                                     const canUpload = isAttended;
-                                                    // View button works as long as we have certId (uses /download endpoint)
                                                     const hasRealUrl = cert && cert.certId != null;
                                                     const hasPlaceholder = cert && cert.certId == null;
 
-                                                    // Card colours
                                                     let cardBorder, cardBg;
-                                                    if (cert) {
-                                                        cardBorder = '#86efac'; cardBg = '#f8fffe';
-                                                    } else if (!canUpload) {
-                                                        cardBorder = 'var(--gray5)'; cardBg = '#fafafa';
-                                                    } else {
-                                                        cardBorder = 'rgba(124,58,237,.2)'; cardBg = 'var(--white)';
-                                                    }
+                                                    if (cert) { cardBorder = '#86efac'; cardBg = '#f8fffe'; }
+                                                    else if (!canUpload) { cardBorder = 'var(--gray5)'; cardBg = '#fafafa'; }
+                                                    else { cardBorder = 'rgba(124,58,237,.2)'; cardBg = 'var(--white)'; }
 
-                                                    // Icon variant
                                                     const iconCls = cert ? 'has' : !canUpload ? 'grey' : '';
 
                                                     return (
                                                         <div className="d-cert-card" key={ck}
                                                             style={{ borderColor: cardBorder, background: cardBg, opacity: !canUpload && !cert ? 0.75 : 1 }}>
-
-                                                            {/* ── top: icon + info ── */}
                                                             <div className="d-cert-card-top">
                                                                 <div className={`d-cert-icon${iconCls ? ` ${iconCls}` : ''}`}>
                                                                     {cert ? '📜' : canUpload ? '📄' : '🚫'}
                                                                 </div>
                                                                 <div className="d-cert-info">
-                                                                    <div className="d-cert-name"
-                                                                        title={`${row.user.firstName || row.user.username} ${row.user.lastName}`.trim()}>
+                                                                    <div className="d-cert-name" title={`${row.user.firstName || row.user.username} ${row.user.lastName}`.trim()}>
                                                                         {row.user.firstName || row.user.username} {row.user.lastName}
                                                                     </div>
-                                                                    <div className="d-cert-course" title={row.course.title}>
-                                                                        📚 {row.course.title}
-                                                                    </div>
+                                                                    <div className="d-cert-course" title={row.course.title}>📚 {row.course.title}</div>
                                                                     <div className="d-cert-badges">
-                                                                        {/* Attendance */}
-                                                                        <span style={{
-                                                                            fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6,
-                                                                            background: isAttended ? '#f0fdf4' : 'rgba(156,163,175,.08)',
-                                                                            color: isAttended ? '#15803d' : 'var(--gray3)',
-                                                                            border: `1px solid ${isAttended ? '#86efac' : 'var(--gray4)'}`,
-                                                                        }}>
+                                                                        <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: isAttended ? '#f0fdf4' : 'rgba(156,163,175,.08)', color: isAttended ? '#15803d' : 'var(--gray3)', border: `1px solid ${isAttended ? '#86efac' : 'var(--gray4)'}` }}>
                                                                             {isAttended ? '✅ حضر' : '❌ غائب'}
                                                                         </span>
-
-                                                                        {/* Cert status */}
                                                                         {hasRealUrl && (
                                                                             <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f0fdf4', color: '#15803d', border: '1px solid #86efac' }}>
-                                                                                📜 {cert.name && cert.name !== 'uploaded'
-                                                                                    ? (cert.name.length > 20 ? cert.name.slice(0, 20) + '…' : cert.name)
-                                                                                    : 'مرفوعة'}
+                                                                                📜 {cert.name && cert.name !== 'uploaded' ? (cert.name.length > 20 ? cert.name.slice(0, 20) + '…' : cert.name) : 'مرفوعة'}
                                                                             </span>
                                                                         )}
                                                                         {hasPlaceholder && (
-                                                                            <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac' }}>
-                                                                                ✅ مرفوعة على السيرفر
-                                                                            </span>
+                                                                            <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac' }}>✅ مرفوعة على السيرفر</span>
                                                                         )}
                                                                         {!cert && canUpload && (
-                                                                            <span style={{ fontSize: '.6rem', color: '#7c3aed', padding: '2px 8px', borderRadius: 6, background: 'rgba(124,58,237,.05)', border: '1px solid rgba(124,58,237,.15)' }}>
-                                                                                لم تُرفع بعد
-                                                                            </span>
+                                                                            <span style={{ fontSize: '.6rem', color: '#7c3aed', padding: '2px 8px', borderRadius: 6, background: 'rgba(124,58,237,.05)', border: '1px solid rgba(124,58,237,.15)' }}>لم تُرفع بعد</span>
                                                                         )}
                                                                         {!cert && !canUpload && (
-                                                                            <span style={{ fontSize: '.6rem', color: 'var(--gray4)', padding: '2px 8px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>
-                                                                                يجب تسجيل الحضور أولاً
-                                                                            </span>
+                                                                            <span style={{ fontSize: '.6rem', color: 'var(--gray4)', padding: '2px 8px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>يجب تسجيل الحضور أولاً</span>
                                                                         )}
                                                                         {cert?.uploadedAt && (
-                                                                            <span style={{ fontSize: '.58rem', color: 'var(--gray3)', padding: '2px 6px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>
-                                                                                🗓 {cert.uploadedAt}
-                                                                            </span>
+                                                                            <span style={{ fontSize: '.58rem', color: 'var(--gray3)', padding: '2px 6px', borderRadius: 6, background: 'var(--bg-flat)', border: '1px solid var(--gray5)' }}>🗓 {cert.uploadedAt}</span>
                                                                         )}
                                                                     </div>
                                                                 </div>
                                                             </div>
-
-                                                            {/* ── bottom: action buttons ── */}
                                                             <div className="d-cert-actions">
                                                                 {cert ? (
                                                                     <>
                                                                         {hasRealUrl && (
-                                                                            <button
-                                                                                className="d-cert-btn dl"
-                                                                                onClick={() => viewCert(cert.certId, cert.url, cert.rawUrl, cert.name)}
-                                                                            >
-                                                                                👁 عرض
-                                                                            </button>
+                                                                            <button className="d-cert-btn dl" onClick={() => viewCert(cert.certId, cert.url, cert.rawUrl, cert.name)}>👁 عرض</button>
                                                                         )}
                                                                         <button className="d-cert-btn up" disabled={uploading}
                                                                             onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>
                                                                             {uploading ? '⏳' : '🔄 تحديث'}
                                                                         </button>
-                                                                        <button
-                                                                            className="d-cert-btn rm"
-                                                                            disabled={deleting}
-                                                                            onClick={() => deleteCert(ck, row.altKey)}
-                                                                        >
+                                                                        <button className="d-cert-btn rm" disabled={deleting} onClick={() => deleteCert(ck, row.altKey)}>
                                                                             {deleting ? '⏳' : '🗑'}
                                                                         </button>
                                                                     </>
