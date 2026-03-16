@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
+const FILES_BASE = 'http://www.arabcont.com/icemt/assets/pdf/planpdf/';
 
 const mediaQueryStyles = `
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -287,6 +288,7 @@ const CourseDetails = () => {
         return { startDate: p[0]?.trim() || '', endDate: p[1]?.trim() || p[0]?.trim() || '' };
     };
 
+    // ── UPDATED transform: builds full file URLs from partial paths ──────────
     const transform = (a) => {
         const { startDate, endDate } = extractDates(a.date);
         const isFree = !a.cost || a.cost === 0;
@@ -305,11 +307,23 @@ const CourseDetails = () => {
             programDates: extractList(a.content, 'تاريخ انعقاد البرنامج'),
             startDate, endDate, date: a.date,
             image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800',
-            files: (a.files || []).map(f => ({
-                id: f.id ?? null,
-                title: f.title || f.name || 'ملف',
-                url: f.url || f.link || f.path || f.fileUrl || f.downloadUrl || null,
-            })),
+            files: (a.files || []).map(f => {
+                // Pick whichever field the API uses for the path/filename
+                const rawUrl =
+                    f.url || f.link || f.path || f.fileUrl ||
+                    f.downloadUrl || f.fileName || f.filename || null;
+
+                // If it's already a full URL leave it alone; otherwise prepend FILES_BASE
+                const url = rawUrl
+                    ? (rawUrl.startsWith('http') ? rawUrl : `${FILES_BASE}${rawUrl}`)
+                    : null;
+
+                return {
+                    id: f.id ?? null,
+                    title: f.title || f.name || 'ملف',
+                    url,
+                };
+            }),
         };
     };
 

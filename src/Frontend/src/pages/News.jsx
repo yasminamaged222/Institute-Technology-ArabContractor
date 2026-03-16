@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './news.css';
 
+const IMAGES_BASE = 'https://www.arabcont.com/icemt/assets/jmages/news/';
+
+const getImageUrl = (raw) => {
+    if (!raw) return '';
+    return raw.startsWith('http') ? raw : `${IMAGES_BASE}${raw}`;
+};
+
 const News = () => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,7 +39,12 @@ const News = () => {
                 return response.json();
             })
             .then(data => {
-                setNews(data.data || []);
+                // Normalise image URLs for every item
+                const items = (data.data || []).map(item => ({
+                    ...item,
+                    imageUrl: getImageUrl(item.imageUrl),
+                }));
+                setNews(items);
                 setTotalPages(data.totalPages || 0);
                 setLoading(false);
                 setTimeout(() => setAnimate(true), 50);
@@ -51,9 +63,9 @@ const News = () => {
     const handleScroll = (direction) => {
         if (scrollRef.current) {
             const scrollAmount = scrollRef.current.clientWidth / 2;
-            scrollRef.current.scrollBy({ 
-                left: direction === 'left' ? -scrollAmount : scrollAmount, 
-                behavior: 'smooth' 
+            scrollRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
             });
         }
     };
@@ -62,7 +74,7 @@ const News = () => {
         <div className="news-page-container">
 
             {/* Breadcrumb */}
-            <div className="overview_intro" style={{ position: 'relative', bottom: '50px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee', bottom:70 }}>
+            <div className="overview_intro" style={{ position: 'relative', bottom: '50px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee', bottom: 70 }}>
                 <span className="overview"><a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار</span>
             </div>
 
@@ -111,10 +123,10 @@ const News = () => {
                             <div key={item.id} className="news-card-item news-card-hover">
                                 <div className="news-card-inner">
                                     <div className="news-date-badge">
-                                        {new Date(item.publishedAt).toLocaleDateString('ar-EG', { 
-                                            day: '2-digit', 
-                                            month: 'long', 
-                                            year: 'numeric' 
+                                        {new Date(item.publishedAt).toLocaleDateString('ar-EG', {
+                                            day: '2-digit',
+                                            month: 'long',
+                                            year: 'numeric'
                                         })}
                                     </div>
                                     <a href={`/news/${item.id}`} className="news-image-wrapper">
