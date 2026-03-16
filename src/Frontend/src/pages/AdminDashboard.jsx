@@ -1822,7 +1822,7 @@ const AdminDashboard = () => {
                     )}
 
                     <div className="d-ftr">
-                        تم إنشاء هذا التقرير بتاريخ {new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                        1تم إنشاء هذا التقرير بتاريخ {new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
                         {' — '}<strong>ICEMT Admin Panel</strong>
                     </div>
                 </main>
