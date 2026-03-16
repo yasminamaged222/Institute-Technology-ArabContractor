@@ -39,7 +39,7 @@ namespace Institute.API.Controllers
             _categoryService = categoryService;
         }
 
-        
+
         [HttpGet("programs/{slug}/courses")]
         public async Task<IActionResult> GetProgramCourses(string slug)
         {
@@ -115,7 +115,7 @@ namespace Institute.API.Controllers
                     Date = c.CourseDate,
                     Description = c.CourseDesc,
                     Cost = c.PlanCost
-                    
+
                 })
                 .ToList();
 
@@ -202,34 +202,98 @@ namespace Institute.API.Controllers
         [HttpGet("my-courses")]
         public async Task<IActionResult> GetMyCourses()
         {
-            // 1️⃣ جايب الـuser الحالي من Clerk
-            var clerkUserId = _clerkService.GetAuthenticatedUserId(User); // string
+            // 1️⃣ جايب الـ User الحالي من Clerk
+            var clerkUserId = _clerkService.GetAuthenticatedUserId(User);
             if (clerkUserId == null)
                 return Unauthorized();
 
-            // map to AppUser int ID
-            var appUser = await _userRepo.GetByClerkIdAsync(clerkUserId); // method تجيب AppUser من ClerkUserId
+            var appUser = await _userRepo.GetByClerkIdAsync(clerkUserId);
             if (appUser == null)
                 return NotFound("User not found in local DB");
 
-            // دلوقتي استخدم الـint ID في الـSpecification
-            var spec = new EnrollmentsByUserSpecification(appUser.Id);
-            var enrollments = await _enrollmentRepo.ListAsync(spec);
+            // 2️⃣ جيب كل الـ Enrollments بتاعت اليوزر ده (مدفوعة + مجانية)
+            // بنستخدم AnyAsync + GetAllAsync بدل Specification عشان نضمن إن الـ Include شغال صح
+            var allEnrollments = await _enrollmentRepo.GetAllAsync();
+            var userEnrollments = allEnrollments
+                .Where(e => e.UserId == appUser.Id)
+                .ToList();
 
-            // 3️⃣ ترجع الكورسات
-            var courses = enrollments.Select(e => new
-            {
-                e.Planwork.ChildId,
-                e.Planwork.CoursePlace,
-                e.Planwork.CourseDate,
-                e.Planwork.ServiceTitle,
-                e.Planwork.Slug,
-                e.EnrolledAt,
-                OrderId = e.OrderId,
-                Cost = e.Planwork.PlanCost
-            });
+            var allPlanworks = (await _planRepo.GetAllAsync()).ToList();
+
+            // 3️⃣ بنعمل Join يدوي بين Enrollment و Planwork
+            var courses = userEnrollments
+                .Select(e =>
+                {
+                    var plan = allPlanworks.FirstOrDefault(p => p.ChildId == e.PlanworkId);
+                    if (plan == null) return null;
+                    return new
+                    {
+                        ChildId = plan.ChildId,
+                        CoursePlace = plan.CoursePlace,
+                        CourseDate = plan.CourseDate,
+                        ServiceTitle = plan.ServiceTitle,
+                        Slug = plan.Slug,
+                        EnrolledAt = e.EnrolledAt,
+                        OrderId = e.OrderId,
+                        Cost = plan.PlanCost,
+                        IsFree = e.OrderId == null // ✅ المجاني مالوش Order
+                    };
+                })
+                .Where(c => c != null)
+                .ToList();
 
             return Ok(courses);
+        }
+
+        // ─── تسجيل في كورس مجاني مباشرة بدون Cart/Payment ───────────────
+        [HttpPost("enroll-free/{planworkId}")]
+        [Authorize]
+        public async Task<IActionResult> EnrollInFreeCourse(int planworkId)
+        {
+            // 1️⃣ جيب الـ User الحالي
+            var clerkUserId = _clerkService.GetAuthenticatedUserId(User);
+            if (clerkUserId == null)
+                return Unauthorized();
+
+            var appUser = await _userRepo.GetByClerkIdAsync(clerkUserId);
+            if (appUser == null)
+                return NotFound("المستخدم غير موجود.");
+
+            // 2️⃣ تحقق إن الكورس موجود ومجاني فعلاً
+            var planworks = (await _planRepo.GetAllAsync()).ToList();
+            var course = planworks.FirstOrDefault(p =>
+                p.ChildId == planworkId &&
+                p.CourseDate != null &&
+                p.DetailsFlag == false &&
+                (p.PlanCost == null || p.PlanCost == 0));
+
+            if (course == null)
+                return BadRequest(new { message = "الكورس غير موجود أو غير مجاني." });
+
+            // 3️⃣ منع التكرار
+            var alreadyEnrolled = await _enrollmentRepo.AnyAsync(
+                e => e.UserId == appUser.Id && e.PlanworkId == planworkId);
+
+            if (alreadyEnrolled)
+                return Ok(new { message = "أنت مسجل في هذا الكورس بالفعل.", alreadyEnrolled = true });
+
+            // 4️⃣ أنشئ الـ Enrollment مباشرة (بدون Order)
+            await _enrollmentRepo.AddAsync(new Enrollment
+            {
+                UserId = appUser.Id,
+                PlanworkId = planworkId,
+                OrderId = null,   // الكورسات المجانية مفيهاش Order
+                EnrolledAt = DateTime.UtcNow
+            });
+            await _enrollmentRepo.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "تم تسجيلك في الكورس المجاني بنجاح.",
+                alreadyEnrolled = false,
+                courseTitle = course.ServiceTitle,
+                courseSlug = course.Slug
+            });
         }
 
     }
