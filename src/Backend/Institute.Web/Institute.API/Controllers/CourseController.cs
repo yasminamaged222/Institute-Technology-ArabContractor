@@ -202,32 +202,45 @@ namespace Institute.API.Controllers
         [HttpGet("my-courses")]
         public async Task<IActionResult> GetMyCourses()
         {
-            // 1️⃣ جايب الـuser الحالي من Clerk
-            var clerkUserId = _clerkService.GetAuthenticatedUserId(User); // string
+            // 1️⃣ جايب الـ User الحالي من Clerk
+            var clerkUserId = _clerkService.GetAuthenticatedUserId(User);
             if (clerkUserId == null)
                 return Unauthorized();
 
-            // map to AppUser int ID
-            var appUser = await _userRepo.GetByClerkIdAsync(clerkUserId); // method تجيب AppUser من ClerkUserId
+            var appUser = await _userRepo.GetByClerkIdAsync(clerkUserId);
             if (appUser == null)
                 return NotFound("User not found in local DB");
 
-            // دلوقتي استخدم الـint ID في الـSpecification
-            var spec = new EnrollmentsByUserSpecification(appUser.Id);
-            var enrollments = await _enrollmentRepo.ListAsync(spec);
+            // 2️⃣ جيب كل الـ Enrollments بتاعت اليوزر ده (مدفوعة + مجانية)
+            // بنستخدم AnyAsync + GetAllAsync بدل Specification عشان نضمن إن الـ Include شغال صح
+            var allEnrollments = await _enrollmentRepo.GetAllAsync();
+            var userEnrollments = allEnrollments
+                .Where(e => e.UserId == appUser.Id)
+                .ToList();
 
-            // 3️⃣ ترجع الكورسات
-            var courses = enrollments.Select(e => new
-            {
-                e.Planwork.ChildId,
-                e.Planwork.CoursePlace,
-                e.Planwork.CourseDate,
-                e.Planwork.ServiceTitle,
-                e.Planwork.Slug,
-                e.EnrolledAt,
-                OrderId = e.OrderId,
-                Cost = e.Planwork.PlanCost
-            });
+            var allPlanworks = (await _planRepo.GetAllAsync()).ToList();
+
+            // 3️⃣ بنعمل Join يدوي بين Enrollment و Planwork
+            var courses = userEnrollments
+                .Select(e =>
+                {
+                    var plan = allPlanworks.FirstOrDefault(p => p.ChildId == e.PlanworkId);
+                    if (plan == null) return null;
+                    return new
+                    {
+                        ChildId = plan.ChildId,
+                        CoursePlace = plan.CoursePlace,
+                        CourseDate = plan.CourseDate,
+                        ServiceTitle = plan.ServiceTitle,
+                        Slug = plan.Slug,
+                        EnrolledAt = e.EnrolledAt,
+                        OrderId = e.OrderId,
+                        Cost = plan.PlanCost,
+                        IsFree = e.OrderId == null // ✅ المجاني مالوش Order
+                    };
+                })
+                .Where(c => c != null)
+                .ToList();
 
             return Ok(courses);
         }

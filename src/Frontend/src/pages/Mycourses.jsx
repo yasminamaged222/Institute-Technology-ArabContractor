@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { SignedIn, SignedOut, SignInButton, useUser, useAuth } from '@clerk/clerk-react';
 import { Button } from '@mui/material';
 
-const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
-
+//const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
+const API_BASE = 'https://localhost:7177/api';
 const BookIcon = () => (
     <svg width="48" height="48" fill="none" stroke="#ffffff" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
@@ -63,7 +63,8 @@ const MyCourses = () => {
                 date: e.courseDate || e.date || '',
                 enrolledAt: e.enrolledAt || '',
                 // ✅ لو orderId مش موجود (null) → كورس مجاني
-                isFree: e.orderId === null || e.orderId === undefined || e.cost === 0 || e.cost === null,
+                // الـ Backend بيبعت isFree جاهز، أو بنحسبها من orderId
+                isFree: e.isFree !== undefined ? e.isFree : (e.orderId === null || e.orderId === undefined),
             }));
             setCourses(mapped);
         } catch (err) {
