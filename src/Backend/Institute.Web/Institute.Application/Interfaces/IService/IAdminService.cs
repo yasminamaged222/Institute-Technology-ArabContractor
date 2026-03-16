@@ -18,5 +18,6 @@ namespace Institute.Application.Interfaces.IService
         Task<AdminStatsDto> GetStatsAsync();
         Task<bool> UploadCertificateAsync(UploadCertificateDto dto);
         Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended);
+        Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync();
     }
 }

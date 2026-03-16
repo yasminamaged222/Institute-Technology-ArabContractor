@@ -13,6 +13,7 @@ namespace Institute.Domain.specifications.AdminSpec.Course
     {
         public PlanworkSearchSpec(PlanworkSpecParams param)
         : base(p =>
+            p.CourseDesc != null &&
             (string.IsNullOrEmpty(param.Search) ||
              EF.Functions.Like(p.ServiceTitle, $"%{param.Search}%")) &&
 

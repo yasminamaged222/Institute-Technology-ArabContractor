@@ -110,5 +110,12 @@ namespace Institute.API.Controllers
 
             return Ok(new { message = "Attendance updated successfully" });
         }
+
+        [HttpGet("certificates")]
+        public async Task<ActionResult<IReadOnlyList<CertificateDto>>> GetCertificates()
+        {
+            var result = await _adminService.GetAllCertificatesAsync();
+            return Ok(result);
+        }
     }
 }
