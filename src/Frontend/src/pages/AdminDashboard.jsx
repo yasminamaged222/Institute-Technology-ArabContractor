@@ -54,13 +54,13 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) { cons
 // HELPERS
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── FIX: relative paths from API are like /certificates/xxx.png
-// ──      we must prepend API_HOST + /api to get a valid URL
+// ── Files are stored at API_HOST + fileUrl  (e.g. /certificates/xxx.png)
+// ── NOT under /api — serve with auth header via viewCert(), never as bare <a href>
 function resolveCertUrl(url) {
     if (!url) return null;
     if (url === 'uploaded') return url;
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${API_HOST}/api${url}`;   // ← FIXED (was: API_HOST + url)
+    if (url.startsWith('/')) return `${API_HOST}${url}`;   // ← correct: no /api prefix
     return url;
 }
 
@@ -159,14 +159,16 @@ function normalizeRefund(r) {
 }
 
 function normalizeCert(cert) {
+    const rawUrl = cert.fileUrl ?? cert.FileUrl ?? cert.url ?? null;
     return {
         id: cert.id ?? cert.Id,
         userId: cert.userId ?? cert.UserId,
         username: cert.username ?? cert.Username ?? '',
         planworkId: cert.planworkId ?? cert.PlanworkId,
         planworkTitle: cert.planworkTitle ?? cert.PlanworkTitle ?? '',
-        fileUrl: resolveCertUrl(cert.fileUrl ?? cert.FileUrl ?? cert.url ?? null),
-        fileName: cert.fileName ?? cert.FileName ?? (cert.fileUrl ? cert.fileUrl.split('/').pop() : 'certificate'),
+        fileUrl: resolveCertUrl(rawUrl),   // full URL (needs auth to open)
+        rawFileUrl: rawUrl,                 // original relative path from DB
+        fileName: cert.fileName ?? cert.FileName ?? (rawUrl ? rawUrl.split('/').pop() : 'certificate'),
         uploadedAt: fmtDate(cert.uploadedAt ?? cert.UploadedAt),
     };
 }
@@ -206,6 +208,7 @@ const AdminDashboard = () => {
     // ── certificates ─────────────────────────────────────────────────────────
     const [certificates, setCertificates] = useState({});
     const [certUploading, setCertUploading] = useState({});
+    const [certDeleting, setCertDeleting] = useState({});
     const [certError, setCertError] = useState(null);
     const [certModal, setCertModal] = useState(null);
     const [certDragOver, setCertDragOver] = useState(false);
@@ -435,14 +438,17 @@ const AdminDashboard = () => {
             const map = {};
             certsArr.forEach(raw => {
                 const cert = normalizeCert(raw);
-                if (!cert.fileUrl) return;
+                // certId alone is enough to view via /download — don't skip if fileUrl is missing
+                if (!cert.id) return;
 
                 const fallbackKey = `${cert.userId}-${cert.planworkId}`;
                 const eidKey = upToEid[fallbackKey];
 
                 const certEntry = {
+                    certId: cert.id,             // ← primary key for /download and DELETE
                     name: cert.fileName,
-                    url: cert.fileUrl,
+                    url: cert.fileUrl,            // stored but currently 404 (backend issue)
+                    rawUrl: cert.rawFileUrl,      // original DB path e.g. /certificates/xxx.png
                     size: null,
                     fromDb: true,
                     uploadedAt: cert.uploadedAt,
@@ -543,66 +549,39 @@ const AdminDashboard = () => {
                 throw new Error(msg);
             }
 
-            const placeholderEntry = { name: file.name, url: 'uploaded', size: file.size, fromDb: false };
-            setCertificates(p => {
-                const next = { ...p };
-                if (eidKey) next[eidKey] = placeholderEntry;
-                next[fallbackKey] = placeholderEntry;
-                return next;
-            });
-
-            let resolvedEntry = null;
-
-            if (rawText && rawText.trim()) {
-                try {
-                    const data = JSON.parse(rawText);
-                    if (data && typeof data === 'object' && !Array.isArray(data)) {
-                        const cert = normalizeCert(data);
-                        if (cert.fileUrl) {
-                            resolvedEntry = { name: cert.fileName, url: cert.fileUrl, size: file.size, fromDb: true, uploadedAt: cert.uploadedAt };
-                        }
-                    } else if (typeof data === 'string' && (data.startsWith('http') || data.startsWith('/'))) {
-                        resolvedEntry = { name: file.name, url: resolveCertUrl(data), size: file.size, fromDb: true };
-                    }
-                } catch {
-                    const trimmed = rawText.trim().replace(/^"+|"+$/g, '');
-                    if (trimmed.startsWith('http') || trimmed.startsWith('/')) {
-                        resolvedEntry = { name: file.name, url: resolveCertUrl(trimmed), size: file.size, fromDb: true };
+            // Upload succeeded — now re-fetch /Admin/certificates to get the certId
+            // (the upload response only says {"message":"Certificate uploaded successfully"}, no certId)
+            // The fileUrl in DB is broken for direct access — we need certId for /download endpoint
+            try {
+                const certRes = await authFetch(`${API_BASE}/Admin/certificates`);
+                if (certRes.ok) {
+                    const certsJson = await certRes.json();
+                    const certsArr = Array.isArray(certsJson) ? certsJson : certsJson?.data ?? certsJson?.certificates ?? [];
+                    const found = certsArr.find(c =>
+                        (c.userId ?? c.UserId) == userId &&
+                        (c.planworkId ?? c.PlanworkId) == planworkId
+                    );
+                    if (found) {
+                        const cert = normalizeCert(found);
+                        const resolvedEntry = {
+                            certId: cert.id,          // ← the key piece — enables /download viewing
+                            name: cert.fileName || file.name,
+                            url: cert.fileUrl,
+                            rawUrl: cert.rawFileUrl,
+                            size: file.size,
+                            fromDb: true,
+                            uploadedAt: cert.uploadedAt,
+                        };
+                        setCertificates(p => {
+                            const next = { ...p };
+                            if (eidKey) next[eidKey] = resolvedEntry;
+                            next[fallbackKey] = resolvedEntry;
+                            return next;
+                        });
                     }
                 }
-            }
-
-            if (!resolvedEntry) {
-                try {
-                    const certRes = await authFetch(`${API_BASE}/Admin/certificates`);
-                    if (certRes.ok) {
-                        const certsJson = await certRes.json();
-                        const certsArr = Array.isArray(certsJson) ? certsJson : certsJson?.data ?? certsJson?.certificates ?? [];
-                        const found = certsArr.find(c =>
-                            (c.userId ?? c.UserId) == userId &&
-                            (c.planworkId ?? c.PlanworkId) == planworkId
-                        );
-                        if (found) {
-                            const cert = normalizeCert(found);
-                            if (cert.fileUrl) {
-                                resolvedEntry = { name: cert.fileName, url: cert.fileUrl, size: file.size, fromDb: true, uploadedAt: cert.uploadedAt };
-                                console.log('[CertUpload] resolved URL from /Admin/certificates:', cert.fileUrl);
-                            }
-                        }
-                    }
-                } catch (fetchErr) {
-                    console.warn('[CertUpload] post-upload certificates fetch failed:', fetchErr.message);
-                }
-            }
-
-            if (resolvedEntry) {
-                setCertificates(p => {
-                    const next = { ...p };
-                    if (eidKey) next[eidKey] = resolvedEntry;
-                    next[fallbackKey] = resolvedEntry;
-                    return next;
-                });
-                console.log('[CertUpload] stored real entry under keys:', eidKey, fallbackKey);
+            } catch (fetchErr) {
+                console.warn('[CertUpload] post-upload fetch failed:', fetchErr.message);
             }
         } catch (err) {
             console.error('[CertUpload] failed:', err);
@@ -613,9 +592,99 @@ const AdminDashboard = () => {
         }
     };
 
-    const removeCert = (k) => {
-        setCertificates(p => { const n = { ...p }; delete n[k]; return n; });
-    };
+    // ── VIEW cert — the file requires auth; fetch with Bearer token → blob → open ──
+    // ── VIEW cert ─────────────────────────────────────────────────────────────
+    // CONFIRMED working: GET /api/Admin/certificates/{certId}/download (with auth)
+    // CONFIRMED broken:  /certificates/xxx.png (always 404 — backend never serves it)
+    const viewCert = useCallback(async (certId, url, rawUrl, filename = 'certificate') => {
+        if (certId == null && !url && !rawUrl) return;
+
+        let token = null;
+        try { token = await getToken(); } catch (_) { }
+        const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+        // Order matters — proven working endpoint goes FIRST
+        const candidates = [];
+        if (certId != null) {
+            candidates.push(`${API_BASE}/Admin/certificates/${certId}/download`); // ✅ confirmed
+            candidates.push(`${API_BASE}/Admin/certificates/${certId}/file`);
+        }
+        // Direct URL only as last resort (currently 404 but may work after backend fix)
+        if (url && url !== 'uploaded') candidates.push(url);
+        if (rawUrl && !rawUrl.startsWith('http')) candidates.push(`${API_HOST}${rawUrl}`);
+
+        for (const candidate of candidates) {
+            try {
+                const res = await fetch(candidate, { headers: authHeaders });
+                if (!res.ok) continue;
+
+                const blob = await res.blob();
+                const blobUrl = URL.createObjectURL(blob);
+                const isPdf = blob.type.includes('pdf') || (filename || '').toLowerCase().endsWith('.pdf');
+
+                if (isPdf) {
+                    const win = window.open('', '_blank');
+                    if (win) {
+                        win.document.write(`<!DOCTYPE html><html><head><title>${filename || 'certificate'}</title></head>` +
+                            `<body style="margin:0"><iframe src="${blobUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+                    }
+                } else {
+                    window.open(blobUrl, '_blank');
+                }
+                setTimeout(() => URL.revokeObjectURL(blobUrl), 90000);
+                return;
+            } catch (_) { }
+        }
+
+        setCertError('تعذّر فتح الشهادة — تأكد من صلاحية الجلسة أو تواصل مع المطور');
+    }, [getToken]);
+
+    // ── DELETE cert ───────────────────────────────────────────────────────────
+    const deleteCert = useCallback(async (ck, altKey = null) => {
+        const cert = certificates[ck] ?? (altKey ? certificates[altKey] : undefined);
+        const certId = cert?.certId;
+
+        if (!window.confirm('هل تريد حذف هذه الشهادة؟')) return;
+
+        setCertDeleting(p => ({ ...p, [ck]: true }));
+        setCertError(null);
+
+        try {
+            if (certId != null) {
+                // Try DELETE first, fallback to POST …/delete pattern if 405
+                let ok = false;
+                const endpoints = [
+                    [`${API_BASE}/Admin/certificates/${certId}`, 'DELETE'],
+                    [`${API_BASE}/Admin/certificates/${certId}/delete`, 'POST'],
+                    [`${API_BASE}/Admin/upload/${certId}`, 'DELETE'],
+                ];
+                for (const [ep, method] of endpoints) {
+                    const res = await authFetch(ep, { method });
+                    if (res.ok || res.status === 404) { ok = true; break; }
+                    if (res.status !== 405) {
+                        const j = await res.json().catch(() => ({}));
+                        throw new Error(j?.message ?? j?.title ?? `HTTP ${res.status}`);
+                    }
+                    // 405 → try next pattern
+                }
+                if (!ok) throw new Error('لم يُعثر على نقطة نهاية للحذف');
+                console.log('[deleteCert] ✅ certId:', certId);
+            }
+
+            // Remove from local state (both keys)
+            setCertificates(p => {
+                const n = { ...p };
+                delete n[ck];
+                if (altKey) delete n[altKey];
+                return n;
+            });
+        } catch (err) {
+            console.error('[deleteCert]', err);
+            setCertError('فشل حذف الشهادة: ' + err.message);
+        } finally {
+            setCertDeleting(p => ({ ...p, [ck]: false }));
+        }
+    }, [authFetch, certificates]);
 
     // ════════════════════════════════════════════════════════════════════════
     // DERIVED DATA
@@ -694,7 +763,16 @@ const AdminDashboard = () => {
         return matchSearch && matchStatus;
     });
 
-    const totalCerts = Object.keys(certificates).length;
+    // Deduplicate by certId so double-keyed entries don't inflate the count
+    const totalCerts = (() => {
+        const seen = new Set();
+        let n = 0;
+        Object.values(certificates).forEach(v => {
+            const key = v?.certId ?? `_noId_${n}`;
+            if (!seen.has(key)) { seen.add(key); n++; }
+        });
+        return n;
+    })();
     const totalEnrollments = usersData.reduce((s, u) => s + u.enrolledCourses.length, 0);
 
     const gs = (fields, fb) => {
@@ -1538,10 +1616,12 @@ const AdminDashboard = () => {
                                                     const ck = row.certKey;
                                                     const cert = certificates[ck] ?? (row.altKey ? certificates[row.altKey] : undefined);
                                                     const uploading = certUploading[ck];
+                                                    const deleting = !!certDeleting[ck];
                                                     const isAttended = !!attendance[ck];
                                                     const canUpload = isAttended;
-                                                    const hasRealUrl = cert && cert.url && cert.url !== 'uploaded';
-                                                    const hasPlaceholder = cert && (!cert.url || cert.url === 'uploaded');
+                                                    // View button works as long as we have certId (uses /download endpoint)
+                                                    const hasRealUrl = cert && cert.certId != null;
+                                                    const hasPlaceholder = cert && cert.certId == null;
 
                                                     // Card colours
                                                     let cardBorder, cardBg;
@@ -1621,15 +1701,24 @@ const AdminDashboard = () => {
                                                                 {cert ? (
                                                                     <>
                                                                         {hasRealUrl && (
-                                                                            <a href={cert.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
-                                                                                <button className="d-cert-btn dl">👁 عرض</button>
-                                                                            </a>
+                                                                            <button
+                                                                                className="d-cert-btn dl"
+                                                                                onClick={() => viewCert(cert.certId, cert.url, cert.rawUrl, cert.name)}
+                                                                            >
+                                                                                👁 عرض
+                                                                            </button>
                                                                         )}
                                                                         <button className="d-cert-btn up" disabled={uploading}
                                                                             onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>
                                                                             {uploading ? '⏳' : '🔄 تحديث'}
                                                                         </button>
-                                                                        <button className="d-cert-btn rm" onClick={() => removeCert(ck)}>🗑</button>
+                                                                        <button
+                                                                            className="d-cert-btn rm"
+                                                                            disabled={deleting}
+                                                                            onClick={() => deleteCert(ck, row.altKey)}
+                                                                        >
+                                                                            {deleting ? '⏳' : '🗑'}
+                                                                        </button>
                                                                     </>
                                                                 ) : canUpload ? (
                                                                     <button className="d-cert-btn up full" disabled={uploading}

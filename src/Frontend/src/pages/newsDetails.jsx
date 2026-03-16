@@ -2,13 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './newsDetails.css';
 
-const IMAGES_BASE = 'https://www.arabcont.com/icemt/assets/jmages/news/';
-
-const getImageUrl = (raw) => {
-    if (!raw) return '';
-    return raw.startsWith('http') ? raw : `${IMAGES_BASE}${raw}`;
-};
-
 const NewsDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -28,9 +21,7 @@ const NewsDetails = () => {
                 return response.json();
             })
             .then(data => {
-                // Normalise main article image URL
-                const item = { ...data, imageUrl: getImageUrl(data.imageUrl) };
-                setNewsItem(item);
+                setNewsItem(data);
                 setLoading(false);
 
                 const year = new Date(data.publishedAt).getFullYear();
@@ -40,12 +31,7 @@ const NewsDetails = () => {
             .then(data => {
                 const filtered = (data.data || []).filter(item => item.id !== parseInt(id));
                 const shuffled = filtered.sort(() => 0.5 - Math.random());
-                // Normalise related news image URLs
-                const related = shuffled.slice(0, 3).map(item => ({
-                    ...item,
-                    imageUrl: getImageUrl(item.imageUrl),
-                }));
-                setRelatedNews(related);
+                setRelatedNews(shuffled.slice(0, 3));
             })
             .catch(err => {
                 setError(err.message);
@@ -214,8 +200,9 @@ const NewsDetails = () => {
                 </div>
             </div>
 
-            {/* Content Section */}
+            {/* Content Section - Now full width + closer to hero */}
             <div className="content-wrapper" style={{ padding: '20px 0 60px', maxWidth: '100%', margin: '0 auto' }}>
+
                 <div className="news-content" style={{
                     fontSize: '1.15rem',
                     lineHeight: '2',
@@ -234,6 +221,7 @@ const NewsDetails = () => {
                         <p>{newsItem.description || 'لا يوجد محتوى متاح لهذا الخبر.'}</p>
                     )}
                 </div>
+
             </div>
 
             {/* Share Section */}

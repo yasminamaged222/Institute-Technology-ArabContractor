@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './news.css';
 
-const IMAGES_BASE = 'https://www.arabcont.com/icemt/assets/jmages/news/';
-
-const getImageUrl = (raw) => {
-    if (!raw) return '';
-    return raw.startsWith('http') ? raw : `${IMAGES_BASE}${raw}`;
-};
-
 const News = () => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,12 +32,7 @@ const News = () => {
                 return response.json();
             })
             .then(data => {
-                // Normalise image URLs for every item
-                const items = (data.data || []).map(item => ({
-                    ...item,
-                    imageUrl: getImageUrl(item.imageUrl),
-                }));
-                setNews(items);
+                setNews(data.data || []);
                 setTotalPages(data.totalPages || 0);
                 setLoading(false);
                 setTimeout(() => setAnimate(true), 50);
