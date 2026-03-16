@@ -3,6 +3,7 @@ using Institute.API.Helpers;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
+using Institute.Domain.Enums;
 using Institute.Domain.specifications.CourseSpec;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -21,6 +22,7 @@ namespace Institute.API.Controllers
         private readonly IClerkService _clerkService;
         private readonly IRepository<AppUser> _userRepo;
         private readonly ICategoryService _categoryService;
+        private readonly IRepository<Order> _orderRepo;
 
 
         public CourseController(
@@ -29,7 +31,8 @@ namespace Institute.API.Controllers
             IRepository<Enrollment> enrollmentRepo,
             IClerkService clerkService,
             IRepository<AppUser> userRepo,
-            ICategoryService categoryService)
+            ICategoryService categoryService,
+            IRepository<Order> orderRepo)
         {
             _planRepo = planRepo;
             _fileRepo = fileRepo;
@@ -37,6 +40,7 @@ namespace Institute.API.Controllers
             _clerkService = clerkService;
             _userRepo = userRepo;
             _categoryService = categoryService;
+            _orderRepo = orderRepo;
         }
 
 
@@ -277,12 +281,23 @@ namespace Institute.API.Controllers
             if (alreadyEnrolled)
                 return Ok(new { message = "أنت مسجل في هذا الكورس بالفعل.", alreadyEnrolled = true });
 
-            // 4️⃣ أنشئ الـ Enrollment مباشرة (بدون Order)
+            // 4️⃣ أنشئ Order وهمي بـ 0 جنيه عشان OrderId مش nullable في الداتابيز
+            var freeOrder = new Order
+            {
+                UserId = appUser.Id,
+                TotalAmount = 0,
+                Status = OrderStatus.Paid,
+                OrderNumber = Guid.NewGuid().ToString("N")
+            };
+            await _orderRepo.AddAsync(freeOrder);
+            await _orderRepo.SaveChangesAsync();
+
+            // 5️⃣ أنشئ الـ Enrollment مع الـ OrderId
             await _enrollmentRepo.AddAsync(new Enrollment
             {
                 UserId = appUser.Id,
                 PlanworkId = planworkId,
-                OrderId = null,   // الكورسات المجانية مفيهاش Order
+                OrderId = freeOrder.Id,
                 EnrolledAt = DateTime.UtcNow
             });
             await _enrollmentRepo.SaveChangesAsync();
