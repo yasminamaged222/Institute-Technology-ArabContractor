@@ -12,6 +12,7 @@ namespace Institute.Application.Services
         private readonly IRepository<Order> _orderRepo;
         private readonly IRepository<Enrollment> _enrollmentRepo;
         private readonly IRepository<Payment> _paymentRepo;
+        private readonly IRepository<Planwork> _planworkRepo;
         private readonly ILogger<RefundService> _logger;
 
         public RefundService(
@@ -19,12 +20,14 @@ namespace Institute.Application.Services
             IRepository<Order> orderRepo,
             IRepository<Enrollment> enrollmentRepo,
             IRepository<Payment> paymentRepo,
+            IRepository<Planwork> planworkRepo,
             ILogger<RefundService> logger)
         {
             _refundRepo = refundRepo;
             _orderRepo = orderRepo;
             _enrollmentRepo = enrollmentRepo;
             _paymentRepo = paymentRepo;
+            _planworkRepo = planworkRepo;
             _logger = logger;
         }
 
@@ -35,7 +38,28 @@ namespace Institute.Application.Services
             string? bankName, string? accountNumber,
             string? accountHolder, string? iban)
         {
-            // Prevent duplicate pending requests for same order+planwork
+            // ── 1. جيب الكورس وتحقق من تاريخ البداية ─────────────────
+            var planwork = (await _planworkRepo.GetAllWithSpecAsync(
+                new BaseSpecification<Planwork>(p => p.ChildId == planworkId)))
+                .FirstOrDefault();
+
+            if (planwork == null)
+                throw new InvalidOperationException("الكورس غير موجود.");
+
+            if (!TryParseCourseStartDate(planwork.CourseDate, out var courseStartDate))
+                throw new InvalidOperationException("تاريخ بدء الكورس غير محدد أو غير صحيح.");
+
+            // ── 2. طبّق سياسة الاسترداد ───────────────────────────────
+            var daysLeft = (courseStartDate.Date - DateTime.UtcNow.Date).TotalDays;
+
+            if (daysLeft < 2)
+                throw new InvalidOperationException(
+                    "لا يمكن طلب الاسترداد. تبقى أقل من يومين على بدء الكورس.");
+
+            if (daysLeft <= 7)
+                amount = amount * 0.75m;  // خصم 25%
+
+            // ── 3. منع التكرار ─────────────────────────────────────────
             var existing = (await _refundRepo.GetAllWithSpecAsync(
                 new BaseSpecification<RefundRequest>(
                     r => r.OrderId == orderId &&
@@ -47,13 +71,14 @@ namespace Institute.Application.Services
                 throw new InvalidOperationException(
                     "يوجد طلب استرداد قيد المعالجة لهذا الكورس مسبقاً.");
 
+            // ── 4. ابعت الطلب ──────────────────────────────────────────
             var refRequest = new RefundRequest
             {
                 RefNumber = GenerateRefNumber(),
                 OrderId = orderId,
                 UserId = userId,
                 PlanworkId = planworkId,
-                Amount = amount,
+                Amount = amount,   // بعد تطبيق الخصم لو فيه
                 Currency = "EGP",
                 Reason = reason,
                 Details = details,
@@ -69,8 +94,8 @@ namespace Institute.Application.Services
             await _refundRepo.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Refund request {RefNumber} created for Order {OrderId} by User {UserId}",
-                refRequest.RefNumber, orderId, userId);
+                "Refund {RefNumber} created. Order={OrderId}, User={UserId}, DaysLeft={DaysLeft}, Amount={Amount}",
+                refRequest.RefNumber, orderId, userId, daysLeft, amount);
 
             return refRequest;
         }
@@ -125,10 +150,20 @@ namespace Institute.Application.Services
             request.AdminNote = adminNote;
             request.ApprovedAt = DateTime.UtcNow;
             _refundRepo.Update(request);
+
+            // ── امسح الـ Enrollment فوراً عند الموافقة ──────────────────
+            var enrollSpec = new BaseSpecification<Enrollment>(
+                e => e.UserId == request.UserId && e.PlanworkId == request.PlanworkId);
+            var enrollment = (await _enrollmentRepo.GetAllWithSpecAsync(enrollSpec)).FirstOrDefault();
+            if (enrollment != null)
+                _enrollmentRepo.Delete(enrollment);
+
             await _refundRepo.SaveChangesAsync();
 
-            _logger.LogInformation("Refund {RefNumber} approved.", request.RefNumber);
-            return (true, "تمت الموافقة على طلب الاسترداد.");
+            _logger.LogInformation(
+                "Refund {RefNumber} approved. Enrollment removed.", request.RefNumber);
+
+            return (true, "تمت الموافقة على طلب الاسترداد وتم إلغاء التسجيل في الكورس.");
         }
 
         public async Task<(bool IsSuccess, string Message)> RejectAsync(int id, string rejectionReason)
@@ -162,14 +197,12 @@ namespace Institute.Application.Services
             if (request.Status != "Approved")
                 return (false, "يجب الموافقة على الطلب أولاً قبل تحديده كمُرسَل.");
 
-            // ── 1. جيب الـ Payment بتاع الـ Order ──────────────────────
             var paymentSpec = new BaseSpecification<Payment>(p => p.OrderId == request.OrderId);
             var payment = (await _paymentRepo.GetAllWithSpecAsync(paymentSpec)).FirstOrDefault();
 
             if (payment == null || string.IsNullOrEmpty(payment.TransactionRef))
                 return (false, "لم يتم العثور على بيانات الدفع الأصلية.");
 
-            // ── 2. كلم البنك ────────────────────────────────────────────
             _logger.LogInformation(
                 "Calling bank refund for Order {OrderNumber}, TransactionRef {TransactionRef}, Amount {Amount}",
                 request.Order.OrderNumber, payment.TransactionRef, request.Amount);
@@ -182,30 +215,23 @@ namespace Institute.Application.Services
 
             if (!bankSuccess)
             {
-                _logger.LogWarning("Bank refund failed for RefundRequest {Id}: {Response}", id, gatewayResponse);
-                return (false, $"البنك رفض عملية الاسترداد. يرجى المحاولة لاحقاً.");
+                _logger.LogWarning(
+                    "Bank refund failed for RefundRequest {Id}: {Response}", id, gatewayResponse);
+                return (false, "البنك رفض عملية الاسترداد. يرجى المحاولة لاحقاً.");
             }
 
-            // ── 3. حدّث الـ RefundRequest ───────────────────────────────
             request.Status = "Sent";
             request.SentAt = DateTime.UtcNow;
             if (!string.IsNullOrWhiteSpace(adminNote))
                 request.AdminNote = adminNote;
             _refundRepo.Update(request);
 
-            // ── 4. ألغِ الـ Enrollment ──────────────────────────────────
-            var enrollSpec = new BaseSpecification<Enrollment>(
-                e => e.UserId == request.UserId && e.PlanworkId == request.PlanworkId);
-            var enrollment = (await _enrollmentRepo.GetAllWithSpecAsync(enrollSpec)).FirstOrDefault();
-            if (enrollment != null)
-                _enrollmentRepo.Delete(enrollment);
-
             await _refundRepo.SaveChangesAsync();
 
             _logger.LogInformation(
-                "Refund {RefNumber} sent successfully via bank. Enrollment cancelled.", request.RefNumber);
+                "Refund {RefNumber} sent successfully via bank.", request.RefNumber);
 
-            return (true, "تم إرسال الاسترداد عبر البنك بنجاح وتم إلغاء التسجيل في الكورس.");
+            return (true, "تم إرسال الاسترداد عبر البنك بنجاح.");
         }
 
         // ─── Helpers ──────────────────────────────────────────────────────
@@ -214,6 +240,36 @@ namespace Institute.Application.Services
             var date = DateTime.UtcNow.ToString("yyyyMMdd");
             var rand = Random.Shared.Next(1000, 9999);
             return $"REF-{date}-{rand}";
+        }
+
+        /// <summary>
+        /// بتفسر تاريخ البداية من الـ CourseDate المخزن في الـ DB.
+        /// بيدعم:
+        ///   - Range:  "yyyy/MM/dd - yyyy/MM/dd"  ← بياخد الجزء الأول فقط
+        ///   - Single: "yyyy/MM/dd" | "dd/MM/yyyy" | "yyyy-MM-dd" | "d/M/yyyy"
+        /// </summary>
+        private static bool TryParseCourseStartDate(string? courseDateStr, out DateTime result)
+        {
+            result = DateTime.MinValue;
+            if (string.IsNullOrWhiteSpace(courseDateStr)) return false;
+
+            // لو فيه range "2026/02/01 - 2026/02/20" — خد الجزء الأول فقط
+            // نستخدم " - " كـ separator عشان نفرق بين الـ range separator والـ date separator
+            var parts = courseDateStr.Split(new[] { " - " }, StringSplitOptions.None);
+            var raw = parts[0].Trim();
+
+            var formats = new[]
+            {
+                "yyyy/MM/dd", "yyyy-MM-dd", "yyyy/M/d", "yyyy-M-d",
+                "dd/MM/yyyy", "d/M/yyyy",
+                "MM/dd/yyyy"
+            };
+
+            return DateTime.TryParseExact(
+                raw, formats,
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None,
+                out result);
         }
     }
 }

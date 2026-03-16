@@ -9,7 +9,7 @@ namespace Institute.Domain.specifications.AdminSpec.Course
 {
     public class PlanworkCount : BaseSpecification<Planwork>
     {
-        public PlanworkCount() : base(p=>p.CourseDesc != null)
+        public PlanworkCount() : base(p=>p.CourseDate != null)
         {
 
         }
