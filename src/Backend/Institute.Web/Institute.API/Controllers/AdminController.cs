@@ -16,13 +16,17 @@ namespace Institute.API.Controllers
     public class AdminController : ControllerBase
     {
         private readonly IAdminService _adminService;
+        private readonly IWebHostEnvironment _env;
 
-        public AdminController(IAdminService adminService)
+
+        public AdminController(IAdminService adminService, IWebHostEnvironment env)
         {
             _adminService = adminService;
+            _env = env;
+
         }
 
-      
+
 
         // GET: api/admin/users?keyword=ahmed
         [HttpGet("users")]
@@ -93,7 +97,9 @@ namespace Institute.API.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> UploadCertificate([FromForm] UploadCertificateDto dto)
         {
-            var result = await _adminService.UploadCertificateAsync(dto);
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "certificates");
+
+            var result = await _adminService.UploadCertificateAsync(dto, uploadsFolder);
 
             if (!result)
                 return BadRequest("Certificate already uploaded");

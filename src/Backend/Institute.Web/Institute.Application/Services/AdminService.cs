@@ -30,6 +30,7 @@ namespace Institute.Application.Services
             _planworkRepository = planworkRepository;
             _certificateRepository = certificateRepository;
             _refundRepository = refundRepository;
+
         }
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param)
         {
@@ -115,7 +116,7 @@ namespace Institute.Application.Services
             };
         }
 
-        public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto)
+        public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto, string uploadsFolder)
         {
             if (dto.File == null || dto.File.Length == 0)
                 return false;
@@ -125,8 +126,6 @@ namespace Institute.Application.Services
 
             if (exists)
                 return false;
-
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/certificates");
 
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
@@ -154,6 +153,9 @@ namespace Institute.Application.Services
             await _certificateRepository.SaveChangesAsync();
             return true;
         }
+
+        
+
 
         public async Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended)
         {
