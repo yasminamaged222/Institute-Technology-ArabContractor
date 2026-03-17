@@ -211,6 +211,29 @@ namespace Institute.Application.Services
 
             return true;
         }
+        public async Task<bool> DeleteCertificateAsync(int certificateId, string uploadsFolder)
+        {
+            var certificate = await _certificateRepository.GetByIdAsync(certificateId);
+
+            if (certificate == null)
+                return false;
+
+            // 🗑️ delete file from server
+            if (!string.IsNullOrEmpty(certificate.FileUrl))
+            {
+                var fileName = Path.GetFileName(certificate.FileUrl);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+
+            // 🗑️ delete from DB
+            _certificateRepository.Delete(certificate);
+            await _certificateRepository.SaveChangesAsync();
+
+            return true;
+        }
 
         public async Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended)
         {

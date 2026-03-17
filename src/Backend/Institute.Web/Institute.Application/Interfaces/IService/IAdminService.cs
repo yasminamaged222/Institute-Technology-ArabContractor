@@ -21,5 +21,6 @@ namespace Institute.Application.Interfaces.IService
         //Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync();
         Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId);
         Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder);
+        Task<bool> DeleteCertificateAsync(int certificateId, string uploadsFolder);
     }
 }

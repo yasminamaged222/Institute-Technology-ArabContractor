@@ -146,6 +146,18 @@ namespace Institute.API.Controllers
 
             return Ok(new { message = "Certificate updated successfully" });
         }
+        [HttpDelete("certificates/{id}")]
+        public async Task<IActionResult> DeleteCertificate(int id)
+        {
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "certificates");
+
+            var result = await _adminService.DeleteCertificateAsync(id, uploadsFolder);
+
+            if (!result)
+                return NotFound("Certificate not found");
+
+            return Ok(new { message = "Certificate deleted successfully" });
+        }
 
     }
 }
