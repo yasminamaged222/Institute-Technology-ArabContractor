@@ -12,9 +12,8 @@ const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com', 'amr
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 const API_HOST = 'https://acwebsite-icmet-test.azurewebsites.net';
 
-// Heights — adjust NAVBAR_H to match your actual navbar height
-const NAVBAR_H = 70;   // your site's navbar height in px
-const OVERVIEW_H = 38;   // the #F5F7E1 breadcrumb bar height in px
+const NAVBAR_H = 70;
+const OVERVIEW_H = 38;
 const ITEMS_PER_PAGE = 10;
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -33,7 +32,19 @@ const REFUND_STATUS_META = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// LOGO / EXPORT HELPERS  (unchanged)
+// RTL EXPORT HELPER  ← NEW
+// Reverses headers + every row so columns appear right-to-left in all
+// export formats (Excel, PDF, Word).
+// ════════════════════════════════════════════════════════════════════════════
+function rtlExport(headers, rows) {
+    return {
+        headers: [...headers].reverse(),
+        rows: rows.map(r => [...r].reverse()),
+    };
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// LOGO / EXPORT HELPERS
 // ════════════════════════════════════════════════════════════════════════════
 let _logoCache = null;
 function getLogoBase64() {
@@ -47,10 +58,68 @@ function getLogoBase64() {
 function triggerDownload(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(() => URL.revokeObjectURL(url), 10000); }
 function buildUsersRows(users) { const headers = ['#', 'الاسم الكامل', 'البريد الإلكتروني', 'اسم الدورة', 'تاريخ التسجيل']; const rows = []; let n = 1; users.forEach(u => { if (!u.enrolledCourses.length) { rows.push([n++, `${u.firstName} ${u.lastName}`, u.email, '—', '—']); } else { u.enrolledCourses.forEach((c, i) => { rows.push(i === 0 ? [n++, `${u.firstName} ${u.lastName}`, u.email, c.title, c.date || '—'] : ['', '', '', c.title, c.date || '—']); }); } }); return { headers, rows }; }
 function buildCoursesRows(courses) { const headers = ['#', 'اسم الدورة', 'الفئة', 'اسم المستخدم', 'البريد الإلكتروني', 'تاريخ التسجيل']; const rows = []; let n = 1; courses.forEach(c => { if (!c.enrolledUsers.length) { rows.push([n++, c.title, c.category, '—', '—', '—']); } else { c.enrolledUsers.forEach((u, i) => { rows.push(i === 0 ? [n++, c.title, c.category, `${u.firstName} ${u.lastName}`, u.email, u.date || '—'] : ['', '', '', `${u.firstName} ${u.lastName}`, u.email, u.date || '—']); }); } }); return { headers, rows }; }
-async function exportExcel(filename, reportTitle, headers, rows) { const reportDate = new Date().toLocaleDateString('ar-EG'); try { const { default: ExcelJS } = await import('exceljs'); const wb = new ExcelJS.Workbook(); wb.views = [{ rightToLeft: true }]; const ws = wb.addWorksheet('التقرير', { views: [{ rightToLeft: true }] }); ws.columns = headers.map((h, i) => ({ width: Math.min(Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)) + 6, 50) })); const logoB64 = await getLogoBase64(); if (logoB64) { const imgId = wb.addImage({ base64: logoB64.split(',')[1], extension: 'png' }); ws.addImage(imgId, { tl: { col: 0, row: 0 }, br: { col: 2, row: 5 } }); } ws.mergeCells(1, 1, 2, headers.length); const titleCell = ws.getCell('A1'); titleCell.value = reportTitle; titleCell.font = { bold: true, size: 18, color: { argb: 'FFFFFFFF' } }; titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0865A8' } }; titleCell.alignment = { horizontal: 'center', vertical: 'middle', readingOrder: 'rightToLeft' }; ws.getRow(1).height = 42; ws.getRow(2).height = 10; ws.mergeCells(3, 1, 3, headers.length); const dateCell = ws.getCell('A3'); dateCell.value = `تاريخ التقرير: ${reportDate}`; dateCell.font = { italic: true, size: 10, color: { argb: 'FF555555' } }; dateCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F4F8' } }; dateCell.alignment = { horizontal: 'center', readingOrder: 'rightToLeft' }; ws.getRow(3).height = 20; const hRow = ws.addRow(headers); hRow.height = 28; hRow.eachCell(cell => { cell.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } }; cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0865A8' } }; cell.alignment = { horizontal: 'center', vertical: 'middle', readingOrder: 'rightToLeft' }; cell.border = { bottom: { style: 'medium', color: { argb: 'FFF57C00' } } }; }); rows.forEach((row, ri) => { const dr = ws.addRow(row); dr.height = 20; const isAlt = ri % 2 !== 0; dr.eachCell({ includeEmpty: true }, (cell, cn) => { cell.alignment = { horizontal: cn === 1 ? 'center' : 'right', readingOrder: 'rightToLeft' }; if (isAlt) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF7F9FC' } }; const b = { style: 'thin', color: { argb: 'FFD0D0D0' } }; cell.border = { top: b, bottom: b, left: b, right: b }; }); }); const buffer = await wb.xlsx.writeBuffer(); triggerDownload(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename); return; } catch (_) { } const wsData = [[reportTitle, ...Array(headers.length - 1).fill('')], [`تاريخ التقرير: ${reportDate}`, ...Array(headers.length - 1).fill('')], [], headers, ...rows]; const ws = XLSX.utils.aoa_to_sheet(wsData); ws['!cols'] = headers.map((h, i) => ({ wch: Math.min(Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)) + 6, 55) })); ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } }]; const wb2 = XLSX.utils.book_new(); wb2.Workbook = { Views: [{ RTL: true }] }; XLSX.utils.book_append_sheet(wb2, ws, 'التقرير'); XLSX.writeFile(wb2, filename); }
+
+async function exportExcel(filename, reportTitle, headers, rows) {
+    const reportDate = new Date().toLocaleDateString('ar-EG');
+    try {
+        const { default: ExcelJS } = await import('exceljs');
+        const wb = new ExcelJS.Workbook();
+        wb.views = [{ rightToLeft: true }];
+        const ws = wb.addWorksheet('التقرير', { views: [{ rightToLeft: true }] });
+        ws.columns = headers.map((h, i) => ({ width: Math.min(Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)) + 6, 50) }));
+        const logoB64 = await getLogoBase64();
+        if (logoB64) {
+            const imgId = wb.addImage({ base64: logoB64.split(',')[1], extension: 'png' });
+            ws.addImage(imgId, { tl: { col: 0, row: 0 }, br: { col: 2, row: 5 } });
+        }
+        ws.mergeCells(1, 1, 2, headers.length);
+        const titleCell = ws.getCell('A1');
+        titleCell.value = reportTitle;
+        titleCell.font = { bold: true, size: 18, color: { argb: 'FFFFFFFF' } };
+        titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0865A8' } };
+        titleCell.alignment = { horizontal: 'center', vertical: 'middle', readingOrder: 'rightToLeft' };
+        ws.getRow(1).height = 42; ws.getRow(2).height = 10;
+        ws.mergeCells(3, 1, 3, headers.length);
+        const dateCell = ws.getCell('A3');
+        dateCell.value = `تاريخ التقرير: ${reportDate}`;
+        dateCell.font = { italic: true, size: 10, color: { argb: 'FF555555' } };
+        dateCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F4F8' } };
+        dateCell.alignment = { horizontal: 'center', readingOrder: 'rightToLeft' };
+        ws.getRow(3).height = 20;
+        const hRow = ws.addRow(headers);
+        hRow.height = 28;
+        hRow.eachCell(cell => {
+            cell.font = { bold: true, size: 11, color: { argb: 'FFFFFFFF' } };
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0865A8' } };
+            cell.alignment = { horizontal: 'center', vertical: 'middle', readingOrder: 'rightToLeft' };
+            cell.border = { bottom: { style: 'medium', color: { argb: 'FFF57C00' } } };
+        });
+        rows.forEach((row, ri) => {
+            const dr = ws.addRow(row);
+            dr.height = 20;
+            const isAlt = ri % 2 !== 0;
+            dr.eachCell({ includeEmpty: true }, (cell, cn) => {
+                cell.alignment = { horizontal: cn === headers.length ? 'center' : 'right', readingOrder: 'rightToLeft' };
+                if (isAlt) cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF7F9FC' } };
+                const b = { style: 'thin', color: { argb: 'FFD0D0D0' } };
+                cell.border = { top: b, bottom: b, left: b, right: b };
+            });
+        });
+        const buffer = await wb.xlsx.writeBuffer();
+        triggerDownload(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), filename);
+        return;
+    } catch (_) { }
+    const wsData = [[reportTitle, ...Array(headers.length - 1).fill('')], [`تاريخ التقرير: ${reportDate}`, ...Array(headers.length - 1).fill('')], [], headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = headers.map((h, i) => ({ wch: Math.min(Math.max(h.length, ...rows.map(r => String(r[i] ?? '').length)) + 6, 55) }));
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } }];
+    const wb2 = XLSX.utils.book_new();
+    wb2.Workbook = { Views: [{ RTL: true }] };
+    XLSX.utils.book_append_sheet(wb2, ws, 'التقرير');
+    XLSX.writeFile(wb2, filename);
+}
+
 // ── Arabic-safe canvas text renderer ─────────────────────────────────────────
-// Uses a hidden off-screen <div> to measure & paint Arabic via the browser's
-// own text-shaping engine, then snapshots it into a canvas PNG.
 function renderTextToImage(text, { fontSize = 12, bold = false, color = '#111111', width = 200, height = 30, bgColor = null, align = 'right' } = {}) {
     const scale = 3;
     const canvas = document.createElement('canvas');
@@ -59,28 +128,21 @@ function renderTextToImage(text, { fontSize = 12, bold = false, color = '#111111
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
     if (bgColor) { ctx.fillStyle = bgColor; ctx.fillRect(0, 0, width, height); }
-
-    // Try multiple Arabic-capable font families in priority order
     const fontStack = `${bold ? 'bold ' : ''}${fontSize}px "Cairo","Amiri","Noto Naskh Arabic","Noto Sans Arabic","Droid Arabic Kufi","Tahoma","Arial Unicode MS","Arial",sans-serif`;
     ctx.font = fontStack;
     ctx.direction = 'rtl';
     ctx.textAlign = align === 'center' ? 'center' : align === 'left' ? 'left' : 'right';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = color;
-
     const padding = 6;
     let x;
     if (align === 'right') x = width - padding;
     else if (align === 'left') x = padding;
     else x = width / 2;
-
-    // Clip text to fit width
     const str = String(text ?? '');
     let finalStr = str;
-    let measured = ctx.measureText(finalStr).width;
     const maxW = width - padding * 2;
-    if (measured > maxW) {
-        // truncate with ellipsis
+    if (ctx.measureText(finalStr).width > maxW) {
         let lo = 0, hi = str.length;
         while (lo < hi) {
             const mid = Math.floor((lo + hi + 1) / 2);
@@ -88,7 +150,6 @@ function renderTextToImage(text, { fontSize = 12, bold = false, color = '#111111
         }
         finalStr = str.slice(0, lo) + '…';
     }
-
     ctx.fillText(finalStr, x, height / 2);
     return canvas.toDataURL('image/png');
 }
@@ -101,54 +162,43 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
     const autoTableModule = await import('jspdf-autotable');
     const autoTable = autoTableModule.default;
 
-    // ── LTR landscape A4 ──────────────────────────────────────────────────────
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
     const BLUE = [8, 101, 168];
     const ORANGE = [245, 124, 0];
-
     const FOOTER_TEXT = 'المعهد التكنولوجى لهندسة التشييد والإدارة';
 
     const drawHeader = () => {
-        // Blue header band
         doc.setFillColor(...BLUE);
         doc.rect(0, 0, pageW, 34, 'F');
-        // Orange accent stripe
         doc.setFillColor(...ORANGE);
         doc.rect(0, 34, pageW, 2.5, 'F');
-
-        // Logo (left side in LTR)
         if (logoDataUrl) {
             doc.setFillColor(255, 255, 255);
             doc.roundedRect(5, 4, 36, 26, 3, 3, 'F');
             try { doc.addImage(logoDataUrl, 'PNG', 6, 5, 34, 24); } catch (_) { }
         }
-
-        // Centered title
         const titleImg = renderTextToImage(reportTitle, { fontSize: 17, bold: true, color: '#FFFFFF', width: 520, height: 44, align: 'center' });
         doc.addImage(titleImg, 'PNG', pageW / 2 - 85, 3, 170, 17);
-
-        // Subtitle
         if (subtitle) {
             const subImg = renderTextToImage(subtitle, { fontSize: 9, color: '#CCE4FF', width: 400, height: 28, align: 'center' });
             doc.addImage(subImg, 'PNG', pageW / 2 - 55, 21, 110, 9);
         }
-
-        // Date — right side
         const dateImg = renderTextToImage(reportDate, { fontSize: 8, color: '#BBDAFF', width: 160, height: 22, align: 'right' });
         doc.addImage(dateImg, 'PNG', pageW - 58, 25, 52, 7);
     };
 
     drawHeader();
 
-    // LTR column order: [#, col1, col2 ...] — # stays at index 0 on the left
+    // # column is now LAST (index = headers.length - 1) after RTL reversal
+    const hashColIndex = headers.length - 1;
+
     autoTable(doc, {
         startY: 40,
         head: [headers],
         body: rows.map(r => r.map(c => String(c ?? ''))),
         theme: 'grid',
-        // We render all text ourselves as images so native font size = invisible
         styles: {
             font: 'helvetica', fontSize: 0.01,
             textColor: [255, 255, 255, 0],
@@ -163,8 +213,8 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
             lineWidth: { bottom: 1.2, top: 0.3, left: 0.3, right: 0.3 },
         },
         alternateRowStyles: { fillColor: [240, 246, 251] },
-        // # column is index 0 — narrow and centered
-        columnStyles: { 0: { cellWidth: 14, halign: 'center' } },
+        // # column is now the LAST column after RTL reversal
+        columnStyles: { [hashColIndex]: { cellWidth: 14, halign: 'center' } },
         margin: { top: 40, left: 8, right: 8, bottom: 16 },
 
         didDrawCell: (data) => {
@@ -172,8 +222,8 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
             if (!text || text.trim() === '') return;
             const { x, y, width: w, height: h } = data.cell;
             const isHeader = data.section === 'head';
-            // Column 0 = # → center; all others = Arabic content → right-aligned
-            const isHashCol = data.column.index === 0;
+            // # column is the LAST column after RTL reversal
+            const isHashCol = data.column.index === data.table.columns.length - 1;
             const cellAlign = isHashCol ? 'center' : 'right';
             const img = renderTextToImage(text, {
                 fontSize: isHeader ? 10 : 9,
@@ -189,28 +239,228 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
         didDrawPage: (data) => {
             if (data.pageNumber > 1) drawHeader();
             const pCount = doc.internal.getNumberOfPages();
-
-            // Footer band
             doc.setFillColor(245, 247, 250);
             doc.rect(0, pageH - 12, pageW, 12, 'F');
             doc.setDrawColor(...ORANGE);
             doc.setLineWidth(0.5);
             doc.line(8, pageH - 12, pageW - 8, pageH - 12);
-
             const mk = (t, w, a) => renderTextToImage(t, { fontSize: 7.5, color: '#555555', width: w, height: 18, align: a });
-
-            // Left: institute name (Arabic)
             doc.addImage(mk(FOOTER_TEXT, 340, 'right'), 'PNG', 8, pageH - 10.5, 90, 6);
-            // Center: page
             doc.addImage(mk(`${data.pageNumber} / ${pCount}`, 110, 'center'), 'PNG', pageW / 2 - 18, pageH - 10.5, 36, 6);
-            // Right: date
             doc.addImage(mk(reportDate, 160, 'left'), 'PNG', pageW - 56, pageH - 10.5, 48, 6);
         },
     });
 
     doc.save(filename);
 }
-async function exportWord(filename, reportTitle, subtitle, headers, rows) { const logoDataUrl = await getLogoBase64(); const reportDate = new Date().toLocaleDateString('ar-EG'); let logoBase64Raw = null, LOGO_W_EMU = 900000, LOGO_H_EMU = 600000; if (logoDataUrl) { logoBase64Raw = logoDataUrl.split(',')[1]; await new Promise(res => { const img = new Image(); img.onload = () => { const H = 600000; LOGO_H_EMU = H; LOGO_W_EMU = img.naturalHeight > 0 ? Math.round((img.naturalWidth / img.naturalHeight) * H) : 900000; res(); }; img.onerror = res; img.src = logoDataUrl; }); } try { const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign, PageOrientation, ImageRun } = await import('docx'); const CB = { top: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, left: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, right: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' } }; const totalDxa = 13440; const cw = Math.floor(totalDxa / headers.length); const colWidths = headers.map(() => cw); const mkTC = (text, isHdr, width, center = false) => new TableCell({ width: { size: width, type: WidthType.DXA }, shading: { fill: isHdr ? '0865a8' : 'FFFFFF', type: ShadingType.CLEAR }, borders: CB, margins: { top: 80, bottom: 80, left: 120, right: 120 }, verticalAlign: VerticalAlign.CENTER, children: [new Paragraph({ bidirectional: true, alignment: center ? AlignmentType.CENTER : AlignmentType.RIGHT, children: [new TextRun({ text: String(text ?? ''), bold: isHdr, color: isHdr ? 'FFFFFF' : '1A1A1A', size: isHdr ? 22 : 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA', eastAsiaValue: 'ar-SA' } })] })] }); const logoRuns = []; if (logoBase64Raw && ImageRun) { try { logoRuns.push(new ImageRun({ data: logoBase64Raw, type: 'png', transformation: { width: 90, height: 60 } })); logoRuns.push(new TextRun({ text: '  ', size: 28 })); } catch (_) { } } const arabicPara = (text, opts = {}) => new Paragraph({ bidirectional: true, alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT, spacing: opts.spacing, border: opts.border, shading: opts.shading, children: [new TextRun({ text, bold: opts.bold || false, color: opts.color || '111111', size: opts.size || 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' }, ...(opts.italic ? { italics: true } : {}) })] }); const doc = new Document({ sections: [{ properties: { page: { size: { width: 12240, height: 15840, orientation: PageOrientation.LANDSCAPE }, margin: { top: 720, right: 720, bottom: 900, left: 720 } } }, children: [new Paragraph({ bidirectional: true, alignment: AlignmentType.CENTER, shading: { fill: '0865a8', type: ShadingType.CLEAR }, border: { bottom: { style: BorderStyle.THICK, size: 18, color: 'f57c00', space: 6 } }, spacing: { before: 0, after: 80 }, children: [...logoRuns, new TextRun({ text: reportTitle, color: 'FFFFFF', bold: true, size: 28, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' } }), subtitle ? new TextRun({ text: `  —  ${subtitle}`, color: 'D0E8FF', size: 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' } }) : new TextRun({ text: '' })] }), arabicPara(`تاريخ التقرير: ${reportDate}   |   إجمالي السجلات: ${rows.length}`, { size: 18, color: '555555', italic: true, spacing: { before: 100, after: 100 } }), new Table({ width: { size: totalDxa, type: WidthType.DXA }, columnWidths: colWidths, rows: [new TableRow({ tableHeader: true, children: headers.map((h, i) => mkTC(h, true, colWidths[i], i === 0)) }), ...rows.map((row, ri) => new TableRow({ children: row.map((cell, ci) => new TableCell({ width: { size: colWidths[ci], type: WidthType.DXA }, shading: { fill: ri % 2 === 0 ? 'FFFFFF' : 'F0F6FB', type: ShadingType.CLEAR }, borders: CB, margins: { top: 70, bottom: 70, left: 110, right: 110 }, verticalAlign: VerticalAlign.CENTER, children: [new Paragraph({ bidirectional: true, alignment: ci === 0 ? AlignmentType.CENTER : AlignmentType.RIGHT, children: [new TextRun({ text: String(cell ?? ''), size: 19, color: '222222', rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { eastAsia: 'ar-SA', value: 'ar-SA' } })] })] })) }))] })] }] }); const buffer = await Packer.toBuffer(doc); triggerDownload(new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }), filename); return; } catch (docxError) { console.warn('docx package not available:', docxError); } }
+
+async function exportWord(filename, reportTitle, subtitle, headers, rows) {
+    const reportDate = new Date().toLocaleDateString('ar-EG');
+    const logoDataUrl = await getLogoBase64();
+
+    // ── resolve logo dimensions ──────────────────────────────────────────────
+    let logoBase64Raw = null;
+    let logoW = 90, logoH = 60;
+    if (logoDataUrl) {
+        logoBase64Raw = logoDataUrl.split(',')[1];
+        await new Promise(res => {
+            const img = new Image();
+            img.onload = () => {
+                if (img.naturalHeight > 0) {
+                    logoH = 60;
+                    logoW = Math.round((img.naturalWidth / img.naturalHeight) * logoH);
+                }
+                res();
+            };
+            img.onerror = res;
+            img.src = logoDataUrl;
+        });
+    }
+
+    try {
+        const docxModule = await import('docx');
+        const {
+            Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+            AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign,
+            PageOrientation, ImageRun,
+        } = docxModule;
+
+        // ── widths ───────────────────────────────────────────────────────────
+        const totalDxa = 13440;
+        const hashColIdx = headers.length - 1; // # is LAST after RTL reversal
+        const narrowW = Math.max(600, Math.floor(totalDxa * 0.05));
+        const wideW = Math.floor((totalDxa - narrowW) / Math.max(headers.length - 1, 1));
+        const colWidths = headers.map((_, i) => i === hashColIdx ? narrowW : wideW);
+
+        // ── shared border style ──────────────────────────────────────────────
+        const CB = {
+            top: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
+            bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
+            left: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
+            right: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
+        };
+
+        // ── cell factory ─────────────────────────────────────────────────────
+        const makeCell = (text, { isHeader = false, width, center = false, altRow = false } = {}) =>
+            new TableCell({
+                width: { size: width, type: WidthType.DXA },
+                shading: {
+                    fill: isHeader ? '0865A8' : altRow ? 'F0F6FB' : 'FFFFFF',
+                    type: ShadingType.CLEAR,
+                },
+                borders: CB,
+                margins: { top: 80, bottom: 80, left: 120, right: 120 },
+                verticalAlign: VerticalAlign.CENTER,
+                children: [new Paragraph({
+                    bidirectional: true,
+                    alignment: center ? AlignmentType.CENTER : AlignmentType.RIGHT,
+                    children: [new TextRun({
+                        text: String(text ?? ''),
+                        bold: isHeader,
+                        color: isHeader ? 'FFFFFF' : '1A1A1A',
+                        size: isHeader ? 22 : 20,
+                        rtl: true,
+                        font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
+                        language: { value: 'ar-SA', eastAsia: 'ar-SA' },
+                    })],
+                })],
+            });
+
+        // ── logo run ─────────────────────────────────────────────────────────
+        const logoRuns = [];
+        if (logoBase64Raw && ImageRun) {
+            try {
+                // Convert base64 → Uint8Array (works in all browsers)
+                const binary = atob(logoBase64Raw);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                logoRuns.push(
+                    new ImageRun({
+                        data: bytes,
+                        transformation: { width: logoW, height: logoH },
+                        type: 'png',
+                    }),
+                    new TextRun({ text: '   ', size: 28 }),
+                );
+            } catch (imgErr) {
+                console.warn('[exportWord] logo embed failed:', imgErr);
+            }
+        }
+
+        // ── helper: Arabic paragraph ─────────────────────────────────────────
+        const arabicPara = (text, opts = {}) =>
+            new Paragraph({
+                bidirectional: true,
+                alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT,
+                spacing: opts.spacing,
+                shading: opts.shading,
+                border: opts.border,
+                children: [new TextRun({
+                    text,
+                    bold: opts.bold || false,
+                    italics: opts.italic || false,
+                    color: opts.color || '111111',
+                    size: opts.size || 20,
+                    rtl: true,
+                    font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
+                    language: { value: 'ar-SA', eastAsia: 'ar-SA' },
+                })],
+            });
+
+        // ── build document ───────────────────────────────────────────────────
+        const doc = new Document({
+            sections: [{
+                properties: {
+                    page: {
+                        size: {
+                            width: 15840,   // landscape A4 in DXA
+                            height: 12240,
+                            orientation: PageOrientation.LANDSCAPE,
+                        },
+                        margin: { top: 720, right: 720, bottom: 900, left: 720 },
+                    },
+                },
+                children: [
+                    // ── title row ────────────────────────────────────────────
+                    new Paragraph({
+                        bidirectional: true,
+                        alignment: AlignmentType.CENTER,
+                        shading: { fill: '0865A8', type: ShadingType.CLEAR },
+                        border: { bottom: { style: BorderStyle.THICK, size: 18, color: 'F57C00', space: 6 } },
+                        spacing: { before: 0, after: 80 },
+                        children: [
+                            ...logoRuns,
+                            new TextRun({
+                                text: reportTitle,
+                                color: 'FFFFFF', bold: true, size: 28, rtl: true,
+                                font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
+                                language: { value: 'ar-SA', eastAsia: 'ar-SA' },
+                            }),
+                            ...(subtitle ? [new TextRun({
+                                text: `  —  ${subtitle}`,
+                                color: 'D0E8FF', size: 20, rtl: true,
+                                font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
+                            })] : []),
+                        ],
+                    }),
+                    // ── date / record count ───────────────────────────────────
+                    arabicPara(
+                        `تاريخ التقرير: ${reportDate}   |   إجمالي السجلات: ${rows.length}`,
+                        { size: 18, color: '555555', italic: true, spacing: { before: 100, after: 200 } },
+                    ),
+                    // ── data table ───────────────────────────────────────────
+                    new Table({
+                        width: { size: totalDxa, type: WidthType.DXA },
+                        columnWidths: colWidths,
+                        rows: [
+                            // header row
+                            new TableRow({
+                                tableHeader: true,
+                                children: headers.map((h, i) =>
+                                    makeCell(h, {
+                                        isHeader: true,
+                                        width: colWidths[i],
+                                        center: i === hashColIdx,
+                                    })
+                                ),
+                            }),
+                            // data rows
+                            ...rows.map((row, ri) =>
+                                new TableRow({
+                                    children: row.map((cell, ci) =>
+                                        makeCell(cell, {
+                                            isHeader: false,
+                                            width: colWidths[ci],
+                                            center: ci === hashColIdx,
+                                            altRow: ri % 2 !== 0,
+                                        })
+                                    ),
+                                })
+                            ),
+                        ],
+                    }),
+                ],
+            }],
+        });
+
+        // ── serialize — use toBlob in browser, toBuffer as fallback ──────────
+        let blob;
+        if (typeof Packer.toBlob === 'function') {
+            blob = await Packer.toBlob(doc);
+        } else {
+            const buf = await Packer.toBuffer(doc);
+            blob = new Blob([buf], {
+                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            });
+        }
+        triggerDownload(blob, filename);
+
+    } catch (err) {
+        console.error('[exportWord] failed:', err);
+        throw err; // re-throw so withExport() shows the error banner
+    }
+}
 
 // ════════════════════════════════════════════════════════════════════════════
 // HELPERS
@@ -229,18 +479,12 @@ function fmtDate(val) {
         const d = new Date(val);
         if (isNaN(d.getTime())) return String(val);
         return d.toISOString().split('T')[0];
-    } catch {
-        return String(val);
-    }
+    } catch { return String(val); }
 }
 
 function toStatusKey(s) {
     if (!s) return 'Pending';
-    const map = {
-        pending: 'Pending', approved: 'Approved',
-        sent: 'Sent', sent_to_bank: 'Sent',
-        rejected: 'Rejected',
-    };
+    const map = { pending: 'Pending', approved: 'Approved', sent: 'Sent', sent_to_bank: 'Sent', rejected: 'Rejected' };
     return map[String(s).toLowerCase()] ?? s;
 }
 
@@ -250,49 +494,25 @@ function toStatusKey(s) {
 const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange, accentColor = '#0865a8' }) => {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     if (totalPages <= 1) return null;
-
     const start = (currentPage - 1) * itemsPerPage + 1;
     const end = Math.min(currentPage * itemsPerPage, totalItems);
-
     const buildPages = () => {
-        const pages = [];
-        const delta = 2;
-        const left = currentPage - delta;
-        const right = currentPage + delta;
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= left && i <= right)) pages.push(i);
-        }
+        const pages = []; const delta = 2; const left = currentPage - delta; const right = currentPage + delta;
+        for (let i = 1; i <= totalPages; i++) { if (i === 1 || i === totalPages || (i >= left && i <= right)) pages.push(i); }
         const result = []; let prev = null;
-        for (const p of pages) {
-            if (prev !== null && p - prev > 1) result.push('...');
-            result.push(p); prev = p;
-        }
+        for (const p of pages) { if (prev !== null && p - prev > 1) result.push('...'); result.push(p); prev = p; }
         return result;
     };
-
     const pages = buildPages();
-
     return (
-        <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            flexWrap: 'wrap', gap: 10,
-            padding: '14px 18px',
-            borderTop: '1.5px solid #e5e7eb',
-            background: '#f5f7fa',
-            fontFamily: '"Droid Arabic Kufi", serif',
-            direction: 'rtl',
-        }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, padding: '14px 18px', borderTop: '1.5px solid #e5e7eb', background: '#f5f7fa', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' }}>
             <span style={{ fontSize: '.72rem', color: '#6b7280', fontWeight: 700 }}>
                 عرض <strong style={{ color: '#111827' }}>{start}</strong> – <strong style={{ color: '#111827' }}>{end}</strong> من إجمالي <strong style={{ color: accentColor }}>{totalItems}</strong> سجل
             </span>
             <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
                 <button disabled={currentPage === 1} onClick={() => onPageChange(1)} style={pgBtnStyle(false, currentPage === 1, accentColor, true)} title="الأولى">«</button>
                 <button disabled={currentPage === 1} onClick={() => onPageChange(currentPage - 1)} style={pgBtnStyle(false, currentPage === 1, accentColor, true)} title="السابقة">‹</button>
-                {pages.map((p, i) =>
-                    p === '...'
-                        ? <span key={`el-${i}`} style={{ padding: '0 4px', color: '#9ca3af', fontSize: '.78rem', userSelect: 'none' }}>…</span>
-                        : <button key={p} onClick={() => onPageChange(p)} style={pgBtnStyle(p === currentPage, false, accentColor, false)}>{p}</button>
-                )}
+                {pages.map((p, i) => p === '...' ? <span key={`el-${i}`} style={{ padding: '0 4px', color: '#9ca3af', fontSize: '.78rem', userSelect: 'none' }}>…</span> : <button key={p} onClick={() => onPageChange(p)} style={pgBtnStyle(p === currentPage, false, accentColor, false)}>{p}</button>)}
                 <button disabled={currentPage === totalPages} onClick={() => onPageChange(currentPage + 1)} style={pgBtnStyle(false, currentPage === totalPages, accentColor, true)} title="التالية">›</button>
                 <button disabled={currentPage === totalPages} onClick={() => onPageChange(totalPages)} style={pgBtnStyle(false, currentPage === totalPages, accentColor, true)} title="الأخيرة">»</button>
             </div>
@@ -301,27 +521,11 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange, accen
 };
 
 function pgBtnStyle(isActive, isDisabled, accent, isNav) {
-    return {
-        minWidth: isNav ? 32 : 34, height: 34,
-        padding: `0 ${isNav ? '8px' : '6px'}`,
-        borderRadius: 8,
-        border: isActive ? `2px solid ${accent}` : '1.5px solid #d1d5db',
-        background: isActive ? accent : isDisabled ? '#f5f7fa' : '#ffffff',
-        color: isActive ? '#fff' : isDisabled ? '#d1d5db' : '#374151',
-        fontFamily: '"Droid Arabic Kufi", serif',
-        fontSize: isNav ? '1rem' : '.78rem',
-        fontWeight: 700,
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        opacity: isDisabled ? 0.5 : 1,
-        transition: 'all .14s',
-        lineHeight: 1,
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        boxShadow: isActive ? `0 2px 8px ${accent}44` : 'none',
-    };
+    return { minWidth: isNav ? 32 : 34, height: 34, padding: `0 ${isNav ? '8px' : '6px'}`, borderRadius: 8, border: isActive ? `2px solid ${accent}` : '1.5px solid #d1d5db', background: isActive ? accent : isDisabled ? '#f5f7fa' : '#ffffff', color: isActive ? '#fff' : isDisabled ? '#d1d5db' : '#374151', fontFamily: '"Droid Arabic Kufi", serif', fontSize: isNav ? '1rem' : '.78rem', fontWeight: 700, cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.5 : 1, transition: 'all .14s', lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxShadow: isActive ? `0 2px 8px ${accent}44` : 'none' };
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// DATA NORMALIZERS  (unchanged)
+// DATA NORMALIZERS
 // ════════════════════════════════════════════════════════════════════════════
 function normalizeUser(u) {
     return {
@@ -420,7 +624,6 @@ const AdminDashboard = () => {
     const exportCertRef = useRef(null);
     const exportRefundRef = useRef(null);
 
-    // ── general ──────────────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState('users');
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFrom, setDateFrom] = useState('');
@@ -439,21 +642,18 @@ const AdminDashboard = () => {
     const [exporting, setExporting] = useState(false);
     const [exportError, setExportError] = useState(null);
 
-    // ── PAGINATION ───────────────────────────────────────────────────────────
     const [usersPage, setUsersPage] = useState(1);
     const [coursesPage, setCoursesPage] = useState(1);
     const [attPage, setAttPage] = useState(1);
     const [certPage, setCertPage] = useState(1);
     const [refundPage, setRefundPage] = useState(1);
 
-    // ── attendance ───────────────────────────────────────────────────────────
     const [attendance, setAttendance] = useState({});
     const [attendanceSaving, setAttendanceSaving] = useState({});
     const [attError, setAttError] = useState(null);
     const [attCourseFilter, setAttCourseFilter] = useState('all');
     const [attUserSearch, setAttUserSearch] = useState('');
 
-    // ── certificates ─────────────────────────────────────────────────────────
     const [certificates, setCertificates] = useState({});
     const [certUploading, setCertUploading] = useState({});
     const [certDeleting, setCertDeleting] = useState({});
@@ -468,7 +668,6 @@ const AdminDashboard = () => {
 
     React.useEffect(() => { usersDataRef.current = usersData; }, [usersData]);
 
-    // ── REFUND STATE ──────────────────────────────────────────────────────────
     const [refunds, setRefunds] = useState([]);
     const [refundsLoading, setRefundsLoading] = useState(false);
     const [refundsError, setRefundsError] = useState(null);
@@ -481,7 +680,6 @@ const AdminDashboard = () => {
     const [refundActionError, setRefundActionError] = useState('');
     const [bankResultBanner, setBankResultBanner] = useState(null);
 
-    // ── Reset pages on filter/tab change ─────────────────────────────────────
     useEffect(() => { setUsersPage(1); setExpandedRow(null); }, [searchQuery, dateFrom, dateTo]);
     useEffect(() => { setCoursesPage(1); setExpandedRow(null); }, [searchQuery, dateFrom, dateTo]);
     useEffect(() => { setUsersPage(1); setCoursesPage(1); setExpandedRow(null); }, [activeTab]);
@@ -489,35 +687,18 @@ const AdminDashboard = () => {
     useEffect(() => { setCertPage(1); }, [certSearch, certStatusFilter]);
     useEffect(() => { setRefundPage(1); }, [refundSearch, refundStatusFilter]);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // AUTH-AWARE FETCH HELPERS
-    // ════════════════════════════════════════════════════════════════════════
     const authFetch = useCallback(async (url, options = {}) => {
         let token = null;
         try { token = await getToken(); } catch (_) { }
-        return fetch(url, {
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                ...options.headers,
-            },
-        });
+        return fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers } });
     }, [getToken]);
 
     const authFetchForm = useCallback(async (url, formData) => {
         let token = null;
         try { token = await getToken(); } catch (_) { }
-        return fetch(url, {
-            method: 'POST',
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-            body: formData,
-        });
+        return fetch(url, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
     }, [getToken]);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // REFUND API HELPERS
-    // ════════════════════════════════════════════════════════════════════════
     const fetchRefunds = useCallback(async (statusFilter = 'all') => {
         setRefundsLoading(true); setRefundsError(null);
         try {
@@ -525,51 +706,33 @@ const AdminDashboard = () => {
             const res = await authFetch(`${API_BASE}/refund/admin/all${qs}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const json = await res.json();
-            const raw = Array.isArray(json) ? json
-                : Array.isArray(json?.data) ? json.data
-                    : Array.isArray(json?.items) ? json.items
-                        : [];
+            const raw = Array.isArray(json) ? json : Array.isArray(json?.data) ? json.data : Array.isArray(json?.items) ? json.items : [];
             setRefunds(raw.map(normalizeRefund));
         } catch (err) {
             console.error('Refunds fetch error:', err);
             setRefundsError('فشل تحميل طلبات الاسترداد: ' + err.message);
-        } finally {
-            setRefundsLoading(false);
-        }
+        } finally { setRefundsLoading(false); }
     }, [authFetch]);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // COMMIT REFUND ACTION
-    // ════════════════════════════════════════════════════════════════════════
     const commitRefundAction = async () => {
         if (!refundActionModal) return;
         const { refund: r, action } = refundActionModal;
         if (action === 'reject' && !refundActionNote.trim()) return;
         setRefundActionSaving(true); setRefundActionError('');
         try {
-            const endpoint = {
-                approve: `${API_BASE}/refund/${r.id}/approve`,
-                reject: `${API_BASE}/refund/${r.id}/reject`,
-                send_to_bank: `${API_BASE}/refund/${r.id}/sent`,
-            }[action];
+            const endpoint = { approve: `${API_BASE}/refund/${r.id}/approve`, reject: `${API_BASE}/refund/${r.id}/reject`, send_to_bank: `${API_BASE}/refund/${r.id}/sent` }[action];
             const body = {};
             if (action === 'reject') body.rejectionReason = refundActionNote.trim();
             if (action === 'approve') body.adminNote = refundActionNote.trim();
             if (action === 'send_to_bank') body.adminNote = refundActionNote.trim();
             const res = await authFetch(endpoint, { method: 'PUT', body: JSON.stringify(body) });
-            if (!res.ok) {
-                const errJson = await res.json().catch(() => ({}));
-                throw new Error(errJson?.message ?? errJson?.error ?? `HTTP ${res.status}`);
-            }
+            if (!res.ok) { const errJson = await res.json().catch(() => ({})); throw new Error(errJson?.message ?? errJson?.error ?? `HTTP ${res.status}`); }
             const updated = await res.json();
             const normalized = normalizeRefund(updated);
             if (action === 'send_to_bank') {
                 const bankRes = normalized.bankResult ?? updated?.bankResult ?? updated?.BankResult ?? null;
-                if (bankRes === 'SUCCESS' || bankRes === 'success') {
-                    setBankResultBanner({ type: 'success', refundId: r.id, msg: `✅ نجح التحويل البنكي — الفلوس رجعت على الكارت تلقائياً (${r.refNumber || r.id})` });
-                } else if (bankRes === 'FAILED' || bankRes === 'failed') {
-                    setBankResultBanner({ type: 'failed', refundId: r.id, msg: `⚠️ فشل التحويل البنكي — يتم التحويل يدوياً على IBAN: ${r.iban || '—'}` });
-                }
+                if (bankRes === 'SUCCESS' || bankRes === 'success') { setBankResultBanner({ type: 'success', refundId: r.id, msg: `✅ نجح التحويل البنكي — الفلوس رجعت على الكارت تلقائياً (${r.refNumber || r.id})` }); }
+                else if (bankRes === 'FAILED' || bankRes === 'failed') { setBankResultBanner({ type: 'failed', refundId: r.id, msg: `⚠️ فشل التحويل البنكي — يتم التحويل يدوياً على IBAN: ${r.iban || '—'}` }); }
                 setTimeout(() => setBankResultBanner(null), 12000);
             }
             setRefundActionModal(null); setRefundActionNote(''); setRefundDetailModal(null);
@@ -577,58 +740,31 @@ const AdminDashboard = () => {
         } catch (err) {
             console.error('Refund action error:', err);
             setRefundActionError(err.message || 'حدث خطأ أثناء تنفيذ الإجراء');
-        } finally {
-            setRefundActionSaving(false);
-        }
+        } finally { setRefundActionSaving(false); }
     };
 
-    // ════════════════════════════════════════════════════════════════════════
-    // AUTH GUARD
-    // ════════════════════════════════════════════════════════════════════════
     useEffect(() => {
         if (!isLoaded || !user) return;
-        if (!ADMIN_EMAILS.includes((user.primaryEmailAddress?.emailAddress || '').toLowerCase())) {
-            navigate('/');
-        }
+        if (!ADMIN_EMAILS.includes((user.primaryEmailAddress?.emailAddress || '').toLowerCase())) { navigate('/'); }
     }, [isLoaded, user, navigate]);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // LOAD USERS / COURSES / STATS
-    // ════════════════════════════════════════════════════════════════════════
     useEffect(() => {
         const load = async () => {
             setLoading(true); setError(null);
             try {
-                const [usersRes, coursesRes, statsRes] = await Promise.all([
-                    authFetch(`${API_BASE}/Admin/users`),
-                    authFetch(`${API_BASE}/Admin/planworks`),
-                    authFetch(`${API_BASE}/Admin/stats`),
-                ]);
+                const [usersRes, coursesRes, statsRes] = await Promise.all([authFetch(`${API_BASE}/Admin/users`), authFetch(`${API_BASE}/Admin/planworks`), authFetch(`${API_BASE}/Admin/stats`)]);
                 let usersRaw = [], coursesRaw = [], statsRaw = null;
-                if (usersRes.ok) {
-                    const j = await usersRes.json();
-                    usersRaw = Array.isArray(j) ? j : j?.data ?? j?.users ?? j?.result ?? [];
-                } else {
-                    const errText = await usersRes.text().catch(() => '');
-                    setError(`Users API ${usersRes.status}: ${errText.slice(0, 200)}`);
-                }
-                if (coursesRes.ok) {
-                    const j = await coursesRes.json();
-                    coursesRaw = Array.isArray(j) ? j : j?.data ?? j?.planWorks ?? j?.planworks ?? j?.courses ?? j?.result ?? [];
-                }
+                if (usersRes.ok) { const j = await usersRes.json(); usersRaw = Array.isArray(j) ? j : j?.data ?? j?.users ?? j?.result ?? []; }
+                else { const errText = await usersRes.text().catch(() => ''); setError(`Users API ${usersRes.status}: ${errText.slice(0, 200)}`); }
+                if (coursesRes.ok) { const j = await coursesRes.json(); coursesRaw = Array.isArray(j) ? j : j?.data ?? j?.planWorks ?? j?.planworks ?? j?.courses ?? j?.result ?? []; }
                 if (statsRes.ok) statsRaw = await statsRes.json();
                 const normalizedUsers = usersRaw.map(u => normalizeUser(u)).filter(u => u.id != null);
                 const normalizedCourses = coursesRaw.map(c => normalizeCourse(c)).filter(c => c.id != null);
-                setUsersData(normalizedUsers);
-                setCoursesData(normalizedCourses);
-                setApiStats(statsRaw);
+                setUsersData(normalizedUsers); setCoursesData(normalizedCourses); setApiStats(statsRaw);
                 seedAttendance(normalizedUsers);
                 await loadCertificatesFromApi(normalizedUsers);
-            } catch (err) {
-                setError(err.message || 'حدث خطأ أثناء تحميل البيانات');
-            } finally {
-                setLoading(false);
-            }
+            } catch (err) { setError(err.message || 'حدث خطأ أثناء تحميل البيانات'); }
+            finally { setLoading(false); }
         };
         if (isLoaded && user) load();
     }, [isLoaded, user, authFetch]);
@@ -646,9 +782,6 @@ const AdminDashboard = () => {
         document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
     }, []);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // CERTIFICATES
-    // ════════════════════════════════════════════════════════════════════════
     const loadCertificatesFromApi = useCallback(async (usersArr) => {
         try {
             const res = await authFetch(`${API_BASE}/Admin/certificates`);
@@ -656,11 +789,7 @@ const AdminDashboard = () => {
             const json = await res.json();
             const certsArr = Array.isArray(json) ? json : json?.data ?? json?.certificates ?? json?.result ?? [];
             const upToEid = {};
-            (usersArr ?? usersDataRef.current).forEach(u => {
-                (u.enrolledCourses ?? []).forEach(c => {
-                    if (c.enrollmentId != null && c.id != null) upToEid[`${u.id}-${c.id}`] = String(c.enrollmentId);
-                });
-            });
+            (usersArr ?? usersDataRef.current).forEach(u => { (u.enrolledCourses ?? []).forEach(c => { if (c.enrollmentId != null && c.id != null) upToEid[`${u.id}-${c.id}`] = String(c.enrollmentId); }); });
             const map = {};
             certsArr.forEach(raw => {
                 const cert = normalizeCert(raw);
@@ -675,44 +804,25 @@ const AdminDashboard = () => {
         } catch (err) { console.warn('[Certs] loadCertificatesFromApi failed:', err.message); }
     }, [authFetch]);
 
-    const refreshCertificates = useCallback(async () => {
-        await loadCertificatesFromApi(usersDataRef.current);
-    }, [loadCertificatesFromApi]);
+    const refreshCertificates = useCallback(async () => { await loadCertificatesFromApi(usersDataRef.current); }, [loadCertificatesFromApi]);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // ATTENDANCE
-    // ════════════════════════════════════════════════════════════════════════
     const seedAttendance = useCallback((users) => {
         const map = {};
-        users.forEach(u => {
-            u.enrolledCourses.forEach(c => {
-                if (c.enrollmentId != null) map[String(c.enrollmentId)] = !!c.attended;
-            });
-        });
+        users.forEach(u => { u.enrolledCourses.forEach(c => { if (c.enrollmentId != null) map[String(c.enrollmentId)] = !!c.attended; }); });
         setAttendance(map);
     }, []);
 
     const toggleAttendance = async (enrollmentId, currentVal) => {
         if (enrollmentId == null) { setAttError('لا يوجد enrollmentId لهذا التسجيل'); return; }
-        const k = String(enrollmentId);
-        const newVal = !currentVal;
-        setAttendance(p => ({ ...p, [k]: newVal }));
-        setAttendanceSaving(p => ({ ...p, [k]: true }));
-        setAttError(null);
+        const k = String(enrollmentId); const newVal = !currentVal;
+        setAttendance(p => ({ ...p, [k]: newVal })); setAttendanceSaving(p => ({ ...p, [k]: true })); setAttError(null);
         try {
             const res = await authFetch(`${API_BASE}/Admin/enrollments/${enrollmentId}/attendance`, { method: 'PATCH', body: JSON.stringify(newVal) });
             if (!res.ok) { const errJson = await res.json().catch(() => ({})); throw new Error(errJson?.message ?? `HTTP ${res.status}`); }
-        } catch (err) {
-            setAttendance(p => ({ ...p, [k]: currentVal }));
-            setAttError('فشل تحديث الحضور: ' + err.message);
-        } finally {
-            setAttendanceSaving(p => ({ ...p, [k]: false }));
-        }
+        } catch (err) { setAttendance(p => ({ ...p, [k]: currentVal })); setAttError('فشل تحديث الحضور: ' + err.message); }
+        finally { setAttendanceSaving(p => ({ ...p, [k]: false })); }
     };
 
-    // ════════════════════════════════════════════════════════════════════════
-    // CERTIFICATE UPLOAD / VIEW / DELETE  (unchanged logic)
-    // ════════════════════════════════════════════════════════════════════════
     const handleCertFile = async (enrollmentId, userId, planworkId, file) => {
         if (!file) return;
         const eidKey = enrollmentId != null ? String(enrollmentId) : null;
@@ -781,11 +891,7 @@ const AdminDashboard = () => {
         try {
             if (certId != null) {
                 let ok = false;
-                const endpoints = [
-                    [`${API_BASE}/Admin/certificates/${certId}`, 'DELETE'],
-                    [`${API_BASE}/Admin/certificates/${certId}/delete`, 'POST'],
-                    [`${API_BASE}/Admin/upload/${certId}`, 'DELETE'],
-                ];
+                const endpoints = [[`${API_BASE}/Admin/certificates/${certId}`, 'DELETE'], [`${API_BASE}/Admin/certificates/${certId}/delete`, 'POST'], [`${API_BASE}/Admin/upload/${certId}`, 'DELETE']];
                 for (const [ep, method] of endpoints) {
                     const res = await authFetch(ep, { method });
                     if (res.ok || res.status === 404) { ok = true; break; }
@@ -802,105 +908,57 @@ const AdminDashboard = () => {
     // DERIVED DATA
     // ════════════════════════════════════════════════════════════════════════
     const inRange = d => {
-        if (!dateFrom && !dateTo) return true;
-        if (!d) return false;
-        const dt = new Date(d);
-        if (isNaN(dt.getTime())) return false;
+        if (!dateFrom && !dateTo) return true; if (!d) return false;
+        const dt = new Date(d); if (isNaN(dt.getTime())) return false;
         if (dateFrom && dt < new Date(dateFrom)) return false;
         if (dateTo) { const toEnd = new Date(dateTo); toEnd.setDate(toEnd.getDate() + 1); if (dt >= toEnd) return false; }
         return true;
     };
 
     const q = searchQuery.toLowerCase();
-    const filteredUsers = usersData
-        .map(u => ({ ...u, enrolledCourses: u.enrolledCourses.filter(c => inRange(c.date)) }))
-        .filter(u => {
-            const matchSearch = `${u.firstName} ${u.lastName} ${u.email} ${u.username}`.toLowerCase().includes(q);
-            if ((dateFrom || dateTo) && u.enrolledCourses.length === 0) return false;
-            return matchSearch;
-        });
-
-    const filteredCourses = coursesData
-        .map(c => ({ ...c, enrolledUsers: c.enrolledUsers.filter(u => inRange(u.date)) }))
-        .filter(c => {
-            const matchSearch = `${c.title} ${c.category}`.toLowerCase().includes(q);
-            if ((dateFrom || dateTo) && c.enrolledUsers.length === 0) return false;
-            return matchSearch;
-        });
+    const filteredUsers = usersData.map(u => ({ ...u, enrolledCourses: u.enrolledCourses.filter(c => inRange(c.date)) })).filter(u => { const matchSearch = `${u.firstName} ${u.lastName} ${u.email} ${u.username}`.toLowerCase().includes(q); if ((dateFrom || dateTo) && u.enrolledCourses.length === 0) return false; return matchSearch; });
+    const filteredCourses = coursesData.map(c => ({ ...c, enrolledUsers: c.enrolledUsers.filter(u => inRange(u.date)) })).filter(c => { const matchSearch = `${c.title} ${c.category}`.toLowerCase().includes(q); if ((dateFrom || dateTo) && c.enrolledUsers.length === 0) return false; return matchSearch; });
 
     const paginatedUsers = filteredUsers.slice((usersPage - 1) * ITEMS_PER_PAGE, usersPage * ITEMS_PER_PAGE);
     const paginatedCourses = filteredCourses.slice((coursesPage - 1) * ITEMS_PER_PAGE, coursesPage * ITEMS_PER_PAGE);
 
-    const attRows = usersData.flatMap(u =>
-        u.enrolledCourses.filter(c => c.enrollmentId != null).map(c => ({ user: u, course: c }))
-    ).filter(r => {
-        const mc = attCourseFilter === 'all' || r.course.id === Number(attCourseFilter);
-        const mu = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username}`.toLowerCase().includes(attUserSearch.toLowerCase());
-        return mc && mu;
-    });
-
+    const attRows = usersData.flatMap(u => u.enrolledCourses.filter(c => c.enrollmentId != null).map(c => ({ user: u, course: c }))).filter(r => { const mc = attCourseFilter === 'all' || r.course.id === Number(attCourseFilter); const mu = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username}`.toLowerCase().includes(attUserSearch.toLowerCase()); return mc && mu; });
     const attCount = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length;
 
-    const certRows = usersData.flatMap(u =>
-        u.enrolledCourses.map(c => {
-            const matchedCourse = coursesData.find(cd => cd.title === (c._titleRaw || c.title));
-            const resolvedPlanworkId = c.id ?? matchedCourse?.id ?? null;
-            const eidKey = c.enrollmentId != null ? String(c.enrollmentId) : null;
-            const fallbackKey = resolvedPlanworkId != null ? `${u.id}-${resolvedPlanworkId}` : null;
-            const certKey = eidKey ?? fallbackKey ?? `${u.id}-unknown`;
-            return { user: u, course: c, certKey, altKey: eidKey ? fallbackKey : null, enrollmentId: c.enrollmentId, userId: u.id, planworkId: resolvedPlanworkId };
-        })
-    ).filter(r => {
+    const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => {
+        const matchedCourse = coursesData.find(cd => cd.title === (c._titleRaw || c.title));
+        const resolvedPlanworkId = c.id ?? matchedCourse?.id ?? null;
+        const eidKey = c.enrollmentId != null ? String(c.enrollmentId) : null;
+        const fallbackKey = resolvedPlanworkId != null ? `${u.id}-${resolvedPlanworkId}` : null;
+        const certKey = eidKey ?? fallbackKey ?? `${u.id}-unknown`;
+        return { user: u, course: c, certKey, altKey: eidKey ? fallbackKey : null, enrollmentId: c.enrollmentId, userId: u.id, planworkId: resolvedPlanworkId };
+    })).filter(r => {
         const matchSearch = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username} ${r.course.title}`.toLowerCase().includes(certSearch.toLowerCase());
         const hasCert = !!(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined));
         const isAtt = !!attendance[r.certKey];
-        const matchStatus = certStatusFilter === 'all' ? true
-            : certStatusFilter === 'uploaded' ? hasCert
-                : certStatusFilter === 'pending' ? (!hasCert && isAtt)
-                    : certStatusFilter === 'not-attended' ? !isAtt
-                        : true;
+        const matchStatus = certStatusFilter === 'all' ? true : certStatusFilter === 'uploaded' ? hasCert : certStatusFilter === 'pending' ? (!hasCert && isAtt) : certStatusFilter === 'not-attended' ? !isAtt : true;
         return matchSearch && matchStatus;
     });
 
-    const totalCerts = (() => {
-        const seen = new Set(); let n = 0;
-        Object.values(certificates).forEach(v => { const key = v?.certId ?? `_noId_${n}`; if (!seen.has(key)) { seen.add(key); n++; } });
-        return n;
-    })();
+    const totalCerts = (() => { const seen = new Set(); let n = 0; Object.values(certificates).forEach(v => { const key = v?.certId ?? `_noId_${n}`; if (!seen.has(key)) { seen.add(key); n++; } }); return n; })();
     const totalEnrollments = usersData.reduce((s, u) => s + u.enrolledCourses.length, 0);
 
-    const gs = (fields, fb) => {
-        if (!apiStats) return fb;
-        for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; }
-        return fb;
-    };
+    const gs = (fields, fb) => { if (!apiStats) return fb; for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; } return fb; };
     const displayStats = {
-        users: gs(['usersCount'], usersData.length),
-        courses: gs(['planworksCount'], coursesData.length),
-        enrollments: gs(['enrollmentsCount'], totalEnrollments),
-        attended: gs(['attendanceCount'], attCount),
-        certificates: gs(['certificatesCount'], totalCerts),
-        refundsPending: gs(['refundsCount'], refunds.filter(r => r.status === 'Pending').length),
+        users: gs(['usersCount'], usersData.length), courses: gs(['planworksCount'], coursesData.length),
+        enrollments: gs(['enrollmentsCount'], totalEnrollments), attended: gs(['attendanceCount'], attCount),
+        certificates: gs(['certificatesCount'], totalCerts), refundsPending: gs(['refundsCount'], refunds.filter(r => r.status === 'Pending').length),
     };
 
     const refundSearch_q = refundSearch.toLowerCase();
     const filteredRefunds = refunds.filter(r => {
-        const u = usersData.find(u => u.id === r.userId);
-        const c = coursesData.find(c => c.id === r.courseId);
+        const u = usersData.find(u => u.id === r.userId); const c = coursesData.find(c => c.id === r.courseId);
         const matchStatus = refundStatusFilter === 'all' || r.status === toStatusKey(refundStatusFilter);
         const matchSearch = !refundSearch_q || [r.refNumber, r.orderId, r.reason, u ? `${u.firstName} ${u.lastName}` : '', c?.title ?? '', String(r.amount)].join(' ').toLowerCase().includes(refundSearch_q);
         return matchStatus && matchSearch;
     });
 
-    const refundStats = {
-        total: refunds.length,
-        pending: refunds.filter(r => r.status === 'Pending').length,
-        approved: refunds.filter(r => r.status === 'Approved').length,
-        sent: refunds.filter(r => r.status === 'Sent').length,
-        rejected: refunds.filter(r => r.status === 'Rejected').length,
-        totalAmount: refunds.filter(r => r.status !== 'Rejected').reduce((s, r) => s + (r.amount || 0), 0),
-    };
-
+    const refundStats = { total: refunds.length, pending: refunds.filter(r => r.status === 'Pending').length, approved: refunds.filter(r => r.status === 'Approved').length, sent: refunds.filter(r => r.status === 'Sent').length, rejected: refunds.filter(r => r.status === 'Rejected').length, totalAmount: refunds.filter(r => r.status !== 'Rejected').reduce((s, r) => s + (r.amount || 0), 0) };
     const refundUserLookup = id => usersData.find(u => u.id === id) ?? { firstName: '—', lastName: '', email: '—' };
     const refundCourseLookup = id => coursesData.find(c => c.id === id) ?? { title: '—' };
 
@@ -909,82 +967,70 @@ const AdminDashboard = () => {
     const paginatedRefunds = filteredRefunds.slice((refundPage - 1) * ITEMS_PER_PAGE, refundPage * ITEMS_PER_PAGE);
 
     // ════════════════════════════════════════════════════════════════════════
-    // EXPORT
+    // EXPORT — all wrapped with rtlExport() for correct RTL column order
     // ════════════════════════════════════════════════════════════════════════
     const withExport = fn => async () => {
         setExporting(true);
-        setExportMenuOpen(false); setExportAttMenuOpen(false);
-        setExportCertMenuOpen(false); setExportRefMenuOpen(false);
+        setExportMenuOpen(false); setExportAttMenuOpen(false); setExportCertMenuOpen(false); setExportRefMenuOpen(false);
         setExportError(null);
         try { await fn(); } catch (e) { console.error(e); setExportError('فشل التصدير: ' + (e?.message || 'خطأ')); }
         finally { setExporting(false); }
     };
-    const doExcel = withExport(async () => { const { headers, rows } = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses); await exportExcel(activeTab === 'users' ? 'المستخدمون-والدورات.xlsx' : 'الدورات-والمستخدمون.xlsx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows); });
-    const doPDF = withExport(async () => { const { headers, rows } = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses); await exportPDF(activeTab === 'users' ? 'تقرير-المستخدمين.pdf' : 'تقرير-الدورات.pdf', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows, 'ICEMT'); });
-    const doWord = withExport(async () => { const { headers, rows } = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses); await exportWord(activeTab === 'users' ? 'تقرير-المستخدمين.docx' : 'تقرير-الدورات.docx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', 'ICEMT', headers, rows); });
 
-    // ── Attendance export rows ────────────────────────────────────────────────
+    // ── Users / Courses ───────────────────────────────────────────────────
+    const doExcel = withExport(async () => {
+        const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
+        const { headers, rows } = rtlExport(raw.headers, raw.rows);
+        await exportExcel(activeTab === 'users' ? 'المستخدمون-والدورات.xlsx' : 'الدورات-والمستخدمون.xlsx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows);
+    });
+    const doPDF = withExport(async () => {
+        const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
+        const { headers, rows } = rtlExport(raw.headers, raw.rows);
+        await exportPDF(activeTab === 'users' ? 'تقرير-المستخدمين.pdf' : 'تقرير-الدورات.pdf', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows, 'ICEMT');
+    });
+    const doWord = withExport(async () => {
+        const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
+        const { headers, rows } = rtlExport(raw.headers, raw.rows);
+        await exportWord(activeTab === 'users' ? 'تقرير-المستخدمين.docx' : 'تقرير-الدورات.docx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', 'ICEMT', headers, rows);
+    });
+
+    // ── Attendance ────────────────────────────────────────────────────────
     const buildAttRows = () => {
         const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور'];
-        const rows = attRows.map((r, i) => [
-            i + 1,
-            `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(),
-            r.user.email,
-            r.course.title,
-            attendance[String(r.course.enrollmentId)] ? 'حضر' : 'غائب',
-        ]);
+        const rows = attRows.map((r, i) => [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, attendance[String(r.course.enrollmentId)] ? 'حضر' : 'غائب']);
         return { headers, rows };
     };
-    const doAttExcel = withExport(async () => { const { headers, rows } = buildAttRows(); await exportExcel('تقرير-الحضور.xlsx', 'تقرير الحضور', headers, rows); });
-    const doAttPDF = withExport(async () => { const { headers, rows } = buildAttRows(); await exportPDF('تقرير-الحضور.pdf', 'تقرير الحضور', headers, rows, 'ICEMT'); });
-    const doAttWord = withExport(async () => { const { headers, rows } = buildAttRows(); await exportWord('تقرير-الحضور.docx', 'تقرير الحضور', 'ICEMT', headers, rows); });
+    const doAttExcel = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportExcel('تقرير-الحضور.xlsx', 'تقرير الحضور', headers, rows); });
+    const doAttPDF = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-الحضور.pdf', 'تقرير الحضور', headers, rows, 'ICEMT'); });
+    const doAttWord = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-الحضور.docx', 'تقرير الحضور', 'ICEMT', headers, rows); });
 
-    // ── Certificates export rows ──────────────────────────────────────────────
+    // ── Certificates ──────────────────────────────────────────────────────
     const buildCertRows = () => {
         const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور', 'الشهادة'];
         const rows = certRows.map((r, i) => {
             const cert = certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined);
             const isAtt = !!attendance[r.certKey];
-            return [
-                i + 1,
-                `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(),
-                r.user.email,
-                r.course.title,
-                isAtt ? 'حضر' : 'غائب',
-                cert ? (cert.name && cert.name !== 'uploaded' ? cert.name : 'مرفوعة') : 'لم تُرفع',
-            ];
+            return [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, isAtt ? 'حضر' : 'غائب', cert ? (cert.name && cert.name !== 'uploaded' ? cert.name : 'مرفوعة') : 'لم تُرفع'];
         });
         return { headers, rows };
     };
-    const doCertExcel = withExport(async () => { const { headers, rows } = buildCertRows(); await exportExcel('تقرير-الشهادات.xlsx', 'تقرير الشهادات', headers, rows); });
-    const doCertPDF = withExport(async () => { const { headers, rows } = buildCertRows(); await exportPDF('تقرير-الشهادات.pdf', 'تقرير الشهادات', headers, rows, 'ICEMT'); });
-    const doCertWord = withExport(async () => { const { headers, rows } = buildCertRows(); await exportWord('تقرير-الشهادات.docx', 'تقرير الشهادات', 'ICEMT', headers, rows); });
+    const doCertExcel = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportExcel('تقرير-الشهادات.xlsx', 'تقرير الشهادات', headers, rows); });
+    const doCertPDF = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-الشهادات.pdf', 'تقرير الشهادات', headers, rows, 'ICEMT'); });
+    const doCertWord = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-الشهادات.docx', 'تقرير الشهادات', 'ICEMT', headers, rows); });
 
-    // ── Refunds export rows ───────────────────────────────────────────────────
+    // ── Refunds ───────────────────────────────────────────────────────────
     const buildRefundRows = () => {
         const headers = ['#', 'رقم الطلب', 'المستخدم', 'البريد الإلكتروني', 'الدورة', 'المبلغ', 'العملة', 'الحالة', 'السبب', 'تاريخ الطلب'];
         const rows = filteredRefunds.map((r, i) => {
-            const u = refundUserLookup(r.userId);
-            const c = refundCourseLookup(r.courseId);
+            const u = refundUserLookup(r.userId); const c = refundCourseLookup(r.courseId);
             const sm = REFUND_STATUS_META[r.status] || REFUND_STATUS_META.Pending;
-            return [
-                i + 1,
-                r.refNumber || r.id,
-                `${u.firstName} ${u.lastName}`.trim(),
-                u.email,
-                c.title,
-                r.amount,
-                r.currency,
-                sm.label,
-                r.reason || '',
-                r.requestedAt || '',
-            ];
+            return [i + 1, r.refNumber || r.id, `${u.firstName} ${u.lastName}`.trim(), u.email, c.title, r.amount, r.currency, sm.label, r.reason || '', r.requestedAt || ''];
         });
         return { headers, rows };
     };
-    const doRefundExcel = withExport(async () => { const { headers, rows } = buildRefundRows(); await exportExcel('تقرير-المستردات.xlsx', 'تقرير المستردات', headers, rows); });
-    const doRefundPDF = withExport(async () => { const { headers, rows } = buildRefundRows(); await exportPDF('تقرير-المستردات.pdf', 'تقرير المستردات', headers, rows, 'ICEMT'); });
-    const doRefundWord = withExport(async () => { const { headers, rows } = buildRefundRows(); await exportWord('تقرير-المستردات.docx', 'تقرير المستردات', 'ICEMT', headers, rows); });
+    const doRefundExcel = withExport(async () => { const raw = buildRefundRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportExcel('تقرير-المستردات.xlsx', 'تقرير المستردات', headers, rows); });
+    const doRefundPDF = withExport(async () => { const raw = buildRefundRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-المستردات.pdf', 'تقرير المستردات', headers, rows, 'ICEMT'); });
+    const doRefundWord = withExport(async () => { const raw = buildRefundRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-المستردات.docx', 'تقرير المستردات', 'ICEMT', headers, rows); });
 
     // ════════════════════════════════════════════════════════════════════════
     // EARLY RETURNS
@@ -1024,7 +1070,6 @@ const AdminDashboard = () => {
     // ════════════════════════════════════════════════════════════════════════
     return (
         <>
-            {/* ─── GLOBAL STYLES ───────────────────────────────────────────── */}
             <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap');
         *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1036,7 +1081,6 @@ const AdminDashboard = () => {
         @keyframes d-slideDown { from { opacity:0; transform:translateY(-14px) } to { opacity:1; transform:translateY(0) } }
 
         :root {
-          /* brand palette */
           --blue:    #0865a8;
           --blue-lt: rgba(8,101,168,0.08);
           --blue-md: rgba(8,101,168,0.15);
@@ -1045,23 +1089,12 @@ const AdminDashboard = () => {
           --orng-md: rgba(245,124,0,0.15);
           --black:   #111827;
           --white:   #ffffff;
-
-          /* neutrals */
-          --gray1: #374151;
-          --gray2: #6b7280;
-          --gray3: #9ca3af;
-          --gray4: #d1d5db;
-          --gray5: #e5e7eb;
+          --gray1: #374151; --gray2: #6b7280; --gray3: #9ca3af; --gray4: #d1d5db; --gray5: #e5e7eb;
           --bg:    #f0f4f8;
-
-          /* component */
-          --card-bg:     #ffffff;
-          --card-border: #e5e7eb;
+          --card-bg: #ffffff; --card-border: #e5e7eb;
           --radius: 12px;
           --shadow: 0 2px 12px rgba(8,101,168,0.07), 0 1px 3px rgba(0,0,0,0.04);
           --shadow-md: 0 4px 20px rgba(8,101,168,0.11), 0 2px 6px rgba(0,0,0,0.05);
-
-          /* layout */
           --navbar-h:   ${NAVBAR_H}px;
           --overview-h: ${OVERVIEW_H}px;
           --total-offset: ${NAVBAR_H + OVERVIEW_H}px;
@@ -1069,443 +1102,252 @@ const AdminDashboard = () => {
           --font: "Droid Arabic Kufi", serif;
         }
 
-        /* ── root layout ── */
-        .d-root {
-          font-family: var(--font);
-          direction: rtl;
-          min-height: 100vh;
-          background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%);
-          /* push content below navbar + overview bar — zero gap */
-          padding-top: var(--total-offset);
-          color: var(--black);
-          display: flex;
-          align-items: flex-start;
-        }
-
-        /* ── fixed breadcrumb bar (exact colours from spec) ── */
-        ._ovr {
-          position: fixed;
-          top: var(--navbar-h);   /* sits flush under the navbar */
-          left: 0;
-          z-index: 1050;
-          width: 100%;
-          height: var(--overview-h);
-          background: #F5F7E1;
-          border-bottom: 1px solid #d1d5db;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: var(--font);
-          font-size: clamp(0.72rem, 1.3vw, 0.82rem);
-        }
-        ._ovr a {
-          margin-left: 6px;
-          color: #374151;
-          text-decoration: none;
-          font-weight: 600;
-          transition: color .15s;
-        }
+        .d-root { font-family: var(--font); direction: rtl; min-height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%); padding-top: var(--total-offset); color: var(--black); display: flex; align-items: flex-start; }
+        ._ovr { position: fixed; top: var(--navbar-h); left: 0; z-index: 1050; width: 100%; height: var(--overview-h); background: #F5F7E1; border-bottom: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: clamp(0.72rem, 1.3vw, 0.82rem); }
+        ._ovr a { margin-left: 6px; color: #374151; text-decoration: none; font-weight: 600; transition: color .15s; }
         ._ovr a:hover { color: #111827; }
-        ._ovr .sep  { color: #9ca3af; margin: 0 4px; }
-        ._ovr .cur  { margin-right: 6px; color: #374151; }
+        ._ovr .sep { color: #9ca3af; margin: 0 4px; }
+        ._ovr .cur { margin-right: 6px; color: #374151; }
 
-        /* ── sidebar ── */
-        .d-sidebar {
-          position: sticky;
-          top: var(--total-offset);
-          width: var(--sidebar-w);
-          height: calc(100vh - var(--total-offset));
-          flex-shrink: 0;
-          align-self: flex-start;
-          background: var(--white);
-          border-left: 2px solid var(--card-border);
-          box-shadow: -2px 0 10px rgba(8,101,168,0.05);
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          z-index: 200;
-          transition: width .25s ease;
-        }
-        .d-sidebar-brand {
-          padding: 16px 14px;
-          border-bottom: 2px solid var(--orange);
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          background: var(--blue);
-          flex-shrink: 0;
-        }
-        .d-sb-logo  { width: 34px; height: 34px; object-fit: contain; filter: brightness(0) invert(1); flex-shrink: 0; }
+        .d-sidebar { position: sticky; top: var(--total-offset); width: var(--sidebar-w); height: calc(100vh - var(--total-offset)); flex-shrink: 0; align-self: flex-start; background: var(--white); border-left: 2px solid var(--card-border); box-shadow: -2px 0 10px rgba(8,101,168,0.05); display: flex; flex-direction: column; overflow: hidden; z-index: 200; transition: width .25s ease; }
+        .d-sidebar-brand { padding: 16px 14px; border-bottom: 2px solid var(--orange); display: flex; align-items: center; gap: 10px; background: var(--blue); flex-shrink: 0; }
+        .d-sb-logo { width: 34px; height: 34px; object-fit: contain; filter: brightness(0) invert(1); flex-shrink: 0; }
         .d-sb-title { min-width: 0; overflow: hidden; }
-        .d-sb-name  { font-size: .84rem; font-weight: 900; color: #fff; white-space: nowrap; letter-spacing: .3px; }
-        .d-sb-sub   { font-size: .6rem;  color: rgba(255,255,255,.55); margin-top: 2px; white-space: nowrap; }
-
-        .d-sidebar-user {
-          padding: 12px 14px;
-          border-bottom: 1.5px solid var(--card-border);
-          display: flex; align-items: center; gap: 10px;
-          background: var(--blue-lt);
-          flex-shrink: 0;
-        }
-        .d-su-av   { width: 34px; height: 34px; border-radius: 9px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 900; color: #fff; flex-shrink: 0; border: 2px solid rgba(8,101,168,.2); }
+        .d-sb-name { font-size: .84rem; font-weight: 900; color: #fff; white-space: nowrap; letter-spacing: .3px; }
+        .d-sb-sub { font-size: .6rem; color: rgba(255,255,255,.55); margin-top: 2px; white-space: nowrap; }
+        .d-sidebar-user { padding: 12px 14px; border-bottom: 1.5px solid var(--card-border); display: flex; align-items: center; gap: 10px; background: var(--blue-lt); flex-shrink: 0; }
+        .d-su-av { width: 34px; height: 34px; border-radius: 9px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 900; color: #fff; flex-shrink: 0; border: 2px solid rgba(8,101,168,.2); }
         .d-su-info { flex: 1; min-width: 0; overflow: hidden; }
         .d-su-name { font-size: .74rem; font-weight: 700; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .d-su-role { display: inline-flex; align-items: center; gap: 3px; margin-top: 2px; padding: 1px 7px; background: var(--orng-lt); border: 1px solid rgba(245,124,0,.3); border-radius: 20px; font-size: .58rem; color: var(--orange); font-weight: 700; }
-
         .d-sidebar-nav { flex: 1; padding: 10px 8px; overflow-y: auto; overflow-x: hidden; }
         .d-sidebar-nav::-webkit-scrollbar { width: 3px; }
         .d-sidebar-nav::-webkit-scrollbar-thumb { background: var(--gray4); border-radius: 2px; }
-
-        .d-nav-section  { margin-bottom: 6px; }
-        .d-nav-label    { font-size: .58rem; font-weight: 700; color: var(--gray3); letter-spacing: 1.2px; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; }
-        .d-nav-btn {
-          width: 100%; display: flex; align-items: center; gap: 8px;
-          padding: 9px 10px; border-radius: 9px;
-          border: 1.5px solid transparent; background: transparent;
-          color: var(--gray2); font-family: var(--font); font-size: .78rem; font-weight: 700;
-          cursor: pointer; transition: all .16s; text-align: right;
-          margin-bottom: 2px; white-space: nowrap; overflow: hidden; position: relative;
-        }
-        .d-nav-btn:hover               { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.15); }
-        .d-nav-btn.active              { background: var(--blue-md); color: var(--blue); border-color: rgba(8,101,168,.3); }
-        .d-nav-btn.active.or           { background: var(--orng-lt); color: var(--orange); border-color: rgba(245,124,0,.3); }
-        .d-nav-btn.active.gr           { background: rgba(22,163,74,.1);  color: #16a34a; border-color: rgba(22,163,74,.3);  }
-        .d-nav-btn.active.pu           { background: rgba(124,58,237,.1); color: #7c3aed; border-color: rgba(124,58,237,.3); }
-        .d-nav-btn.active.rd           { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.3);  }
-        .d-nav-btn.active::after       { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background: var(--blue);   border-radius:2px 0 0 2px; }
-        .d-nav-btn.active.or::after    { background: var(--orange); }
-        .d-nav-btn.active.gr::after    { background: #16a34a; }
-        .d-nav-btn.active.pu::after    { background: #7c3aed; }
-        .d-nav-btn.active.rd::after    { background: #dc2626; }
-        .d-nav-icon      { font-size: .9rem; flex-shrink: 0; }
+        .d-nav-section { margin-bottom: 6px; }
+        .d-nav-label { font-size: .58rem; font-weight: 700; color: var(--gray3); letter-spacing: 1.2px; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; }
+        .d-nav-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 9px; border: 1.5px solid transparent; background: transparent; color: var(--gray2); font-family: var(--font); font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .16s; text-align: right; margin-bottom: 2px; white-space: nowrap; overflow: hidden; position: relative; }
+        .d-nav-btn:hover { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.15); }
+        .d-nav-btn.active { background: var(--blue-md); color: var(--blue); border-color: rgba(8,101,168,.3); }
+        .d-nav-btn.active.or { background: var(--orng-lt); color: var(--orange); border-color: rgba(245,124,0,.3); }
+        .d-nav-btn.active.gr { background: rgba(22,163,74,.1); color: #16a34a; border-color: rgba(22,163,74,.3); }
+        .d-nav-btn.active.pu { background: rgba(124,58,237,.1); color: #7c3aed; border-color: rgba(124,58,237,.3); }
+        .d-nav-btn.active.rd { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.3); }
+        .d-nav-btn.active::after { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background: var(--blue); border-radius:2px 0 0 2px; }
+        .d-nav-btn.active.or::after { background: var(--orange); }
+        .d-nav-btn.active.gr::after { background: #16a34a; }
+        .d-nav-btn.active.pu::after { background: #7c3aed; }
+        .d-nav-btn.active.rd::after { background: #dc2626; }
+        .d-nav-icon { font-size: .9rem; flex-shrink: 0; }
         .d-nav-label-txt { flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; }
-        .d-nav-badge     { margin-right: auto; padding: 1px 6px; border-radius: 9px; font-size: .58rem; font-weight: 900; background: var(--orng-lt); color: var(--orange); border: 1px solid rgba(245,124,0,.3); flex-shrink: 0; }
-        .d-nav-badge.rd  { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.3); animation: d-pulse 2s ease infinite; }
-
+        .d-nav-badge { margin-right: auto; padding: 1px 6px; border-radius: 9px; font-size: .58rem; font-weight: 900; background: var(--orng-lt); color: var(--orange); border: 1px solid rgba(245,124,0,.3); flex-shrink: 0; }
+        .d-nav-badge.rd { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.3); animation: d-pulse 2s ease infinite; }
         .d-sidebar-footer { padding: 10px 12px; border-top: 1.5px solid var(--card-border); font-size: .6rem; color: var(--gray3); text-align: center; background: var(--bg); flex-shrink: 0; }
 
-        /* ── main area ── */
-        .d-main {
-          flex: 1; min-width: 0;
-          padding: clamp(16px,2.5vw,28px) clamp(14px,2.5vw,28px) clamp(40px,5vw,60px);
-          animation: d-fadeUp .28s ease;
-        }
-
-        /* ── page header ── */
-        .d-page-hdr   { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: clamp(18px,2.5vw,28px); padding-bottom: clamp(14px,2vw,20px); border-bottom: 2px solid var(--orange); }
+        .d-main { flex: 1; min-width: 0; padding: clamp(16px,2.5vw,28px) clamp(14px,2.5vw,28px) clamp(40px,5vw,60px); animation: d-fadeUp .28s ease; }
+        .d-page-hdr { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: clamp(18px,2.5vw,28px); padding-bottom: clamp(14px,2vw,20px); border-bottom: 2px solid var(--orange); }
         .d-page-title { font-size: clamp(1rem,2.5vw,1.4rem); font-weight: 900; color: var(--black); line-height: 1.2; }
-        .d-page-sub   { font-size: clamp(.65rem,1.2vw,.74rem); color: var(--gray2); margin-top: 4px; }
+        .d-page-sub { font-size: clamp(.65rem,1.2vw,.74rem); color: var(--gray2); margin-top: 4px; }
 
-        /* ── stats grid ── */
         .d-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(110px,14vw,150px),1fr)); gap: clamp(8px,1.5vw,14px); margin-bottom: clamp(18px,2.5vw,26px); }
-        .d-sc {
-          background: #ffffff;
-          border-radius: var(--radius);
-          padding: clamp(14px,2vw,18px) clamp(12px,2vw,16px);
-          border: 1.5px solid var(--card-border);
-          border-right: 4px solid transparent;
-          box-shadow: var(--shadow);
-          position: relative; overflow: hidden;
-          transition: transform .2s, box-shadow .2s;
-        }
+        .d-sc { background: #ffffff; border-radius: var(--radius); padding: clamp(14px,2vw,18px) clamp(12px,2vw,16px); border: 1.5px solid var(--card-border); border-right: 4px solid transparent; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s; }
         .d-sc:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
         .d-sc::after { content: attr(data-icon); position: absolute; left: -4px; bottom: -6px; font-size: clamp(1.8rem,4vw,2.5rem); opacity: .06; pointer-events: none; transform: rotate(-10deg); }
         .d-sc-val { font-size: clamp(1.5rem,3.5vw,2rem); font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; }
         .d-sc-lbl { font-size: clamp(.62rem,1.1vw,.7rem); margin-top: 5px; color: var(--gray2); font-weight: 700; }
         .d-sc-bar { height: 3px; border-radius: 2px; margin-top: 10px; width: 40%; opacity: .6; }
 
-        /* ── toolbar ── */
-        .d-toolbar {
-          display: flex; align-items: center; gap: clamp(6px,1.2vw,10px); flex-wrap: wrap;
-          margin-bottom: clamp(12px,2vw,18px);
-          background: var(--white); border: 1.5px solid var(--card-border);
-          border-radius: var(--radius); padding: clamp(9px,1.5vw,13px) clamp(12px,2vw,16px);
-          box-shadow: var(--shadow);
-        }
+        .d-toolbar { display: flex; align-items: center; gap: clamp(6px,1.2vw,10px); flex-wrap: wrap; margin-bottom: clamp(12px,2vw,18px); background: var(--white); border: 1.5px solid var(--card-border); border-radius: var(--radius); padding: clamp(9px,1.5vw,13px) clamp(12px,2vw,16px); box-shadow: var(--shadow); }
         .d-search { flex: 1; min-width: clamp(140px,18vw,200px); position: relative; }
-        .d-search input {
-          width: 100%; padding: clamp(7px,1.2vw,10px) 36px clamp(7px,1.2vw,10px) clamp(10px,1.5vw,14px);
-          border-radius: 9px; border: 1.5px solid var(--gray4); background: var(--bg);
-          color: var(--black); font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem);
-          outline: none; direction: rtl; transition: border .18s, background .18s;
-        }
+        .d-search input { width: 100%; padding: clamp(7px,1.2vw,10px) 36px clamp(7px,1.2vw,10px) clamp(10px,1.5vw,14px); border-radius: 9px; border: 1.5px solid var(--gray4); background: var(--bg); color: var(--black); font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); outline: none; direction: rtl; transition: border .18s, background .18s; }
         .d-search input::placeholder { color: var(--gray3); }
         .d-search input:focus { border-color: var(--blue); background: #fff; }
         .d-search::after { content: '🔍'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: .7rem; pointer-events: none; opacity: .5; }
 
-        /* export button */
-        .d-expw   { position: relative; }
-        .d-expbtn {
-          display: flex; align-items: center; gap: 6px;
-          padding: clamp(7px,1.2vw,10px) clamp(12px,2vw,18px);
-          background: var(--orange); color: #fff;
-          border: none; border-radius: 9px;
-          font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); font-weight: 700;
-          cursor: pointer; white-space: nowrap;
-          transition: all .18s; box-shadow: 0 3px 10px rgba(245,124,0,.3);
-        }
-        .d-expbtn:hover    { background: #e65100; transform: translateY(-1px); }
+        .d-expw { position: relative; }
+        .d-expbtn { display: flex; align-items: center; gap: 6px; padding: clamp(7px,1.2vw,10px) clamp(12px,2vw,18px); background: var(--orange); color: #fff; border: none; border-radius: 9px; font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .18s; box-shadow: 0 3px 10px rgba(245,124,0,.3); }
+        .d-expbtn:hover { background: #e65100; transform: translateY(-1px); }
         .d-expbtn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-        .d-expmenu {
-          position: absolute; top: calc(100% + 6px); left: 0;
-          background: var(--white); border: 1.5px solid var(--card-border);
-          border-radius: 11px; box-shadow: 0 8px 28px rgba(0,0,0,.1);
-          overflow: hidden; z-index: 400; min-width: 185px;
-          animation: d-slideIn .15s ease;
-        }
-        .d-expitem {
-          display: flex; align-items: center; gap: 9px;
-          width: 100%; padding: clamp(9px,1.8vw,12px) clamp(12px,2vw,16px);
-          background: none; border: none; border-bottom: 1px solid var(--gray5);
-          font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); font-weight: 700;
-          color: var(--gray1); direction: rtl; cursor: pointer; transition: background .12s, color .12s;
-        }
+        .d-expmenu { position: absolute; top: calc(100% + 6px); left: 0; background: var(--white); border: 1.5px solid var(--card-border); border-radius: 11px; box-shadow: 0 8px 28px rgba(0,0,0,.1); overflow: hidden; z-index: 400; min-width: 185px; animation: d-slideIn .15s ease; }
+        .d-expitem { display: flex; align-items: center; gap: 9px; width: 100%; padding: clamp(9px,1.8vw,12px) clamp(12px,2vw,16px); background: none; border: none; border-bottom: 1px solid var(--gray5); font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); font-weight: 700; color: var(--gray1); direction: rtl; cursor: pointer; transition: background .12s, color .12s; }
         .d-expitem:last-child { border-bottom: none; }
         .d-expitem:hover { background: var(--blue-lt); color: var(--blue); }
 
-        /* filter bar */
-        .d-filter {
-          display: flex; align-items: center; gap: clamp(6px,1.2vw,12px); flex-wrap: wrap;
-          background: var(--white); border: 1.5px solid var(--card-border);
-          border-radius: var(--radius); padding: clamp(9px,1.5vw,12px) clamp(12px,2vw,16px);
-          margin-bottom: clamp(12px,2vw,18px); box-shadow: var(--shadow);
-        }
-        .d-flbl  { font-size: clamp(.68rem,1.2vw,.76rem); font-weight: 700; color: var(--gray2); white-space: nowrap; }
-        .d-fsm   { font-size: clamp(.64rem,1.1vw,.7rem); color: var(--gray3); }
-        .d-fdate {
-          padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius: 8px;
-          border: 1.5px solid var(--gray4); background: var(--bg);
-          color: var(--black); font-family: var(--font); font-size: clamp(.7rem,1.2vw,.78rem);
-          outline: none; direction: ltr; transition: border .18s;
-        }
+        .d-filter { display: flex; align-items: center; gap: clamp(6px,1.2vw,12px); flex-wrap: wrap; background: var(--white); border: 1.5px solid var(--card-border); border-radius: var(--radius); padding: clamp(9px,1.5vw,12px) clamp(12px,2vw,16px); margin-bottom: clamp(12px,2vw,18px); box-shadow: var(--shadow); }
+        .d-flbl { font-size: clamp(.68rem,1.2vw,.76rem); font-weight: 700; color: var(--gray2); white-space: nowrap; }
+        .d-fsm { font-size: clamp(.64rem,1.1vw,.7rem); color: var(--gray3); }
+        .d-fdate { padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); color: var(--black); font-family: var(--font); font-size: clamp(.7rem,1.2vw,.78rem); outline: none; direction: ltr; transition: border .18s; }
         .d-fdate:focus { border-color: var(--blue); background: #fff; }
-        .d-fsel  {
-          padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius: 8px;
-          border: 1.5px solid var(--gray4); background: var(--bg);
-          color: var(--black); font-family: var(--font); font-size: clamp(.7rem,1.2vw,.78rem);
-          outline: none; cursor: pointer;
-        }
-        .d-fbadge {
-          display: inline-flex; align-items: center; gap: 4px;
-          padding: 3px 10px; border-radius: 20px;
-          background: var(--orng-lt); border: 1px solid rgba(245,124,0,.3);
-          color: var(--orange); font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700;
-        }
-        .d-fclear {
-          padding: clamp(4px,.9vw,7px) clamp(9px,1.5vw,12px); border-radius: 8px;
-          background: var(--bg); border: 1.5px solid var(--gray4);
-          font-family: var(--font); font-size: clamp(.64rem,1.1vw,.72rem); font-weight: 700;
-          cursor: pointer; color: var(--gray2); transition: all .16s;
-        }
+        .d-fsel { padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); color: var(--black); font-family: var(--font); font-size: clamp(.7rem,1.2vw,.78rem); outline: none; cursor: pointer; }
+        .d-fbadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; background: var(--orng-lt); border: 1px solid rgba(245,124,0,.3); color: var(--orange); font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; }
+        .d-fclear { padding: clamp(4px,.9vw,7px) clamp(9px,1.5vw,12px); border-radius: 8px; background: var(--bg); border: 1.5px solid var(--gray4); font-family: var(--font); font-size: clamp(.64rem,1.1vw,.72rem); font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .16s; }
         .d-fclear:hover { border-color: var(--orange); color: var(--orange); background: var(--orng-lt); }
 
-        /* error banner */
-        .d-err {
-          background: #fef2f2; border: 1.5px solid rgba(220,38,38,.3); color: #dc2626;
-          border-radius: 9px; padding: clamp(8px,1.5vw,11px) clamp(10px,2vw,14px);
-          margin-bottom: 14px; font-size: clamp(.7rem,1.3vw,.78rem);
-          display: flex; align-items: center; gap: 9px;
-        }
+        .d-err { background: #fef2f2; border: 1.5px solid rgba(220,38,38,.3); color: #dc2626; border-radius: 9px; padding: clamp(8px,1.5vw,11px) clamp(10px,2vw,14px); margin-bottom: 14px; font-size: clamp(.7rem,1.3vw,.78rem); display: flex; align-items: center; gap: 9px; }
 
-        /* card */
-        .d-card {
-          background: var(--white); border-radius: var(--radius);
-          border: 1.5px solid var(--card-border); overflow: hidden; box-shadow: var(--shadow);
-        }
+        .d-card { background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--card-border); overflow: hidden; box-shadow: var(--shadow); }
         .d-tscr { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .d-tbl  { width: 100%; border-collapse: collapse; min-width: 480px; }
-
-        /* table head */
-        .d-tbl thead th {
-          background: var(--blue); color: #fff;
-          padding: clamp(10px,1.8vw,14px) clamp(10px,2vw,18px);
-          font-family: var(--font); font-size: clamp(.68rem,1.2vw,.76rem); font-weight: 700;
-          text-align: right; white-space: nowrap;
-          border-bottom: 3px solid var(--orange); letter-spacing: .3px;
-        }
+        .d-tbl { width: 100%; border-collapse: collapse; min-width: 480px; }
+        .d-tbl thead th { background: var(--blue); color: #fff; padding: clamp(10px,1.8vw,14px) clamp(10px,2vw,18px); font-family: var(--font); font-size: clamp(.68rem,1.2vw,.76rem); font-weight: 700; text-align: right; white-space: nowrap; border-bottom: 3px solid var(--orange); letter-spacing: .3px; }
         .d-tbl thead th.or { background: var(--orange); border-bottom-color: #fff3e0; }
-        .d-tbl thead th.gr { background: #16a34a;  border-bottom-color: #86efac; }
-        .d-tbl thead th.pu { background: #7c3aed;  border-bottom-color: #c4b5fd; }
-        .d-tbl thead th.rd { background: #dc2626;  border-bottom-color: #fca5a5; }
-        .d-tbl thead th.c  { text-align: center; }
-
-        /* table rows */
+        .d-tbl thead th.gr { background: #16a34a; border-bottom-color: #86efac; }
+        .d-tbl thead th.pu { background: #7c3aed; border-bottom-color: #c4b5fd; }
+        .d-tbl thead th.rd { background: #dc2626; border-bottom-color: #fca5a5; }
+        .d-tbl thead th.c { text-align: center; }
         .d-tbl tbody tr { border-bottom: 1px solid var(--gray5); transition: background .12s; }
         .d-tbl tbody tr:last-child { border-bottom: none; }
-        .d-tbl tbody tr:hover  { background: var(--blue-lt); }
+        .d-tbl tbody tr:hover { background: var(--blue-lt); }
         .d-tbl tbody tr.xopen { background: var(--blue-lt); }
         .d-tbl tbody tr:nth-child(even) { background: #fafbfc; }
         .d-tbl tbody tr:nth-child(even):hover { background: var(--blue-lt); }
-        .d-tbl td {
-          padding: clamp(9px,1.6vw,13px) clamp(10px,2vw,18px);
-          font-family: var(--font); font-size: clamp(.69rem,1.25vw,.78rem);
-          color: var(--gray1); vertical-align: middle;
-        }
+        .d-tbl td { padding: clamp(9px,1.6vw,13px) clamp(10px,2vw,18px); font-family: var(--font); font-size: clamp(.69rem,1.25vw,.78rem); color: var(--gray1); vertical-align: middle; }
 
-        /* avatar */
         .d-av { width: clamp(28px,3.5vw,36px); height: clamp(28px,3.5vw,36px); border-radius: 9px; background: var(--blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: clamp(.58rem,1vw,.66rem); flex-shrink: 0; border: 2px solid rgba(8,101,168,.2); }
-        .d-av.or  { background: var(--orange); border-color: rgba(245,124,0,.2); }
-        .d-av.sm  { width: 24px; height: 24px; border-radius: 7px; font-size: .58rem; }
-        .d-av.rd  { background: #dc2626; border-color: rgba(220,38,38,.2); }
-
-        .d-uc    { display: flex; align-items: center; gap: 9px; }
+        .d-av.or { background: var(--orange); border-color: rgba(245,124,0,.2); }
+        .d-av.sm { width: 24px; height: 24px; border-radius: 7px; font-size: .58rem; }
+        .d-av.rd { background: #dc2626; border-color: rgba(220,38,38,.2); }
+        .d-uc { display: flex; align-items: center; gap: 9px; }
         .d-uname { font-weight: 700; color: var(--black); }
-
-        /* count badge */
-        .d-cb    { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 7px; background: var(--blue-lt); border: 1.5px solid rgba(8,101,168,.25); color: var(--blue); font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 900; padding: 0 6px; font-family: 'Courier New', monospace; }
+        .d-cb { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 7px; background: var(--blue-lt); border: 1.5px solid rgba(8,101,168,.25); color: var(--blue); font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 900; padding: 0 6px; font-family: 'Courier New', monospace; }
         .d-cb.or { background: var(--orng-lt); border-color: rgba(245,124,0,.3); color: var(--orange); }
-
-        /* expand pill */
-        .d-pill    { display: inline-block; padding: 4px 12px; border-radius: 7px; font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; cursor: pointer; border: 1.5px solid rgba(8,101,168,.3); color: var(--blue); background: var(--blue-lt); user-select: none; transition: all .14s; font-family: var(--font); }
+        .d-pill { display: inline-block; padding: 4px 12px; border-radius: 7px; font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; cursor: pointer; border: 1.5px solid rgba(8,101,168,.3); color: var(--blue); background: var(--blue-lt); user-select: none; transition: all .14s; font-family: var(--font); }
         .d-pill:hover,.d-pill.op { background: var(--blue-md); border-color: rgba(8,101,168,.55); }
         .d-pill.or { border-color: rgba(245,124,0,.3); color: var(--orange); background: var(--orng-lt); }
         .d-pill.or:hover,.d-pill.or.op { background: var(--orng-md); border-color: rgba(245,124,0,.55); }
-
-        /* expanded row */
         .d-xrow td { padding: 0!important; border: none; }
-        .d-xin    { padding: clamp(12px,2vw,16px) clamp(14px,2.5vw,22px); display: flex; flex-wrap: wrap; gap: clamp(7px,1.3vw,11px); background: var(--blue-lt); border-top: 2px solid rgba(8,101,168,.15); }
-        .d-mc     { background: var(--white); border-radius: 10px; padding: clamp(9px,1.8vw,13px) clamp(10px,2vw,14px); border: 1.5px solid var(--gray5); min-width: clamp(150px,20vw,200px); flex: 1 1 150px; max-width: 260px; transition: border-color .14s; box-shadow: var(--shadow); }
+        .d-xin { padding: clamp(12px,2vw,16px) clamp(14px,2.5vw,22px); display: flex; flex-wrap: wrap; gap: clamp(7px,1.3vw,11px); background: var(--blue-lt); border-top: 2px solid rgba(8,101,168,.15); }
+        .d-mc { background: var(--white); border-radius: 10px; padding: clamp(9px,1.8vw,13px) clamp(10px,2vw,14px); border: 1.5px solid var(--gray5); min-width: clamp(150px,20vw,200px); flex: 1 1 150px; max-width: 260px; transition: border-color .14s; box-shadow: var(--shadow); }
         .d-mc:hover { border-color: rgba(8,101,168,.3); }
-        .d-mt  { font-size: clamp(.7rem,1.25vw,.78rem); font-weight: 700; color: var(--blue); margin-bottom: 2px; }
+        .d-mt { font-size: clamp(.7rem,1.25vw,.78rem); font-weight: 700; color: var(--blue); margin-bottom: 2px; }
         .d-mt.or { color: var(--orange); }
-        .d-ms  { font-size: clamp(.63rem,1.1vw,.7rem); color: var(--gray2); }
-        .d-md  { font-size: clamp(.6rem,1vw,.66rem); color: var(--gray3); margin-top: 4px; }
+        .d-ms { font-size: clamp(.63rem,1.1vw,.7rem); color: var(--gray2); }
+        .d-md { font-size: clamp(.6rem,1vw,.66rem); color: var(--gray3); margin-top: 4px; }
 
-        /* empty / loading */
         .d-empty { text-align: center; padding: clamp(40px,8vw,70px) 20px; }
-        .d-emi   { font-size: clamp(1.8rem,4vw,2.5rem); margin-bottom: 12px; opacity: .35; }
+        .d-emi { font-size: clamp(1.8rem,4vw,2.5rem); margin-bottom: 12px; opacity: .35; }
         .d-empty p { color: var(--gray3); font-size: clamp(.74rem,1.4vw,.82rem); }
-        .d-ld    { text-align: center; padding: clamp(50px,10vw,80px) 20px; }
-        .d-sp    { width: clamp(32px,4.5vw,42px); height: clamp(32px,4.5vw,42px); border: 3px solid var(--gray5); border-top-color: var(--blue); border-radius: 50%; animation: d-spin .7s linear infinite; margin: 0 auto clamp(12px,2vw,18px); }
-        .d-ld p  { color: var(--gray3); font-size: clamp(.72rem,1.3vw,.8rem); }
+        .d-ld { text-align: center; padding: clamp(50px,10vw,80px) 20px; }
+        .d-sp { width: clamp(32px,4.5vw,42px); height: clamp(32px,4.5vw,42px); border: 3px solid var(--gray5); border-top-color: var(--blue); border-radius: 50%; animation: d-spin .7s linear infinite; margin: 0 auto clamp(12px,2vw,18px); }
+        .d-ld p { color: var(--gray3); font-size: clamp(.72rem,1.3vw,.8rem); }
 
-        /* overlay */
-        .d-ovl   { position: fixed; inset: 0; background: rgba(245,247,250,.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
-        .d-ovlb  { background: var(--white); border-radius: 18px; padding: clamp(28px,5vw,44px) clamp(44px,7vw,64px); text-align: center; box-shadow: 0 16px 48px rgba(8,101,168,.18); border: 2px solid rgba(8,101,168,.15); }
+        .d-ovl { position: fixed; inset: 0; background: rgba(245,247,250,.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+        .d-ovlb { background: var(--white); border-radius: 18px; padding: clamp(28px,5vw,44px) clamp(44px,7vw,64px); text-align: center; box-shadow: 0 16px 48px rgba(8,101,168,.18); border: 2px solid rgba(8,101,168,.15); }
         .d-ovlb p { font-size: clamp(.78rem,1.5vw,.86rem); margin-top: 14px; color: var(--gray2); font-family: var(--font); }
 
-        /* attendance */
-        .d-chk       { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--gray4); background: var(--bg); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all .16s; flex-shrink: 0; font-size: .75rem; color: transparent; }
+        .d-chk { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--gray4); background: var(--bg); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all .16s; flex-shrink: 0; font-size: .75rem; color: transparent; }
         .d-chk:hover { border-color: #16a34a; background: #f0fdf4; }
-        .d-chk.on    { background: #f0fdf4; border-color: #16a34a; color: #16a34a; }
-        .d-chk.spin  { border-color: #16a34a; border-top-color: transparent; border-radius: 50%; animation: d-spin .6s linear infinite; }
-        .d-att-badge     { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 7px; font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; }
-        .d-att-badge.on  { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+        .d-chk.on { background: #f0fdf4; border-color: #16a34a; color: #16a34a; }
+        .d-chk.spin { border-color: #16a34a; border-top-color: transparent; border-radius: 50%; animation: d-spin .6s linear infinite; }
+        .d-att-badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 7px; font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; }
+        .d-att-badge.on { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
         .d-att-badge.off { background: var(--bg); color: var(--gray3); border: 1px solid var(--gray4); }
         .d-att-sum { display: flex; align-items: center; gap: clamp(10px,2vw,20px); flex-wrap: wrap; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: var(--radius); padding: clamp(9px,1.8vw,13px) clamp(12px,2vw,18px); margin-bottom: clamp(12px,2vw,18px); box-shadow: var(--shadow); }
         .d-att-sum span { font-size: clamp(.7rem,1.3vw,.78rem); font-weight: 700; color: #15803d; }
         .d-prog-wrap { flex: 1; min-width: 100px; height: 6px; background: #bbf7d0; border-radius: 3px; overflow: hidden; }
         .d-prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg,#16a34a,#22c55e); transition: width .5s ease; }
 
-        /* certificates */
         .d-cert-grid { display: grid; gap: clamp(10px,1.8vw,14px); padding: clamp(12px,2vw,18px); grid-template-columns: repeat(auto-fill,minmax(clamp(240px,28vw,300px),1fr)); }
         .d-cert-card { background: var(--white); border-radius: 13px; padding: clamp(12px,2vw,16px); border: 1.5px solid var(--card-border); display: flex; flex-direction: column; gap: 10px; transition: border-color .16s, box-shadow .16s, transform .16s; box-shadow: var(--shadow); }
         .d-cert-card:hover { border-color: rgba(124,58,237,.3); box-shadow: 0 4px 18px rgba(124,58,237,.1); transform: translateY(-1px); }
         .d-cert-card-top { display: flex; align-items: flex-start; gap: 10px; }
-        .d-cert-icon      { width: 42px; height: 42px; border-radius: 10px; background: rgba(124,58,237,.08); border: 1.5px solid rgba(124,58,237,.2); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
-        .d-cert-icon.has  { background: #f0fdf4; border-color: #86efac; }
+        .d-cert-icon { width: 42px; height: 42px; border-radius: 10px; background: rgba(124,58,237,.08); border: 1.5px solid rgba(124,58,237,.2); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
+        .d-cert-icon.has { background: #f0fdf4; border-color: #86efac; }
         .d-cert-icon.grey { background: rgba(156,163,175,.06); border-color: rgba(156,163,175,.15); }
-        .d-cert-info      { flex: 1; min-width: 0; }
-        .d-cert-name      { font-weight: 700; font-size: .8rem; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .d-cert-course    { font-size: .7rem; color: var(--blue); margin-top: 3px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .d-cert-badges    { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
-        .d-cert-actions   { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--gray5); padding-top: 9px; }
+        .d-cert-info { flex: 1; min-width: 0; }
+        .d-cert-name { font-weight: 700; font-size: .8rem; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .d-cert-course { font-size: .7rem; color: var(--blue); margin-top: 3px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .d-cert-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+        .d-cert-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--gray5); padding-top: 9px; }
         .d-cert-btn { padding: clamp(5px,1vw,7px) clamp(10px,1.5vw,14px); border-radius: 8px; font-family: var(--font); font-size: clamp(.64rem,1.1vw,.72rem); font-weight: 700; cursor: pointer; border: none; transition: all .14s; white-space: nowrap; }
-        .d-cert-btn.up   { background: rgba(124,58,237,.1); color: #7c3aed; border: 1.5px solid rgba(124,58,237,.25); }
+        .d-cert-btn.up { background: rgba(124,58,237,.1); color: #7c3aed; border: 1.5px solid rgba(124,58,237,.25); }
         .d-cert-btn.up:hover { background: rgba(124,58,237,.2); }
-        .d-cert-btn.dl   { background: var(--blue-lt); color: var(--blue); border: 1.5px solid rgba(8,101,168,.25); }
+        .d-cert-btn.dl { background: var(--blue-lt); color: var(--blue); border: 1.5px solid rgba(8,101,168,.25); }
         .d-cert-btn.dl:hover { background: var(--blue-md); }
-        .d-cert-btn.rm   { background: #fef2f2; color: #dc2626; border: 1.5px solid rgba(220,38,38,.2); }
+        .d-cert-btn.rm { background: #fef2f2; color: #dc2626; border: 1.5px solid rgba(220,38,38,.2); }
         .d-cert-btn.rm:hover { background: #fee2e2; }
         .d-cert-btn.full { width: 100%; text-align: center; justify-content: center; }
         .d-cert-btn:disabled { opacity: .45; cursor: not-allowed; }
 
-        /* modals */
         .d-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); animation: d-fadeUp .16s ease; }
-        .d-modal    { background: var(--white); border-radius: 14px; padding: clamp(14px,2.5vw,20px); max-width: clamp(290px,88vw,520px); width: 100%; box-shadow: 0 16px 48px rgba(0,0,0,.15); direction: rtl; border: 2px solid rgba(124,58,237,.2); border-top: 4px solid #7c3aed; }
+        .d-modal { background: var(--white); border-radius: 14px; padding: clamp(14px,2.5vw,20px); max-width: clamp(290px,88vw,520px); width: 100%; box-shadow: 0 16px 48px rgba(0,0,0,.15); direction: rtl; border: 2px solid rgba(124,58,237,.2); border-top: 4px solid #7c3aed; }
         .d-modal.rd-modal { border-color: rgba(220,38,38,.2); border-top-color: #dc2626; max-width: clamp(290px,92vw,540px); max-height: 90vh; overflow-y: auto; }
         .d-modal h3 { font-size: clamp(.82rem,1.5vw,.92rem); font-weight: 900; color: var(--black); margin-bottom: 3px; }
-        .d-modal p  { font-size: clamp(.66rem,1.1vw,.72rem); color: var(--gray2); margin-bottom: 12px; font-family: var(--font); }
-        .d-drop     { border: 2px dashed rgba(124,58,237,.35); border-radius: 12px; padding: clamp(24px,5vw,36px) 16px; text-align: center; cursor: pointer; transition: all .16s; background: rgba(124,58,237,.04); }
+        .d-modal p { font-size: clamp(.66rem,1.1vw,.72rem); color: var(--gray2); margin-bottom: 12px; font-family: var(--font); }
+        .d-drop { border: 2px dashed rgba(124,58,237,.35); border-radius: 12px; padding: clamp(24px,5vw,36px) 16px; text-align: center; cursor: pointer; transition: all .16s; background: rgba(124,58,237,.04); }
         .d-drop.over { border-color: #7c3aed; background: rgba(124,58,237,.1); }
         .d-drop:hover { border-color: rgba(124,58,237,.6); }
         .d-drop-icon { font-size: clamp(1.7rem,3.5vw,2.3rem); margin-bottom: 8px; }
-        .d-drop-txt  { font-size: clamp(.72rem,1.4vw,.8rem); color: var(--gray1); margin-bottom: 4px; font-family: var(--font); }
-        .d-drop-sub  { font-size: clamp(.62rem,1.1vw,.7rem); color: var(--gray3); }
+        .d-drop-txt { font-size: clamp(.72rem,1.4vw,.8rem); color: var(--gray1); margin-bottom: 4px; font-family: var(--font); }
+        .d-drop-sub { font-size: clamp(.62rem,1.1vw,.7rem); color: var(--gray3); }
         .d-modal-actions { display: flex; gap: 7px; margin-top: 18px; justify-content: flex-end; }
-        .d-modal-cancel  { padding: clamp(7px,1.3vw,10px) clamp(12px,2vw,18px); border-radius: 9px; background: var(--bg); border: 1.5px solid var(--gray4); font-family: var(--font); font-size: clamp(.7rem,1.3vw,.78rem); font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .14s; }
+        .d-modal-cancel { padding: clamp(7px,1.3vw,10px) clamp(12px,2vw,18px); border-radius: 9px; background: var(--bg); border: 1.5px solid var(--gray4); font-family: var(--font); font-size: clamp(.7rem,1.3vw,.78rem); font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .14s; }
         .d-modal-cancel:hover { border-color: var(--gray2); color: var(--black); background: var(--white); }
 
-        /* email */
         .d-email { direction: ltr; text-align: right; color: var(--gray3); font-size: clamp(.65rem,1.15vw,.73rem); }
 
-        /* ── REFUNDS ── */
         .rf-stat-bar { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 10px; margin-bottom: 20px; }
-        .rf-sc       { background: var(--white); border-radius: 11px; padding: 14px 16px; border: 1.5px solid var(--card-border); box-shadow: var(--shadow); display: flex; align-items: center; gap: 11px; transition: transform .2s; }
+        .rf-sc { background: var(--white); border-radius: 11px; padding: 14px 16px; border: 1.5px solid var(--card-border); box-shadow: var(--shadow); display: flex; align-items: center; gap: 11px; transition: transform .2s; }
         .rf-sc:hover { transform: translateY(-2px); }
-        .rf-sc-icon  { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
-        .rf-sc-body  { flex: 1; min-width: 0; }
-        .rf-sc-val   { font-size: 1.35rem; font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; }
-        .rf-sc-lbl   { font-size: .65rem; color: var(--gray2); font-weight: 700; margin-top: 3px; }
-        .rf-status   { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: .7rem; font-weight: 700; white-space: nowrap; border: 1.5px solid transparent; }
-        .rf-amount   { font-family: 'Courier New', monospace; font-weight: 900; font-size: .88rem; color: #15803d; direction: ltr; display: inline-block; }
+        .rf-sc-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .rf-sc-body { flex: 1; min-width: 0; }
+        .rf-sc-val { font-size: 1.35rem; font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; }
+        .rf-sc-lbl { font-size: .65rem; color: var(--gray2); font-weight: 700; margin-top: 3px; }
+        .rf-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: .7rem; font-weight: 700; white-space: nowrap; border: 1.5px solid transparent; }
+        .rf-amount { font-family: 'Courier New', monospace; font-weight: 900; font-size: .88rem; color: #15803d; direction: ltr; display: inline-block; }
         .rf-filter-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-        .rf-fbtn     { padding: 5px 13px; border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); font-family: var(--font); font-size: .7rem; font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .14s; }
+        .rf-fbtn { padding: 5px 13px; border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); font-family: var(--font); font-size: .7rem; font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .14s; }
         .rf-fbtn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
-        .rf-fbtn.active       { background: var(--blue-md); border-color: rgba(8,101,168,.4); color: var(--blue); }
-        .rf-fbtn.active.pend  { background: #fff8f0; border-color: rgba(245,124,0,.4); color: var(--orange); }
-        .rf-fbtn.active.appr  { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
-        .rf-fbtn.active.bank  { background: var(--blue-lt); border-color: rgba(8,101,168,.35); color: var(--blue); }
-        .rf-fbtn.active.rjct  { background: #fef2f2; border-color: rgba(220,38,38,.35); color: #dc2626; }
+        .rf-fbtn.active { background: var(--blue-md); border-color: rgba(8,101,168,.4); color: var(--blue); }
+        .rf-fbtn.active.pend { background: #fff8f0; border-color: rgba(245,124,0,.4); color: var(--orange); }
+        .rf-fbtn.active.appr { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
+        .rf-fbtn.active.bank { background: var(--blue-lt); border-color: rgba(8,101,168,.35); color: var(--blue); }
+        .rf-fbtn.active.rjct { background: #fef2f2; border-color: rgba(220,38,38,.35); color: #dc2626; }
         .rf-action-btn { padding: 5px 12px; border-radius: 7px; font-family: var(--font); font-size: .68rem; font-weight: 700; cursor: pointer; border: 1.5px solid; transition: all .14s; white-space: nowrap; }
         .rf-action-btn:disabled { opacity: .4; cursor: not-allowed; }
-        .rf-action-btn.view    { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.3); }
+        .rf-action-btn.view { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.3); }
         .rf-action-btn.view:hover { background: var(--blue-md); }
         .rf-action-btn.approve { background: #f0fdf4; color: #16a34a; border-color: #86efac; }
         .rf-action-btn.approve:hover { background: #dcfce7; }
-        .rf-action-btn.bank    { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.35); }
+        .rf-action-btn.bank { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.35); }
         .rf-action-btn.bank:hover { background: var(--blue-md); }
-        .rf-action-btn.reject  { background: #fef2f2; color: #dc2626; border-color: rgba(220,38,38,.3); }
+        .rf-action-btn.reject { background: #fef2f2; color: #dc2626; border-color: rgba(220,38,38,.3); }
         .rf-action-btn.reject:hover { background: #fee2e2; }
-        .rf-detail     { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
-        .rf-field-lbl  { font-size: .58rem; color: var(--gray3); font-weight: 700; margin-bottom: 2px; }
-        .rf-field-val  { font-size: .74rem; color: var(--black); font-weight: 700; word-break: break-all; }
+        .rf-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+        .rf-field-lbl { font-size: .58rem; color: var(--gray3); font-weight: 700; margin-bottom: 2px; }
+        .rf-field-val { font-size: .74rem; color: var(--black); font-weight: 700; word-break: break-all; }
         .rf-field-val.mono { font-family: 'Courier New', monospace; direction: ltr; display: inline-block; }
-        .rf-full       { grid-column: 1/-1; }
-        .rf-divider    { grid-column: 1/-1; border: none; border-top: 1.5px dashed var(--gray5); margin: 2px 0; }
+        .rf-full { grid-column: 1/-1; }
+        .rf-divider { grid-column: 1/-1; border: none; border-top: 1.5px dashed var(--gray5); margin: 2px 0; }
         .rf-bank-block { grid-column: 1/-1; background: #f8faff; border: 1.5px solid rgba(8,101,168,.15); border-radius: 9px; padding: 9px 12px; }
         .rf-bank-title { font-size: .68rem; font-weight: 900; color: var(--blue); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
-        .rf-bank-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; }
+        .rf-bank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; }
         .rf-action-area { margin-top: 12px; border-top: 1.5px solid var(--gray5); padding-top: 10px; }
-        .rf-action-row  { display: flex; gap: 7px; flex-wrap: wrap; }
-        .rf-textarea   { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); font-family: var(--font); font-size: .74rem; color: var(--black); resize: vertical; min-height: 60px; outline: none; direction: rtl; margin-top: 8px; transition: border .18s; }
+        .rf-action-row { display: flex; gap: 7px; flex-wrap: wrap; }
+        .rf-textarea { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); font-family: var(--font); font-size: .74rem; color: var(--black); resize: vertical; min-height: 60px; outline: none; direction: rtl; margin-top: 8px; transition: border .18s; }
         .rf-textarea:focus { border-color: var(--blue); background: #fff; }
         .rf-action-confirm { padding: 8px 18px; border-radius: 8px; font-family: var(--font); font-size: .76rem; font-weight: 700; cursor: pointer; border: none; transition: all .16s; }
         .rf-action-confirm.approve { background: #16a34a; color: #fff; }
         .rf-action-confirm.approve:hover { background: #15803d; }
-        .rf-action-confirm.bank    { background: var(--blue); color: #fff; }
+        .rf-action-confirm.bank { background: var(--blue); color: #fff; }
         .rf-action-confirm.bank:hover { background: #0552a0; }
-        .rf-action-confirm.reject  { background: #dc2626; color: #fff; }
+        .rf-action-confirm.reject { background: #dc2626; color: #fff; }
         .rf-action-confirm.reject:hover { background: #b91c1c; }
         .rf-action-confirm:disabled { opacity: .5; cursor: not-allowed; }
         .rf-bank-banner { padding: 12px 16px; border-radius: 11px; font-family: var(--font); font-size: .78rem; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; animation: d-slideDown .3s ease; position: relative; }
         .rf-bank-banner.success { background: #f0fdf4; border: 1.5px solid #86efac; color: #15803d; }
-        .rf-bank-banner.failed  { background: #fff8f0; border: 1.5px solid rgba(245,124,0,.4); color: #b45309; }
+        .rf-bank-banner.failed { background: #fff8f0; border: 1.5px solid rgba(245,124,0,.4); color: #b45309; }
         .rf-bank-banner-close { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem; color: inherit; opacity: .6; }
         .rf-bank-banner-close:hover { opacity: 1; }
 
-        /* footer */
         .d-ftr { text-align: center; margin-top: clamp(20px,3.5vw,32px); padding-top: 18px; border-top: 1.5px solid var(--gray5); color: var(--gray3); font-size: clamp(.6rem,1vw,.67rem); }
         .d-ftr strong { color: var(--blue); }
 
-        /* ── responsive ── */
         @media(max-width:1100px){
           :root{ --sidebar-w: 54px; }
           .d-sb-title,.d-su-info,.d-nav-label,.d-nav-badge,.d-sidebar-footer,.d-nav-label-txt { display: none; }
           .d-sidebar-brand { padding: 12px; justify-content: center; }
-          .d-sidebar-user  { padding: 10px; justify-content: center; }
-          .d-sidebar-nav   { padding: 8px 6px; }
-          .d-nav-btn       { justify-content: center; padding: 10px 7px; }
+          .d-sidebar-user { padding: 10px; justify-content: center; }
+          .d-sidebar-nav { padding: 8px 6px; }
+          .d-nav-btn { justify-content: center; padding: 10px 7px; }
           .d-sb-logo,.d-su-av { width: 28px; height: 28px; }
         }
         @media(max-width:768px){
@@ -1514,13 +1356,13 @@ const AdminDashboard = () => {
           .d-cert-grid { grid-template-columns: 1fr!important; }
           .d-mc { max-width: 100%; }
           .d-page-hdr { flex-direction: column; }
-          .d-toolbar  { flex-direction: column; align-items: stretch; }
-          .d-expw     { align-self: flex-start; }
+          .d-toolbar { flex-direction: column; align-items: stretch; }
+          .d-expw { align-self: flex-start; }
         }
         @media(max-width:480px){
           .d-stats { grid-template-columns: repeat(2,1fr); }
-          .d-main  { padding: 12px 10px 32px; }
-          ._ovr    { font-size: .7rem; }
+          .d-main { padding: 12px 10px 32px; }
+          ._ovr { font-size: .7rem; }
         }
         @media(min-width:1920px){
           :root{ --sidebar-w: 220px; }
@@ -1533,7 +1375,6 @@ const AdminDashboard = () => {
         }
       `}</style>
 
-            {/* ── export overlay ───────────────────────────────────────────── */}
             {exporting && (
                 <div className="d-ovl">
                     <div className="d-ovlb">
@@ -1543,7 +1384,6 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {/* ── certificate upload modal ─────────────────────────────────── */}
             {certModal && (
                 <div className="d-modal-bg" onClick={() => setCertModal(null)}>
                     <div className="d-modal" onClick={e => e.stopPropagation()}>
@@ -1570,7 +1410,6 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {/* ── refund detail modal ──────────────────────────────────────── */}
             {refundDetailModal && (() => {
                 const r = refunds.find(x => x.id === refundDetailModal.id) || refundDetailModal;
                 const u = refundUserLookup(r.userId);
@@ -1629,7 +1468,6 @@ const AdminDashboard = () => {
                 );
             })()}
 
-            {/* ── refund action confirmation modal ────────────────────────── */}
             {refundActionModal && (() => {
                 const { refund: r, action } = refundActionModal;
                 const u = refundUserLookup(r.userId);
@@ -1665,9 +1503,6 @@ const AdminDashboard = () => {
                 );
             })()}
 
-            {/* ══════════════════════════════════════════════════════════════
-                FIXED OVERVIEW BAR  — exact spec colours preserved
-            ══════════════════════════════════════════════════════════════ */}
             <div className="_ovr">
                 <span>
                     <a href="/" className="ml-3">الصفحة الرئيسية</a>
@@ -1676,12 +1511,7 @@ const AdminDashboard = () => {
                 </span>
             </div>
 
-            {/* ══════════════════════════════════════════════════════════════
-                ROOT LAYOUT
-            ══════════════════════════════════════════════════════════════ */}
             <div className="d-root">
-
-                {/* ── SIDEBAR ────────────────────────────────────────────── */}
                 <aside className="d-sidebar">
                     <div className="d-sidebar-brand">
                         <img src={logoSrc} alt="ICEMT" className="d-sb-logo" />
@@ -1690,7 +1520,6 @@ const AdminDashboard = () => {
                             <div className="d-sb-sub">لوحة التحكم الإدارية</div>
                         </div>
                     </div>
-
                     <div className="d-sidebar-user">
                         <div className="d-su-av">{user?.firstName?.[0] || 'م'}{user?.lastName?.[0] || ''}</div>
                         <div className="d-su-info">
@@ -1698,7 +1527,6 @@ const AdminDashboard = () => {
                             <div className="d-su-role">🔐 مدير النظام</div>
                         </div>
                     </div>
-
                     <nav className="d-sidebar-nav">
                         <div className="d-nav-section">
                             <div className="d-nav-label">القائمة</div>
@@ -1714,30 +1542,20 @@ const AdminDashboard = () => {
                             ))}
                         </div>
                     </nav>
-
                     <div className="d-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
                 </aside>
 
-                {/* ── MAIN ───────────────────────────────────────────────── */}
                 <main className="d-main">
-                    {/* page header — NO api badge */}
                     <div className="d-page-hdr">
                         <div>
                             <div className="d-page-title">
                                 <span style={{ color: '#f57c00', marginLeft: 6 }}>{TABS.find(t => t.id === activeTab)?.icon}</span>
-                                {activeTab === 'users' ? 'المستخدمون والدورات'
-                                    : activeTab === 'courses' ? 'الدورات والمستخدمون'
-                                        : activeTab === 'attendance' ? 'سجل الحضور'
-                                            : activeTab === 'certificates' ? 'الشهادات'
-                                                : 'طلبات الاسترداد'}
+                                {activeTab === 'users' ? 'المستخدمون والدورات' : activeTab === 'courses' ? 'الدورات والمستخدمون' : activeTab === 'attendance' ? 'سجل الحضور' : activeTab === 'certificates' ? 'الشهادات' : 'طلبات الاسترداد'}
                             </div>
-                            <div className="d-page-sub">
-                                {new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                            </div>
+                            <div className="d-page-sub">{new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
                         </div>
                     </div>
 
-                    {/* stats */}
                     {!loading && !error && (
                         <div className="d-stats">
                             {STATS.map(s => (
@@ -1757,7 +1575,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ REFUNDS TAB ══════════════════════════════════════ */}
+                    {/* ══ REFUNDS TAB ══ */}
                     {activeTab === 'refunds' && (
                         <div>
                             {bankResultBanner && (
@@ -1784,28 +1602,19 @@ const AdminDashboard = () => {
                                     </div>
                                 ))}
                             </div>
-
                             <div className="d-filter">
                                 <div className="d-search" style={{ minWidth: 200 }}>
                                     <input type="text" placeholder="ابحث برقم الطلب، المبلغ، المستخدم..." value={refundSearch} onChange={e => setRefundSearch(e.target.value)} />
                                 </div>
                                 <div className="rf-filter-btns">
                                     <span className="d-flbl">الحالة:</span>
-                                    {[
-                                        { id: 'all', lbl: 'الكل', cls: '' },
-                                        { id: 'Pending', lbl: '⏳ قيد المراجعة', cls: 'pend' },
-                                        { id: 'Approved', lbl: '✅ موافق عليه', cls: 'appr' },
-                                        { id: 'Sent', lbl: '🏦 أُرسل للبنك', cls: 'bank' },
-                                        { id: 'Rejected', lbl: '❌ مرفوض', cls: 'rjct' },
-                                    ].map(f => (
+                                    {[{ id: 'all', lbl: 'الكل', cls: '' }, { id: 'Pending', lbl: '⏳ قيد المراجعة', cls: 'pend' }, { id: 'Approved', lbl: '✅ موافق عليه', cls: 'appr' }, { id: 'Sent', lbl: '🏦 أُرسل للبنك', cls: 'bank' }, { id: 'Rejected', lbl: '❌ مرفوض', cls: 'rjct' }].map(f => (
                                         <button key={f.id} className={`rf-fbtn${refundStatusFilter === f.id ? ` active ${f.cls}` : ''}`} onClick={() => setRefundStatusFilter(f.id)}>{f.lbl}</button>
                                     ))}
                                 </div>
                                 {refundSearch && <button className="d-fclear" onClick={() => setRefundSearch('')}>✕</button>}
                                 <div className="d-expw" ref={exportRefundRef} style={{ marginRight: 'auto' }}>
-                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportRefMenuOpen(p => !p)}>
-                                        {exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}
-                                    </button>
+                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportRefMenuOpen(p => !p)}>{exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}</button>
                                     {exportRefMenuOpen && (
                                         <div className="d-expmenu">
                                             <button className="d-expitem" onClick={doRefundExcel}>📊 Excel (.xlsx)</button>
@@ -1815,18 +1624,14 @@ const AdminDashboard = () => {
                                     )}
                                 </div>
                             </div>
-
                             {refundsError && (
                                 <div className="d-err">⚠️ {refundsError}
                                     <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setRefundsError(null)}>✕</button>
                                 </div>
                             )}
-
                             <div className="d-card">
-                                {refundsLoading
-                                    ? <div className="d-ld"><div className="d-sp" /><p>جاري تحميل طلبات الاسترداد...</p></div>
-                                    : filteredRefunds.length === 0
-                                        ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد طلبات مطابقة</p></div>
+                                {refundsLoading ? <div className="d-ld"><div className="d-sp" /><p>جاري تحميل طلبات الاسترداد...</p></div>
+                                    : filteredRefunds.length === 0 ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد طلبات مطابقة</p></div>
                                         : (
                                             <>
                                                 <div className="d-tscr">
@@ -1859,16 +1664,9 @@ const AdminDashboard = () => {
                                                                                 </div>
                                                                             </div>
                                                                         </td>
-                                                                        <td style={{ textAlign: 'center' }}>
-                                                                            <span className="rf-amount">{Number(r.amount || 0).toLocaleString()}</span>
-                                                                            <span style={{ fontSize: '.6rem', color: 'var(--gray3)', marginRight: 3 }}>{r.currency}</span>
-                                                                        </td>
-                                                                        <td style={{ maxWidth: 150 }}>
-                                                                            <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.74rem', color: 'var(--gray2)' }} title={r.reason}>{r.reason || '—'}</div>
-                                                                        </td>
-                                                                        <td style={{ textAlign: 'center' }}>
-                                                                            <span className="rf-status" style={{ background: sm.bg, color: sm.color, borderColor: sm.border }}>{sm.icon} {sm.label}</span>
-                                                                        </td>
+                                                                        <td style={{ textAlign: 'center' }}><span className="rf-amount">{Number(r.amount || 0).toLocaleString()}</span><span style={{ fontSize: '.6rem', color: 'var(--gray3)', marginRight: 3 }}>{r.currency}</span></td>
+                                                                        <td style={{ maxWidth: 150 }}><div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '.74rem', color: 'var(--gray2)' }} title={r.reason}>{r.reason || '—'}</div></td>
+                                                                        <td style={{ textAlign: 'center' }}><span className="rf-status" style={{ background: sm.bg, color: sm.color, borderColor: sm.border }}>{sm.icon} {sm.label}</span></td>
                                                                         <td style={{ fontSize: '.72rem', fontFamily: 'Courier New', color: 'var(--gray3)', whiteSpace: 'nowrap' }}>{r.requestedAt || '—'}</td>
                                                                         <td>
                                                                             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -1878,9 +1676,7 @@ const AdminDashboard = () => {
                                                                                     <button className="rf-action-btn bank" onClick={() => setRefundActionModal({ refund: r, action: 'send_to_bank' })}>🏦</button>
                                                                                     <button className="rf-action-btn reject" onClick={() => setRefundActionModal({ refund: r, action: 'reject' })}>❌</button>
                                                                                 </>}
-                                                                                {r.status === 'Approved' && (
-                                                                                    <button className="rf-action-btn bank" onClick={() => setRefundActionModal({ refund: r, action: 'send_to_bank' })}>🏦 إرسال للبنك</button>
-                                                                                )}
+                                                                                {r.status === 'Approved' && <button className="rf-action-btn bank" onClick={() => setRefundActionModal({ refund: r, action: 'send_to_bank' })}>🏦 إرسال للبنك</button>}
                                                                             </div>
                                                                         </td>
                                                                     </tr>
@@ -1896,7 +1692,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ ATTENDANCE TAB ═══════════════════════════════════ */}
+                    {/* ══ ATTENDANCE TAB ══ */}
                     {activeTab === 'attendance' && (
                         <div>
                             <div className="d-filter">
@@ -1910,9 +1706,7 @@ const AdminDashboard = () => {
                                 </div>
                                 {attUserSearch && <button className="d-fclear" onClick={() => setAttUserSearch('')}>✕ مسح</button>}
                                 <div className="d-expw" ref={exportAttRef} style={{ marginRight: 'auto' }}>
-                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportAttMenuOpen(p => !p)}>
-                                        {exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}
-                                    </button>
+                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportAttMenuOpen(p => !p)}>{exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}</button>
                                     {exportAttMenuOpen && (
                                         <div className="d-expmenu">
                                             <button className="d-expitem" onClick={doAttExcel}>📊 Excel (.xlsx)</button>
@@ -1926,17 +1720,9 @@ const AdminDashboard = () => {
                                 <span>✅ {attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length} حضر</span>
                                 <span>❌ {attRows.filter(r => !attendance[String(r.course.enrollmentId)]).length} غائب</span>
                                 <span>📋 {attRows.length} إجمالي</span>
-                                {attRows.length > 0 && (() => {
-                                    const cnt = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length;
-                                    const pct = Math.round(cnt / attRows.length * 100);
-                                    return (<><span>{pct}٪ حضور</span><div className="d-prog-wrap"><div className="d-prog-fill" style={{ width: `${pct}%` }} /></div></>);
-                                })()}
+                                {attRows.length > 0 && (() => { const cnt = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length; const pct = Math.round(cnt / attRows.length * 100); return (<><span>{pct}٪ حضور</span><div className="d-prog-wrap"><div className="d-prog-fill" style={{ width: `${pct}%` }} /></div></>); })()}
                             </div>
-                            {attError && (
-                                <div className="d-err">⚠️ {attError}
-                                    <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setAttError(null)}>✕</button>
-                                </div>
-                            )}
+                            {attError && <div className="d-err">⚠️ {attError}<button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setAttError(null)}>✕</button></div>}
                             <div className="d-card">
                                 {loading ? <div className="d-ld"><div className="d-sp" /><p>جاري التحميل...</p></div>
                                     : attRows.length === 0 ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد نتائج</p></div>
@@ -1955,31 +1741,18 @@ const AdminDashboard = () => {
                                                         <tbody>
                                                             {paginatedAttRows.map((row, idx) => {
                                                                 const rowNum = (attPage - 1) * ITEMS_PER_PAGE + idx + 1;
-                                                                const eid = row.course.enrollmentId;
-                                                                const k = String(eid);
-                                                                const attended = !!attendance[k];
-                                                                const saving = !!attendanceSaving[k];
+                                                                const eid = row.course.enrollmentId; const k = String(eid);
+                                                                const attended = !!attendance[k]; const saving = !!attendanceSaving[k];
                                                                 return (
                                                                     <tr key={k + idx}>
                                                                         <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{rowNum}</td>
-                                                                        <td>
-                                                                            <div className="d-uc">
-                                                                                <div className="d-av">{(row.user.firstName || row.user.username || '?')[0]}{(row.user.lastName || '')[0]}</div>
-                                                                                <span className="d-uname">{row.user.firstName || row.user.username} {row.user.lastName}</span>
-                                                                            </div>
-                                                                        </td>
+                                                                        <td><div className="d-uc"><div className="d-av">{(row.user.firstName || row.user.username || '?')[0]}{(row.user.lastName || '')[0]}</div><span className="d-uname">{row.user.firstName || row.user.username} {row.user.lastName}</span></div></td>
                                                                         <td className="d-email">{row.user.email}</td>
                                                                         <td style={{ color: 'var(--blue)', fontWeight: 700 }}>{row.course.title}</td>
                                                                         <td style={{ textAlign: 'center' }}>
-                                                                            <div className={`d-chk${saving ? ' spin' : attended ? ' on' : ''}`}
-                                                                                onClick={() => !saving && toggleAttendance(eid, attended)}
-                                                                                title={eid == null ? 'لا يوجد enrollmentId' : ''}>
-                                                                                {!saving && attended && '✓'}
-                                                                            </div>
+                                                                            <div className={`d-chk${saving ? ' spin' : attended ? ' on' : ''}`} onClick={() => !saving && toggleAttendance(eid, attended)} title={eid == null ? 'لا يوجد enrollmentId' : ''}>{!saving && attended && '✓'}</div>
                                                                         </td>
-                                                                        <td style={{ textAlign: 'center' }}>
-                                                                            <span className={`d-att-badge ${attended ? 'on' : 'off'}`}>{attended ? '✅ حضر' : '❌ غائب'}</span>
-                                                                        </td>
+                                                                        <td style={{ textAlign: 'center' }}><span className={`d-att-badge ${attended ? 'on' : 'off'}`}>{attended ? '✅ حضر' : '❌ غائب'}</span></td>
                                                                     </tr>
                                                                 );
                                                             })}
@@ -1993,7 +1766,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ CERTIFICATES TAB ═════════════════════════════════ */}
+                    {/* ══ CERTIFICATES TAB ══ */}
                     {activeTab === 'certificates' && (
                         <div>
                             <div className="d-filter">
@@ -2003,33 +1776,13 @@ const AdminDashboard = () => {
                                 </div>
                                 {certSearch && <button className="d-fclear" onClick={() => setCertSearch('')}>✕</button>}
                                 <div style={{ display: 'flex', gap: 5, marginRight: 'auto', flexWrap: 'wrap' }}>
-                                    {[
-                                        { id: 'all', label: 'الكل', icon: '📋' },
-                                        { id: 'uploaded', label: 'مرفوعة', icon: '✅' },
-                                        { id: 'pending', label: 'حضر / لم تُرفع', icon: '📄' },
-                                        { id: 'not-attended', label: 'لم يحضر', icon: '🚫' },
-                                    ].map(f => (
-                                        <button key={f.id}
-                                            style={{
-                                                padding: '5px 12px', borderRadius: 8, border: '1.5px solid', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', transition: 'all .14s',
-                                                background: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#f0fdf4' : f.id === 'pending' ? 'rgba(156,163,175,.1)' : 'var(--blue-lt)') : 'var(--bg)',
-                                                borderColor: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#86efac' : f.id === 'pending' ? 'var(--gray4)' : 'rgba(8,101,168,.3)') : 'var(--gray4)',
-                                                color: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#15803d' : f.id === 'pending' ? 'var(--gray2)' : 'var(--blue)') : 'var(--gray2)',
-                                            }}
-                                            onClick={() => setCertStatusFilter(f.id)}>
-                                            {f.icon} {f.label}
-                                        </button>
+                                    {[{ id: 'all', label: 'الكل', icon: '📋' }, { id: 'uploaded', label: 'مرفوعة', icon: '✅' }, { id: 'pending', label: 'حضر / لم تُرفع', icon: '📄' }, { id: 'not-attended', label: 'لم يحضر', icon: '🚫' }].map(f => (
+                                        <button key={f.id} style={{ padding: '5px 12px', borderRadius: 8, border: '1.5px solid', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', transition: 'all .14s', background: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#f0fdf4' : f.id === 'pending' ? 'rgba(156,163,175,.1)' : 'var(--blue-lt)') : 'var(--bg)', borderColor: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#86efac' : f.id === 'pending' ? 'var(--gray4)' : 'rgba(8,101,168,.3)') : 'var(--gray4)', color: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#15803d' : f.id === 'pending' ? 'var(--gray2)' : 'var(--blue)') : 'var(--gray2)' }} onClick={() => setCertStatusFilter(f.id)}>{f.icon} {f.label}</button>
                                     ))}
                                 </div>
-                                <button
-                                    style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid var(--gray4)', background: 'var(--bg)', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', color: 'var(--gray2)', transition: 'all .14s', display: 'flex', alignItems: 'center', gap: 5 }}
-                                    onClick={refreshCertificates} title="تحديث الشهادات من السيرفر">
-                                    ↻ تحديث
-                                </button>
+                                <button style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid var(--gray4)', background: 'var(--bg)', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', color: 'var(--gray2)', transition: 'all .14s', display: 'flex', alignItems: 'center', gap: 5 }} onClick={refreshCertificates} title="تحديث الشهادات من السيرفر">↻ تحديث</button>
                                 <div className="d-expw" ref={exportCertRef}>
-                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportCertMenuOpen(p => !p)}>
-                                        {exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}
-                                    </button>
+                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportCertMenuOpen(p => !p)}>{exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}</button>
                                     {exportCertMenuOpen && (
                                         <div className="d-expmenu">
                                             <button className="d-expitem" onClick={doCertExcel}>📊 Excel (.xlsx)</button>
@@ -2051,41 +1804,24 @@ const AdminDashboard = () => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: 'var(--white)', border: '1.5px solid var(--card-border)', borderRadius: 'var(--radius)', padding: '11px 18px', marginBottom: 16, boxShadow: 'var(--shadow)', fontFamily: '"Droid Arabic Kufi", serif' }}>
                                         <span style={{ fontSize: '.76rem', fontWeight: 900, color: 'var(--black)' }}>📜 الشهادات</span>
                                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: 1 }}>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: '#f0fdf4', border: '1.5px solid #86efac', color: '#15803d', fontSize: '.7rem', fontWeight: 700 }}>
-                                                ✅ مرفوعة: {uploaded}
-                                                {withUrl > 0 && <span style={{ fontSize: '.62rem', color: '#16a34a', fontWeight: 400 }}>({withUrl} قابلة للعرض)</span>}
-                                            </span>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'rgba(124,58,237,.06)', border: '1.5px solid rgba(124,58,237,.2)', color: '#7c3aed', fontSize: '.7rem', fontWeight: 700 }}>
-                                                📄 حضر ولم تُرفع: {pendingUpload}
-                                            </span>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'rgba(156,163,175,.08)', border: '1.5px solid var(--gray4)', color: 'var(--gray3)', fontSize: '.7rem', fontWeight: 700 }}>
-                                                🚫 لم يحضر: {notAttended}
-                                            </span>
-                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'var(--blue-lt)', border: '1.5px solid rgba(8,101,168,.2)', color: 'var(--blue)', fontSize: '.7rem', fontWeight: 700 }}>
-                                                📋 الإجمالي: {certRows.length}
-                                            </span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: '#f0fdf4', border: '1.5px solid #86efac', color: '#15803d', fontSize: '.7rem', fontWeight: 700 }}>✅ مرفوعة: {uploaded}{withUrl > 0 && <span style={{ fontSize: '.62rem', color: '#16a34a', fontWeight: 400 }}>({withUrl} قابلة للعرض)</span>}</span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'rgba(124,58,237,.06)', border: '1.5px solid rgba(124,58,237,.2)', color: '#7c3aed', fontSize: '.7rem', fontWeight: 700 }}>📄 حضر ولم تُرفع: {pendingUpload}</span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'rgba(156,163,175,.08)', border: '1.5px solid var(--gray4)', color: 'var(--gray3)', fontSize: '.7rem', fontWeight: 700 }}>🚫 لم يحضر: {notAttended}</span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 11px', borderRadius: 8, background: 'var(--blue-lt)', border: '1.5px solid rgba(8,101,168,.2)', color: 'var(--blue)', fontSize: '.7rem', fontWeight: 700 }}>📋 الإجمالي: {certRows.length}</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 140 }}>
-                                            <div style={{ flex: 1, height: 7, background: 'var(--gray5)', borderRadius: 4, overflow: 'hidden' }}>
-                                                <div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#16a34a,#22c55e)', borderRadius: 4, transition: 'width .5s ease' }} />
-                                            </div>
+                                            <div style={{ flex: 1, height: 7, background: 'var(--gray5)', borderRadius: 4, overflow: 'hidden' }}><div style={{ width: `${pct}%`, height: '100%', background: 'linear-gradient(90deg,#16a34a,#22c55e)', borderRadius: 4, transition: 'width .5s ease' }} /></div>
                                             <span style={{ fontSize: '.68rem', fontWeight: 700, color: '#15803d', minWidth: 32 }} title="من إجمالي الحاضرين">{pct}٪</span>
                                         </div>
                                     </div>
                                 );
                             })()}
 
-                            {certError && (
-                                <div className="d-err">⚠️ {certError}
-                                    <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setCertError(null)}>✕</button>
-                                </div>
-                            )}
+                            {certError && <div className="d-err">⚠️ {certError}<button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setCertError(null)}>✕</button></div>}
 
                             <div className="d-card">
-                                {loading
-                                    ? <div className="d-ld"><div className="d-sp" /><p>جاري التحميل...</p></div>
-                                    : certRows.length === 0
-                                        ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد نتائج</p></div>
+                                {loading ? <div className="d-ld"><div className="d-sp" /><p>جاري التحميل...</p></div>
+                                    : certRows.length === 0 ? <div className="d-empty"><div className="d-emi">🔍</div><p>لا توجد نتائج</p></div>
                                         : (
                                             <>
                                                 <div className="d-cert-grid">
@@ -2098,29 +1834,20 @@ const AdminDashboard = () => {
                                                         const canUpload = isAttended;
                                                         const hasRealUrl = cert && cert.certId != null;
                                                         const hasPlaceholder = cert && cert.certId == null;
-
                                                         let cardBorder, cardBg;
                                                         if (cert) { cardBorder = '#86efac'; cardBg = '#f8fffe'; }
                                                         else if (!canUpload) { cardBorder = 'var(--gray5)'; cardBg = '#fafafa'; }
                                                         else { cardBorder = 'rgba(124,58,237,.2)'; cardBg = 'var(--white)'; }
-
                                                         const iconCls = cert ? 'has' : !canUpload ? 'grey' : '';
-
                                                         return (
                                                             <div className="d-cert-card" key={ck} style={{ borderColor: cardBorder, background: cardBg, opacity: !canUpload && !cert ? 0.75 : 1 }}>
                                                                 <div className="d-cert-card-top">
-                                                                    <div className={`d-cert-icon${iconCls ? ` ${iconCls}` : ''}`}>
-                                                                        {cert ? '📜' : canUpload ? '📄' : '🚫'}
-                                                                    </div>
+                                                                    <div className={`d-cert-icon${iconCls ? ` ${iconCls}` : ''}`}>{cert ? '📜' : canUpload ? '📄' : '🚫'}</div>
                                                                     <div className="d-cert-info">
-                                                                        <div className="d-cert-name" title={`${row.user.firstName || row.user.username} ${row.user.lastName}`.trim()}>
-                                                                            {row.user.firstName || row.user.username} {row.user.lastName}
-                                                                        </div>
+                                                                        <div className="d-cert-name" title={`${row.user.firstName || row.user.username} ${row.user.lastName}`.trim()}>{row.user.firstName || row.user.username} {row.user.lastName}</div>
                                                                         <div className="d-cert-course" title={row.course.title}>📚 {row.course.title}</div>
                                                                         <div className="d-cert-badges">
-                                                                            <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: isAttended ? '#f0fdf4' : 'rgba(156,163,175,.08)', color: isAttended ? '#15803d' : 'var(--gray3)', border: `1px solid ${isAttended ? '#86efac' : 'var(--gray4)'}` }}>
-                                                                                {isAttended ? '✅ حضر' : '❌ غائب'}
-                                                                            </span>
+                                                                            <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: isAttended ? '#f0fdf4' : 'rgba(156,163,175,.08)', color: isAttended ? '#15803d' : 'var(--gray3)', border: `1px solid ${isAttended ? '#86efac' : 'var(--gray4)'}` }}>{isAttended ? '✅ حضر' : '❌ غائب'}</span>
                                                                             {hasRealUrl && <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f0fdf4', color: '#15803d', border: '1px solid #86efac' }}>📜 {cert.name && cert.name !== 'uploaded' ? (cert.name.length > 20 ? cert.name.slice(0, 20) + '…' : cert.name) : 'مرفوعة'}</span>}
                                                                             {hasPlaceholder && <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 8px', borderRadius: 6, background: '#f0fdf4', color: '#16a34a', border: '1px solid #86efac' }}>✅ مرفوعة على السيرفر</span>}
                                                                             {!cert && canUpload && <span style={{ fontSize: '.6rem', color: '#7c3aed', padding: '2px 8px', borderRadius: 6, background: 'rgba(124,58,237,.05)', border: '1px solid rgba(124,58,237,.15)' }}>لم تُرفع بعد</span>}
@@ -2153,27 +1880,21 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ USERS / COURSES TABS ═════════════════════════════ */}
+                    {/* ══ USERS / COURSES TABS ══ */}
                     {isExportTab && (
                         <>
                             <div className="d-toolbar">
                                 <div className="d-search">
-                                    <input type="text"
-                                        placeholder={activeTab === 'users' ? 'ابحث باسم المستخدم أو البريد...' : 'ابحث باسم الدورة أو الفئة...'}
-                                        value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setExpandedRow(null); }} />
+                                    <input type="text" placeholder={activeTab === 'users' ? 'ابحث باسم المستخدم أو البريد...' : 'ابحث باسم الدورة أو الفئة...'} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setExpandedRow(null); }} />
                                 </div>
                                 <span className="d-flbl">📅</span>
                                 <span className="d-fsm">من</span>
                                 <input type="date" className="d-fdate" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setExpandedRow(null); }} />
                                 <span className="d-fsm">إلى</span>
                                 <input type="date" className="d-fdate" value={dateTo} min={dateFrom} onChange={e => { setDateTo(e.target.value); setExpandedRow(null); }} />
-                                {(dateFrom || dateTo) && (
-                                    <><span className="d-fbadge">🔶 فلتر نشط</span><button className="d-fclear" onClick={() => { setDateFrom(''); setDateTo(''); setExpandedRow(null); }}>✕</button></>
-                                )}
+                                {(dateFrom || dateTo) && (<><span className="d-fbadge">🔶 فلتر نشط</span><button className="d-fclear" onClick={() => { setDateFrom(''); setDateTo(''); setExpandedRow(null); }}>✕</button></>)}
                                 <div className="d-expw" ref={exportRef}>
-                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportMenuOpen(p => !p)}>
-                                        {exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}
-                                    </button>
+                                    <button className="d-expbtn" disabled={exporting} onClick={() => setExportMenuOpen(p => !p)}>{exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}</button>
                                     {exportMenuOpen && (
                                         <div className="d-expmenu">
                                             <button className="d-expitem" onClick={doExcel}>📊 Excel (.xlsx)</button>
@@ -2209,40 +1930,13 @@ const AdminDashboard = () => {
                                                                             <React.Fragment key={u.id}>
                                                                                 <tr className={expandedRow === u.id ? 'xopen' : ''}>
                                                                                     <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{rowNum}</td>
-                                                                                    <td>
-                                                                                        <div className="d-uc">
-                                                                                            <div className="d-av">{(u.firstName || u.username || '?')[0]}{(u.lastName || '')[0]}</div>
-                                                                                            <span className="d-uname">{u.firstName || u.username} {u.lastName}</span>
-                                                                                        </div>
-                                                                                    </td>
+                                                                                    <td><div className="d-uc"><div className="d-av">{(u.firstName || u.username || '?')[0]}{(u.lastName || '')[0]}</div><span className="d-uname">{u.firstName || u.username} {u.lastName}</span></div></td>
                                                                                     <td className="d-email">{u.email}</td>
                                                                                     <td style={{ textAlign: 'center' }}><span className="d-cb">{u.enrolledCourses.length}</span></td>
-                                                                                    <td style={{ textAlign: 'center' }}>
-                                                                                        {u.enrolledCourses.length > 0
-                                                                                            ? <span className={`d-pill${expandedRow === u.id ? ' op' : ''}`} onClick={() => setExpandedRow(expandedRow === u.id ? null : u.id)}>{expandedRow === u.id ? '▲ إخفاء' : '▼ عرض'}</span>
-                                                                                            : <span style={{ color: 'var(--gray4)' }}>—</span>}
-                                                                                    </td>
+                                                                                    <td style={{ textAlign: 'center' }}>{u.enrolledCourses.length > 0 ? <span className={`d-pill${expandedRow === u.id ? ' op' : ''}`} onClick={() => setExpandedRow(expandedRow === u.id ? null : u.id)}>{expandedRow === u.id ? '▲ إخفاء' : '▼ عرض'}</span> : <span style={{ color: 'var(--gray4)' }}>—</span>}</td>
                                                                                 </tr>
                                                                                 {expandedRow === u.id && (
-                                                                                    <tr className="d-xrow"><td colSpan={5}>
-                                                                                        <div className="d-xin">
-                                                                                            {u.enrolledCourses.map(c => {
-                                                                                                const ck = String(c.enrollmentId ?? `${u.id}-${c.id}`);
-                                                                                                return (
-                                                                                                    <div className="d-mc" key={ck}>
-                                                                                                        <div className="d-mt">📚 {c.title}</div>
-                                                                                                        {c.date && <div className="d-md">📅 {c.date}</div>}
-                                                                                                        <div style={{ marginTop: 5, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
-                                                                                                            <span className={`d-att-badge ${attendance[String(c.enrollmentId)] ? 'on' : 'off'}`} style={{ fontSize: '.62rem' }}>
-                                                                                                                {attendance[String(c.enrollmentId)] ? '✅ حضر' : '❌ غائب'}
-                                                                                                            </span>
-                                                                                                            {(certificates[ck] ?? certificates[`${u.id}-${c.id}`]) ? <span style={{ fontSize: '.62rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span> : null}
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                );
-                                                                                            })}
-                                                                                        </div>
-                                                                                    </td></tr>
+                                                                                    <tr className="d-xrow"><td colSpan={5}><div className="d-xin">{u.enrolledCourses.map(c => { const ck = String(c.enrollmentId ?? `${u.id}-${c.id}`); return (<div className="d-mc" key={ck}><div className="d-mt">📚 {c.title}</div>{c.date && <div className="d-md">📅 {c.date}</div>}<div style={{ marginTop: 5, display: 'flex', gap: 5, flexWrap: 'wrap' }}><span className={`d-att-badge ${attendance[String(c.enrollmentId)] ? 'on' : 'off'}`} style={{ fontSize: '.62rem' }}>{attendance[String(c.enrollmentId)] ? '✅ حضر' : '❌ غائب'}</span>{(certificates[ck] ?? certificates[`${u.id}-${c.id}`]) ? <span style={{ fontSize: '.62rem', color: '#7c3aed', fontWeight: 700 }}>📜 شهادة</span> : null}</div></div>); })}</div></td></tr>
                                                                                 )}
                                                                             </React.Fragment>
                                                                         );
@@ -2255,29 +1949,10 @@ const AdminDashboard = () => {
                                                                                     <td style={{ color: 'var(--gray3)', fontSize: '.68rem', textAlign: 'center' }}>{rowNum}</td>
                                                                                     <td style={{ fontWeight: 700, color: 'var(--blue)' }}>📚 {c.title}</td>
                                                                                     <td style={{ textAlign: 'center' }}><span className="d-cb or">{c.enrolledUsers.length}</span></td>
-                                                                                    <td style={{ textAlign: 'center' }}>
-                                                                                        {c.enrolledUsers.length > 0
-                                                                                            ? <span className={`d-pill or${expandedRow === c.id ? ' op' : ''}`} onClick={() => setExpandedRow(expandedRow === c.id ? null : c.id)}>{expandedRow === c.id ? '▲ إخفاء' : '▼ عرض'}</span>
-                                                                                            : <span style={{ color: 'var(--gray4)' }}>—</span>}
-                                                                                    </td>
+                                                                                    <td style={{ textAlign: 'center' }}>{c.enrolledUsers.length > 0 ? <span className={`d-pill or${expandedRow === c.id ? ' op' : ''}`} onClick={() => setExpandedRow(expandedRow === c.id ? null : c.id)}>{expandedRow === c.id ? '▲ إخفاء' : '▼ عرض'}</span> : <span style={{ color: 'var(--gray4)' }}>—</span>}</td>
                                                                                 </tr>
                                                                                 {expandedRow === c.id && (
-                                                                                    <tr className="d-xrow"><td colSpan={4}>
-                                                                                        <div className="d-xin">
-                                                                                            {c.enrolledUsers.map(u => (
-                                                                                                <div className="d-mc" key={u.enrollmentId ?? u.username ?? u.email}>
-                                                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}>
-                                                                                                        <div className="d-av or sm">{(u.firstName || u.username || '?')[0]}{(u.lastName || '')[0]}</div>
-                                                                                                        <div>
-                                                                                                            <div className="d-mt or">{u.firstName || u.username} {u.lastName}</div>
-                                                                                                            <div className="d-ms">✉ {u.email}</div>
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                    {u.date && <div className="d-md">📅 {u.date}</div>}
-                                                                                                </div>
-                                                                                            ))}
-                                                                                        </div>
-                                                                                    </td></tr>
+                                                                                    <tr className="d-xrow"><td colSpan={4}><div className="d-xin">{c.enrolledUsers.map(u => (<div className="d-mc" key={u.enrollmentId ?? u.username ?? u.email}><div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 3 }}><div className="d-av or sm">{(u.firstName || u.username || '?')[0]}{(u.lastName || '')[0]}</div><div><div className="d-mt or">{u.firstName || u.username} {u.lastName}</div><div className="d-ms">✉ {u.email}</div></div></div>{u.date && <div className="d-md">📅 {u.date}</div>}</div>))}</div></td></tr>
                                                                                 )}
                                                                             </React.Fragment>
                                                                         );
@@ -2285,14 +1960,11 @@ const AdminDashboard = () => {
                                                             </tbody>
                                                         </table>
                                                     </div>
-
                                                     <Pagination
                                                         currentPage={activeTab === 'users' ? usersPage : coursesPage}
                                                         totalItems={activeTab === 'users' ? filteredUsers.length : filteredCourses.length}
                                                         itemsPerPage={ITEMS_PER_PAGE}
-                                                        onPageChange={activeTab === 'users'
-                                                            ? p => { setUsersPage(p); setExpandedRow(null); }
-                                                            : p => { setCoursesPage(p); setExpandedRow(null); }}
+                                                        onPageChange={activeTab === 'users' ? p => { setUsersPage(p); setExpandedRow(null); } : p => { setCoursesPage(p); setExpandedRow(null); }}
                                                         accentColor={activeTab === 'users' ? '#0865a8' : '#f57c00'}
                                                     />
                                                 </>
