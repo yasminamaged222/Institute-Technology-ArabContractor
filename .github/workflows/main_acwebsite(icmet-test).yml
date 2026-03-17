@@ -141,18 +141,22 @@ jobs:
         shell: pwsh
         run: |
           $kuduUrl = "https://acwebsite-icmet-test.scm.azurewebsites.net/api/command"
-          $creds = "${{ secrets.KUDU_USERNAME }}:${{ secrets.KUDU_PASSWORD }}"
-          $encodedCreds = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($creds))
+          $username = "${{ secrets.KUDU_USERNAME }}"
+          $password = "${{ secrets.KUDU_PASSWORD }}"
+          $base64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${username}:${password}"))
           $headers = @{
-            Authorization = "Basic $encodedCreds"
-            "Content-Type" = "application/json"
+            "Authorization" = "Basic $base64"
+            "Content-Type"  = "application/json"
           }
-          $body = '{"command":"cp -r /home/site/wwwroot/ACicemtAdmin /home/ACicemtAdmin_backup 2>/dev/null || echo No folder to backup","dir":"/home/site/wwwroot"}'
+          $body = @{
+            command = "cp -r /home/site/wwwroot/ACicemtAdmin /home/ACicemtAdmin_backup || echo No folder to backup"
+            dir     = "/home/site/wwwroot"
+          } | ConvertTo-Json
           try {
             $response = Invoke-RestMethod -Uri $kuduUrl -Method Post -Headers $headers -Body $body
-            Write-Host "✅ Backup done: $response"
+            Write-Host "✅ Backup done"
           } catch {
-            Write-Host "⚠️ Backup step failed (folder may not exist yet): $_"
+            Write-Host "⚠️ Backup failed: $_"
           }
 
       # ✅ Step 2: Deploy your code
@@ -169,16 +173,20 @@ jobs:
         shell: pwsh
         run: |
           $kuduUrl = "https://acwebsite-icmet-test.scm.azurewebsites.net/api/command"
-          $creds = "${{ secrets.KUDU_USERNAME }}:${{ secrets.KUDU_PASSWORD }}"
-          $encodedCreds = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($creds))
+          $username = "${{ secrets.KUDU_USERNAME }}"
+          $password = "${{ secrets.KUDU_PASSWORD }}"
+          $base64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("${username}:${password}"))
           $headers = @{
-            Authorization = "Basic $encodedCreds"
-            "Content-Type" = "application/json"
+            "Authorization" = "Basic $base64"
+            "Content-Type"  = "application/json"
           }
-          $body = '{"command":"cp -r /home/ACicemtAdmin_backup /home/site/wwwroot/ACicemtAdmin 2>/dev/null || echo Nothing to restore","dir":"/home/site/wwwroot"}'
+          $body = @{
+            command = "cp -r /home/ACicemtAdmin_backup /home/site/wwwroot/ACicemtAdmin || echo Nothing to restore"
+            dir     = "/home/site/wwwroot"
+          } | ConvertTo-Json
           try {
             $response = Invoke-RestMethod -Uri $kuduUrl -Method Post -Headers $headers -Body $body
-            Write-Host "✅ Restore done: $response"
+            Write-Host "✅ Restore done"
           } catch {
-            Write-Host "⚠️ Restore step failed: $_"
+            Write-Host "⚠️ Restore failed: $_"
           }
