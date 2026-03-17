@@ -67,7 +67,7 @@ namespace Institute.API.Controllers
                 return Ok(user);
             }
 
-            //// 3️⃣ لو مفيش أي حاجة، اعمل مستخدم جديد
+            // 3️⃣ لو مفيش أي حاجة، اعمل مستخدم جديد
             var newUser = new AppUser
             {
                 ClerkUserId = clerkUserId,
