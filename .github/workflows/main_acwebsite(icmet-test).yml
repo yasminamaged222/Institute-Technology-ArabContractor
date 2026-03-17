@@ -71,8 +71,6 @@ jobs:
           }
           Copy-Item -Path src/Frontend/dist/* -Destination published/wwwroot -Recurse -Force
 
-      # ✅ Ensure web.config exists in wwwroot (fallback if not copied from public/)
-      - name: Ensure web.config exists in wwwroot
       # ✅ Remove web.config from wwwroot — ASP.NET handles all routing via UseDefaultFiles + MapFallbackToFile
       #    A web.config in wwwroot causes IIS to skip "/" rewrite (treats it as a directory)
       - name: Remove web.config from wwwroot if present
@@ -80,39 +78,9 @@ jobs:
         run: |
           $dest = "published/wwwroot/web.config"
           if (Test-Path $dest) {
-            Write-Host "✅ web.config already present (copied from public/)"
             Remove-Item -Path $dest -Force
             Write-Host "Removed web.config from wwwroot (ASP.NET handles routing)"
           } else {
-            Write-Host "⚠️ web.config missing — writing fallback"
-            $lines = @(
-              '<?xml version="1.0" encoding="utf-8"?>',
-              '<configuration>',
-              '  <system.webServer>',
-              '    <rewrite>',
-              '      <rules>',
-              '        <rule name="StaticFiles" stopProcessing="true">',
-              '          <match url=".*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|map)$" />',
-              '          <action type="None" />',
-              '        </rule>',
-              '        <rule name="API" stopProcessing="true">',
-              '          <match url="^api/.*" />',
-              '          <action type="None" />',
-              '        </rule>',
-              '        <rule name="ReactRoutes" stopProcessing="true">',
-              '          <match url=".*" />',
-              '          <conditions logicalGrouping="MatchAll">',
-              '            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />',
-              '            <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />',
-              '          </conditions>',
-              '          <action type="Rewrite" url="/index.html" />',
-              '        </rule>',
-              '      </rules>',
-              '    </rewrite>',
-              '  </system.webServer>',
-              '</configuration>'
-            )
-            $lines | Out-File -FilePath $dest -Encoding utf8
             Write-Host "No web.config in wwwroot - nothing to remove"
           }
 
