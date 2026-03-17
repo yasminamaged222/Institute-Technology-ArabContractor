@@ -49,7 +49,7 @@ namespace Institute.API.Controllers
                 return Ok(user);
             }
 
-            // 2️⃣ لو مفيش مستخدم بنفس ClerkUserId، دور على Email موجود (حتى لو soft-deleted)
+            //// 2️⃣ لو مفيش مستخدم بنفس ClerkUserId، دور على Email موجود (حتى لو soft-deleted)
             user = await _context.AppUsers
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(u => u.Email == clerkUser.Email);
