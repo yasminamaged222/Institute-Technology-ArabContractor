@@ -136,6 +136,26 @@ jobs:
             $files
           }
 
+      # ✅ Step 1: Backup ACicemtAdmin BEFORE deploy
+      - name: Backup ACicemtAdmin folder via Kudu API
+        shell: pwsh
+        run: |
+          $kuduUrl = "https://acwebsite-icmet-test.scm.azurewebsites.net/api/command"
+          $creds = "${{ secrets.KUDU_USERNAME }}:${{ secrets.KUDU_PASSWORD }}"
+          $encodedCreds = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($creds))
+          $headers = @{
+            Authorization = "Basic $encodedCreds"
+            "Content-Type" = "application/json"
+          }
+          $body = '{"command":"cp -r /home/site/wwwroot/ACicemtAdmin /home/ACicemtAdmin_backup 2>/dev/null || echo No folder to backup","dir":"/home/site/wwwroot"}'
+          try {
+            $response = Invoke-RestMethod -Uri $kuduUrl -Method Post -Headers $headers -Body $body
+            Write-Host "✅ Backup done: $response"
+          } catch {
+            Write-Host "⚠️ Backup step failed (folder may not exist yet): $_"
+          }
+
+      # ✅ Step 2: Deploy your code
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
@@ -143,3 +163,22 @@ jobs:
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
+
+      # ✅ Step 3: Restore ACicemtAdmin AFTER deploy
+      - name: Restore ACicemtAdmin folder via Kudu API
+        shell: pwsh
+        run: |
+          $kuduUrl = "https://acwebsite-icmet-test.scm.azurewebsites.net/api/command"
+          $creds = "${{ secrets.KUDU_USERNAME }}:${{ secrets.KUDU_PASSWORD }}"
+          $encodedCreds = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes($creds))
+          $headers = @{
+            Authorization = "Basic $encodedCreds"
+            "Content-Type" = "application/json"
+          }
+          $body = '{"command":"cp -r /home/ACicemtAdmin_backup /home/site/wwwroot/ACicemtAdmin 2>/dev/null || echo Nothing to restore","dir":"/home/site/wwwroot"}'
+          try {
+            $response = Invoke-RestMethod -Uri $kuduUrl -Method Post -Headers $headers -Body $body
+            Write-Host "✅ Restore done: $response"
+          } catch {
+            Write-Host "⚠️ Restore step failed: $_"
+          }
