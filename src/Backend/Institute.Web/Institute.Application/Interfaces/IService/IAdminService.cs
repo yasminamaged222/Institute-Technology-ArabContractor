@@ -20,5 +20,6 @@ namespace Institute.Application.Interfaces.IService
         Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended);
         //Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync();
         Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId);
+        Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder);
     }
 }

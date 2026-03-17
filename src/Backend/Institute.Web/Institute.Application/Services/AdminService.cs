@@ -176,6 +176,41 @@ namespace Institute.Application.Services
                 UploadedAt = certificate.UploadedAt
             };
         }
+        public async Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder)
+        {
+            var certificate = await _certificateRepository.GetByIdAsync(dto.CertificateId);
+
+            if (certificate == null)
+                return false;
+
+            // delete old file
+            if (!string.IsNullOrEmpty(certificate.FileUrl))
+            {
+                var oldPath = Path.Combine(uploadsFolder, Path.GetFileName(certificate.FileUrl));
+                if (File.Exists(oldPath))
+                    File.Delete(oldPath);
+            }
+
+            // save new file
+            var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await dto.File.CopyToAsync(stream);
+            }
+
+            // update entity
+            certificate.FileUrl = "/certificates/" + fileName;
+            certificate.FileName = dto.File.FileName;
+            certificate.FileSizeBytes = dto.File.Length;
+            certificate.UploadedAt = DateTime.UtcNow;
+
+            _certificateRepository.Update(certificate);
+            await _certificateRepository.SaveChangesAsync();
+
+            return true;
+        }
 
         public async Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended)
         {

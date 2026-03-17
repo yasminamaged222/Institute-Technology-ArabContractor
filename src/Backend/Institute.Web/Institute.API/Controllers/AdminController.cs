@@ -134,6 +134,18 @@ namespace Institute.API.Controllers
 
             return Ok(result);
         }
+        [HttpPut("certificates")]
+        public async Task<IActionResult> UpdateCertificate([FromForm] UpdateCertificateDto dto)
+        {
+            var uploadsFolder = Path.Combine(_env.WebRootPath, "certificates");
+
+            var result = await _adminService.UpdateCertificateAsync(dto, uploadsFolder);
+
+            if (!result)
+                return NotFound("Certificate not found");
+
+            return Ok(new { message = "Certificate updated successfully" });
+        }
 
     }
 }
