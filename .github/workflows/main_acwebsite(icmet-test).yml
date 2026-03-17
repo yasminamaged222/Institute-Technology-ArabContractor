@@ -133,7 +133,7 @@ jobs:
         run: |
           $user = "${{ secrets.KUDU_USERNAME }}"
           $pass = "${{ secrets.KUDU_PASSWORD }}"
-          $base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$user:$pass"))
+          $base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${user}:${pass}"))
           $headers = @{ Authorization = "Basic $base64Auth" }
 
           $zipPath = "published.zip"
@@ -143,10 +143,8 @@ jobs:
 
           # Deploy incrementally
           Invoke-RestMethod -Uri "https://acwebsite-icmet-test.scm.azurewebsites.net/api/zipdeploy?isAsync=true&isIncremental=true" `
-                            -Method POST `
-                            -Headers $headers `
-                            -InFile $zipPath
+                      -Method POST `
+                      -Headers $headers `
+                      -InFile $zipPath
 
-      - name: Confirm deployment
-        shell: pwsh
-        run: Write-Host "✅ Deployment triggered via Kudu API (incremental)."
+          Write-Host "✅ Deployment triggered via Kudu API (incremental)."
