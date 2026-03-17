@@ -32,7 +32,7 @@ namespace Institute.API.Controllers
             if (clerkUser == null)
                 return BadRequest();
 
-            // 1️⃣ حاول تجيب المستخدم على أساس ClerkUserId أولاً
+            //// 1️⃣ حاول تجيب المستخدم على أساس ClerkUserId أولاً
             var user = await _context.AppUsers
                 .IgnoreQueryFilters()
                 .FirstOrDefaultAsync(u => u.ClerkUserId == clerkUserId);
