@@ -122,19 +122,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ASP-app
-          path: artifact
+          path: .
 
       - name: Verify downloaded artifact
         shell: pwsh
         run: |
-          $files = Get-ChildItem artifact -Recurse
-          if ($files.Count -eq 0) {
-            Write-Host "❌ ERROR: Artifact folder is empty! Download failed."
-            exit 1
-          } else {
-            Write-Host "✅ Artifact downloaded successfully."
-            $files
-          }
+          Get-ChildItem published -Recurse
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -142,5 +135,5 @@ jobs:
           app-name: acwebsite
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: artifact/
+          package: published/
           clean: false
