@@ -122,13 +122,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ASP-app
-          path: .
+          path: ASP-app
 
       - name: Verify downloaded artifact
         shell: pwsh
         run: |
             Write-Host "✅ Listing published folder contents..."
-            Get-ChildItem published -Recurse
+            Get-ChildItem ASP-app/published -Recurse
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -136,5 +136,5 @@ jobs:
           app-name: acwebsite
           slot-name: icmet-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: published/  # ✅ المسار الصحيح بعد download
+          package: ASP-app/published/   # ✅ الآن المسار صحيح
           clean: false         # ✅ incremental deploy, لا يمسح الملفات القديمة
