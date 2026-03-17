@@ -122,29 +122,24 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ASP-app
-          path: published
+          path: artifact
 
       - name: Verify downloaded artifact
         shell: pwsh
-        run: Get-ChildItem published -Recurse
-
-      - name: Deploy incrementally via Kudu API
-        shell: pwsh
         run: |
-          $user = "${{ secrets.KUDU_USERNAME }}"
-          $pass = "${{ secrets.KUDU_PASSWORD }}"
-          $base64Auth = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${user}:${pass}"))
-          $headers = @{ Authorization = "Basic $base64Auth" }
+          $files = Get-ChildItem artifact -Recurse
+          if ($files.Count -eq 0) {
+            Write-Host "❌ ERROR: Artifact folder is empty! Download failed."
+            exit 1
+          } else {
+            Write-Host "✅ Artifact downloaded successfully."
+            $files
+          }
 
-          $zipPath = "published.zip"
-
-          # Compress publish folder into a zip
-          Compress-Archive -Path published/* -DestinationPath $zipPath -Force
-
-          # Deploy incrementally
-          Invoke-RestMethod -Uri "https://acwebsite-icmet-test.scm.azurewebsites.net/api/zipdeploy?isAsync=true&isIncremental=true" `
-                      -Method POST `
-                      -Headers $headers `
-                      -InFile $zipPath
-
-          Write-Host "✅ Deployment triggered via Kudu API (incremental)."
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: acwebsite
+          slot-name: icmet-test
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: artifact/
