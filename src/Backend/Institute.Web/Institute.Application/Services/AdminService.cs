@@ -154,8 +154,28 @@ namespace Institute.Application.Services
             return true;
         }
 
-        
 
+        public async Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId)
+        {
+            var spec = new CertificateWithUserAndPlanworkSpec(userId, planworkId);
+
+            var certificate = await _certificateRepository.GetByIdWithSpecAsync(spec);
+
+            if (certificate == null)
+                return null;
+
+            return new CertificateDto
+            {
+                Id = certificate.Id,
+                UserId = certificate.UserId,
+                Username = certificate.User.Username,
+                PlanworkId = certificate.PlanworkId,
+                PlanworkTitle = certificate.Planwork.ServiceTitle,
+                FileUrl = certificate.FileUrl,
+                FileName = certificate.FileName,
+                UploadedAt = certificate.UploadedAt
+            };
+        }
 
         public async Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended)
         {

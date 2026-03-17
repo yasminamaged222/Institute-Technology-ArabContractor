@@ -123,5 +123,17 @@ namespace Institute.API.Controllers
             var result = await _adminService.GetAllCertificatesAsync();
             return Ok(result);
         }
+
+        [HttpGet("certificates/{userId}/{planworkId}")]
+        public async Task<ActionResult<CertificateDto>> GetCertificate(int userId, int planworkId)
+        {
+            var result = await _adminService.GetCertificateAsync(userId, planworkId);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
     }
 }
