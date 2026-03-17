@@ -16,8 +16,11 @@ namespace Institute.Application.Interfaces.IService
        
         Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(PlanworkSpecParams param);
         Task<AdminStatsDto> GetStatsAsync();
-        Task<bool> UploadCertificateAsync(UploadCertificateDto dto);
+        Task<bool> UploadCertificateAsync(UploadCertificateDto dto, string uploadsFolder);
         Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended);
-        Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync();
+        //Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync();
+        Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId);
+        Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder);
+        Task<bool> DeleteCertificateAsync(int certificateId, string uploadsFolder);
     }
 }

@@ -30,6 +30,7 @@ namespace Institute.Application.Services
             _planworkRepository = planworkRepository;
             _certificateRepository = certificateRepository;
             _refundRepository = refundRepository;
+
         }
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param)
         {
@@ -115,7 +116,7 @@ namespace Institute.Application.Services
             };
         }
 
-        public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto)
+        public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto, string uploadsFolder)
         {
             if (dto.File == null || dto.File.Length == 0)
                 return false;
@@ -125,8 +126,6 @@ namespace Institute.Application.Services
 
             if (exists)
                 return false;
-
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/certificates");
 
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
@@ -155,6 +154,87 @@ namespace Institute.Application.Services
             return true;
         }
 
+
+        public async Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId)
+        {
+            var spec = new CertificateWithUserAndPlanworkSpec(userId, planworkId);
+
+            var certificate = await _certificateRepository.GetByIdWithSpecAsync(spec);
+
+            if (certificate == null)
+                return null;
+
+            return new CertificateDto
+            {
+                Id = certificate.Id,
+                UserId = certificate.UserId,
+                Username = certificate.User.Username,
+                PlanworkId = certificate.PlanworkId,
+                PlanworkTitle = certificate.Planwork.ServiceTitle,
+                FileUrl = certificate.FileUrl,
+                FileName = certificate.FileName,
+                UploadedAt = certificate.UploadedAt
+            };
+        }
+        public async Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder)
+        {
+            var certificate = await _certificateRepository.GetByIdAsync(dto.CertificateId);
+
+            if (certificate == null)
+                return false;
+
+            // delete old file
+            if (!string.IsNullOrEmpty(certificate.FileUrl))
+            {
+                var oldPath = Path.Combine(uploadsFolder, Path.GetFileName(certificate.FileUrl));
+                if (File.Exists(oldPath))
+                    File.Delete(oldPath);
+            }
+
+            // save new file
+            var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await dto.File.CopyToAsync(stream);
+            }
+
+            // update entity
+            certificate.FileUrl = "/certificates/" + fileName;
+            certificate.FileName = dto.File.FileName;
+            certificate.FileSizeBytes = dto.File.Length;
+            certificate.UploadedAt = DateTime.UtcNow;
+
+            _certificateRepository.Update(certificate);
+            await _certificateRepository.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task<bool> DeleteCertificateAsync(int certificateId, string uploadsFolder)
+        {
+            var certificate = await _certificateRepository.GetByIdAsync(certificateId);
+
+            if (certificate == null)
+                return false;
+
+            // 🗑️ delete file from server
+            if (!string.IsNullOrEmpty(certificate.FileUrl))
+            {
+                var fileName = Path.GetFileName(certificate.FileUrl);
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                if (File.Exists(filePath))
+                    File.Delete(filePath);
+            }
+
+            // 🗑️ delete from DB
+            _certificateRepository.Delete(certificate);
+            await _certificateRepository.SaveChangesAsync();
+
+            return true;
+        }
+
         public async Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended)
         {
             // جلب الـ enrollment
@@ -169,28 +249,28 @@ namespace Institute.Application.Services
             await _enrollmentRepository.SaveChangesAsync();
             return true;
         }
-        public async Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync()
-        {
-            var spec = new CertificateWithUserAndPlanworkSpec();
+        //public async Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync()
+        //{
+        //    var spec = new CertificateWithUserAndPlanworkSpec();
 
-            var certificates = await _certificateRepository.GetAllWithSpecAsync(spec);
+        //    var certificates = await _certificateRepository.GetAllWithSpecAsync(spec);
 
 
-            return certificates.Select(c => new CertificateDto
-            {
-                Id = c.Id,
-                UserId = c.UserId,
-                Username = c.User.Username,
+        //    return certificates.Select(c => new CertificateDto
+        //    {
+        //        Id = c.Id,
+        //        UserId = c.UserId,
+        //        Username = c.User.Username,
 
-                PlanworkId = c.PlanworkId,
-                PlanworkTitle = c.Planwork.ServiceTitle,
+        //        PlanworkId = c.PlanworkId,
+        //        PlanworkTitle = c.Planwork.ServiceTitle,
 
-                FileUrl = c.FileUrl,
-                FileName = c.FileName,
+        //        FileUrl = c.FileUrl,
+        //        FileName = c.FileName,
 
-                UploadedAt = c.UploadedAt
-            }).ToList();
-        }
+        //        UploadedAt = c.UploadedAt
+        //    }).ToList();
+        //}
 
     }
 }
