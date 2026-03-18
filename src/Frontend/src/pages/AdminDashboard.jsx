@@ -733,6 +733,9 @@ const AdminDashboard = () => {
     useEffect(() => { if (activeTab === 'refunds') fetchRefunds(); }, [activeTab, fetchRefunds]);
     useEffect(() => { if (activeTab === 'refunds') fetchRefunds(refundStatusFilter); }, [refundStatusFilter]); // eslint-disable-line
 
+    // Auto-refresh certs from GET /api/Admin/certificates whenever the tab is opened
+    useEffect(() => { if (activeTab === 'certificates') refreshCertificates(); }, [activeTab]); // eslint-disable-line
+
     useEffect(() => {
         const h = e => {
             if (exportRef.current && !exportRef.current.contains(e.target)) setExportMenuOpen(false);
@@ -760,50 +763,46 @@ const AdminDashboard = () => {
     //  DEL  /api/Admin/certificates/{id}         → delete by cert id
     // ─────────────────────────────────────────────────────────────────────
 
-    const loadCertificatesFromApi = useCallback(async (usersArr) => {
+    const loadCertificatesFromApi = useCallback(async (_usersArr) => {
         try {
             const res = await authFetch(`${API_BASE}/Admin/certificates`);
             if (!res.ok) { console.warn('[Certs] GET /Admin/certificates failed:', res.status); return; }
             const json = await res.json();
             const certsArr = Array.isArray(json) ? json : json?.data ?? json?.certificates ?? json?.result ?? [];
 
-            // Build lookup: "userId-planworkId" → enrollmentId string
-            const upToEid = {};
-            (usersArr ?? usersDataRef.current).forEach(u => {
-                (u.enrolledCourses ?? []).forEach(c => {
-                    if (c.enrollmentId != null && c.id != null) {
-                        upToEid[`${u.id}-${c.id}`] = String(c.enrollmentId);
-                    }
-                });
-            });
-
+            // Index ONLY by "userId-planworkId" — this comes directly from the API response
+            // and is guaranteed to exist. certRows uses certKey = fallbackKey = "userId-planworkId"
+            // so this lookup always hits regardless of whether enrollmentId is available.
             const map = {};
             certsArr.forEach(raw => {
-                const cert = normalizeCert(raw);
-                if (!cert.id) return;
-                const fallbackKey = `${cert.userId}-${cert.planworkId}`;
-                const eidKey = upToEid[fallbackKey];
-                // Store userId+planworkId on entry so viewCert & update can use them
-                const certEntry = {
-                    certId: cert.id,
-                    name: cert.fileName,
-                    url: cert.fileUrl,
-                    rawUrl: cert.rawFileUrl,
-                    size: null,
-                    fromDb: true,
-                    uploadedAt: cert.uploadedAt,
-                    userId: cert.userId,
-                    planworkId: cert.planworkId,
-                };
-                // Store under BOTH keys so any lookup hits
-                map[fallbackKey] = certEntry;
-                if (eidKey) map[eidKey] = certEntry;
+                // Read all possible casings directly — ASP.NET may return PascalCase or camelCase
+                const certId = raw.id ?? raw.Id ?? null;
+                const userId = raw.userId ?? raw.UserId ?? null;
+                const planworkId = raw.planworkId ?? raw.PlanworkId ?? null;
+                const rawFileUrl = raw.fileUrl ?? raw.FileUrl ?? raw.filePath ?? raw.FilePath ?? null;
+                const fileName = raw.fileName ?? raw.FileName ?? (rawFileUrl ? rawFileUrl.split('/').pop().split('?')[0] : 'certificate');
+                const uploadedAt = fmtDate(raw.uploadedAt ?? raw.UploadedAt ?? null);
+                let fileUrl = null;
+                if (rawFileUrl && rawFileUrl !== 'uploaded') {
+                    fileUrl = rawFileUrl.startsWith('http') ? rawFileUrl : `${API_HOST}${rawFileUrl}`;
+                }
+
+                if (!certId || userId == null || planworkId == null) {
+                    console.warn('[Certs] skipping — missing fields. raw:', JSON.stringify(raw));
+                    return;
+                }
+
+                // Key MUST match what certRows produces: `${Number(u.id)}-${Number(resolvedPlanworkId)}`
+                const key = `${Number(userId)}-${Number(planworkId)}`;
+                console.log('[Certs] storing key:', key, '| certId:', certId, '| file:', fileName);
+                map[key] = { certId, name: fileName, url: fileUrl, rawUrl: rawFileUrl, size: null, fromDb: true, uploadedAt, userId, planworkId };
             });
+            console.log('[Certs] total certs loaded:', Object.keys(map).length, '| keys:', Object.keys(map));
             setCertificates(map);
         } catch (err) { console.warn('[Certs] loadCertificatesFromApi failed:', err.message); }
     }, [authFetch]);
 
-    const refreshCertificates = useCallback(async () => { await loadCertificatesFromApi(usersDataRef.current); }, [loadCertificatesFromApi]);
+    const refreshCertificates = useCallback(async () => { await loadCertificatesFromApi(); }, [loadCertificatesFromApi]);
 
     const seedAttendance = useCallback((users) => {
         const map = {};
@@ -828,14 +827,13 @@ const AdminDashboard = () => {
     const handleCertFile = async (enrollmentId, userId, planworkId, file) => {
         if (!file) return;
         const eidKey = enrollmentId != null ? String(enrollmentId) : null;
-        const fallbackKey = `${userId}-${planworkId}`;
-        const k = eidKey ?? fallbackKey;
+        const fallbackKey = `${Number(userId)}-${Number(planworkId)}`;
 
-        setCertUploading(p => ({ ...p, [k]: true, [fallbackKey]: true }));
+        setCertUploading(p => ({ ...p, [fallbackKey]: true }));
         setCertError(null);
         try {
-            // Check if a cert already exists for this user+planwork
-            const existing = certificates[k] ?? certificates[fallbackKey] ?? (eidKey ? certificates[eidKey] : null);
+            // cert map is indexed by fallbackKey ("userId-planworkId") — always look up by that
+            const existing = certificates[fallbackKey];
 
             let uploadRes, uploadText;
 
@@ -889,12 +887,7 @@ const AdminDashboard = () => {
                             userId: cert.userId ?? userId,
                             planworkId: cert.planworkId ?? planworkId,
                         };
-                        setCertificates(p => {
-                            const next = { ...p };
-                            next[fallbackKey] = entry;
-                            if (eidKey) next[eidKey] = entry;
-                            return next;
-                        });
+                        setCertificates(p => ({ ...p, [fallbackKey]: entry }));
                         return;
                     }
                 }
@@ -906,7 +899,7 @@ const AdminDashboard = () => {
             console.error('[CertUpload] failed:', err);
             setCertError('فشل رفع الشهادة: ' + err.message);
         } finally {
-            setCertUploading(p => ({ ...p, [k]: false, [fallbackKey]: false }));
+            setCertUploading(p => ({ ...p, [fallbackKey]: false }));
             setCertModal(null);
         }
     };
@@ -1022,15 +1015,46 @@ const AdminDashboard = () => {
     // certKey  = "userId-planworkId" — PRIMARY, always present in cert map (from loadCertificatesFromApi)
     // altKey   = enrollmentId string — SECONDARY fallback
     // This guarantees certificates[certKey] hits when cert exists
+    // Build a lookup from the cert map itself: userId → [planworkIds with certs]
+    // This lets certRows find certs for a user even when planworkId is missing from enrollment data
+    const certsByUser = {};
+    Object.values(certificates).forEach(ce => {
+        if (!ce || ce.userId == null || ce.planworkId == null) return;
+        const uid = Number(ce.userId);
+        if (!certsByUser[uid]) certsByUser[uid] = [];
+        certsByUser[uid].push(ce);
+    });
+
     const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => {
-        const matchedCourse = coursesData.find(cd => cd.title === (c._titleRaw || c.title));
+        // Try every possible source for planworkId
+        const matchedCourse = coursesData.find(cd =>
+            cd.title === (c._titleRaw || c.title) ||
+            cd.title === c.title
+        );
         const resolvedPlanworkId = c.id ?? matchedCourse?.id ?? null;
+
         const eidKey = c.enrollmentId != null ? String(c.enrollmentId) : null;
-        const fallbackKey = resolvedPlanworkId != null ? `${u.id}-${resolvedPlanworkId}` : null;
-        // PRIMARY key = fallbackKey because cert map is indexed by "userId-planworkId"
-        const certKey = fallbackKey ?? eidKey ?? `${u.id}-unknown`;
-        const altKey = eidKey; // secondary lookup
-        return { user: u, course: c, certKey, altKey, enrollmentId: c.enrollmentId, userId: u.id, planworkId: resolvedPlanworkId };
+        const fallbackKey = resolvedPlanworkId != null
+            ? `${Number(u.id)}-${Number(resolvedPlanworkId)}`
+            : null;
+
+        // Also search the cert map directly for this user+course title match
+        // This handles the case where planworkId is missing from enrollment data
+        const userCerts = certsByUser[Number(u.id)] ?? [];
+        const titleMatch = userCerts.find(ce => {
+            const mc = coursesData.find(cd => Number(cd.id) === Number(ce.planworkId));
+            return mc && (mc.title === (c._titleRaw || c.title) || mc.title === c.title);
+        });
+        const titleMatchKey = titleMatch
+            ? `${Number(u.id)}-${Number(titleMatch.planworkId)}`
+            : null;
+
+        // PRIMARY key: fallbackKey → titleMatchKey → eidKey
+        const certKey = fallbackKey ?? titleMatchKey ?? eidKey ?? `${u.id}-unknown`;
+        const altKey = certKey !== titleMatchKey ? titleMatchKey : (certKey !== eidKey ? eidKey : null);
+        const finalPlanworkId = resolvedPlanworkId ?? titleMatch?.planworkId ?? null;
+
+        return { user: u, course: c, certKey, altKey, enrollmentId: c.enrollmentId, userId: u.id, planworkId: finalPlanworkId };
     })).filter(r => {
         const matchSearch = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username} ${r.course.title}`.toLowerCase().includes(certSearch.toLowerCase());
         const hasCert = !!(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined));

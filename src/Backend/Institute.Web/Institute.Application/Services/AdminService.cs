@@ -249,26 +249,65 @@ namespace Institute.Application.Services
             await _enrollmentRepository.SaveChangesAsync();
             return true;
         }
+        public async Task<IReadOnlyList<EnrollmentWithCertificateDto>> GetEnrollmentsWithCertificatesAsync()
+        {
+            var enrollments = await _enrollmentRepository.GetAllAsync();
+
+            var result = new List<EnrollmentWithCertificateDto>();
+
+            foreach (var e in enrollments)
+            {
+                var hasCertificate = await _certificateRepository.AnyAsync(
+                    c => c.UserId == e.UserId && c.PlanworkId == e.PlanworkId);
+
+                result.Add(new EnrollmentWithCertificateDto
+                {
+                    EnrollmentId = e.Id,
+                    UserId = e.UserId,
+                    Username = e.User.Username,
+                    PlanworkId = e.PlanworkId,
+                    PlanworkTitle = e.Planwork.ServiceTitle,
+                    Attended = e.Attended,
+                    HasCertificate = hasCertificate
+                });
+            }
+
+            return result;
+        }
         public async Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync()
         {
-            var spec = new AllCertificateWithUserAndPlanworkSpec();
+            // 🔹 جيب كل الشهادات
+            var certSpec = new AllCertificateWithUserAndPlanworkSpec();
+            var certificates = await _certificateRepository.GetAllWithSpecAsync(certSpec);
 
-            var certificates = await _certificateRepository.GetAllWithSpecAsync(spec);
+            // 🔹 حطهم في Dictionary علشان البحث السريع
+            var certDict = certificates.ToDictionary(
+                c => (c.UserId, c.PlanworkId),
+                c => c);
 
+            // 🔹 جيب كل الـ enrollments مع user + planwork
+            var enrollSpec = new EnrollmentWithUserAndPlanworkSpec();
+            var enrollments = await _enrollmentRepository.GetAllWithSpecAsync(enrollSpec);
 
-            return certificates.Select(c => new CertificateDto
+            // 🔥 ارجع نتيجة لكل enrollment
+            return enrollments.Select(e =>
             {
-                Id = c.Id,
-                UserId = c.UserId,
-                Username = c.User.Username,
+                certDict.TryGetValue((e.UserId, e.PlanworkId), out var cert);
 
-                PlanworkId = c.PlanworkId,
-                PlanworkTitle = c.Planwork.ServiceTitle,
+                return new CertificateDto
+                {
+                    Id = cert?.Id ?? 0,
+                    UserId = e.UserId,
+                    Username = e.User.Username,
 
-                FileUrl = c.FileUrl,
-                FileName = c.FileName,
+                    PlanworkId = e.PlanworkId,
+                    PlanworkTitle = e.Planwork.ServiceTitle,
 
-                UploadedAt = c.UploadedAt
+                    FileUrl = cert?.FileUrl,
+                    FileName = cert?.FileName,
+
+                    UploadedAt = cert?.UploadedAt ?? DateTime.MinValue
+                };
             }).ToList();
         }
 

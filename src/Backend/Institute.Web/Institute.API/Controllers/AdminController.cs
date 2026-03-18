@@ -107,6 +107,13 @@ namespace Institute.API.Controllers
             return Ok(new { message = "Certificate uploaded successfully" });
         }
 
+        [HttpGet("enrollments-with-certificates")]
+        public async Task<ActionResult<IReadOnlyList<EnrollmentWithCertificateDto>>>GetEnrollmentsWithCertificates()
+        {
+            var result = await _adminService.GetEnrollmentsWithCertificatesAsync();
+            return Ok(result);
+        }
+
         [HttpPatch("enrollments/{id}/attendance")]
         public async Task<IActionResult> UpdateAttendance(int id, [FromBody] bool attended)
         {
