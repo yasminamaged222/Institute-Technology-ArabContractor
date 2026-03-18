@@ -249,28 +249,28 @@ namespace Institute.Application.Services
             await _enrollmentRepository.SaveChangesAsync();
             return true;
         }
-        //public async Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync()
-        //{
-        //    var spec = new CertificateWithUserAndPlanworkSpec();
+        public async Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync()
+        {
+            var spec = new AllCertificateWithUserAndPlanworkSpec();
 
-        //    var certificates = await _certificateRepository.GetAllWithSpecAsync(spec);
+            var certificates = await _certificateRepository.GetAllWithSpecAsync(spec);
 
 
-        //    return certificates.Select(c => new CertificateDto
-        //    {
-        //        Id = c.Id,
-        //        UserId = c.UserId,
-        //        Username = c.User.Username,
+            return certificates.Select(c => new CertificateDto
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                Username = c.User.Username,
 
-        //        PlanworkId = c.PlanworkId,
-        //        PlanworkTitle = c.Planwork.ServiceTitle,
+                PlanworkId = c.PlanworkId,
+                PlanworkTitle = c.Planwork.ServiceTitle,
 
-        //        FileUrl = c.FileUrl,
-        //        FileName = c.FileName,
+                FileUrl = c.FileUrl,
+                FileName = c.FileName,
 
-        //        UploadedAt = c.UploadedAt
-        //    }).ToList();
-        //}
+                UploadedAt = c.UploadedAt
+            }).ToList();
+        }
 
     }
 }

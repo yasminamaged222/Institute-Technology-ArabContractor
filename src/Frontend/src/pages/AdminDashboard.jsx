@@ -32,9 +32,7 @@ const REFUND_STATUS_META = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// RTL EXPORT HELPER  ← NEW
-// Reverses headers + every row so columns appear right-to-left in all
-// export formats (Excel, PDF, Word).
+// RTL EXPORT HELPER
 // ════════════════════════════════════════════════════════════════════════════
 function rtlExport(headers, rows) {
     return {
@@ -191,7 +189,6 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
 
     drawHeader();
 
-    // # column is now LAST (index = headers.length - 1) after RTL reversal
     const hashColIndex = headers.length - 1;
 
     autoTable(doc, {
@@ -213,7 +210,6 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
             lineWidth: { bottom: 1.2, top: 0.3, left: 0.3, right: 0.3 },
         },
         alternateRowStyles: { fillColor: [240, 246, 251] },
-        // # column is now the LAST column after RTL reversal
         columnStyles: { [hashColIndex]: { cellWidth: 14, halign: 'center' } },
         margin: { top: 40, left: 8, right: 8, bottom: 16 },
 
@@ -222,7 +218,6 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
             if (!text || text.trim() === '') return;
             const { x, y, width: w, height: h } = data.cell;
             const isHeader = data.section === 'head';
-            // # column is the LAST column after RTL reversal
             const isHashCol = data.column.index === data.table.columns.length - 1;
             const cellAlign = isHashCol ? 'center' : 'right';
             const img = renderTextToImage(text, {
@@ -258,7 +253,6 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
     const reportDate = new Date().toLocaleDateString('ar-EG');
     const logoDataUrl = await getLogoBase64();
 
-    // ── resolve logo dimensions ──────────────────────────────────────────────
     let logoBase64Raw = null;
     let logoW = 90, logoH = 60;
     if (logoDataUrl) {
@@ -285,14 +279,12 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
             PageOrientation, ImageRun,
         } = docxModule;
 
-        // ── widths ───────────────────────────────────────────────────────────
         const totalDxa = 13440;
-        const hashColIdx = headers.length - 1; // # is LAST after RTL reversal
+        const hashColIdx = headers.length - 1;
         const narrowW = Math.max(600, Math.floor(totalDxa * 0.05));
         const wideW = Math.floor((totalDxa - narrowW) / Math.max(headers.length - 1, 1));
         const colWidths = headers.map((_, i) => i === hashColIdx ? narrowW : wideW);
 
-        // ── shared border style ──────────────────────────────────────────────
         const CB = {
             top: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
             bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
@@ -300,7 +292,6 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
             right: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
         };
 
-        // ── cell factory ─────────────────────────────────────────────────────
         const makeCell = (text, { isHeader = false, width, center = false, altRow = false } = {}) =>
             new TableCell({
                 width: { size: width, type: WidthType.DXA },
@@ -326,21 +317,14 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
                 })],
             });
 
-        // ── logo run ─────────────────────────────────────────────────────────
         const logoRuns = [];
         if (logoBase64Raw && ImageRun) {
             try {
-                // Convert base64 → Uint8Array (works in all browsers)
                 const binary = atob(logoBase64Raw);
                 const bytes = new Uint8Array(binary.length);
                 for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
                 logoRuns.push(
-                    new ImageRun({
-                        data: bytes,
-                        transformation: { width: logoW, height: logoH },
-                        type: 'png',
-                    }),
+                    new ImageRun({ data: bytes, transformation: { width: logoW, height: logoH }, type: 'png' }),
                     new TextRun({ text: '   ', size: 28 }),
                 );
             } catch (imgErr) {
@@ -348,7 +332,6 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
             }
         }
 
-        // ── helper: Arabic paragraph ─────────────────────────────────────────
         const arabicPara = (text, opts = {}) =>
             new Paragraph({
                 bidirectional: true,
@@ -368,21 +351,15 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
                 })],
             });
 
-        // ── build document ───────────────────────────────────────────────────
         const doc = new Document({
             sections: [{
                 properties: {
                     page: {
-                        size: {
-                            width: 15840,   // landscape A4 in DXA
-                            height: 12240,
-                            orientation: PageOrientation.LANDSCAPE,
-                        },
+                        size: { width: 15840, height: 12240, orientation: PageOrientation.LANDSCAPE },
                         margin: { top: 720, right: 720, bottom: 900, left: 720 },
                     },
                 },
                 children: [
-                    // ── title row ────────────────────────────────────────────
                     new Paragraph({
                         bidirectional: true,
                         alignment: AlignmentType.CENTER,
@@ -404,37 +381,24 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
                             })] : []),
                         ],
                     }),
-                    // ── date / record count ───────────────────────────────────
                     arabicPara(
                         `تاريخ التقرير: ${reportDate}   |   إجمالي السجلات: ${rows.length}`,
                         { size: 18, color: '555555', italic: true, spacing: { before: 100, after: 200 } },
                     ),
-                    // ── data table ───────────────────────────────────────────
                     new Table({
                         width: { size: totalDxa, type: WidthType.DXA },
                         columnWidths: colWidths,
                         rows: [
-                            // header row
                             new TableRow({
                                 tableHeader: true,
                                 children: headers.map((h, i) =>
-                                    makeCell(h, {
-                                        isHeader: true,
-                                        width: colWidths[i],
-                                        center: i === hashColIdx,
-                                    })
+                                    makeCell(h, { isHeader: true, width: colWidths[i], center: i === hashColIdx })
                                 ),
                             }),
-                            // data rows
                             ...rows.map((row, ri) =>
                                 new TableRow({
                                     children: row.map((cell, ci) =>
-                                        makeCell(cell, {
-                                            isHeader: false,
-                                            width: colWidths[ci],
-                                            center: ci === hashColIdx,
-                                            altRow: ri % 2 !== 0,
-                                        })
+                                        makeCell(cell, { isHeader: false, width: colWidths[ci], center: ci === hashColIdx, altRow: ri % 2 !== 0 })
                                     ),
                                 })
                             ),
@@ -444,21 +408,18 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
             }],
         });
 
-        // ── serialize — use toBlob in browser, toBuffer as fallback ──────────
         let blob;
         if (typeof Packer.toBlob === 'function') {
             blob = await Packer.toBlob(doc);
         } else {
             const buf = await Packer.toBuffer(doc);
-            blob = new Blob([buf], {
-                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            });
+            blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
         }
         triggerDownload(blob, filename);
 
     } catch (err) {
         console.error('[exportWord] failed:', err);
-        throw err; // re-throw so withExport() shows the error banner
+        throw err;
     }
 }
 
@@ -782,23 +743,61 @@ const AdminDashboard = () => {
         document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
     }, []);
 
+    // ════════════════════════════════════════════════════════════════════════
+    // CERT FUNCTION 1 — loadCertificatesFromApi
+    // GET /api/Admin/certificates → returns array of cert objects
+    // Each cert has: { id, userId, planworkId, fileUrl, fileName, uploadedAt, ... }
+    // We store each cert in the map under TWO keys:
+    //   "userId-planworkId"  → always present, used by certRows as fallback lookup
+    //   enrollmentId string  → resolved from user data, used by certRows as primary certKey
+    // ════════════════════════════════════════════════════════════════════════
+    // ─────────────────────────────────────────────────────────────────────
+    // CERT APIs (from Swagger):
+    //  GET  /api/Admin/certificates              → list all, returns [{id,userId,planworkId,fileUrl,fileName,uploadedAt}]
+    //  GET  /api/Admin/certificates/{uid}/{pwid} → single cert JSON (same shape)
+    //  POST /api/Admin/upload                    → form-data: UserId, PlanworkId, File  (new upload)
+    //  PUT  /api/Admin/certificates              → form-data: CertificateId, File       (update existing)
+    //  DEL  /api/Admin/certificates/{id}         → delete by cert id
+    // ─────────────────────────────────────────────────────────────────────
+
     const loadCertificatesFromApi = useCallback(async (usersArr) => {
         try {
             const res = await authFetch(`${API_BASE}/Admin/certificates`);
             if (!res.ok) { console.warn('[Certs] GET /Admin/certificates failed:', res.status); return; }
             const json = await res.json();
             const certsArr = Array.isArray(json) ? json : json?.data ?? json?.certificates ?? json?.result ?? [];
+
+            // Build lookup: "userId-planworkId" → enrollmentId string
             const upToEid = {};
-            (usersArr ?? usersDataRef.current).forEach(u => { (u.enrolledCourses ?? []).forEach(c => { if (c.enrollmentId != null && c.id != null) upToEid[`${u.id}-${c.id}`] = String(c.enrollmentId); }); });
+            (usersArr ?? usersDataRef.current).forEach(u => {
+                (u.enrolledCourses ?? []).forEach(c => {
+                    if (c.enrollmentId != null && c.id != null) {
+                        upToEid[`${u.id}-${c.id}`] = String(c.enrollmentId);
+                    }
+                });
+            });
+
             const map = {};
             certsArr.forEach(raw => {
                 const cert = normalizeCert(raw);
                 if (!cert.id) return;
                 const fallbackKey = `${cert.userId}-${cert.planworkId}`;
                 const eidKey = upToEid[fallbackKey];
-                const certEntry = { certId: cert.id, name: cert.fileName, url: cert.fileUrl, rawUrl: cert.rawFileUrl, size: null, fromDb: true, uploadedAt: cert.uploadedAt };
-                if (eidKey) map[eidKey] = certEntry;
+                // Store userId+planworkId on entry so viewCert & update can use them
+                const certEntry = {
+                    certId: cert.id,
+                    name: cert.fileName,
+                    url: cert.fileUrl,
+                    rawUrl: cert.rawFileUrl,
+                    size: null,
+                    fromDb: true,
+                    uploadedAt: cert.uploadedAt,
+                    userId: cert.userId,
+                    planworkId: cert.planworkId,
+                };
+                // Store under BOTH keys so any lookup hits
                 map[fallbackKey] = certEntry;
+                if (eidKey) map[eidKey] = certEntry;
             });
             setCertificates(map);
         } catch (err) { console.warn('[Certs] loadCertificatesFromApi failed:', err.message); }
@@ -823,66 +822,162 @@ const AdminDashboard = () => {
         finally { setAttendanceSaving(p => ({ ...p, [k]: false })); }
     };
 
+    // Upload new cert:  POST /api/Admin/upload  { UserId, PlanworkId, File }
+    // Update cert:      PUT  /api/Admin/certificates  { CertificateId, File }
+    // After upload/update: GET /api/Admin/certificates/{userId}/{planworkId} to refresh state
     const handleCertFile = async (enrollmentId, userId, planworkId, file) => {
         if (!file) return;
         const eidKey = enrollmentId != null ? String(enrollmentId) : null;
         const fallbackKey = `${userId}-${planworkId}`;
         const k = eidKey ?? fallbackKey;
-        setCertUploading(p => ({ ...p, [k]: true })); setCertError(null);
+
+        setCertUploading(p => ({ ...p, [k]: true, [fallbackKey]: true }));
+        setCertError(null);
         try {
-            const fd = new FormData();
-            if (userId != null) fd.append('UserId', Number(userId));
-            if (planworkId != null) fd.append('PlanworkId', Number(planworkId));
-            if (enrollmentId != null) fd.append('EnrollmentId', Number(enrollmentId));
-            fd.append('File', file, file.name);
-            const res = await authFetchForm(`${API_BASE}/Admin/upload`, fd);
-            const rawText = await res.text();
-            if (!res.ok) {
-                let msg = `HTTP ${res.status}`; let rawMsg = '';
-                try { const j = JSON.parse(rawText); rawMsg = j?.message ?? j?.error ?? j?.title ?? j?.detail ?? ''; msg = rawMsg || msg; } catch { rawMsg = rawText.trim(); if (rawMsg && rawMsg.length < 400) msg = rawMsg; }
-                if (rawMsg.toLowerCase().includes('already') || rawMsg.toLowerCase().includes('exist') || rawMsg.toLowerCase().includes('duplicate')) { await refreshCertificates(); return; }
+            // Check if a cert already exists for this user+planwork
+            const existing = certificates[k] ?? certificates[fallbackKey] ?? (eidKey ? certificates[eidKey] : null);
+
+            let uploadRes, uploadText;
+
+            if (existing?.certId != null) {
+                // ── UPDATE: PUT /api/Admin/certificates  { CertificateId, File } ──────
+                const fd = new FormData();
+                fd.append('CertificateId', Number(existing.certId));
+                fd.append('File', file, file.name);
+                let token = null; try { token = await getToken(); } catch (_) { }
+                uploadRes = await fetch(`${API_BASE}/Admin/certificates`, {
+                    method: 'PUT',
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                    body: fd,
+                });
+                uploadText = await uploadRes.text();
+            } else {
+                // ── NEW UPLOAD: POST /api/Admin/upload  { UserId, PlanworkId, File } ──
+                const fd = new FormData();
+                if (userId != null) fd.append('UserId', Number(userId));
+                if (planworkId != null) fd.append('PlanworkId', Number(planworkId));
+                if (enrollmentId != null) fd.append('EnrollmentId', Number(enrollmentId));
+                fd.append('File', file, file.name);
+                uploadRes = await authFetchForm(`${API_BASE}/Admin/upload`, fd);
+                uploadText = await uploadRes.text();
+            }
+
+            if (!uploadRes.ok) {
+                let msg = `HTTP ${uploadRes.status}`;
+                try { const j = JSON.parse(uploadText); msg = j?.message ?? j?.error ?? j?.title ?? j?.detail ?? msg; }
+                catch { if (uploadText.trim().length < 400) msg = uploadText.trim(); }
                 throw new Error(msg);
             }
+
+            // ── Fetch fresh cert record: GET /api/Admin/certificates/{userId}/{planworkId} ──
+            // This endpoint returns JSON: { id, userId, planworkId, fileUrl, fileName, uploadedAt }
             try {
-                const certRes = await authFetch(`${API_BASE}/Admin/certificates`);
-                if (certRes.ok) {
-                    const certsJson = await certRes.json();
-                    const certsArr = Array.isArray(certsJson) ? certsJson : certsJson?.data ?? certsJson?.certificates ?? [];
-                    const found = certsArr.find(c => (c.userId ?? c.UserId) == userId && (c.planworkId ?? c.PlanworkId) == planworkId);
-                    if (found) {
-                        const cert = normalizeCert(found);
-                        const resolvedEntry = { certId: cert.id, name: cert.fileName || file.name, url: cert.fileUrl, rawUrl: cert.rawFileUrl, size: file.size, fromDb: true, uploadedAt: cert.uploadedAt };
-                        setCertificates(p => { const next = { ...p }; if (eidKey) next[eidKey] = resolvedEntry; next[fallbackKey] = resolvedEntry; return next; });
+                const metaRes = await authFetch(`${API_BASE}/Admin/certificates/${userId}/${planworkId}`);
+                if (metaRes.ok) {
+                    const metaJson = await metaRes.json();
+                    const raw = Array.isArray(metaJson) ? metaJson[0] : metaJson;
+                    if (raw) {
+                        const cert = normalizeCert(raw);
+                        const entry = {
+                            certId: cert.id,
+                            name: cert.fileName || file.name,
+                            url: cert.fileUrl,
+                            rawUrl: cert.rawFileUrl,
+                            size: file.size,
+                            fromDb: true,
+                            uploadedAt: cert.uploadedAt,
+                            userId: cert.userId ?? userId,
+                            planworkId: cert.planworkId ?? planworkId,
+                        };
+                        setCertificates(p => {
+                            const next = { ...p };
+                            next[fallbackKey] = entry;
+                            if (eidKey) next[eidKey] = entry;
+                            return next;
+                        });
+                        return;
                     }
                 }
-            } catch (fetchErr) { console.warn('[CertUpload] post-upload fetch failed:', fetchErr.message); }
-        } catch (err) { console.error('[CertUpload] failed:', err); setCertError('فشل رفع الشهادة: ' + err.message); }
-        finally { setCertUploading(p => ({ ...p, [k]: false })); setCertModal(null); }
+            } catch (fetchErr) { console.warn('[CertUpload] post-upload meta fetch failed:', fetchErr.message); }
+            // Fallback: reload all
+            await refreshCertificates();
+
+        } catch (err) {
+            console.error('[CertUpload] failed:', err);
+            setCertError('فشل رفع الشهادة: ' + err.message);
+        } finally {
+            setCertUploading(p => ({ ...p, [k]: false, [fallbackKey]: false }));
+            setCertModal(null);
+        }
     };
 
-    const viewCert = useCallback(async (certId, url, rawUrl, filename = 'certificate') => {
-        if (certId == null && !url && !rawUrl) return;
+    // View cert:
+    //  Step 1 — GET /api/Admin/certificates/{userId}/{planworkId} → JSON with fileUrl
+    //  Step 2 — Open fileUrl directly (Azure blob = self-signed URL, no auth needed)
+    //  Step 3 — If no fileUrl, try fetching with auth header
+    const viewCert = useCallback(async (certId, url, rawUrl, filename = 'certificate', userId = null, planworkId = null) => {
+        if (certId == null && !url && !rawUrl && userId == null) return;
         let token = null; try { token = await getToken(); } catch (_) { }
         const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-        const candidates = [];
-        if (certId != null) { candidates.push(`${API_BASE}/Admin/certificates/${certId}/download`); candidates.push(`${API_BASE}/Admin/certificates/${certId}/file`); }
-        if (url && url !== 'uploaded') candidates.push(url);
-        if (rawUrl && !rawUrl.startsWith('http')) candidates.push(`${API_HOST}${rawUrl}`);
-        for (const candidate of candidates) {
+
+        // Step 1: GET /api/Admin/certificates/{userId}/{planworkId} → extract fileUrl from JSON
+        let fileUrl = null;
+        if (userId != null && planworkId != null) {
             try {
-                const res = await fetch(candidate, { headers: authHeaders });
-                if (!res.ok) continue;
-                const blob = await res.blob();
-                const blobUrl = URL.createObjectURL(blob);
-                const isPdf = blob.type.includes('pdf') || (filename || '').toLowerCase().endsWith('.pdf');
-                if (isPdf) { const win = window.open('', '_blank'); if (win) { win.document.write(`<!DOCTYPE html><html><head><title>${filename || 'certificate'}</title></head><body style="margin:0"><iframe src="${blobUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`); } }
-                else { window.open(blobUrl, '_blank'); }
-                setTimeout(() => URL.revokeObjectURL(blobUrl), 90000); return;
+                const metaRes = await fetch(`${API_BASE}/Admin/certificates/${userId}/${planworkId}`, { headers: authHeaders });
+                if (metaRes.ok) {
+                    const meta = await metaRes.json();
+                    const obj = Array.isArray(meta) ? meta[0] : meta;
+                    const fu = obj?.fileUrl ?? obj?.FileUrl ?? obj?.url ?? obj?.Url ?? null;
+                    if (fu && fu !== 'uploaded') {
+                        fileUrl = fu.startsWith('http') ? fu : `${API_HOST}${fu}`;
+                    }
+                }
             } catch (_) { }
         }
+
+        // Step 2: Fallback to stored url/rawUrl
+        if (!fileUrl && url && url !== 'uploaded') fileUrl = url;
+        if (!fileUrl && rawUrl) fileUrl = rawUrl.startsWith('http') ? rawUrl : `${API_HOST}${rawUrl}`;
+
+        if (fileUrl) {
+            // Azure blob / S3 / GCS URLs are SAS-signed — open directly, no auth header
+            const isExternal = fileUrl.includes('blob.core.windows.net') ||
+                fileUrl.includes('amazonaws.com') ||
+                fileUrl.includes('storage.googleapis.com') ||
+                fileUrl.includes('cloudinary.com');
+            if (isExternal) { window.open(fileUrl, '_blank'); return; }
+
+            // Internal URL — try fetching with auth header
+            try {
+                const fileRes = await fetch(fileUrl, { headers: authHeaders });
+                if (fileRes.ok) {
+                    const ct = fileRes.headers.get('content-type') ?? '';
+                    if (!ct.includes('application/json')) {
+                        const blob = await fileRes.blob();
+                        const blobUrl = URL.createObjectURL(blob);
+                        const fname = filename || 'certificate';
+                        const isPdf = ct.includes('pdf') || blob.type.includes('pdf') || fname.toLowerCase().endsWith('.pdf');
+                        if (isPdf) {
+                            const win = window.open('', '_blank');
+                            if (win) win.document.write(`<!DOCTYPE html><html><head><title>${fname}</title></head><body style="margin:0"><iframe src="${blobUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+                        } else {
+                            window.open(blobUrl, '_blank');
+                        }
+                        setTimeout(() => URL.revokeObjectURL(blobUrl), 90000);
+                        return;
+                    }
+                }
+            } catch (_) { }
+            // Last resort: open directly
+            window.open(fileUrl, '_blank');
+            return;
+        }
+
         setCertError('تعذّر فتح الشهادة — تأكد من صلاحية الجلسة أو تواصل مع المطور');
     }, [getToken]);
 
+    // DELETE /api/Admin/certificates/{id}
     const deleteCert = useCallback(async (ck, altKey = null) => {
         const cert = certificates[ck] ?? (altKey ? certificates[altKey] : undefined);
         const certId = cert?.certId;
@@ -890,19 +985,17 @@ const AdminDashboard = () => {
         setCertDeleting(p => ({ ...p, [ck]: true })); setCertError(null);
         try {
             if (certId != null) {
-                let ok = false;
-                const endpoints = [[`${API_BASE}/Admin/certificates/${certId}`, 'DELETE'], [`${API_BASE}/Admin/certificates/${certId}/delete`, 'POST'], [`${API_BASE}/Admin/upload/${certId}`, 'DELETE']];
-                for (const [ep, method] of endpoints) {
-                    const res = await authFetch(ep, { method });
-                    if (res.ok || res.status === 404) { ok = true; break; }
-                    if (res.status !== 405) { const j = await res.json().catch(() => ({})); throw new Error(j?.message ?? j?.title ?? `HTTP ${res.status}`); }
+                const res = await authFetch(`${API_BASE}/Admin/certificates/${certId}`, { method: 'DELETE' });
+                if (!res.ok && res.status !== 404) {
+                    const j = await res.json().catch(() => ({}));
+                    throw new Error(j?.message ?? j?.title ?? `HTTP ${res.status}`);
                 }
-                if (!ok) throw new Error('لم يُعثر على نقطة نهاية للحذف');
             }
             setCertificates(p => { const n = { ...p }; delete n[ck]; if (altKey) delete n[altKey]; return n; });
         } catch (err) { console.error('[deleteCert]', err); setCertError('فشل حذف الشهادة: ' + err.message); }
         finally { setCertDeleting(p => ({ ...p, [ck]: false })); }
     }, [authFetch, certificates]);
+
 
     // ════════════════════════════════════════════════════════════════════════
     // DERIVED DATA
@@ -925,17 +1018,23 @@ const AdminDashboard = () => {
     const attRows = usersData.flatMap(u => u.enrolledCourses.filter(c => c.enrollmentId != null).map(c => ({ user: u, course: c }))).filter(r => { const mc = attCourseFilter === 'all' || r.course.id === Number(attCourseFilter); const mu = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username}`.toLowerCase().includes(attUserSearch.toLowerCase()); return mc && mu; });
     const attCount = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length;
 
+    // certRows:
+    // certKey  = "userId-planworkId" — PRIMARY, always present in cert map (from loadCertificatesFromApi)
+    // altKey   = enrollmentId string — SECONDARY fallback
+    // This guarantees certificates[certKey] hits when cert exists
     const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => {
         const matchedCourse = coursesData.find(cd => cd.title === (c._titleRaw || c.title));
         const resolvedPlanworkId = c.id ?? matchedCourse?.id ?? null;
         const eidKey = c.enrollmentId != null ? String(c.enrollmentId) : null;
         const fallbackKey = resolvedPlanworkId != null ? `${u.id}-${resolvedPlanworkId}` : null;
-        const certKey = eidKey ?? fallbackKey ?? `${u.id}-unknown`;
-        return { user: u, course: c, certKey, altKey: eidKey ? fallbackKey : null, enrollmentId: c.enrollmentId, userId: u.id, planworkId: resolvedPlanworkId };
+        // PRIMARY key = fallbackKey because cert map is indexed by "userId-planworkId"
+        const certKey = fallbackKey ?? eidKey ?? `${u.id}-unknown`;
+        const altKey = eidKey; // secondary lookup
+        return { user: u, course: c, certKey, altKey, enrollmentId: c.enrollmentId, userId: u.id, planworkId: resolvedPlanworkId };
     })).filter(r => {
         const matchSearch = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username} ${r.course.title}`.toLowerCase().includes(certSearch.toLowerCase());
         const hasCert = !!(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined));
-        const isAtt = !!attendance[r.certKey];
+        const isAtt = !!attendance[String(r.enrollmentId)];
         const matchStatus = certStatusFilter === 'all' ? true : certStatusFilter === 'uploaded' ? hasCert : certStatusFilter === 'pending' ? (!hasCert && isAtt) : certStatusFilter === 'not-attended' ? !isAtt : true;
         return matchSearch && matchStatus;
     });
@@ -967,7 +1066,7 @@ const AdminDashboard = () => {
     const paginatedRefunds = filteredRefunds.slice((refundPage - 1) * ITEMS_PER_PAGE, refundPage * ITEMS_PER_PAGE);
 
     // ════════════════════════════════════════════════════════════════════════
-    // EXPORT — all wrapped with rtlExport() for correct RTL column order
+    // EXPORT
     // ════════════════════════════════════════════════════════════════════════
     const withExport = fn => async () => {
         setExporting(true);
@@ -977,7 +1076,6 @@ const AdminDashboard = () => {
         finally { setExporting(false); }
     };
 
-    // ── Users / Courses ───────────────────────────────────────────────────
     const doExcel = withExport(async () => {
         const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
         const { headers, rows } = rtlExport(raw.headers, raw.rows);
@@ -994,7 +1092,6 @@ const AdminDashboard = () => {
         await exportWord(activeTab === 'users' ? 'تقرير-المستخدمين.docx' : 'تقرير-الدورات.docx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', 'ICEMT', headers, rows);
     });
 
-    // ── Attendance ────────────────────────────────────────────────────────
     const buildAttRows = () => {
         const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور'];
         const rows = attRows.map((r, i) => [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, attendance[String(r.course.enrollmentId)] ? 'حضر' : 'غائب']);
@@ -1004,12 +1101,11 @@ const AdminDashboard = () => {
     const doAttPDF = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-الحضور.pdf', 'تقرير الحضور', headers, rows, 'ICEMT'); });
     const doAttWord = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-الحضور.docx', 'تقرير الحضور', 'ICEMT', headers, rows); });
 
-    // ── Certificates ──────────────────────────────────────────────────────
     const buildCertRows = () => {
         const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور', 'الشهادة'];
         const rows = certRows.map((r, i) => {
             const cert = certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined);
-            const isAtt = !!attendance[r.certKey];
+            const isAtt = !!attendance[String(r.enrollmentId)];
             return [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, isAtt ? 'حضر' : 'غائب', cert ? (cert.name && cert.name !== 'uploaded' ? cert.name : 'مرفوعة') : 'لم تُرفع'];
         });
         return { headers, rows };
@@ -1018,7 +1114,6 @@ const AdminDashboard = () => {
     const doCertPDF = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-الشهادات.pdf', 'تقرير الشهادات', headers, rows, 'ICEMT'); });
     const doCertWord = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-الشهادات.docx', 'تقرير الشهادات', 'ICEMT', headers, rows); });
 
-    // ── Refunds ───────────────────────────────────────────────────────────
     const buildRefundRows = () => {
         const headers = ['#', 'رقم الطلب', 'المستخدم', 'البريد الإلكتروني', 'الدورة', 'المبلغ', 'العملة', 'الحالة', 'السبب', 'تاريخ الطلب'];
         const rows = filteredRefunds.map((r, i) => {
@@ -1065,9 +1160,6 @@ const AdminDashboard = () => {
         { label: 'المستردات', value: displayStats.refundsPending, icon: '💳', accent: '#f57c00', bg: 'linear-gradient(135deg,rgba(245,124,0,0.08) 0%,rgba(245,124,0,0.03) 100%)', border: 'rgba(245,124,0,0.18)' },
     ];
 
-    // ════════════════════════════════════════════════════════════════════════
-    // RENDER
-    // ════════════════════════════════════════════════════════════════════════
     return (
         <>
             <style>{`
@@ -1796,9 +1888,9 @@ const AdminDashboard = () => {
                             {!loading && (() => {
                                 const uploaded = certRows.filter(r => !!(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined))).length;
                                 const withUrl = certRows.filter(r => { const c = certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined); return c && c.url && c.url !== 'uploaded'; }).length;
-                                const attendedTotal = certRows.filter(r => !!attendance[r.certKey]).length;
-                                const pendingUpload = certRows.filter(r => !(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined)) && !!attendance[r.certKey]).length;
-                                const notAttended = certRows.filter(r => !attendance[r.certKey]).length;
+                                const attendedTotal = certRows.filter(r => !!attendance[String(r.enrollmentId)]).length;
+                                const pendingUpload = certRows.filter(r => !(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined)) && !!attendance[String(r.enrollmentId)]).length;
+                                const notAttended = certRows.filter(r => !attendance[String(r.enrollmentId)]).length;
                                 const pct = attendedTotal > 0 ? Math.round(uploaded / attendedTotal * 100) : 0;
                                 return (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', background: 'var(--white)', border: '1.5px solid var(--card-border)', borderRadius: 'var(--radius)', padding: '11px 18px', marginBottom: 16, boxShadow: 'var(--shadow)', fontFamily: '"Droid Arabic Kufi", serif' }}>
@@ -1830,7 +1922,8 @@ const AdminDashboard = () => {
                                                         const cert = certificates[ck] ?? (row.altKey ? certificates[row.altKey] : undefined);
                                                         const uploading = certUploading[ck];
                                                         const deleting = !!certDeleting[ck];
-                                                        const isAttended = !!attendance[ck];
+                                                        // attendance is keyed by enrollmentId
+                                                        const isAttended = !!attendance[String(row.enrollmentId)];
                                                         const canUpload = isAttended;
                                                         const hasRealUrl = cert && cert.certId != null;
                                                         const hasPlaceholder = cert && cert.certId == null;
@@ -1859,7 +1952,7 @@ const AdminDashboard = () => {
                                                                 <div className="d-cert-actions">
                                                                     {cert ? (
                                                                         <>
-                                                                            {hasRealUrl && <button className="d-cert-btn dl" onClick={() => viewCert(cert.certId, cert.url, cert.rawUrl, cert.name)}>👁 عرض</button>}
+                                                                            {hasRealUrl && <button className="d-cert-btn dl" onClick={() => viewCert(cert.certId, cert.url, cert.rawUrl, cert.name, cert.userId, cert.planworkId)}>👁 عرض</button>}
                                                                             <button className="d-cert-btn up" disabled={uploading} onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>{uploading ? '⏳' : '🔄 تحديث'}</button>
                                                                             <button className="d-cert-btn rm" disabled={deleting} onClick={() => deleteCert(ck, row.altKey)}>{deleting ? '⏳' : '🗑'}</button>
                                                                         </>
