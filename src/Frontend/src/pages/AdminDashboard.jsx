@@ -748,21 +748,7 @@ const AdminDashboard = () => {
 
     // ════════════════════════════════════════════════════════════════════════
     // CERT FUNCTION 1 — loadCertificatesFromApi
-    // GET /api/Admin/certificates → returns array of cert objects
-    // Each cert has: { id, userId, planworkId, fileUrl, fileName, uploadedAt, ... }
-    // We store each cert in the map under TWO keys:
-    //   "userId-planworkId"  → always present, used by certRows as fallback lookup
-    //   enrollmentId string  → resolved from user data, used by certRows as primary certKey
     // ════════════════════════════════════════════════════════════════════════
-    // ─────────────────────────────────────────────────────────────────────
-    // CERT APIs (from Swagger):
-    //  GET  /api/Admin/certificates              → list all, returns [{id,userId,planworkId,fileUrl,fileName,uploadedAt}]
-    //  GET  /api/Admin/certificates/{uid}/{pwid} → single cert JSON (same shape)
-    //  POST /api/Admin/upload                    → form-data: UserId, PlanworkId, File  (new upload)
-    //  PUT  /api/Admin/certificates              → form-data: CertificateId, File       (update existing)
-    //  DEL  /api/Admin/certificates/{id}         → delete by cert id
-    // ─────────────────────────────────────────────────────────────────────
-
     const loadCertificatesFromApi = useCallback(async (_usersArr) => {
         try {
             const res = await authFetch(`${API_BASE}/Admin/certificates`);
@@ -770,12 +756,8 @@ const AdminDashboard = () => {
             const json = await res.json();
             const certsArr = Array.isArray(json) ? json : json?.data ?? json?.certificates ?? json?.result ?? [];
 
-            // Index ONLY by "userId-planworkId" — this comes directly from the API response
-            // and is guaranteed to exist. certRows uses certKey = fallbackKey = "userId-planworkId"
-            // so this lookup always hits regardless of whether enrollmentId is available.
             const map = {};
             certsArr.forEach(raw => {
-                // Read all possible casings directly — ASP.NET may return PascalCase or camelCase
                 const certId = raw.id ?? raw.Id ?? null;
                 const userId = raw.userId ?? raw.UserId ?? null;
                 const planworkId = raw.planworkId ?? raw.PlanworkId ?? null;
@@ -792,7 +774,6 @@ const AdminDashboard = () => {
                     return;
                 }
 
-                // Key MUST match what certRows produces: `${Number(u.id)}-${Number(resolvedPlanworkId)}`
                 const key = `${Number(userId)}-${Number(planworkId)}`;
                 console.log('[Certs] storing key:', key, '| certId:', certId, '| file:', fileName);
                 map[key] = { certId, name: fileName, url: fileUrl, rawUrl: rawFileUrl, size: null, fromDb: true, uploadedAt, userId, planworkId };
@@ -802,7 +783,10 @@ const AdminDashboard = () => {
         } catch (err) { console.warn('[Certs] loadCertificatesFromApi failed:', err.message); }
     }, [authFetch]);
 
-    const refreshCertificates = useCallback(async () => { await loadCertificatesFromApi(); }, [loadCertificatesFromApi]);
+    // ── refreshCertificates: always re-fetches from server ──────────────────
+    const refreshCertificates = useCallback(async () => {
+        await loadCertificatesFromApi();
+    }, [loadCertificatesFromApi]);
 
     const seedAttendance = useCallback((users) => {
         const map = {};
@@ -821,24 +805,22 @@ const AdminDashboard = () => {
         finally { setAttendanceSaving(p => ({ ...p, [k]: false })); }
     };
 
-    // Upload new cert:  POST /api/Admin/upload  { UserId, PlanworkId, File }
-    // Update cert:      PUT  /api/Admin/certificates  { CertificateId, File }
-    // After upload/update: GET /api/Admin/certificates/{userId}/{planworkId} to refresh state
+    // ════════════════════════════════════════════════════════════════════════
+    // handleCertFile — auto-refreshes after every upload / update
+    // ════════════════════════════════════════════════════════════════════════
     const handleCertFile = async (enrollmentId, userId, planworkId, file) => {
         if (!file) return;
-        const eidKey = enrollmentId != null ? String(enrollmentId) : null;
         const fallbackKey = `${Number(userId)}-${Number(planworkId)}`;
 
         setCertUploading(p => ({ ...p, [fallbackKey]: true }));
         setCertError(null);
         try {
-            // cert map is indexed by fallbackKey ("userId-planworkId") — always look up by that
             const existing = certificates[fallbackKey];
 
             let uploadRes, uploadText;
 
             if (existing?.certId != null) {
-                // ── UPDATE: PUT /api/Admin/certificates  { CertificateId, File } ──────
+                // ── UPDATE: PUT /api/Admin/certificates  { CertificateId, File } ──
                 const fd = new FormData();
                 fd.append('CertificateId', Number(existing.certId));
                 fd.append('File', file, file.name);
@@ -867,32 +849,7 @@ const AdminDashboard = () => {
                 throw new Error(msg);
             }
 
-            // ── Fetch fresh cert record: GET /api/Admin/certificates/{userId}/{planworkId} ──
-            // This endpoint returns JSON: { id, userId, planworkId, fileUrl, fileName, uploadedAt }
-            try {
-                const metaRes = await authFetch(`${API_BASE}/Admin/certificates/${userId}/${planworkId}`);
-                if (metaRes.ok) {
-                    const metaJson = await metaRes.json();
-                    const raw = Array.isArray(metaJson) ? metaJson[0] : metaJson;
-                    if (raw) {
-                        const cert = normalizeCert(raw);
-                        const entry = {
-                            certId: cert.id,
-                            name: cert.fileName || file.name,
-                            url: cert.fileUrl,
-                            rawUrl: cert.rawFileUrl,
-                            size: file.size,
-                            fromDb: true,
-                            uploadedAt: cert.uploadedAt,
-                            userId: cert.userId ?? userId,
-                            planworkId: cert.planworkId ?? planworkId,
-                        };
-                        setCertificates(p => ({ ...p, [fallbackKey]: entry }));
-                        return;
-                    }
-                }
-            } catch (fetchErr) { console.warn('[CertUpload] post-upload meta fetch failed:', fetchErr.message); }
-            // Fallback: reload all
+            // ── Always refresh full cert list from server after upload/update ──
             await refreshCertificates();
 
         } catch (err) {
@@ -904,16 +861,14 @@ const AdminDashboard = () => {
         }
     };
 
-    // View cert:
-    //  Step 1 — GET /api/Admin/certificates/{userId}/{planworkId} → JSON with fileUrl
-    //  Step 2 — Open fileUrl directly (Azure blob = self-signed URL, no auth needed)
-    //  Step 3 — If no fileUrl, try fetching with auth header
+    // ════════════════════════════════════════════════════════════════════════
+    // viewCert
+    // ════════════════════════════════════════════════════════════════════════
     const viewCert = useCallback(async (certId, url, rawUrl, filename = 'certificate', userId = null, planworkId = null) => {
         if (certId == null && !url && !rawUrl && userId == null) return;
         let token = null; try { token = await getToken(); } catch (_) { }
         const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
-        // Step 1: GET /api/Admin/certificates/{userId}/{planworkId} → extract fileUrl from JSON
         let fileUrl = null;
         if (userId != null && planworkId != null) {
             try {
@@ -929,19 +884,16 @@ const AdminDashboard = () => {
             } catch (_) { }
         }
 
-        // Step 2: Fallback to stored url/rawUrl
         if (!fileUrl && url && url !== 'uploaded') fileUrl = url;
         if (!fileUrl && rawUrl) fileUrl = rawUrl.startsWith('http') ? rawUrl : `${API_HOST}${rawUrl}`;
 
         if (fileUrl) {
-            // Azure blob / S3 / GCS URLs are SAS-signed — open directly, no auth header
             const isExternal = fileUrl.includes('blob.core.windows.net') ||
                 fileUrl.includes('amazonaws.com') ||
                 fileUrl.includes('storage.googleapis.com') ||
                 fileUrl.includes('cloudinary.com');
             if (isExternal) { window.open(fileUrl, '_blank'); return; }
 
-            // Internal URL — try fetching with auth header
             try {
                 const fileRes = await fetch(fileUrl, { headers: authHeaders });
                 if (fileRes.ok) {
@@ -962,7 +914,6 @@ const AdminDashboard = () => {
                     }
                 }
             } catch (_) { }
-            // Last resort: open directly
             window.open(fileUrl, '_blank');
             return;
         }
@@ -970,7 +921,9 @@ const AdminDashboard = () => {
         setCertError('تعذّر فتح الشهادة — تأكد من صلاحية الجلسة أو تواصل مع المطور');
     }, [getToken]);
 
-    // DELETE /api/Admin/certificates/{id}
+    // ════════════════════════════════════════════════════════════════════════
+    // deleteCert — auto-refreshes after deletion
+    // ════════════════════════════════════════════════════════════════════════
     const deleteCert = useCallback(async (ck, altKey = null) => {
         const cert = certificates[ck] ?? (altKey ? certificates[altKey] : undefined);
         const certId = cert?.certId;
@@ -984,10 +937,15 @@ const AdminDashboard = () => {
                     throw new Error(j?.message ?? j?.title ?? `HTTP ${res.status}`);
                 }
             }
-            setCertificates(p => { const n = { ...p }; delete n[ck]; if (altKey) delete n[altKey]; return n; });
-        } catch (err) { console.error('[deleteCert]', err); setCertError('فشل حذف الشهادة: ' + err.message); }
-        finally { setCertDeleting(p => ({ ...p, [ck]: false })); }
-    }, [authFetch, certificates]);
+            // ── Auto-refresh from server after delete ──
+            await refreshCertificates();
+        } catch (err) {
+            console.error('[deleteCert]', err);
+            setCertError('فشل حذف الشهادة: ' + err.message);
+        } finally {
+            setCertDeleting(p => ({ ...p, [ck]: false }));
+        }
+    }, [authFetch, certificates, refreshCertificates]);
 
 
     // ════════════════════════════════════════════════════════════════════════
@@ -1011,12 +969,6 @@ const AdminDashboard = () => {
     const attRows = usersData.flatMap(u => u.enrolledCourses.filter(c => c.enrollmentId != null).map(c => ({ user: u, course: c }))).filter(r => { const mc = attCourseFilter === 'all' || r.course.id === Number(attCourseFilter); const mu = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username}`.toLowerCase().includes(attUserSearch.toLowerCase()); return mc && mu; });
     const attCount = attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length;
 
-    // certRows:
-    // certKey  = "userId-planworkId" — PRIMARY, always present in cert map (from loadCertificatesFromApi)
-    // altKey   = enrollmentId string — SECONDARY fallback
-    // This guarantees certificates[certKey] hits when cert exists
-    // Build a lookup from the cert map itself: userId → [planworkIds with certs]
-    // This lets certRows find certs for a user even when planworkId is missing from enrollment data
     const certsByUser = {};
     Object.values(certificates).forEach(ce => {
         if (!ce || ce.userId == null || ce.planworkId == null) return;
@@ -1026,7 +978,6 @@ const AdminDashboard = () => {
     });
 
     const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => {
-        // Try every possible source for planworkId
         const matchedCourse = coursesData.find(cd =>
             cd.title === (c._titleRaw || c.title) ||
             cd.title === c.title
@@ -1038,8 +989,6 @@ const AdminDashboard = () => {
             ? `${Number(u.id)}-${Number(resolvedPlanworkId)}`
             : null;
 
-        // Also search the cert map directly for this user+course title match
-        // This handles the case where planworkId is missing from enrollment data
         const userCerts = certsByUser[Number(u.id)] ?? [];
         const titleMatch = userCerts.find(ce => {
             const mc = coursesData.find(cd => Number(cd.id) === Number(ce.planworkId));
@@ -1049,7 +998,6 @@ const AdminDashboard = () => {
             ? `${Number(u.id)}-${Number(titleMatch.planworkId)}`
             : null;
 
-        // PRIMARY key: fallbackKey → titleMatchKey → eidKey
         const certKey = fallbackKey ?? titleMatchKey ?? eidKey ?? `${u.id}-unknown`;
         const altKey = certKey !== titleMatchKey ? titleMatchKey : (certKey !== eidKey ? eidKey : null);
         const finalPlanworkId = resolvedPlanworkId ?? titleMatch?.planworkId ?? null;
@@ -1896,7 +1844,7 @@ const AdminDashboard = () => {
                                         <button key={f.id} style={{ padding: '5px 12px', borderRadius: 8, border: '1.5px solid', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', transition: 'all .14s', background: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#f0fdf4' : f.id === 'pending' ? 'rgba(156,163,175,.1)' : 'var(--blue-lt)') : 'var(--bg)', borderColor: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#86efac' : f.id === 'pending' ? 'var(--gray4)' : 'rgba(8,101,168,.3)') : 'var(--gray4)', color: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#15803d' : f.id === 'pending' ? 'var(--gray2)' : 'var(--blue)') : 'var(--gray2)' }} onClick={() => setCertStatusFilter(f.id)}>{f.icon} {f.label}</button>
                                     ))}
                                 </div>
-                                <button style={{ padding: '6px 14px', borderRadius: 8, border: '1.5px solid var(--gray4)', background: 'var(--bg)', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', color: 'var(--gray2)', transition: 'all .14s', display: 'flex', alignItems: 'center', gap: 5 }} onClick={refreshCertificates} title="تحديث الشهادات من السيرفر">↻ تحديث</button>
+                                {/* ↻ Manual refresh button REMOVED — auto-refresh now happens on upload/update/delete */}
                                 <div className="d-expw" ref={exportCertRef}>
                                     <button className="d-expbtn" disabled={exporting} onClick={() => setExportCertMenuOpen(p => !p)}>{exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}</button>
                                     {exportCertMenuOpen && (
@@ -1946,7 +1894,6 @@ const AdminDashboard = () => {
                                                         const cert = certificates[ck] ?? (row.altKey ? certificates[row.altKey] : undefined);
                                                         const uploading = certUploading[ck];
                                                         const deleting = !!certDeleting[ck];
-                                                        // attendance is keyed by enrollmentId
                                                         const isAttended = !!attendance[String(row.enrollmentId)];
                                                         const canUpload = isAttended;
                                                         const hasRealUrl = cert && cert.certId != null;
