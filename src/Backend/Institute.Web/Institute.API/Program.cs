@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Institute.API.DTOs;
 using Institute.API.Helpers;
+using Institute.API.Middleware;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Application.Services;
@@ -111,7 +112,7 @@ builder.Services
 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
-    options.Authority = "https://mighty-basilisk-11.clerk.accounts.dev";
+    options.Authority = builder.Configuration["Clerk:Authority"];
 
     options.RequireHttpsMetadata = true;
 
@@ -159,6 +160,8 @@ builder.Services.AddAutoMapper(cfg =>
 var app = builder.Build();
 
 // ======= Middleware =======
+app.UseMiddleware<ExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

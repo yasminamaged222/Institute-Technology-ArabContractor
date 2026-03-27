@@ -1,3 +1,4 @@
+using AutoMapper;
 ﻿using Institute.API.DTOs;
 using Institute.Application.Interfaces.IService;
 using Microsoft.AspNetCore.Authorization;
@@ -13,27 +14,20 @@ namespace Institute.API.Controllers
     {
         private readonly ICartService _cartService;
         private readonly ICurrentUserService _currentUser;
+        private readonly IMapper _mapper;
 
-        public CartController(ICartService cartService, ICurrentUserService currentUser)
+        public CartController(ICartService cartService, ICurrentUserService currentUser, IMapper mapper)
         {
             _cartService = cartService;
             _currentUser = currentUser;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetCart()
         {
             var cart = await _cartService.GetUserCartAsync(_currentUser.UserId);
-            var result = new CartDto
-            {
-                Id = cart.Id,
-                CreatedAt = cart.CreatedAt,
-                Items = cart.Items.Select(i => new CartItemDto
-                {
-                    PlanworkId = i.PlanworkId,
-                    Price = i.Price
-                }).ToList()
-            };
+            var result = _mapper.Map<CartDto>(cart);
 
             return Ok(result);
 

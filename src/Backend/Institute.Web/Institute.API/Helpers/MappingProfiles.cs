@@ -36,6 +36,9 @@ namespace Institute.API.Helpers
     .ForMember(d => d.ImageUrl,
         o => o.MapFrom<NewsPictureUrlResolver<NewsDetailsDto>>());
 
+            CreateMap<Cart, CartDto>();
+            CreateMap<CartItem, CartItemDto>();
+
 
         }
     }
