@@ -11,10 +11,10 @@ namespace Institute.Domain.Entities
         public int Id { get; set; }
 
         public int UserId { get; set; }
-        public AppUser User { get; set; }
+        public AppUser? User { get; set; }
 
         public int PlanworkId { get; set; }
-        public Planwork Planwork { get; set; }
+        public Planwork? Planwork { get; set; }
 
         public int? OrderId { get; set; }
 
