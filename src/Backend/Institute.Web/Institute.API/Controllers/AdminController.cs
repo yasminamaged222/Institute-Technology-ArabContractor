@@ -141,6 +141,23 @@ namespace Institute.API.Controllers
 
             return Ok(result);
         }
+        [HttpGet("certificates/{planworkId}")]
+        public async Task<IActionResult> GetMyCertificate(int planworkId)
+        {
+            var clerkId = User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(clerkId))
+                return Unauthorized();
+
+            var cert = await _adminService
+                .GetCertificateByClerkIdAsync(clerkId, planworkId);
+
+            if (cert == null)
+                return NotFound();
+
+            return Ok(cert);
+        }
+
         [HttpPut("certificates")]
         public async Task<IActionResult> UpdateCertificate([FromForm] UpdateCertificateDto dto)
         {

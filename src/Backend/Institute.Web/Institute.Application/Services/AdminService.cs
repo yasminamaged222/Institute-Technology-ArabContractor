@@ -176,6 +176,36 @@ namespace Institute.Application.Services
                 UploadedAt = certificate.UploadedAt
             };
         }
+
+        public async Task<CertificateDto?> GetCertificateByClerkIdAsync(string clerkId, int planworkId)
+        {
+            // 1. get user from ClerkId
+            var user = await _userRepository
+                .GetByIdWithSpecAsync(new UserByClerkIdSpec(clerkId));
+
+            if (user == null)
+                return null;
+
+            // 2. get certificate using DB userId
+            var spec = new CertificateWithUserAndPlanworkSpec(user.Id, planworkId);
+            var certificate = await _certificateRepository.GetByIdWithSpecAsync(spec);
+
+            if (certificate == null)
+                return null;
+
+            // 3. map to DTO
+            return new CertificateDto
+            {
+                Id = certificate.Id,
+                UserId = certificate.UserId,
+                Username = certificate.User.Username,
+                PlanworkId = certificate.PlanworkId,
+                PlanworkTitle = certificate.Planwork.ServiceTitle,
+                FileUrl = certificate.FileUrl,
+                FileName = certificate.FileName,
+                UploadedAt = certificate.UploadedAt
+            };
+        }
         public async Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder)
         {
             var certificate = await _certificateRepository.GetByIdAsync(dto.CertificateId);
