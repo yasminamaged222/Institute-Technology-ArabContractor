@@ -85,7 +85,6 @@ const S = {
     pricePreview: { width: '100%', height: '200px', overflow: 'hidden', position: 'relative' },
     previewImg: { width: '100%', height: '100%', objectFit: 'cover' },
 
-    // ── Certificate ribbon on image (updated: clickable) ──────────────────
     certPreviewRibbon: {
         position: 'absolute', bottom: '12px', left: '12px',
         backgroundColor: 'rgba(124,58,237,0.92)',
@@ -113,7 +112,6 @@ const S = {
     actionBtns: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
     btnViewMyCourses: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg,#4a4a8a 0%,#7b5ea7 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '17px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif', transition: 'all 0.3s', boxShadow: '0 4px 12px rgba(74,74,138,0.3)' },
 
-    // ── Certificate button in sidebar ──────────────────────────────────────
     btnCertPreview: {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
         width: '100%', padding: '13px 24px',
@@ -144,7 +142,6 @@ const S = {
     notFoundCard: { backgroundColor: '#fff', padding: '48px', borderRadius: '12px', border: '2px solid #f0f0f0', textAlign: 'center', maxWidth: '500px' },
     btnPrimary: { display: 'inline-block', padding: '14px 32px', background: 'linear-gradient(135deg,#0865a8 0%,#f57c00 100%)', color: '#fff', textDecoration: 'none', borderRadius: '10px', marginTop: '24px', fontWeight: 'bold' },
 
-    // ── Refund modal ──────────────────────────────────────────────────────
     overlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backdropFilter: 'blur(4px)' },
     modalCard: { backgroundColor: '#fff', borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.22)', width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto', animation: 'modalSlideUp 0.3s ease-out' },
     modalHeader: { background: 'linear-gradient(135deg,#c62828 0%,#e53935 100%)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#fff', position: 'sticky', top: 0, zIndex: 1 },
@@ -173,7 +170,6 @@ const S = {
     policyBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi",serif' },
     enrollMsgBox: { padding: '12px 16px', borderRadius: '10px', fontSize: '14px', fontFamily: '"Droid Arabic Kufi",serif', lineHeight: '1.6', marginBottom: '12px', display: 'flex', alignItems: 'flex-start', gap: '8px' },
 
-    // ── Certificate modal styles ──────────────────────────────────────────
     certOverlay: {
         position: 'fixed', inset: 0,
         backgroundColor: 'rgba(10,5,30,0.75)',
@@ -308,12 +304,10 @@ async function parseServerError(res) {
 const CertificateModal = ({ cert, courseTitle, onClose }) => {
     const [iframeError, setIframeError] = useState(false);
 
-    // Determine if the cert URL looks like a PDF
-    const certUrl = cert?.url || cert?.fileUrl || cert?.path || null;
+    const certUrl = cert?.url || null;
     const certName = cert?.name || cert?.fileName || `شهادة_${courseTitle || 'الدورة'}.pdf`;
     const isPdf = certUrl && certUrl.toLowerCase().includes('.pdf');
 
-    // Close on Escape
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
         window.addEventListener('keydown', handler);
@@ -326,7 +320,6 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
         <div style={S.certOverlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
             <div style={S.certModalCard} className="cert-modal-card" dir="rtl">
 
-                {/* Header */}
                 <div style={S.certModalHeader}>
                     <div style={S.certModalHeaderIconWrap}>📜</div>
                     <div style={S.certModalTitleWrap}>
@@ -340,7 +333,6 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                     </button>
                 </div>
 
-                {/* Preview body */}
                 <div style={S.certModalBody}>
                     <div style={S.certPreviewArea}>
                         {!iframeError && isPdf ? (
@@ -351,7 +343,6 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                                 onError={() => setIframeError(true)}
                             />
                         ) : (
-                            /* Fallback: image preview or generic icon */
                             !iframeError && certUrl.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? (
                                 <img
                                     src={certUrl}
@@ -372,7 +363,6 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                     </div>
                 </div>
 
-                {/* Footer actions */}
                 <div style={S.certModalFooter}>
                     <div style={S.certModalInfo}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -382,27 +372,14 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                     </div>
 
                     <div style={S.certModalActions}>
-                        {/* Open in new tab */}
-                        <a
-                            href={certUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={S.btnOpenNewTab}
-                            className="btnOpenNewTab"
-                        >
+                        <a href={certUrl} target="_blank" rel="noopener noreferrer" style={S.btnOpenNewTab} className="btnOpenNewTab">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
                             </svg>
                             فتح في تبويب جديد
                         </a>
 
-                        {/* Download */}
-                        <a
-                            href={certUrl}
-                            download={certName}
-                            style={S.btnCertDownloadModal}
-                            className="btnCertDownloadModal"
-                        >
+                        <a href={certUrl} download={certName} style={S.btnCertDownloadModal} className="btnCertDownloadModal">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
                             </svg>
@@ -421,7 +398,7 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
 const CourseDetails = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const { getToken, isSignedIn, userId } = useAuth();
+    const { getToken, isSignedIn } = useAuth();   // ← removed unused userId
 
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -431,14 +408,11 @@ const CourseDetails = () => {
     const [cert, setCert] = useState(null);
     const [certLoading, setCertLoading] = useState(false);
 
-    // Certificate modal
     const [showCertModal, setShowCertModal] = useState(false);
 
-    // Free enroll state
     const [enrolling, setEnrolling] = useState(false);
     const [enrollMsg, setEnrollMsg] = useState(null);
 
-    // Refund state
     const [showRefund, setShowRefund] = useState(false);
     const [refundReason, setRefundReason] = useState('');
     const [bankName, setBankName] = useState('');
@@ -465,36 +439,43 @@ const CourseDetails = () => {
         } catch { setOwnedCourseIds(new Set()); }
     }, [isSignedIn, safeGetToken]);
 
-    // ── Certificate fetch: per-course via /Admin/certificates/{userId}/{planworkId} ──
+    // ── Certificate fetch: NEW endpoint /Admin/certificates/{planworkId} ──────
     const fetchCertForCourse = useCallback(async (courseId) => {
-        if (!isSignedIn || !userId || !courseId) return;
+        if (!isSignedIn || !courseId) return;
         setCert(null);
         setCertLoading(true);
         try {
             const token = await safeGetToken();
             if (!token) return;
-            const res = await fetch(`${API_BASE}/Admin/certificates/${userId}/${courseId}`, {
+
+            // ✅ Updated to new endpoint — no userId needed
+            const res = await fetch(`${API_BASE}/Admin/certificates/${courseId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            // 404 = cert not uploaded yet, silently ignore
+
+            // 404 means cert not uploaded yet — silently ignore
             if (!res.ok) return;
+
             const data = await res.json();
             const raw = Array.isArray(data) ? data[0] : data;
             if (!raw) return;
+
             // Resolve URL from whichever field the API uses
             const rawUrl =
                 raw.url || raw.fileUrl || raw.filePath || raw.path ||
                 raw.downloadUrl || raw.fileName || raw.filename || null;
+
             const url = rawUrl
                 ? (rawUrl.startsWith('http') ? rawUrl : `${API_BASE}/${rawUrl.replace(/^\//, '')}`)
                 : null;
+
             setCert({ ...raw, url });
         } catch {
             setCert(null);
         } finally {
             setCertLoading(false);
         }
-    }, [isSignedIn, safeGetToken, userId]);
+    }, [isSignedIn, safeGetToken]);
 
     useEffect(() => { fetchOwnedCourses(); }, [fetchOwnedCourses]);
 
@@ -571,12 +552,8 @@ const CourseDetails = () => {
             startDate, endDate, date: a.date,
             image: 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=800',
             files: (a.files || []).map(f => {
-                const rawUrl =
-                    f.url || f.link || f.path || f.fileUrl ||
-                    f.downloadUrl || f.fileName || f.filename || null;
-                const url = rawUrl
-                    ? (rawUrl.startsWith('http') ? rawUrl : `${FILES_BASE}${rawUrl}`)
-                    : null;
+                const rawUrl = f.url || f.link || f.path || f.fileUrl || f.downloadUrl || f.fileName || f.filename || null;
+                const url = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : `${FILES_BASE}${rawUrl}`) : null;
                 return { id: f.id ?? null, title: f.title || f.name || 'ملف', url };
             }),
         };
@@ -604,7 +581,7 @@ const CourseDetails = () => {
 
     const isOwned = course ? ownedCourseIds.has(course.id) : false;
 
-    // Fetch cert whenever this course is owned (fires when course loads or ownership confirmed)
+    // Fetch cert whenever this course becomes owned
     useEffect(() => {
         if (course?.id && isOwned) {
             fetchCertForCourse(course.id);
@@ -714,7 +691,6 @@ const CourseDetails = () => {
     const font = '"Droid Arabic Kufi",serif';
     const statusInfo = existingRefund ? REFUND_STATUS_MAP[existingRefund.status] : null;
 
-    // cert.url is already resolved by fetchCertForCourse
     const getCertUrl = (c) => c?.url || null;
 
     if (loading) return (
@@ -901,7 +877,6 @@ const CourseDetails = () => {
                                 <div style={S.pricePreview}>
                                     <img src={course.image} alt={course.title} style={S.previewImg} />
 
-                                    {/* ── Certificate ribbon: always visible when owned, two states ── */}
                                     {isOwned && (
                                         certLoading ? (
                                             <div style={{ ...S.certPreviewRibbon, background: 'rgba(100,100,120,0.85)', animation: 'none', cursor: 'default' }}>
@@ -942,7 +917,6 @@ const CourseDetails = () => {
                                     <div style={S.actionBtns}>
                                         {isOwned ? (
                                             <>
-                                                {/* ── Certificate button: always shown when owned ── */}
                                                 {certLoading ? (
                                                     <div style={{ ...S.btnCertPreview, opacity: 0.6, cursor: 'default', justifyContent: 'center' }}>
                                                         <svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
