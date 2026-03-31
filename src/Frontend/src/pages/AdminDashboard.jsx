@@ -1923,7 +1923,6 @@ const AdminDashboard = () => {
                                                                 <div className="d-cert-actions">
                                                                     {cert ? (
                                                                         <>
-                                                                            {hasRealUrl && <button className="d-cert-btn dl" onClick={() => viewCert(cert.certId, cert.url, cert.rawUrl, cert.name, cert.userId, cert.planworkId)}>👁 عرض</button>}
                                                                             <button className="d-cert-btn up" disabled={uploading} onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>{uploading ? '⏳' : '🔄 تحديث'}</button>
                                                                             <button className="d-cert-btn rm" disabled={deleting} onClick={() => deleteCert(ck, row.altKey)}>{deleting ? '⏳' : '🗑'}</button>
                                                                         </>

@@ -12,12 +12,6 @@ const BookIcon = () => (
     </svg>
 );
 
-const EyeIcon = () => (
-    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-);
 
 const DownloadIcon = () => (
     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -37,70 +31,6 @@ export const enrollFreeCourse = async (planworkId, getToken) => {
     return data;
 };
 
-// Certificate Preview Modal
-const CertModal = ({ cert, courseTitle, onClose }) => {
-    useEffect(() => {
-        const handler = (e) => { if (e.key === 'Escape') onClose(); };
-        window.addEventListener('keydown', handler);
-        document.body.style.overflow = 'hidden';
-        return () => {
-            window.removeEventListener('keydown', handler);
-            document.body.style.overflow = '';
-        };
-    }, [onClose]);
-
-    const certUrl = cert?.fileUrl || '';
-    const certName = cert?.name || cert?.fileName || cert?.title || 'certificate';
-    const isPdf = certUrl.toLowerCase().endsWith('.pdf');
-
-    return (
-        <div style={styles.modalOverlay} onClick={onClose}>
-            <div style={styles.modalBox} onClick={e => e.stopPropagation()}>
-                <div style={styles.modalHeader}>
-                    <div style={styles.modalTitleRow}>
-                        <span style={{ fontSize: '22px' }}>📜</span>
-                        <div>
-                            <div style={styles.modalTitle}>شهادة الإتمام</div>
-                            {courseTitle && <div style={styles.modalSubtitle}>{courseTitle}</div>}
-                        </div>
-                    </div>
-                    <button style={styles.modalClose} onClick={onClose}>
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <div style={styles.modalBody}>
-                    {isPdf ? (
-                        <iframe src={certUrl} title="شهادة" style={styles.certIframe} />
-                    ) : (
-                        <>
-                            <img
-                                src={certUrl}
-                                alt={certName}
-                                style={styles.certImg}
-                                onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                            />
-                            <div style={{ ...styles.certFallback, display: 'none' }}>
-                                <span style={{ fontSize: '64px' }}>📜</span>
-                                <p style={{ color: '#666', fontFamily: '"Droid Arabic Kufi", serif', textAlign: 'center' }}>
-                                    المعاينة غير متاحة — يمكنك تحميل الشهادة مباشرةً
-                                </p>
-                            </div>
-                        </>
-                    )}
-                </div>
-                <div style={styles.modalFooter}>
-                    <a href={certUrl} download={certName} target="_blank" rel="noopener noreferrer" style={styles.modalDownloadBtn}>
-                        <DownloadIcon />
-                        <span>تحميل الشهادة</span>
-                    </a>
-                    <button style={styles.modalCancelBtn} onClick={onClose}>إغلاق</button>
-                </div>
-            </div>
-        </div>
-    );
-};
 
 // Main Component
 const MyCourses = () => {
@@ -118,8 +48,6 @@ const MyCourses = () => {
     const [certificates, setCertificates] = useState({});
     // per-course loading state while fetching cert
     const [certsLoading, setCertsLoading] = useState({});
-    // cert open in preview modal: { cert, courseTitle }
-    const [previewCert, setPreviewCert] = useState(null);
 
     const userName = user?.firstName || user?.fullName?.split(' ')[0] || '';
 
@@ -160,42 +88,24 @@ const MyCourses = () => {
     // NEW API: GET /api/Admin/certificates/{planworkId}  (no userId needed)
     const fetchCertForCourse = useCallback(async (planworkId) => {
         if (!isSignedIn) return;
-
         setCertsLoading(prev => ({ ...prev, [planworkId]: true }));
-
         try {
             const token = await getToken();
-
             const res = await fetch(
                 `${API_BASE}/Admin/certificates/${planworkId}`,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-
             if (!res.ok) {
                 setCertificates(prev => ({ ...prev, [planworkId]: null }));
                 return;
             }
-
             const data = await res.json();
-
-            let cert = null;
-
-            if (Array.isArray(data)) {
-                // ناخد أحدث شهادة (آخر واحدة)
-                cert = data[data.length - 1];
-            } else {
-                cert = data;
-            }
-
-            // 🔥 أهم حاجة: نعتمد على fileUrl بس
-            const url = cert?.fileUrl;
-
-            setCertificates(prev => ({
-                ...prev,
-                [planworkId]: url ? cert : null
-            }));
-
-        } catch (err) {
+            // normalise: may be array or single object
+            const cert = Array.isArray(data) ? data[0] : data;
+            // verify a usable URL field exists
+            const url = cert?.url || cert?.fileUrl || cert?.filePath || cert?.path || null;
+            setCertificates(prev => ({ ...prev, [planworkId]: url ? cert : null }));
+        } catch {
             setCertificates(prev => ({ ...prev, [planworkId]: null }));
         } finally {
             setCertsLoading(prev => ({ ...prev, [planworkId]: false }));
@@ -257,15 +167,6 @@ const MyCourses = () => {
                         <span style={styles.breadcrumbCurrent}>دوراتي التدريبية</span>
                     </div>
                 </div>
-
-                {/* Cert Preview Modal */}
-                {previewCert && (
-                    <CertModal
-                        cert={previewCert.cert}
-                        courseTitle={previewCert.courseTitle}
-                        onClose={() => setPreviewCert(null)}
-                    />
-                )}
 
                 <SignedOut>
                     <div style={styles.authGate}>
@@ -375,7 +276,6 @@ const MyCourses = () => {
                                             onHover={() => setHoveredCard(course.id)}
                                             onLeave={() => setHoveredCard(null)}
                                             navigate={navigate}
-                                            onPreview={() => setPreviewCert({ cert, courseTitle: course.title })}
                                         />
                                     );
                                 })}
@@ -391,7 +291,7 @@ const MyCourses = () => {
 // Course Card
 const CourseCard = ({
     course, cert, certUrl, hasCert, isCertLoading,
-    hovered, onHover, onLeave, navigate, onPreview
+    hovered, onHover, onLeave, navigate
 }) => {
     const certName = cert?.name || cert?.fileName || cert?.title || 'certificate';
 
@@ -414,15 +314,8 @@ const CourseCard = ({
                 <span style={{ ...styles.badge, ...(course.isFree ? styles.badgeFree : styles.badgePaid) }}>
                     ✅ {course.isFree ? 'مجاني - مسجل' : 'مسجل'}
                 </span>
-                {/* Cert ribbon on card image — clickable to open preview */}
                 {hasCert && (
-                    <button
-                        style={styles.certRibbon}
-                        title="اضغط لمعاينة شهادتك"
-                        onClick={e => { e.stopPropagation(); onPreview(); }}
-                    >
-                        📜 شهادة
-                    </button>
+                    <div style={styles.certRibbon}>📜 شهادة جاهزة</div>
                 )}
             </div>
 
@@ -476,30 +369,20 @@ const CourseCard = ({
                         </span>
                     </div>
 
-                    {/* Preview + Download — only when cert exists */}
+                    {/* Download — only when cert exists */}
                     {hasCert && !isCertLoading && (
-                        <div style={styles.certBtnRow}>
-                            <button
-                                className="mc-cert-preview-btn"
-                                style={styles.certPreviewBtn}
-                                onClick={e => { e.stopPropagation(); onPreview(); }}
-                            >
-                                <EyeIcon />
-                                <span>معاينة</span>
-                            </button>
-                            <a
-                                href={certUrl}
-                                download={certName}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mc-cert-download-btn"
-                                style={styles.certDownloadBtn}
-                                onClick={e => e.stopPropagation()}
-                            >
-                                <DownloadIcon />
-                                <span>تحميل</span>
-                            </a>
-                        </div>
+                        <a
+                            href={certUrl}
+                            download={certName}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mc-cert-download-btn"
+                            style={styles.certDownloadBtnFull}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <DownloadIcon />
+                            <span>تحميل الشهادة</span>
+                        </a>
                     )}
                 </div>
 
@@ -575,7 +458,6 @@ const styles = {
     badge: { position: 'absolute', top: '12px', right: '12px', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
     badgePaid: { backgroundColor: '#0865a8', color: '#fff', boxShadow: '0 2px 8px rgba(8,101,168,0.35)' },
     badgeFree: { backgroundColor: '#1a7a4a', color: '#fff', boxShadow: '0 2px 8px rgba(26,122,74,0.35)' },
-    certRibbon: { position: 'absolute', bottom: '12px', left: '12px', backgroundColor: 'rgba(124,58,237,0.9)', backdropFilter: 'blur(6px)', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', color: '#fff', boxShadow: '0 2px 8px rgba(124,58,237,0.4)', border: '1.5px solid rgba(255,255,255,0.3)', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi", serif', transition: 'all 0.2s' },
     cardBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 },
     cardTitle: { fontSize: '16px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 },
     metaRow: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#555', fontFamily: '"Droid Arabic Kufi", serif' },
@@ -584,8 +466,7 @@ const styles = {
     certSection: { borderRadius: '12px', border: '1.5px solid', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px' },
     certSectionHeader: { display: 'flex', alignItems: 'center', gap: '8px' },
     certSectionTitle: { fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
-    certBtnRow: { display: 'flex', gap: '8px' },
-    certPreviewBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 10px', backgroundColor: '#ffffff', color: '#7c3aed', border: '1.5px solid #c4b5fd', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', transition: 'all 0.2s ease' },
+    certDownloadBtnFull: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', textDecoration: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(124,58,237,0.3)', transition: 'all 0.2s ease' },
     certDownloadBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 10px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', textDecoration: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(124,58,237,0.3)', transition: 'all 0.2s ease' },
     ctaBtn: { marginTop: 'auto', width: '100%', padding: '12px 20px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' },
     ctaBtnHover: { transform: 'translateY(-2px)', boxShadow: '0 6px 18px rgba(8,101,168,0.32)' },
@@ -601,27 +482,12 @@ const styles = {
     authGateSub: { fontSize: '15px', color: '#666', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
     btnBrowse: { marginTop: '4px', width: '100%', padding: '10px 24px', backgroundColor: 'transparent', color: '#888', border: '1.5px solid #ddd', borderRadius: '10px', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer' },
     // Modal
-    modalOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
-    modalBox: { backgroundColor: '#fff', borderRadius: '20px', width: '100%', maxWidth: '780px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden', animation: 'modalIn 0.25s ease-out' },
-    modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1.5px solid #f0e6ff', background: 'linear-gradient(135deg, #faf5ff 0%, #fff 100%)', flexShrink: 0 },
-    modalTitleRow: { display: 'flex', alignItems: 'center', gap: '12px' },
-    modalTitle: { fontSize: '18px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif' },
     modalSubtitle: { fontSize: '12px', color: '#888', fontFamily: '"Droid Arabic Kufi", serif', marginTop: '2px', maxWidth: '400px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' },
-    modalClose: { width: '36px', height: '36px', borderRadius: '50%', border: '1.5px solid #e0e0e0', backgroundColor: '#f5f5f5', color: '#555', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-    modalBody: { flex: 1, overflow: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fafafa', minHeight: '280px', gap: '16px' },
-    certIframe: { width: '100%', height: '520px', border: 'none', borderRadius: '8px' },
-    certImg: { maxWidth: '100%', maxHeight: '520px', borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.12)' },
-    certFallback: { flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '40px', textAlign: 'center' },
-    modalFooter: { display: 'flex', gap: '12px', padding: '16px 24px', borderTop: '1.5px solid #f0e6ff', justifyContent: 'center', flexShrink: 0 },
-    modalDownloadBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '11px 28px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', borderRadius: '10px', fontSize: '14px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', textDecoration: 'none', boxShadow: '0 4px 12px rgba(124,58,237,0.35)' },
-    modalCancelBtn: { padding: '11px 28px', backgroundColor: '#f5f5f5', color: '#555', border: '1.5px solid #e0e0e0', borderRadius: '10px', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer' },
 };
 
 const css = `
   * { font-family: "Droid Arabic Kufi", serif !important; box-sizing: border-box; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  @keyframes modalIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-  .mc-cert-preview-btn:hover { background-color: #f3e8ff !important; border-color: #a78bfa !important; }
   .mc-cert-download-btn:hover { opacity: 0.9; transform: translateY(-1px); }
   @media (max-width: 640px) {
     .mc-hero { padding-top: 100px !important; }
