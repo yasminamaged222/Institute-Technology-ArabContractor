@@ -1,90 +1,121 @@
-import React from "react";
-import './vision_goals.css'
+import React, { useEffect } from "react";
+import './vision_goals.css';
 import { FaHardHat, FaCalendarAlt, FaUsers, FaLaptop, FaGraduationCap, FaCogs } from 'react-icons/fa';
 import img2 from '/images/vision.jfif';
 import img1 from '../../assets/img1.jpg';
-import { useEffect } from "react";
 
 function Vision_goals() {
+
     useEffect(() => {
-        document.title = '      الرؤية والأهداف - المعهد التكنولوجي لهندسة التشييد والإدارة';
+        document.title = 'الرؤية والأهداف - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
+
     return (
-        <div>
-            {/* Fixed Overview Bar */}
-            <div className="overview_intro" style={{
-                position: 'fixed',
-                top: '70px',
-                background: '#F5F7E1',
-                width: '100%',
-                zIndex: '40',
-                borderBottom: '1px solid #d1d5db',
-                padding: '0.75rem 1.25rem'
-            }}>
-                <span className="overview">
-                    <a href="/" className="btn_go_home">الصفحة الرئيسية</a> - الرؤية والأهداف
-                </span>
-            </div>
+        <div className="page-root-vision" style={{ fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif' }}>
 
-            {/* Vision & Mission Section with Image 1 */}
-            <div className="container" style={{ marginTop: '120px' }}>
-                <div className="content-wrapper">
-                    <div className="vision-mission-container">
-                        {/* Image 1 with Overlay */}
-                        <div className="image-container">
-                            <img
-                                src={img1}
-                                alt="Vision and Mission"
-                                className="main-image"
-                            />
-                            <div className="image-overlay">
-                                <h1 className="overlay-title">الرؤية والرسالة</h1>
-                            </div>
-                        </div>
-
-                        {/* Vision and Mission Grid */}
-                        <div className="vision-mission-grid">
-                            {/* الرؤية (Vision) */}
-                            <div className="vision-section">
-                                <h2 className="section-title text-right">الرؤية</h2>
-                                <p className="text-content text-right">
-                                    تحقيق الــريـــادة فــي التعليـــم والتدريب المهني محلياً وإقليمياً، وتوفير الدعم التدريبي للعاملين بالشركة.
-                                </p>
-                            </div>
-
-                            {/* الرسالة (Mission) */}
-                            <div className="mission-section">
-                                <h2 className="section-title text-right">الرسالة</h2>
-                                <p className="text-content text-right">إعداد وتأهيل أجيال من الكوادر المهنية المتميزة لتلبية متطلبات الشركة وسوق العمل من خلال بيئة تدريبية مثالية طبقاً لمعايير الجودة.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+            {/* ══════════════════════════════════════
+                FIXED OVERVIEW BAR
+                Kept exactly as requested — inline styles preserved
+            ══════════════════════════════════════ */}
+            <div className="top-100 fixed left-0 z-50 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2">
+                <div className="text-center">
+                    <span className="text-base" style={{ fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif' }}>
+                        <a href="/" className="ml-3 text-gray-700 hover:text-gray-900" style={{ fontWeight: 700 }}>
+                            الصفحة الرئيسية
+                        </a>
+                        <span className="text-gray-500"> - </span>
+                        <span className="mr-3 text-gray-700">الرؤية والأهداف</span>
+                    </span>
                 </div>
             </div>
 
-            {/* Strategy Section with Image 2 */}
-            <div className="strategy-container container">
-                <div className="content-wrapper">
-                    <div className="strategy-wrapper">
-                        {/* Image 2 */}
+            {/* ══════════════════════════════════════
+                HERO
+            ══════════════════════════════════════ */}
+            <section className="vision-hero">
+                <div className="vision-hero-accent" />
+                <div className="vision-hero-content">
+                    <span className="vision-hero-eyebrow">المعهد التكنولوجي لهندسة التشييد والإدارة</span>
+                    <h1 className="vision-hero-title">
+                        الرؤية <em>والأهداف</em>
+                    </h1>
+                </div>
+            </section>
+
+            {/* ══════════════════════════════════════
+                SECTION 1 — VISION & MISSION
+                white bg → diagonal blue cut at bottom
+            ══════════════════════════════════════ */}
+            <section className="vision-mission-section">
+                <div className="section-inner">
+                    <div className="vision-mission-container">
+
+                        {/* Image */}
                         <div className="image-container">
                             <img
-                                src={img2}
-                                alt="Strategy"
+                                src={img1}
+                                alt="الرؤية والرسالة"
                                 className="main-image"
                             />
                             <div className="image-overlay">
-                                <h1 className="overlay-title">إستراتيجية العمل</h1>
+                                <h2 className="overlay-title">الرؤية والرسالة</h2>
                             </div>
                         </div>
 
-                        {/* Strategy Section */}
+                        {/* Vision + Mission cards */}
+                        <div className="vision-mission-grid">
+
+                            <div className="vision-section">
+                                <h2 className="section-title text-right">الرؤية</h2>
+                                <p className="text-content text-right">
+                                    تحقيق الريادة في التعليم والتدريب المهني محليًا وإقليميًا،
+                                    وتوفير الدعم التدريبي للعاملين بالشركة.
+                                </p>
+                            </div>
+
+                            <div className="mission-section">
+                                <h2 className="section-title text-right">الرسالة</h2>
+                                <p className="text-content text-right">
+                                    إعداد وتأهيل أجيال من الكوادر المهنية المتميزة لتلبية متطلبات الشركة
+                                    وسوق العمل من خلال بيئة تدريبية مثالية طبقًا لمعايير الجودة.
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ══════════════════════════════════════
+                SECTION 2 — STRATEGY
+                blue bg, diagonal top, diagonal bottom into gray
+            ══════════════════════════════════════ */}
+            <section className="strategy-container">
+                <div className="section-inner">
+                    <div className="strategy-wrapper">
+
+                        {/* Image */}
+                        <div className="image-container">
+                            <img
+                                src={img2}
+                                alt="إستراتيجية العمل"
+                                className="main-image"
+                            />
+                            <div className="image-overlay">
+                                <h2 className="overlay-title">إستراتيجية العمل</h2>
+                            </div>
+                        </div>
+
+                        {/* Strategy items */}
                         <div className="strategy-section">
-                            <h2 className="section-title text-center">إستراتيجية العمل</h2>
+                            <span className="section-label">خططنا وتوجهاتنا</span>
+                            <h2 className="section-heading text-right">
+                                إستراتيجية <span>العمل</span>
+                            </h2>
+                            <div className="heading-bar" />
 
                             <div className="strategy-items">
-                                {/* Strategy Item 1 */}
+
                                 <div className="strategy-item">
                                     <div className="icon-box">
                                         <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -93,10 +124,11 @@ function Vision_goals() {
                                         </svg>
                                     </div>
                                     <p className="strategy-text text-right">
-اعداد اجيال من الكوادر المؤهلين في بيئة مبتكرة و داعمة بتمتعون بالتميز التقني و المهارات القيادية والمهارات العملية                                    </p>
+                                        إعداد أجيال من الكوادر المؤهلين في بيئة مبتكرة وداعمة يتمتعون
+                                        بالتميز التقني والمهارات القيادية والمهارات العملية.
+                                    </p>
                                 </div>
 
-                                {/* Strategy Item 2 */}
                                 <div className="strategy-item">
                                     <div className="icon-box">
                                         <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -104,10 +136,11 @@ function Vision_goals() {
                                         </svg>
                                     </div>
                                     <p className="strategy-text text-right">
-الارتقاء بالدور القيادي للمعهد في مجال التعليم الفني و التطوير للمساهمة في تنمية اقتصاد المعرفة من خلال اقامة شراكات مجتمعية فاعلة                                    </p>
+                                        الارتقاء بالدور القيادي للمعهد في مجال التعليم الفني والتطوير
+                                        للمساهمة في تنمية اقتصاد المعرفة من خلال إقامة شراكات مجتمعية فاعلة.
+                                    </p>
                                 </div>
 
-                                {/* Strategy Item 3 */}
                                 <div className="strategy-item">
                                     <div className="icon-box">
                                         <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -115,10 +148,11 @@ function Vision_goals() {
                                         </svg>
                                     </div>
                                     <p className="strategy-text text-right">
-تعزيز دور المعهد من خلال تقديم برامج و خدمات و دراسات معتمدة محليآ و عالميآ لتحقق تطلعات العملاء و تستجيب لمتغيرات سوق العمل                                    </p>
+                                        تعزيز دور المعهد من خلال تقديم برامج وخدمات ودراسات معتمدة
+                                        محليًا وعالميًا تستجيب لمتغيرات سوق العمل.
+                                    </p>
                                 </div>
 
-                                {/* Strategy Item 4 */}
                                 <div className="strategy-item">
                                     <div className="icon-box">
                                         <svg className="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -127,30 +161,35 @@ function Vision_goals() {
                                         </svg>
                                     </div>
                                     <p className="strategy-text text-right">
-ضمان تقديم كافة الخدمات وفق معايير الجودة و الكفاءة العالمية وترسيخ ثقافة الابتكار في بيئة العمل المؤسسي                                    </p>
+                                        ضمان تقديم كافة الخدمات وفق معايير الجودة والكفاءة العالمية
+                                        وترسيخ ثقافة الابتكار في بيئة العمل المؤسسي.
+                                    </p>
                                 </div>
+
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            {/* Goals Section - Separate Section */}
-            <div className="goals-container" style={{ marginTop: '4rem' }}>
+            {/* ══════════════════════════════════════
+                SECTION 3 — GOALS
+                gray bg, diagonal top, black cut at bottom
+            ══════════════════════════════════════ */}
+            <section className="goals-container">
                 <div className="goals-wrapper">
-                  
 
-                    {/* Goals Title */}
                     <div className="goals-title-section">
-                        <h2 className="goals-title">الأهداف</h2>
+                        <h2 className="goals-title">
+                            <em>الأهداف</em>
+                        </h2>
                         <p className="goals-subtitle">
                             يهدف المعهد لتطوير مستوى العاملين من خلال:
                         </p>
                     </div>
 
-                    {/* Bottom Section - Three Boxes */}
                     <div className="bottom-boxes">
-                        {/* Box 3 */}
+
                         <div className="goal-box">
                             <div className="goal-icon">
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="icon-svg">
@@ -158,12 +197,11 @@ function Vision_goals() {
                                 </svg>
                             </div>
                             <p className="goal-text">
-                                إيجاد فرص للتعاون مع الجهات ذات الصلة مثل الجامعات ومعاهد البحوث والهيئات الدولية.
-
+                                إيجاد فرص للتعاون مع الجهات ذات الصلة مثل الجامعات ومعاهد البحوث
+                                والهيئات الدولية.
                             </p>
                         </div>
 
-                        {/* Box 4 */}
                         <div className="goal-box">
                             <div className="goal-icon">
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="icon-svg">
@@ -171,12 +209,10 @@ function Vision_goals() {
                                 </svg>
                             </div>
                             <p className="goal-text">
-                                ربط المسار المهنى للمشرف و العامل الحرفى بخطط التدريب الفنية.
-
+                                ربط المسار المهنى للمشرف والعامل الحرفى بخطط التدريب الفنية.
                             </p>
                         </div>
 
-                        {/* Box 5 */}
                         <div className="goal-box">
                             <div className="goal-icon">
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="icon-svg">
@@ -184,13 +220,14 @@ function Vision_goals() {
                                 </svg>
                             </div>
                             <p className="goal-text">
-                                إعداد و تأهيل قيادات الصف الثاني بالشركة (قادة المستقبل).
-
+                                إعداد وتأهيل قيادات الصف الثاني بالشركة (قادة المستقبل).
                             </p>
                         </div>
+
                     </div>
                 </div>
-            </div>
+            </section>
+
         </div>
     );
 }

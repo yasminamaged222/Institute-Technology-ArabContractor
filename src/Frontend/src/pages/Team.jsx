@@ -7,12 +7,13 @@ const Team = () => {
     const accentColor = "#f57c00";
     const globalFont = '"Droid Arabic Kufi", serif';
 
+    const chairman = {
+        name: "أحمد العصار",
+        role: "رئيس مجلس الإدارة",
+        image: "/images/team4.jpg",
+    };
+
     const teamMembers = [
-        {
-            name: "أحمد العصار",
-            role: "رئيس مجلس الإدارة",
-            image: "/images/team4.jpg",
-        },
         {
             name: "شريف حمدي",
             role: "مدير المعهد",
@@ -30,21 +31,24 @@ const Team = () => {
         },
     ];
 
-    const MemberCard = ({ member }) => (
+    const MemberCard = ({ member, large = false }) => (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             style={{
                 width: "100%",
-                maxWidth: "280px",
+                maxWidth: large ? "320px" : "280px",
                 backgroundColor: "#fff",
                 borderRadius: "16px",
                 overflow: "hidden",
-                boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                boxShadow: large
+                    ? "0 10px 30px rgba(8,101,168,0.18)"
+                    : "0 6px 18px rgba(0,0,0,0.08)",
                 display: "flex",
                 flexDirection: "column",
                 fontFamily: globalFont,
+                border: large ? `2px solid ${accentColor}` : "none",
             }}
         >
             <div style={{ position: "relative", paddingTop: "100%" }}>
@@ -77,7 +81,7 @@ const Team = () => {
             <div style={{ padding: "0 12px 20px", textAlign: "center" }}>
                 <h3
                     style={{
-                        fontSize: "1.05rem",
+                        fontSize: large ? "1.2rem" : "1.05rem",
                         fontWeight: "bold",
                         marginBottom: "6px",
                         color: primaryColor,
@@ -102,20 +106,17 @@ const Team = () => {
     );
 
     useEffect(() => {
-        document.title = '   فريق العمل - المعهد التكنولوجي لهندسة التشييد والإدارة';
+        document.title = 'فريق العمل - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
     return (
         <div style={{ direction: "rtl", fontFamily: globalFont }}>
 
-            {/* Fixed Overview Bar — SAME STYLE & COLORS */}
+            {/* Fixed Overview Bar */}
             <div className="fixed left-0 top-[70px] z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2 font-['Droid_Arabic_Kufi']">
                 <div className="text-center">
                     <span className="text-base">
-                        <a
-                            href="/"
-                            className="ml-3 text-gray-700 hover:text-gray-900"
-                        >
+                        <a href="/" className="ml-3 text-gray-700 hover:text-gray-900">
                             الصفحة الرئيسية
                         </a>
                         <span className="text-gray-500">-</span>
@@ -129,11 +130,12 @@ const Team = () => {
                 style={{
                     backgroundColor: "#f3f5f8",
                     minHeight: "100vh",
-                    padding: "140px 16px 60px", // navbar + overview
+                    padding: "140px 16px 60px",
                     fontFamily: globalFont,
                 }}
             >
                 <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
+
                     {/* Header */}
                     <div style={{ textAlign: "center", marginBottom: "50px" }}>
                         <h1
@@ -148,11 +150,39 @@ const Team = () => {
                         </h1>
                         <p style={{ color: "#666", fontSize: "0.95rem" }}>
                             لدينا فريق عمل على أعلى مستوى من الكفاءة والخبرة
-
                         </p>
                     </div>
 
-                    {/* Grid */}
+                    {/* Chairman — top row, centered */}
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            marginBottom: "30px",
+                        }}
+                    >
+                        <MemberCard member={chairman} large={true} />
+                    </div>
+
+                    {/* Divider / connector hint */}
+                    <div
+                        style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            marginBottom: "30px",
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: "2px",
+                                height: "40px",
+                                backgroundColor: accentColor,
+                                opacity: 0.5,
+                            }}
+                        />
+                    </div>
+
+                    {/* Team — bottom row */}
                     <div
                         style={{
                             display: "grid",

@@ -441,7 +441,7 @@ const Footer = () => {
                                 fontSize: '0.9rem'
                             }}
                         >
-                            Designed by Yasmina Maged, Samir Yousri & Ahmed Taha
+                            Designed by Eng.Yasmina Maged, Samir Yousri & Ahmed Taha
                         </Typography>
                     </Box>
 

@@ -44,7 +44,6 @@ export default function TechnicalEducationAlt() {
                     box-sizing: border-box;
                 }
 
-                /* Fixed Navigation Bar */
                 .tech-fixed-bar {
                     position: fixed;
                     top: 0;
@@ -82,14 +81,12 @@ export default function TechnicalEducationAlt() {
                     color: #666;
                 }
 
-                /* Main Content Container */
                 .tech-main-container {
                     max-width: 1400px;
                     margin: 0 auto;
-                    padding: 120px 5% 60px; /* Top padding accounts for fixed bar */
+                    padding: 120px 5% 60px;
                 }
 
-                /* Cards General Styling */
                 .tech-card {
                     background: #fff;
                     border-radius: 18px;
@@ -100,7 +97,6 @@ export default function TechnicalEducationAlt() {
                     transition: transform var(--transition-speed), box-shadow var(--transition-speed);
                 }
 
-                /* Header Card */
                 .tech-header-card {
                     padding: 40px 30px;
                     text-align: center;
@@ -134,7 +130,6 @@ export default function TechnicalEducationAlt() {
                     margin: 0 auto;
                 }
 
-                /* Axis/Role Card */
                 .tech-role-card {
                     padding: 30px;
                 }
@@ -168,7 +163,7 @@ export default function TechnicalEducationAlt() {
                     margin-top: 4px;
                 }
 
-                /* Grid Layouts */
+                /* ✅ FIXED: Always 2 columns grid */
                 .tech-grid {
                     display: grid;
                     gap: 25px;
@@ -176,14 +171,14 @@ export default function TechnicalEducationAlt() {
                 }
 
                 .tech-grid-2 {
-                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    grid-template-columns: repeat(2, 1fr);
                 }
 
-                /* School Cards */
                 .school-card {
                     padding: 25px;
                     border-top: 4px solid var(--primary-color);
                     height: 100%;
+                    margin-bottom: 0;
                 }
 
                 .school-card:hover {
@@ -205,7 +200,6 @@ export default function TechnicalEducationAlt() {
                     margin: 0;
                 }
 
-                /* Image Cards */
                 .image-card {
                     height: clamp(250px, 40vh, 450px);
                     cursor: pointer;
@@ -222,7 +216,6 @@ export default function TechnicalEducationAlt() {
                     transform: scale(1.05);
                 }
 
-                /* Modal Styles */
                 .tech-modal-overlay {
                     position: fixed;
                     inset: 0;
@@ -284,20 +277,16 @@ export default function TechnicalEducationAlt() {
                     text-align: center;
                 }
 
-                /* Media Queries for Specific Adjustments */
-                
-                /* Large Screens (1920px+) */
                 @media (min-width: 1920px) {
                     .tech-main-container {
                         max-width: 1600px;
                     }
                     .tech-grid-2 {
-                        grid-template-columns: repeat(2, 1fr);
                         gap: 40px;
                     }
                 }
 
-                /* Tablets and below (768px) */
+                /* ✅ Stack to 1 column on mobile */
                 @media (max-width: 768px) {
                     .tech-main-container {
                         padding-top: 100px;
@@ -310,7 +299,6 @@ export default function TechnicalEducationAlt() {
                     }
                 }
 
-                /* Small Phones (300px - 480px) */
                 @media (max-width: 480px) {
                     .tech-main-container {
                         padding: 90px 15px 40px;
@@ -331,7 +319,6 @@ export default function TechnicalEducationAlt() {
                     }
                 }
 
-                /* Ultra Small Screens (300px) */
                 @media (max-width: 320px) {
                     .tech-title {
                         font-size: 1.3rem;
@@ -342,7 +329,7 @@ export default function TechnicalEducationAlt() {
                 }
             `}</style>
 
-            <nav className="tech-fixed-bar" style={{top:70}}>
+            <nav className="tech-fixed-bar" style={{ top: 70 }}>
                 <div className="tech-fixed-bar-content">
                     <a href="/" className="tech-nav-link">الصفحة الرئيسية</a>
                     <span className="tech-nav-sep">-</span>
@@ -380,7 +367,7 @@ export default function TechnicalEducationAlt() {
                     </ul>
                 </section>
 
-                {/* Schools Grid */}
+                {/* Schools Grid — ✅ now always 2×2 */}
                 <section className="tech-grid tech-grid-2">
                     <SchoolCard
                         title="مدرسة المعدات الثقيلة الصناعية بالإسماعيلية"
@@ -415,7 +402,6 @@ export default function TechnicalEducationAlt() {
                 </section>
             </main>
 
-            {/* Modal */}
             {modalImage && (
                 <div className="tech-modal-overlay" onClick={closeModal}>
                     <div className="tech-modal-content" onClick={e => e.stopPropagation()}>
