@@ -117,7 +117,6 @@ async function exportExcel(filename, reportTitle, headers, rows) {
     XLSX.writeFile(wb2, filename);
 }
 
-// ── Arabic-safe canvas text renderer ─────────────────────────────────────────
 function renderTextToImage(text, { fontSize = 12, bold = false, color = '#111111', width = 200, height = 30, bgColor = null, align = 'right' } = {}) {
     const scale = 3;
     const canvas = document.createElement('canvas');
@@ -196,23 +195,11 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
         head: [headers],
         body: rows.map(r => r.map(c => String(c ?? ''))),
         theme: 'grid',
-        styles: {
-            font: 'helvetica', fontSize: 0.01,
-            textColor: [255, 255, 255, 0],
-            cellPadding: { top: 2, bottom: 2, left: 2, right: 2 },
-            lineColor: [218, 218, 218], lineWidth: 0.3,
-            minCellHeight: 10, valign: 'middle',
-        },
-        headStyles: {
-            fillColor: BLUE, textColor: [255, 255, 255, 0],
-            minCellHeight: 12,
-            lineColor: ORANGE,
-            lineWidth: { bottom: 1.2, top: 0.3, left: 0.3, right: 0.3 },
-        },
+        styles: { font: 'helvetica', fontSize: 0.01, textColor: [255, 255, 255, 0], cellPadding: { top: 2, bottom: 2, left: 2, right: 2 }, lineColor: [218, 218, 218], lineWidth: 0.3, minCellHeight: 10, valign: 'middle' },
+        headStyles: { fillColor: BLUE, textColor: [255, 255, 255, 0], minCellHeight: 12, lineColor: ORANGE, lineWidth: { bottom: 1.2, top: 0.3, left: 0.3, right: 0.3 } },
         alternateRowStyles: { fillColor: [240, 246, 251] },
         columnStyles: { [hashColIndex]: { cellWidth: 14, halign: 'center' } },
         margin: { top: 40, left: 8, right: 8, bottom: 16 },
-
         didDrawCell: (data) => {
             const text = String(data.cell.raw ?? '');
             if (!text || text.trim() === '') return;
@@ -220,17 +207,9 @@ async function exportPDF(filename, reportTitle, headers, rows, subtitle = '') {
             const isHeader = data.section === 'head';
             const isHashCol = data.column.index === data.table.columns.length - 1;
             const cellAlign = isHashCol ? 'center' : 'right';
-            const img = renderTextToImage(text, {
-                fontSize: isHeader ? 10 : 9,
-                bold: isHeader,
-                color: isHeader ? '#FFFFFF' : '#1A1A1A',
-                width: Math.max(Math.round(w * 3.8), 50),
-                height: Math.max(Math.round(h * 3.8), 20),
-                align: cellAlign,
-            });
+            const img = renderTextToImage(text, { fontSize: isHeader ? 10 : 9, bold: isHeader, color: isHeader ? '#FFFFFF' : '#1A1A1A', width: Math.max(Math.round(w * 3.8), 50), height: Math.max(Math.round(h * 3.8), 20), align: cellAlign });
             try { doc.addImage(img, 'PNG', x + 0.5, y + 0.3, w - 1, h - 0.6); } catch (_) { }
         },
-
         didDrawPage: (data) => {
             if (data.pageNumber > 1) drawHeader();
             const pCount = doc.internal.getNumberOfPages();
@@ -259,13 +238,7 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
         logoBase64Raw = logoDataUrl.split(',')[1];
         await new Promise(res => {
             const img = new Image();
-            img.onload = () => {
-                if (img.naturalHeight > 0) {
-                    logoH = 60;
-                    logoW = Math.round((img.naturalWidth / img.naturalHeight) * logoH);
-                }
-                res();
-            };
+            img.onload = () => { if (img.naturalHeight > 0) { logoH = 60; logoW = Math.round((img.naturalWidth / img.naturalHeight) * logoH); } res(); };
             img.onerror = res;
             img.src = logoDataUrl;
         });
@@ -273,11 +246,7 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
 
     try {
         const docxModule = await import('docx');
-        const {
-            Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-            AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign,
-            PageOrientation, ImageRun,
-        } = docxModule;
+        const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, AlignmentType, WidthType, ShadingType, BorderStyle, VerticalAlign, PageOrientation, ImageRun } = docxModule;
 
         const totalDxa = 13440;
         const hashColIdx = headers.length - 1;
@@ -285,35 +254,19 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
         const wideW = Math.floor((totalDxa - narrowW) / Math.max(headers.length - 1, 1));
         const colWidths = headers.map((_, i) => i === hashColIdx ? narrowW : wideW);
 
-        const CB = {
-            top: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
-            bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
-            left: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
-            right: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' },
-        };
+        const CB = { top: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, bottom: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, left: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' }, right: { style: BorderStyle.SINGLE, size: 4, color: 'D5E8F0' } };
 
         const makeCell = (text, { isHeader = false, width, center = false, altRow = false } = {}) =>
             new TableCell({
                 width: { size: width, type: WidthType.DXA },
-                shading: {
-                    fill: isHeader ? '0865A8' : altRow ? 'F0F6FB' : 'FFFFFF',
-                    type: ShadingType.CLEAR,
-                },
+                shading: { fill: isHeader ? '0865A8' : altRow ? 'F0F6FB' : 'FFFFFF', type: ShadingType.CLEAR },
                 borders: CB,
                 margins: { top: 80, bottom: 80, left: 120, right: 120 },
                 verticalAlign: VerticalAlign.CENTER,
                 children: [new Paragraph({
                     bidirectional: true,
                     alignment: center ? AlignmentType.CENTER : AlignmentType.RIGHT,
-                    children: [new TextRun({
-                        text: String(text ?? ''),
-                        bold: isHeader,
-                        color: isHeader ? 'FFFFFF' : '1A1A1A',
-                        size: isHeader ? 22 : 20,
-                        rtl: true,
-                        font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
-                        language: { value: 'ar-SA', eastAsia: 'ar-SA' },
-                    })],
+                    children: [new TextRun({ text: String(text ?? ''), bold: isHeader, color: isHeader ? 'FFFFFF' : '1A1A1A', size: isHeader ? 22 : 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { value: 'ar-SA', eastAsia: 'ar-SA' } })],
                 })],
             });
 
@@ -323,85 +276,34 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
                 const binary = atob(logoBase64Raw);
                 const bytes = new Uint8Array(binary.length);
                 for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                logoRuns.push(
-                    new ImageRun({ data: bytes, transformation: { width: logoW, height: logoH }, type: 'png' }),
-                    new TextRun({ text: '   ', size: 28 }),
-                );
-            } catch (imgErr) {
-                console.warn('[exportWord] logo embed failed:', imgErr);
-            }
+                logoRuns.push(new ImageRun({ data: bytes, transformation: { width: logoW, height: logoH }, type: 'png' }), new TextRun({ text: '   ', size: 28 }));
+            } catch (imgErr) { console.warn('[exportWord] logo embed failed:', imgErr); }
         }
 
         const arabicPara = (text, opts = {}) =>
             new Paragraph({
-                bidirectional: true,
-                alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT,
-                spacing: opts.spacing,
-                shading: opts.shading,
-                border: opts.border,
-                children: [new TextRun({
-                    text,
-                    bold: opts.bold || false,
-                    italics: opts.italic || false,
-                    color: opts.color || '111111',
-                    size: opts.size || 20,
-                    rtl: true,
-                    font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
-                    language: { value: 'ar-SA', eastAsia: 'ar-SA' },
-                })],
+                bidirectional: true, alignment: opts.center ? AlignmentType.CENTER : AlignmentType.RIGHT,
+                spacing: opts.spacing, shading: opts.shading, border: opts.border,
+                children: [new TextRun({ text, bold: opts.bold || false, italics: opts.italic || false, color: opts.color || '111111', size: opts.size || 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { value: 'ar-SA', eastAsia: 'ar-SA' } })],
             });
 
         const doc = new Document({
             sections: [{
-                properties: {
-                    page: {
-                        size: { width: 15840, height: 12240, orientation: PageOrientation.LANDSCAPE },
-                        margin: { top: 720, right: 720, bottom: 900, left: 720 },
-                    },
-                },
+                properties: { page: { size: { width: 15840, height: 12240, orientation: PageOrientation.LANDSCAPE }, margin: { top: 720, right: 720, bottom: 900, left: 720 } } },
                 children: [
                     new Paragraph({
-                        bidirectional: true,
-                        alignment: AlignmentType.CENTER,
+                        bidirectional: true, alignment: AlignmentType.CENTER,
                         shading: { fill: '0865A8', type: ShadingType.CLEAR },
                         border: { bottom: { style: BorderStyle.THICK, size: 18, color: 'F57C00', space: 6 } },
                         spacing: { before: 0, after: 80 },
-                        children: [
-                            ...logoRuns,
-                            new TextRun({
-                                text: reportTitle,
-                                color: 'FFFFFF', bold: true, size: 28, rtl: true,
-                                font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
-                                language: { value: 'ar-SA', eastAsia: 'ar-SA' },
-                            }),
-                            ...(subtitle ? [new TextRun({
-                                text: `  —  ${subtitle}`,
-                                color: 'D0E8FF', size: 20, rtl: true,
-                                font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' },
-                            })] : []),
-                        ],
+                        children: [...logoRuns, new TextRun({ text: reportTitle, color: 'FFFFFF', bold: true, size: 28, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' }, language: { value: 'ar-SA', eastAsia: 'ar-SA' } }), ...(subtitle ? [new TextRun({ text: `  —  ${subtitle}`, color: 'D0E8FF', size: 20, rtl: true, font: { ascii: 'Arial', hAnsi: 'Arial', cs: 'Arial' } })] : [])],
                     }),
-                    arabicPara(
-                        `تاريخ التقرير: ${reportDate}   |   إجمالي السجلات: ${rows.length}`,
-                        { size: 18, color: '555555', italic: true, spacing: { before: 100, after: 200 } },
-                    ),
+                    arabicPara(`تاريخ التقرير: ${reportDate}   |   إجمالي السجلات: ${rows.length}`, { size: 18, color: '555555', italic: true, spacing: { before: 100, after: 200 } }),
                     new Table({
-                        width: { size: totalDxa, type: WidthType.DXA },
-                        columnWidths: colWidths,
+                        width: { size: totalDxa, type: WidthType.DXA }, columnWidths: colWidths,
                         rows: [
-                            new TableRow({
-                                tableHeader: true,
-                                children: headers.map((h, i) =>
-                                    makeCell(h, { isHeader: true, width: colWidths[i], center: i === hashColIdx })
-                                ),
-                            }),
-                            ...rows.map((row, ri) =>
-                                new TableRow({
-                                    children: row.map((cell, ci) =>
-                                        makeCell(cell, { isHeader: false, width: colWidths[ci], center: ci === hashColIdx, altRow: ri % 2 !== 0 })
-                                    ),
-                                })
-                            ),
+                            new TableRow({ tableHeader: true, children: headers.map((h, i) => makeCell(h, { isHeader: true, width: colWidths[i], center: i === hashColIdx })) }),
+                            ...rows.map((row, ri) => new TableRow({ children: row.map((cell, ci) => makeCell(cell, { isHeader: false, width: colWidths[ci], center: ci === hashColIdx, altRow: ri % 2 !== 0 })) })),
                         ],
                     }),
                 ],
@@ -409,18 +311,10 @@ async function exportWord(filename, reportTitle, subtitle, headers, rows) {
         });
 
         let blob;
-        if (typeof Packer.toBlob === 'function') {
-            blob = await Packer.toBlob(doc);
-        } else {
-            const buf = await Packer.toBuffer(doc);
-            blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-        }
+        if (typeof Packer.toBlob === 'function') { blob = await Packer.toBlob(doc); }
+        else { const buf = await Packer.toBuffer(doc); blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }); }
         triggerDownload(blob, filename);
-
-    } catch (err) {
-        console.error('[exportWord] failed:', err);
-        throw err;
-    }
+    } catch (err) { console.error('[exportWord] failed:', err); throw err; }
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -436,11 +330,7 @@ function resolveCertUrl(url) {
 
 function fmtDate(val) {
     if (!val) return '';
-    try {
-        const d = new Date(val);
-        if (isNaN(d.getTime())) return String(val);
-        return d.toISOString().split('T')[0];
-    } catch { return String(val); }
+    try { const d = new Date(val); if (isNaN(d.getTime())) return String(val); return d.toISOString().split('T')[0]; } catch { return String(val); }
 }
 
 function toStatusKey(s) {
@@ -732,8 +622,6 @@ const AdminDashboard = () => {
 
     useEffect(() => { if (activeTab === 'refunds') fetchRefunds(); }, [activeTab, fetchRefunds]);
     useEffect(() => { if (activeTab === 'refunds') fetchRefunds(refundStatusFilter); }, [refundStatusFilter]); // eslint-disable-line
-
-    // Auto-refresh certs from GET /api/Admin/certificates whenever the tab is opened
     useEffect(() => { if (activeTab === 'certificates') refreshCertificates(); }, [activeTab]); // eslint-disable-line
 
     useEffect(() => {
@@ -746,16 +634,12 @@ const AdminDashboard = () => {
         document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
     }, []);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // CERT FUNCTION 1 — loadCertificatesFromApi
-    // ════════════════════════════════════════════════════════════════════════
     const loadCertificatesFromApi = useCallback(async (_usersArr) => {
         try {
             const res = await authFetch(`${API_BASE}/Admin/certificates`);
             if (!res.ok) { console.warn('[Certs] GET /Admin/certificates failed:', res.status); return; }
             const json = await res.json();
             const certsArr = Array.isArray(json) ? json : json?.data ?? json?.certificates ?? json?.result ?? [];
-
             const map = {};
             certsArr.forEach(raw => {
                 const certId = raw.id ?? raw.Id ?? null;
@@ -765,28 +649,16 @@ const AdminDashboard = () => {
                 const fileName = raw.fileName ?? raw.FileName ?? (rawFileUrl ? rawFileUrl.split('/').pop().split('?')[0] : 'certificate');
                 const uploadedAt = fmtDate(raw.uploadedAt ?? raw.UploadedAt ?? null);
                 let fileUrl = null;
-                if (rawFileUrl && rawFileUrl !== 'uploaded') {
-                    fileUrl = rawFileUrl.startsWith('http') ? rawFileUrl : `${API_HOST}${rawFileUrl}`;
-                }
-
-                if (!certId || userId == null || planworkId == null) {
-                    console.warn('[Certs] skipping — missing fields. raw:', JSON.stringify(raw));
-                    return;
-                }
-
+                if (rawFileUrl && rawFileUrl !== 'uploaded') { fileUrl = rawFileUrl.startsWith('http') ? rawFileUrl : `${API_HOST}${rawFileUrl}`; }
+                if (!certId || userId == null || planworkId == null) { console.warn('[Certs] skipping — missing fields. raw:', JSON.stringify(raw)); return; }
                 const key = `${Number(userId)}-${Number(planworkId)}`;
-                console.log('[Certs] storing key:', key, '| certId:', certId, '| file:', fileName);
                 map[key] = { certId, name: fileName, url: fileUrl, rawUrl: rawFileUrl, size: null, fromDb: true, uploadedAt, userId, planworkId };
             });
-            console.log('[Certs] total certs loaded:', Object.keys(map).length, '| keys:', Object.keys(map));
             setCertificates(map);
         } catch (err) { console.warn('[Certs] loadCertificatesFromApi failed:', err.message); }
     }, [authFetch]);
 
-    // ── refreshCertificates: always re-fetches from server ──────────────────
-    const refreshCertificates = useCallback(async () => {
-        await loadCertificatesFromApi();
-    }, [loadCertificatesFromApi]);
+    const refreshCertificates = useCallback(async () => { await loadCertificatesFromApi(); }, [loadCertificatesFromApi]);
 
     const seedAttendance = useCallback((users) => {
         const map = {};
@@ -805,34 +677,22 @@ const AdminDashboard = () => {
         finally { setAttendanceSaving(p => ({ ...p, [k]: false })); }
     };
 
-    // ════════════════════════════════════════════════════════════════════════
-    // handleCertFile — auto-refreshes after every upload / update
-    // ════════════════════════════════════════════════════════════════════════
     const handleCertFile = async (enrollmentId, userId, planworkId, file) => {
         if (!file) return;
         const fallbackKey = `${Number(userId)}-${Number(planworkId)}`;
-
         setCertUploading(p => ({ ...p, [fallbackKey]: true }));
         setCertError(null);
         try {
             const existing = certificates[fallbackKey];
-
             let uploadRes, uploadText;
-
             if (existing?.certId != null) {
-                // ── UPDATE: PUT /api/Admin/certificates  { CertificateId, File } ──
                 const fd = new FormData();
                 fd.append('CertificateId', Number(existing.certId));
                 fd.append('File', file, file.name);
                 let token = null; try { token = await getToken(); } catch (_) { }
-                uploadRes = await fetch(`${API_BASE}/Admin/certificates`, {
-                    method: 'PUT',
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                    body: fd,
-                });
+                uploadRes = await fetch(`${API_BASE}/Admin/certificates`, { method: 'PUT', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: fd });
                 uploadText = await uploadRes.text();
             } else {
-                // ── NEW UPLOAD: POST /api/Admin/upload  { UserId, PlanworkId, File } ──
                 const fd = new FormData();
                 if (userId != null) fd.append('UserId', Number(userId));
                 if (planworkId != null) fd.append('PlanworkId', Number(planworkId));
@@ -841,17 +701,13 @@ const AdminDashboard = () => {
                 uploadRes = await authFetchForm(`${API_BASE}/Admin/upload`, fd);
                 uploadText = await uploadRes.text();
             }
-
             if (!uploadRes.ok) {
                 let msg = `HTTP ${uploadRes.status}`;
                 try { const j = JSON.parse(uploadText); msg = j?.message ?? j?.error ?? j?.title ?? j?.detail ?? msg; }
                 catch { if (uploadText.trim().length < 400) msg = uploadText.trim(); }
                 throw new Error(msg);
             }
-
-            // ── Always refresh full cert list from server after upload/update ──
             await refreshCertificates();
-
         } catch (err) {
             console.error('[CertUpload] failed:', err);
             setCertError('فشل رفع الشهادة: ' + err.message);
@@ -861,14 +717,10 @@ const AdminDashboard = () => {
         }
     };
 
-    // ════════════════════════════════════════════════════════════════════════
-    // viewCert
-    // ════════════════════════════════════════════════════════════════════════
     const viewCert = useCallback(async (certId, url, rawUrl, filename = 'certificate', userId = null, planworkId = null) => {
         if (certId == null && !url && !rawUrl && userId == null) return;
         let token = null; try { token = await getToken(); } catch (_) { }
         const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
-
         let fileUrl = null;
         if (userId != null && planworkId != null) {
             try {
@@ -877,23 +729,15 @@ const AdminDashboard = () => {
                     const meta = await metaRes.json();
                     const obj = Array.isArray(meta) ? meta[0] : meta;
                     const fu = obj?.fileUrl ?? obj?.FileUrl ?? obj?.url ?? obj?.Url ?? null;
-                    if (fu && fu !== 'uploaded') {
-                        fileUrl = fu.startsWith('http') ? fu : `${API_HOST}${fu}`;
-                    }
+                    if (fu && fu !== 'uploaded') { fileUrl = fu.startsWith('http') ? fu : `${API_HOST}${fu}`; }
                 }
             } catch (_) { }
         }
-
         if (!fileUrl && url && url !== 'uploaded') fileUrl = url;
         if (!fileUrl && rawUrl) fileUrl = rawUrl.startsWith('http') ? rawUrl : `${API_HOST}${rawUrl}`;
-
         if (fileUrl) {
-            const isExternal = fileUrl.includes('blob.core.windows.net') ||
-                fileUrl.includes('amazonaws.com') ||
-                fileUrl.includes('storage.googleapis.com') ||
-                fileUrl.includes('cloudinary.com');
+            const isExternal = fileUrl.includes('blob.core.windows.net') || fileUrl.includes('amazonaws.com') || fileUrl.includes('storage.googleapis.com') || fileUrl.includes('cloudinary.com');
             if (isExternal) { window.open(fileUrl, '_blank'); return; }
-
             try {
                 const fileRes = await fetch(fileUrl, { headers: authHeaders });
                 if (fileRes.ok) {
@@ -903,12 +747,8 @@ const AdminDashboard = () => {
                         const blobUrl = URL.createObjectURL(blob);
                         const fname = filename || 'certificate';
                         const isPdf = ct.includes('pdf') || blob.type.includes('pdf') || fname.toLowerCase().endsWith('.pdf');
-                        if (isPdf) {
-                            const win = window.open('', '_blank');
-                            if (win) win.document.write(`<!DOCTYPE html><html><head><title>${fname}</title></head><body style="margin:0"><iframe src="${blobUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
-                        } else {
-                            window.open(blobUrl, '_blank');
-                        }
+                        if (isPdf) { const win = window.open('', '_blank'); if (win) win.document.write(`<!DOCTYPE html><html><head><title>${fname}</title></head><body style="margin:0"><iframe src="${blobUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`); }
+                        else { window.open(blobUrl, '_blank'); }
                         setTimeout(() => URL.revokeObjectURL(blobUrl), 90000);
                         return;
                     }
@@ -917,13 +757,9 @@ const AdminDashboard = () => {
             window.open(fileUrl, '_blank');
             return;
         }
-
         setCertError('تعذّر فتح الشهادة — تأكد من صلاحية الجلسة أو تواصل مع المطور');
     }, [getToken]);
 
-    // ════════════════════════════════════════════════════════════════════════
-    // deleteCert — auto-refreshes after deletion
-    // ════════════════════════════════════════════════════════════════════════
     const deleteCert = useCallback(async (ck, altKey = null) => {
         const cert = certificates[ck] ?? (altKey ? certificates[altKey] : undefined);
         const certId = cert?.certId;
@@ -932,21 +768,14 @@ const AdminDashboard = () => {
         try {
             if (certId != null) {
                 const res = await authFetch(`${API_BASE}/Admin/certificates/${certId}`, { method: 'DELETE' });
-                if (!res.ok && res.status !== 404) {
-                    const j = await res.json().catch(() => ({}));
-                    throw new Error(j?.message ?? j?.title ?? `HTTP ${res.status}`);
-                }
+                if (!res.ok && res.status !== 404) { const j = await res.json().catch(() => ({})); throw new Error(j?.message ?? j?.title ?? `HTTP ${res.status}`); }
             }
-            // ── Auto-refresh from server after delete ──
             await refreshCertificates();
         } catch (err) {
             console.error('[deleteCert]', err);
             setCertError('فشل حذف الشهادة: ' + err.message);
-        } finally {
-            setCertDeleting(p => ({ ...p, [ck]: false }));
-        }
+        } finally { setCertDeleting(p => ({ ...p, [ck]: false })); }
     }, [authFetch, certificates, refreshCertificates]);
-
 
     // ════════════════════════════════════════════════════════════════════════
     // DERIVED DATA
@@ -978,30 +807,16 @@ const AdminDashboard = () => {
     });
 
     const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => {
-        const matchedCourse = coursesData.find(cd =>
-            cd.title === (c._titleRaw || c.title) ||
-            cd.title === c.title
-        );
+        const matchedCourse = coursesData.find(cd => cd.title === (c._titleRaw || c.title) || cd.title === c.title);
         const resolvedPlanworkId = c.id ?? matchedCourse?.id ?? null;
-
         const eidKey = c.enrollmentId != null ? String(c.enrollmentId) : null;
-        const fallbackKey = resolvedPlanworkId != null
-            ? `${Number(u.id)}-${Number(resolvedPlanworkId)}`
-            : null;
-
+        const fallbackKey = resolvedPlanworkId != null ? `${Number(u.id)}-${Number(resolvedPlanworkId)}` : null;
         const userCerts = certsByUser[Number(u.id)] ?? [];
-        const titleMatch = userCerts.find(ce => {
-            const mc = coursesData.find(cd => Number(cd.id) === Number(ce.planworkId));
-            return mc && (mc.title === (c._titleRaw || c.title) || mc.title === c.title);
-        });
-        const titleMatchKey = titleMatch
-            ? `${Number(u.id)}-${Number(titleMatch.planworkId)}`
-            : null;
-
+        const titleMatch = userCerts.find(ce => { const mc = coursesData.find(cd => Number(cd.id) === Number(ce.planworkId)); return mc && (mc.title === (c._titleRaw || c.title) || mc.title === c.title); });
+        const titleMatchKey = titleMatch ? `${Number(u.id)}-${Number(titleMatch.planworkId)}` : null;
         const certKey = fallbackKey ?? titleMatchKey ?? eidKey ?? `${u.id}-unknown`;
         const altKey = certKey !== titleMatchKey ? titleMatchKey : (certKey !== eidKey ? eidKey : null);
         const finalPlanworkId = resolvedPlanworkId ?? titleMatch?.planworkId ?? null;
-
         return { user: u, course: c, certKey, altKey, enrollmentId: c.enrollmentId, userId: u.id, planworkId: finalPlanworkId };
     })).filter(r => {
         const matchSearch = `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username} ${r.course.title}`.toLowerCase().includes(certSearch.toLowerCase());
@@ -1048,53 +863,21 @@ const AdminDashboard = () => {
         finally { setExporting(false); }
     };
 
-    const doExcel = withExport(async () => {
-        const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
-        const { headers, rows } = rtlExport(raw.headers, raw.rows);
-        await exportExcel(activeTab === 'users' ? 'المستخدمون-والدورات.xlsx' : 'الدورات-والمستخدمون.xlsx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows);
-    });
-    const doPDF = withExport(async () => {
-        const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
-        const { headers, rows } = rtlExport(raw.headers, raw.rows);
-        await exportPDF(activeTab === 'users' ? 'تقرير-المستخدمين.pdf' : 'تقرير-الدورات.pdf', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows, 'ICEMT');
-    });
-    const doWord = withExport(async () => {
-        const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses);
-        const { headers, rows } = rtlExport(raw.headers, raw.rows);
-        await exportWord(activeTab === 'users' ? 'تقرير-المستخدمين.docx' : 'تقرير-الدورات.docx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', 'ICEMT', headers, rows);
-    });
+    const doExcel = withExport(async () => { const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportExcel(activeTab === 'users' ? 'المستخدمون-والدورات.xlsx' : 'الدورات-والمستخدمون.xlsx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows); });
+    const doPDF = withExport(async () => { const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF(activeTab === 'users' ? 'تقرير-المستخدمين.pdf' : 'تقرير-الدورات.pdf', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', headers, rows, 'ICEMT'); });
+    const doWord = withExport(async () => { const raw = activeTab === 'users' ? buildUsersRows(filteredUsers) : buildCoursesRows(filteredCourses); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord(activeTab === 'users' ? 'تقرير-المستخدمين.docx' : 'تقرير-الدورات.docx', activeTab === 'users' ? 'تقرير المستخدمين والدورات' : 'تقرير الدورات والمستخدمين', 'ICEMT', headers, rows); });
 
-    const buildAttRows = () => {
-        const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور'];
-        const rows = attRows.map((r, i) => [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, attendance[String(r.course.enrollmentId)] ? 'حضر' : 'غائب']);
-        return { headers, rows };
-    };
+    const buildAttRows = () => { const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور']; const rows = attRows.map((r, i) => [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, attendance[String(r.course.enrollmentId)] ? 'حضر' : 'غائب']); return { headers, rows }; };
     const doAttExcel = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportExcel('تقرير-الحضور.xlsx', 'تقرير الحضور', headers, rows); });
     const doAttPDF = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-الحضور.pdf', 'تقرير الحضور', headers, rows, 'ICEMT'); });
     const doAttWord = withExport(async () => { const raw = buildAttRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-الحضور.docx', 'تقرير الحضور', 'ICEMT', headers, rows); });
 
-    const buildCertRows = () => {
-        const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور', 'الشهادة'];
-        const rows = certRows.map((r, i) => {
-            const cert = certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined);
-            const isAtt = !!attendance[String(r.enrollmentId)];
-            return [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, isAtt ? 'حضر' : 'غائب', cert ? (cert.name && cert.name !== 'uploaded' ? cert.name : 'مرفوعة') : 'لم تُرفع'];
-        });
-        return { headers, rows };
-    };
+    const buildCertRows = () => { const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور', 'الشهادة']; const rows = certRows.map((r, i) => { const cert = certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined); const isAtt = !!attendance[String(r.enrollmentId)]; return [i + 1, `${r.user.firstName || r.user.username} ${r.user.lastName}`.trim(), r.user.email, r.course.title, isAtt ? 'حضر' : 'غائب', cert ? (cert.name && cert.name !== 'uploaded' ? cert.name : 'مرفوعة') : 'لم تُرفع']; }); return { headers, rows }; };
     const doCertExcel = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportExcel('تقرير-الشهادات.xlsx', 'تقرير الشهادات', headers, rows); });
     const doCertPDF = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-الشهادات.pdf', 'تقرير الشهادات', headers, rows, 'ICEMT'); });
     const doCertWord = withExport(async () => { const raw = buildCertRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-الشهادات.docx', 'تقرير الشهادات', 'ICEMT', headers, rows); });
 
-    const buildRefundRows = () => {
-        const headers = ['#', 'رقم الطلب', 'المستخدم', 'البريد الإلكتروني', 'الدورة', 'المبلغ', 'العملة', 'الحالة', 'السبب', 'تاريخ الطلب'];
-        const rows = filteredRefunds.map((r, i) => {
-            const u = refundUserLookup(r.userId); const c = refundCourseLookup(r.courseId);
-            const sm = REFUND_STATUS_META[r.status] || REFUND_STATUS_META.Pending;
-            return [i + 1, r.refNumber || r.id, `${u.firstName} ${u.lastName}`.trim(), u.email, c.title, r.amount, r.currency, sm.label, r.reason || '', r.requestedAt || ''];
-        });
-        return { headers, rows };
-    };
+    const buildRefundRows = () => { const headers = ['#', 'رقم الطلب', 'المستخدم', 'البريد الإلكتروني', 'الدورة', 'المبلغ', 'العملة', 'الحالة', 'السبب', 'تاريخ الطلب']; const rows = filteredRefunds.map((r, i) => { const u = refundUserLookup(r.userId); const c = refundCourseLookup(r.courseId); const sm = REFUND_STATUS_META[r.status] || REFUND_STATUS_META.Pending; return [i + 1, r.refNumber || r.id, `${u.firstName} ${u.lastName}`.trim(), u.email, c.title, r.amount, r.currency, sm.label, r.reason || '', r.requestedAt || '']; }); return { headers, rows }; };
     const doRefundExcel = withExport(async () => { const raw = buildRefundRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportExcel('تقرير-المستردات.xlsx', 'تقرير المستردات', headers, rows); });
     const doRefundPDF = withExport(async () => { const raw = buildRefundRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportPDF('تقرير-المستردات.pdf', 'تقرير المستردات', headers, rows, 'ICEMT'); });
     const doRefundWord = withExport(async () => { const raw = buildRefundRows(); const { headers, rows } = rtlExport(raw.headers, raw.rows); await exportWord('تقرير-المستردات.docx', 'تقرير المستردات', 'ICEMT', headers, rows); });
@@ -1124,19 +907,19 @@ const AdminDashboard = () => {
     ];
 
     const STATS = [
-        { label: 'المستخدمون', value: displayStats.users, icon: '👤', accent: '#0865a8', bg: 'linear-gradient(135deg,rgba(8,101,168,0.1) 0%,rgba(8,101,168,0.04) 100%)', border: 'rgba(8,101,168,0.22)' },
-        { label: 'الدورات', value: displayStats.courses, icon: '📚', accent: '#f57c00', bg: 'linear-gradient(135deg,rgba(245,124,0,0.1) 0%,rgba(245,124,0,0.04) 100%)', border: 'rgba(245,124,0,0.22)' },
-        { label: 'التسجيلات', value: displayStats.enrollments, icon: '🔗', accent: '#0865a8', bg: 'linear-gradient(135deg,rgba(8,101,168,0.06) 0%,rgba(8,101,168,0.02) 100%)', border: 'rgba(8,101,168,0.14)' },
-        { label: 'حضروا', value: displayStats.attended, icon: '🎓', accent: '#f57c00', bg: 'linear-gradient(135deg,rgba(245,124,0,0.06) 0%,rgba(245,124,0,0.02) 100%)', border: 'rgba(245,124,0,0.14)' },
-        { label: 'الشهادات', value: displayStats.certificates, icon: '📜', accent: '#0865a8', bg: 'linear-gradient(135deg,rgba(8,101,168,0.08) 0%,rgba(8,101,168,0.03) 100%)', border: 'rgba(8,101,168,0.18)' },
-        { label: 'المستردات', value: displayStats.refundsPending, icon: '💳', accent: '#f57c00', bg: 'linear-gradient(135deg,rgba(245,124,0,0.08) 0%,rgba(245,124,0,0.03) 100%)', border: 'rgba(245,124,0,0.18)' },
+        { label: 'المستخدمون', value: displayStats.users, icon: '👤', accent: '#0865a8', lightBg: 'rgba(8,101,168,0.07)', border: 'rgba(8,101,168,0.18)' },
+        { label: 'الدورات', value: displayStats.courses, icon: '📚', accent: '#f57c00', lightBg: 'rgba(245,124,0,0.07)', border: 'rgba(245,124,0,0.18)' },
+        { label: 'التسجيلات', value: displayStats.enrollments, icon: '🔗', accent: '#0865a8', lightBg: 'rgba(8,101,168,0.07)', border: 'rgba(8,101,168,0.18)' },
+        { label: 'حضروا', value: displayStats.attended, icon: '🎓', accent: '#f57c00', lightBg: 'rgba(245,124,0,0.07)', border: 'rgba(245,124,0,0.18)' },
+        { label: 'الشهادات', value: displayStats.certificates, icon: '📜', accent: '#0865a8', lightBg: 'rgba(8,101,168,0.07)', border: 'rgba(8,101,168,0.18)' },
+        { label: 'المستردات', value: displayStats.refundsPending, icon: '💳', accent: '#f57c00', lightBg: 'rgba(245,124,0,0.07)', border: 'rgba(245,124,0,0.18)' },
     ];
 
     return (
         <>
             <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap');
-        *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
         @keyframes d-spin    { to { transform: rotate(360deg) } }
         @keyframes d-fadeUp  { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: translateY(0) } }
@@ -1154,7 +937,7 @@ const AdminDashboard = () => {
           --black:   #111827;
           --white:   #ffffff;
           --gray1: #374151; --gray2: #6b7280; --gray3: #9ca3af; --gray4: #d1d5db; --gray5: #e5e7eb;
-          --bg:    #f0f4f8;
+          --bg: #f0f4f8;
           --card-bg: #ffffff; --card-border: #e5e7eb;
           --radius: 12px;
           --shadow: 0 2px 12px rgba(8,101,168,0.07), 0 1px 3px rgba(0,0,0,0.04);
@@ -1162,74 +945,269 @@ const AdminDashboard = () => {
           --navbar-h:   ${NAVBAR_H}px;
           --overview-h: ${OVERVIEW_H}px;
           --total-offset: ${NAVBAR_H + OVERVIEW_H}px;
-          --sidebar-w:  200px;
+          --sidebar-w: 210px;
           --font: "Droid Arabic Kufi", serif;
         }
 
-        .d-root { font-family: var(--font); direction: rtl; min-height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 100%); padding-top: var(--total-offset); color: var(--black); display: flex; align-items: flex-start; }
-        ._ovr { position: fixed; top: var(--navbar-h); left: 0; z-index: 1050; width: 100%; height: var(--overview-h); background: #F5F7E1; border-bottom: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; font-family: var(--font); font-size: clamp(0.72rem, 1.3vw, 0.82rem); }
-        ._ovr a { margin-left: 6px; color: #374151; text-decoration: none; font-weight: 600; transition: color .15s; }
+        /* ── Layout shell ─────────────────────────────────────────────── */
+        .d-root {
+          font-family: var(--font);
+          direction: rtl;
+          background: linear-gradient(135deg,#f5f7fa 0%,#e8eef5 100%);
+          color: var(--black);
+
+          /* Sit below fixed navbar + overview bar */
+          margin-top: var(--total-offset);
+
+          /* Full viewport height minus offset, no extra scrollbar */
+          height: calc(100vh - var(--total-offset));
+          overflow: hidden;          /* prevent root from scrolling */
+
+          display: flex;
+          align-items: stretch;      /* sidebar & main both fill the height */
+        }
+
+        /* ── Overview breadcrumb (fixed) ─────────────────────────────── */
+        ._ovr {
+          position: fixed;
+          top: var(--navbar-h);
+          left: 0;
+          z-index: 1050;
+          width: 100%;
+          height: var(--overview-h);
+          background: #F5F7E1;
+          border-bottom: 1px solid #d1d5db;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: var(--font);
+          font-size: clamp(0.72rem,1.3vw,0.82rem);
+        }
+        ._ovr a  { margin-left: 6px; color: #374151; text-decoration: none; font-weight: 600; transition: color .15s; }
         ._ovr a:hover { color: #111827; }
         ._ovr .sep { color: #9ca3af; margin: 0 4px; }
         ._ovr .cur { margin-right: 6px; color: #374151; }
 
-        .d-sidebar { position: sticky; top: var(--total-offset); width: var(--sidebar-w); height: calc(100vh - var(--total-offset)); flex-shrink: 0; align-self: flex-start; background: var(--white); border-left: 2px solid var(--card-border); box-shadow: -2px 0 10px rgba(8,101,168,0.05); display: flex; flex-direction: column; overflow: hidden; z-index: 200; transition: width .25s ease; }
-        .d-sidebar-brand { padding: 16px 14px; border-bottom: 2px solid var(--orange); display: flex; align-items: center; gap: 10px; background: var(--blue); flex-shrink: 0; }
+        /* ── Sidebar ─────────────────────────────────────────────────── */
+        .d-sidebar {
+          width: var(--sidebar-w);
+          flex-shrink: 0;
+
+          /* Stretch full height of the flex container (= 100vh - offset) */
+          align-self: stretch;
+
+          background: var(--white);
+          border-left: 2px solid var(--card-border);
+          box-shadow: -2px 0 14px rgba(8,101,168,0.06);
+
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+
+          /* Sticky so it doesn't scroll with main content */
+          position: sticky;
+          top: 0;
+          z-index: 200;
+
+          transition: width .25s ease;
+        }
+
+        .d-sidebar-brand {
+          padding: 0 14px;
+          height: 64px;
+          border-bottom: 3px solid var(--orange);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: var(--blue);
+          flex-shrink: 0;
+        }
         .d-sb-logo { width: 34px; height: 34px; object-fit: contain; filter: brightness(0) invert(1); flex-shrink: 0; }
         .d-sb-title { min-width: 0; overflow: hidden; }
-        .d-sb-name { font-size: .84rem; font-weight: 900; color: #fff; white-space: nowrap; letter-spacing: .3px; }
-        .d-sb-sub { font-size: .6rem; color: rgba(255,255,255,.55); margin-top: 2px; white-space: nowrap; }
-        .d-sidebar-user { padding: 12px 14px; border-bottom: 1.5px solid var(--card-border); display: flex; align-items: center; gap: 10px; background: var(--blue-lt); flex-shrink: 0; }
-        .d-su-av { width: 34px; height: 34px; border-radius: 9px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 900; color: #fff; flex-shrink: 0; border: 2px solid rgba(8,101,168,.2); }
+        .d-sb-name  { font-size: .84rem; font-weight: 900; color: #fff; white-space: nowrap; letter-spacing: .3px; }
+        .d-sb-sub   { font-size: .6rem; color: rgba(255,255,255,.55); margin-top: 2px; white-space: nowrap; }
+
+        .d-sidebar-user {
+          padding: 12px 14px;
+          border-bottom: 1.5px solid var(--card-border);
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: var(--blue-lt);
+          flex-shrink: 0;
+        }
+        .d-su-av   { width: 34px; height: 34px; border-radius: 9px; background: var(--blue); display: flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 900; color: #fff; flex-shrink: 0; border: 2px solid rgba(8,101,168,.2); }
         .d-su-info { flex: 1; min-width: 0; overflow: hidden; }
         .d-su-name { font-size: .74rem; font-weight: 700; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .d-su-role { display: inline-flex; align-items: center; gap: 3px; margin-top: 2px; padding: 1px 7px; background: var(--orng-lt); border: 1px solid rgba(245,124,0,.3); border-radius: 20px; font-size: .58rem; color: var(--orange); font-weight: 700; }
-        .d-sidebar-nav { flex: 1; padding: 10px 8px; overflow-y: auto; overflow-x: hidden; }
+
+        .d-sidebar-nav {
+          flex: 1;
+          padding: 10px 8px;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
         .d-sidebar-nav::-webkit-scrollbar { width: 3px; }
         .d-sidebar-nav::-webkit-scrollbar-thumb { background: var(--gray4); border-radius: 2px; }
-        .d-nav-section { margin-bottom: 6px; }
-        .d-nav-label { font-size: .58rem; font-weight: 700; color: var(--gray3); letter-spacing: 1.2px; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; }
-        .d-nav-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 9px; border: 1.5px solid transparent; background: transparent; color: var(--gray2); font-family: var(--font); font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .16s; text-align: right; margin-bottom: 2px; white-space: nowrap; overflow: hidden; position: relative; }
-        .d-nav-btn:hover { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.15); }
-        .d-nav-btn.active { background: var(--blue-md); color: var(--blue); border-color: rgba(8,101,168,.3); }
-        .d-nav-btn.active.or { background: var(--orng-lt); color: var(--orange); border-color: rgba(245,124,0,.3); }
-        .d-nav-btn.active.gr { background: rgba(22,163,74,.1); color: #16a34a; border-color: rgba(22,163,74,.3); }
-        .d-nav-btn.active.pu { background: rgba(124,58,237,.1); color: #7c3aed; border-color: rgba(124,58,237,.3); }
-        .d-nav-btn.active.rd { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.3); }
-        .d-nav-btn.active::after { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background: var(--blue); border-radius:2px 0 0 2px; }
+
+        .d-nav-section  { margin-bottom: 6px; }
+        .d-nav-label    { font-size: .58rem; font-weight: 700; color: var(--gray3); letter-spacing: 1.2px; text-transform: uppercase; padding: 0 8px; margin-bottom: 4px; }
+
+        .d-nav-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 12px;
+          border-radius: 9px;
+          border: 1.5px solid transparent;
+          background: transparent;
+          color: var(--gray2);
+          font-family: var(--font);
+          font-size: .79rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all .16s;
+          text-align: right;
+          margin-bottom: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          position: relative;
+        }
+        .d-nav-btn:hover            { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.15); }
+        .d-nav-btn.active           { background: var(--blue-md); color: var(--blue); border-color: rgba(8,101,168,.3); }
+        .d-nav-btn.active.or        { background: var(--orng-lt); color: var(--orange); border-color: rgba(245,124,0,.3); }
+        .d-nav-btn.active.gr        { background: rgba(22,163,74,.1); color: #16a34a; border-color: rgba(22,163,74,.3); }
+        .d-nav-btn.active.pu        { background: rgba(124,58,237,.1); color: #7c3aed; border-color: rgba(124,58,237,.3); }
+        .d-nav-btn.active.rd        { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.3); }
+        .d-nav-btn.active::after    { content:''; position:absolute; right:0; top:0; bottom:0; width:3px; background:var(--blue); border-radius:2px 0 0 2px; }
         .d-nav-btn.active.or::after { background: var(--orange); }
         .d-nav-btn.active.gr::after { background: #16a34a; }
         .d-nav-btn.active.pu::after { background: #7c3aed; }
         .d-nav-btn.active.rd::after { background: #dc2626; }
-        .d-nav-icon { font-size: .9rem; flex-shrink: 0; }
-        .d-nav-label-txt { flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; }
-        .d-nav-badge { margin-right: auto; padding: 1px 6px; border-radius: 9px; font-size: .58rem; font-weight: 900; background: var(--orng-lt); color: var(--orange); border: 1px solid rgba(245,124,0,.3); flex-shrink: 0; }
+        .d-nav-icon     { font-size: .9rem; flex-shrink: 0; }
+        .d-nav-label-txt{ flex: 1; text-align: right; overflow: hidden; text-overflow: ellipsis; }
+        .d-nav-badge    { margin-right: auto; padding: 1px 6px; border-radius: 9px; font-size: .58rem; font-weight: 900; background: var(--orng-lt); color: var(--orange); border: 1px solid rgba(245,124,0,.3); flex-shrink: 0; }
         .d-nav-badge.rd { background: rgba(220,38,38,.08); color: #dc2626; border-color: rgba(220,38,38,.3); animation: d-pulse 2s ease infinite; }
-        .d-sidebar-footer { padding: 10px 12px; border-top: 1.5px solid var(--card-border); font-size: .6rem; color: var(--gray3); text-align: center; background: var(--bg); flex-shrink: 0; }
 
-        .d-main { flex: 1; min-width: 0; padding: clamp(16px,2.5vw,28px) clamp(14px,2.5vw,28px) clamp(40px,5vw,60px); animation: d-fadeUp .28s ease; }
-        .d-page-hdr { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: clamp(18px,2.5vw,28px); padding-bottom: clamp(14px,2vw,20px); border-bottom: 2px solid var(--orange); }
-        .d-page-title { font-size: clamp(1rem,2.5vw,1.4rem); font-weight: 900; color: var(--black); line-height: 1.2; }
-        .d-page-sub { font-size: clamp(.65rem,1.2vw,.74rem); color: var(--gray2); margin-top: 4px; }
+        .d-sidebar-footer {
+          padding: 10px 12px;
+          border-top: 1.5px solid var(--card-border);
+          font-size: .6rem;
+          color: var(--gray3);
+          text-align: center;
+          background: var(--bg);
+          flex-shrink: 0;
+        }
 
-        .d-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(110px,14vw,150px),1fr)); gap: clamp(8px,1.5vw,14px); margin-bottom: clamp(18px,2.5vw,26px); }
-        .d-sc { background: #ffffff; border-radius: var(--radius); padding: clamp(14px,2vw,18px) clamp(12px,2vw,16px); border: 1.5px solid var(--card-border); border-right: 4px solid transparent; box-shadow: var(--shadow); position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s; }
-        .d-sc:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-        .d-sc::after { content: attr(data-icon); position: absolute; left: -4px; bottom: -6px; font-size: clamp(1.8rem,4vw,2.5rem); opacity: .06; pointer-events: none; transform: rotate(-10deg); }
-        .d-sc-val { font-size: clamp(1.5rem,3.5vw,2rem); font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; }
-        .d-sc-lbl { font-size: clamp(.62rem,1.1vw,.7rem); margin-top: 5px; color: var(--gray2); font-weight: 700; }
-        .d-sc-bar { height: 3px; border-radius: 2px; margin-top: 10px; width: 40%; opacity: .6; }
+        /* ── Main content (scrollable) ───────────────────────────────── */
+        .d-main {
+          flex: 1;
+          min-width: 0;
+          overflow-y: auto;          /* only main scrolls */
+          padding: clamp(16px,2.5vw,28px) clamp(14px,2.5vw,28px) clamp(40px,5vw,60px);
+          animation: d-fadeUp .28s ease;
+        }
+        .d-main::-webkit-scrollbar       { width: 6px; }
+        .d-main::-webkit-scrollbar-thumb { background: var(--gray4); border-radius: 3px; }
 
+        /* ── Page header ─────────────────────────────────────────────── */
+        .d-page-hdr {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+          margin-bottom: clamp(18px,2.5vw,26px);
+          padding-bottom: clamp(14px,2vw,18px);
+          border-bottom: 3px solid var(--orange);
+        }
+        .d-page-title { font-size: clamp(1rem,2.5vw,1.35rem); font-weight: 900; color: var(--black); line-height: 1.2; }
+        .d-page-sub   { font-size: clamp(.65rem,1.2vw,.74rem); color: var(--gray2); margin-top: 4px; }
+
+        /* ── Stat cards — fill the entire row evenly ─────────────────── */
+        .d-stats {
+          display: grid;
+          /* 6 equal columns on desktop; auto-fill on small screens */
+          grid-template-columns: repeat(6, 1fr);
+          gap: clamp(10px,1.5vw,16px);
+          margin-bottom: clamp(20px,2.5vw,28px);
+        }
+        @media(max-width:1100px){ .d-stats{ grid-template-columns: repeat(3,1fr); } }
+        @media(max-width:640px) { .d-stats{ grid-template-columns: repeat(2,1fr); } }
+
+        .d-sc {
+          background: #fff;
+          border-radius: var(--radius);
+          padding: clamp(16px,2vw,22px) clamp(14px,1.8vw,18px) clamp(14px,1.8vw,18px);
+          border: 1.5px solid var(--card-border);
+          border-top: 4px solid transparent;   /* coloured top accent */
+          box-shadow: var(--shadow);
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          position: relative;
+          overflow: hidden;
+          transition: transform .2s, box-shadow .2s;
+          /* ensure card fills its grid cell */
+          min-width: 0;
+        }
+        .d-sc:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+        /* decorative watermark icon */
+        .d-sc::after {
+          content: attr(data-icon);
+          position: absolute;
+          left: -6px;
+          bottom: -8px;
+          font-size: clamp(2rem,4.5vw,3rem);
+          opacity: .055;
+          pointer-events: none;
+          transform: rotate(-12deg);
+        }
+
+        .d-sc-icon {
+          width: 38px;
+          height: 38px;
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.1rem;
+          flex-shrink: 0;
+          margin-bottom: 2px;
+        }
+
+        .d-sc-val {
+          font-size: clamp(1.7rem,3.5vw,2.2rem);
+          font-weight: 900;
+          line-height: 1;
+          font-family: 'Courier New', monospace;
+        }
+        .d-sc-lbl {
+          font-size: clamp(.65rem,1.1vw,.72rem);
+          color: var(--gray2);
+          font-weight: 700;
+        }
+        .d-sc-bar {
+          height: 3px;
+          border-radius: 2px;
+          margin-top: 6px;
+          width: 50%;
+          opacity: .55;
+        }
+
+        /* ── Toolbar ──────────────────────────────────────────────────── */
         .d-toolbar { display: flex; align-items: center; gap: clamp(6px,1.2vw,10px); flex-wrap: wrap; margin-bottom: clamp(12px,2vw,18px); background: var(--white); border: 1.5px solid var(--card-border); border-radius: var(--radius); padding: clamp(9px,1.5vw,13px) clamp(12px,2vw,16px); box-shadow: var(--shadow); }
         .d-search { flex: 1; min-width: clamp(140px,18vw,200px); position: relative; }
         .d-search input { width: 100%; padding: clamp(7px,1.2vw,10px) 36px clamp(7px,1.2vw,10px) clamp(10px,1.5vw,14px); border-radius: 9px; border: 1.5px solid var(--gray4); background: var(--bg); color: var(--black); font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); outline: none; direction: rtl; transition: border .18s, background .18s; }
         .d-search input::placeholder { color: var(--gray3); }
-        .d-search input:focus { border-color: var(--blue); background: #fff; }
+        .d-search input:focus { border-color: var(--blue); background: #fff; box-shadow: 0 0 0 3px rgba(8,101,168,0.1); }
         .d-search::after { content: '🔍'; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); font-size: .7rem; pointer-events: none; opacity: .5; }
 
         .d-expw { position: relative; }
-        .d-expbtn { display: flex; align-items: center; gap: 6px; padding: clamp(7px,1.2vw,10px) clamp(12px,2vw,18px); background: var(--orange); color: #fff; border: none; border-radius: 9px; font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .18s; box-shadow: 0 3px 10px rgba(245,124,0,.3); }
-        .d-expbtn:hover { background: #e65100; transform: translateY(-1px); }
+        .d-expbtn { display: flex; align-items: center; gap: 6px; padding: clamp(7px,1.2vw,10px) clamp(12px,2vw,18px); background: var(--orange); color: #fff; border: none; border-radius: 9px; font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); font-weight: 700; cursor: pointer; white-space: nowrap; transition: all .18s; box-shadow: 0 3px 10px rgba(245,124,0,.28); }
+        .d-expbtn:hover { background: #e65100; transform: translateY(-1px); box-shadow: 0 5px 16px rgba(245,124,0,.38); }
         .d-expbtn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
         .d-expmenu { position: absolute; top: calc(100% + 6px); left: 0; background: var(--white); border: 1.5px solid var(--card-border); border-radius: 11px; box-shadow: 0 8px 28px rgba(0,0,0,.1); overflow: hidden; z-index: 400; min-width: 185px; animation: d-slideIn .15s ease; }
         .d-expitem { display: flex; align-items: center; gap: 9px; width: 100%; padding: clamp(9px,1.8vw,12px) clamp(12px,2vw,16px); background: none; border: none; border-bottom: 1px solid var(--gray5); font-family: var(--font); font-size: clamp(.72rem,1.3vw,.8rem); font-weight: 700; color: var(--gray1); direction: rtl; cursor: pointer; transition: background .12s, color .12s; }
@@ -1238,8 +1216,8 @@ const AdminDashboard = () => {
 
         .d-filter { display: flex; align-items: center; gap: clamp(6px,1.2vw,12px); flex-wrap: wrap; background: var(--white); border: 1.5px solid var(--card-border); border-radius: var(--radius); padding: clamp(9px,1.5vw,12px) clamp(12px,2vw,16px); margin-bottom: clamp(12px,2vw,18px); box-shadow: var(--shadow); }
         .d-flbl { font-size: clamp(.68rem,1.2vw,.76rem); font-weight: 700; color: var(--gray2); white-space: nowrap; }
-        .d-fsm { font-size: clamp(.64rem,1.1vw,.7rem); color: var(--gray3); }
-        .d-fdate { padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); color: var(--black); font-family: var(--font); font-size: clamp(.7rem,1.2vw,.78rem); outline: none; direction: ltr; transition: border .18s; }
+        .d-fsm  { font-size: clamp(.64rem,1.1vw,.7rem); color: var(--gray3); }
+        .d-fdate{ padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); color: var(--black); font-family: var(--font); font-size: clamp(.7rem,1.2vw,.78rem); outline: none; direction: ltr; transition: border .18s; }
         .d-fdate:focus { border-color: var(--blue); background: #fff; }
         .d-fsel { padding: clamp(5px,1vw,8px) clamp(7px,1.2vw,11px); border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); color: var(--black); font-family: var(--font); font-size: clamp(.7rem,1.2vw,.78rem); outline: none; cursor: pointer; }
         .d-fbadge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; background: var(--orng-lt); border: 1px solid rgba(245,124,0,.3); color: var(--orange); font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; }
@@ -1248,38 +1226,53 @@ const AdminDashboard = () => {
 
         .d-err { background: #fef2f2; border: 1.5px solid rgba(220,38,38,.3); color: #dc2626; border-radius: 9px; padding: clamp(8px,1.5vw,11px) clamp(10px,2vw,14px); margin-bottom: 14px; font-size: clamp(.7rem,1.3vw,.78rem); display: flex; align-items: center; gap: 9px; }
 
+        /* ── Table card ───────────────────────────────────────────────── */
         .d-card { background: var(--white); border-radius: var(--radius); border: 1.5px solid var(--card-border); overflow: hidden; box-shadow: var(--shadow); }
         .d-tscr { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        .d-tbl { width: 100%; border-collapse: collapse; min-width: 480px; }
-        .d-tbl thead th { background: var(--blue); color: #fff; padding: clamp(10px,1.8vw,14px) clamp(10px,2vw,18px); font-family: var(--font); font-size: clamp(.68rem,1.2vw,.76rem); font-weight: 700; text-align: right; white-space: nowrap; border-bottom: 3px solid var(--orange); letter-spacing: .3px; }
+        .d-tbl  { width: 100%; border-collapse: collapse; min-width: 480px; }
+
+        .d-tbl thead th {
+          background: var(--blue);
+          color: #fff;
+          padding: clamp(12px,1.8vw,16px) clamp(10px,2vw,18px);
+          font-family: var(--font);
+          font-size: clamp(.7rem,1.2vw,.78rem);
+          font-weight: 700;
+          text-align: right;
+          white-space: nowrap;
+          border-bottom: 3px solid var(--orange);
+          letter-spacing: .3px;
+        }
         .d-tbl thead th.or { background: var(--orange); border-bottom-color: #fff3e0; }
         .d-tbl thead th.gr { background: #16a34a; border-bottom-color: #86efac; }
         .d-tbl thead th.pu { background: #7c3aed; border-bottom-color: #c4b5fd; }
         .d-tbl thead th.rd { background: #dc2626; border-bottom-color: #fca5a5; }
-        .d-tbl thead th.c { text-align: center; }
+        .d-tbl thead th.c  { text-align: center; }
+
         .d-tbl tbody tr { border-bottom: 1px solid var(--gray5); transition: background .12s; }
         .d-tbl tbody tr:last-child { border-bottom: none; }
         .d-tbl tbody tr:hover { background: var(--blue-lt); }
         .d-tbl tbody tr.xopen { background: var(--blue-lt); }
         .d-tbl tbody tr:nth-child(even) { background: #fafbfc; }
         .d-tbl tbody tr:nth-child(even):hover { background: var(--blue-lt); }
-        .d-tbl td { padding: clamp(9px,1.6vw,13px) clamp(10px,2vw,18px); font-family: var(--font); font-size: clamp(.69rem,1.25vw,.78rem); color: var(--gray1); vertical-align: middle; }
+        .d-tbl td { padding: clamp(11px,1.6vw,14px) clamp(10px,2vw,18px); font-family: var(--font); font-size: clamp(.69rem,1.25vw,.78rem); color: var(--gray1); vertical-align: middle; }
 
-        .d-av { width: clamp(28px,3.5vw,36px); height: clamp(28px,3.5vw,36px); border-radius: 9px; background: var(--blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: clamp(.58rem,1vw,.66rem); flex-shrink: 0; border: 2px solid rgba(8,101,168,.2); }
+        .d-av  { width: clamp(30px,3.5vw,38px); height: clamp(30px,3.5vw,38px); border-radius: 9px; background: var(--blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 900; font-size: clamp(.6rem,1vw,.68rem); flex-shrink: 0; border: 2px solid rgba(8,101,168,.2); }
         .d-av.or { background: var(--orange); border-color: rgba(245,124,0,.2); }
         .d-av.sm { width: 24px; height: 24px; border-radius: 7px; font-size: .58rem; }
         .d-av.rd { background: #dc2626; border-color: rgba(220,38,38,.2); }
-        .d-uc { display: flex; align-items: center; gap: 9px; }
+        .d-uc  { display: flex; align-items: center; gap: 9px; }
         .d-uname { font-weight: 700; color: var(--black); }
-        .d-cb { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; border-radius: 7px; background: var(--blue-lt); border: 1.5px solid rgba(8,101,168,.25); color: var(--blue); font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 900; padding: 0 6px; font-family: 'Courier New', monospace; }
+        .d-cb  { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 26px; border-radius: 7px; background: var(--blue-lt); border: 1.5px solid rgba(8,101,168,.25); color: var(--blue); font-size: clamp(.64rem,1.1vw,.72rem); font-weight: 900; padding: 0 6px; font-family: 'Courier New', monospace; }
         .d-cb.or { background: var(--orng-lt); border-color: rgba(245,124,0,.3); color: var(--orange); }
         .d-pill { display: inline-block; padding: 4px 12px; border-radius: 7px; font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; cursor: pointer; border: 1.5px solid rgba(8,101,168,.3); color: var(--blue); background: var(--blue-lt); user-select: none; transition: all .14s; font-family: var(--font); }
         .d-pill:hover,.d-pill.op { background: var(--blue-md); border-color: rgba(8,101,168,.55); }
         .d-pill.or { border-color: rgba(245,124,0,.3); color: var(--orange); background: var(--orng-lt); }
         .d-pill.or:hover,.d-pill.or.op { background: var(--orng-md); border-color: rgba(245,124,0,.55); }
+
         .d-xrow td { padding: 0!important; border: none; }
-        .d-xin { padding: clamp(12px,2vw,16px) clamp(14px,2.5vw,22px); display: flex; flex-wrap: wrap; gap: clamp(7px,1.3vw,11px); background: var(--blue-lt); border-top: 2px solid rgba(8,101,168,.15); }
-        .d-mc { background: var(--white); border-radius: 10px; padding: clamp(9px,1.8vw,13px) clamp(10px,2vw,14px); border: 1.5px solid var(--gray5); min-width: clamp(150px,20vw,200px); flex: 1 1 150px; max-width: 260px; transition: border-color .14s; box-shadow: var(--shadow); }
+        .d-xin  { padding: clamp(12px,2vw,16px) clamp(14px,2.5vw,22px); display: flex; flex-wrap: wrap; gap: clamp(7px,1.3vw,11px); background: var(--blue-lt); border-top: 2px solid rgba(8,101,168,.15); }
+        .d-mc   { background: var(--white); border-radius: 10px; padding: clamp(9px,1.8vw,13px) clamp(10px,2vw,14px); border: 1.5px solid var(--gray5); min-width: clamp(150px,20vw,200px); flex: 1 1 150px; max-width: 260px; transition: border-color .14s; box-shadow: var(--shadow); }
         .d-mc:hover { border-color: rgba(8,101,168,.3); }
         .d-mt { font-size: clamp(.7rem,1.25vw,.78rem); font-weight: 700; color: var(--blue); margin-bottom: 2px; }
         .d-mt.or { color: var(--orange); }
@@ -1287,13 +1280,13 @@ const AdminDashboard = () => {
         .d-md { font-size: clamp(.6rem,1vw,.66rem); color: var(--gray3); margin-top: 4px; }
 
         .d-empty { text-align: center; padding: clamp(40px,8vw,70px) 20px; }
-        .d-emi { font-size: clamp(1.8rem,4vw,2.5rem); margin-bottom: 12px; opacity: .35; }
+        .d-emi   { font-size: clamp(1.8rem,4vw,2.5rem); margin-bottom: 12px; opacity: .35; }
         .d-empty p { color: var(--gray3); font-size: clamp(.74rem,1.4vw,.82rem); }
-        .d-ld { text-align: center; padding: clamp(50px,10vw,80px) 20px; }
-        .d-sp { width: clamp(32px,4.5vw,42px); height: clamp(32px,4.5vw,42px); border: 3px solid var(--gray5); border-top-color: var(--blue); border-radius: 50%; animation: d-spin .7s linear infinite; margin: 0 auto clamp(12px,2vw,18px); }
+        .d-ld   { text-align: center; padding: clamp(50px,10vw,80px) 20px; }
+        .d-sp   { width: clamp(32px,4.5vw,42px); height: clamp(32px,4.5vw,42px); border: 3px solid var(--gray5); border-top-color: var(--blue); border-radius: 50%; animation: d-spin .7s linear infinite; margin: 0 auto clamp(12px,2vw,18px); }
         .d-ld p { color: var(--gray3); font-size: clamp(.72rem,1.3vw,.8rem); }
 
-        .d-ovl { position: fixed; inset: 0; background: rgba(245,247,250,.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
+        .d-ovl  { position: fixed; inset: 0; background: rgba(245,247,250,.85); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(6px); }
         .d-ovlb { background: var(--white); border-radius: 18px; padding: clamp(28px,5vw,44px) clamp(44px,7vw,64px); text-align: center; box-shadow: 0 16px 48px rgba(8,101,168,.18); border: 2px solid rgba(8,101,168,.15); }
         .d-ovlb p { font-size: clamp(.78rem,1.5vw,.86rem); margin-top: 14px; color: var(--gray2); font-family: var(--font); }
 
@@ -1302,7 +1295,7 @@ const AdminDashboard = () => {
         .d-chk.on { background: #f0fdf4; border-color: #16a34a; color: #16a34a; }
         .d-chk.spin { border-color: #16a34a; border-top-color: transparent; border-radius: 50%; animation: d-spin .6s linear infinite; }
         .d-att-badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 9px; border-radius: 7px; font-size: clamp(.62rem,1.1vw,.7rem); font-weight: 700; }
-        .d-att-badge.on { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+        .d-att-badge.on  { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
         .d-att-badge.off { background: var(--bg); color: var(--gray3); border: 1px solid var(--gray4); }
         .d-att-sum { display: flex; align-items: center; gap: clamp(10px,2vw,20px); flex-wrap: wrap; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: var(--radius); padding: clamp(9px,1.8vw,13px) clamp(12px,2vw,18px); margin-bottom: clamp(12px,2vw,18px); box-shadow: var(--shadow); }
         .d-att-sum span { font-size: clamp(.7rem,1.3vw,.78rem); font-weight: 700; color: #15803d; }
@@ -1314,108 +1307,109 @@ const AdminDashboard = () => {
         .d-cert-card:hover { border-color: rgba(124,58,237,.3); box-shadow: 0 4px 18px rgba(124,58,237,.1); transform: translateY(-1px); }
         .d-cert-card-top { display: flex; align-items: flex-start; gap: 10px; }
         .d-cert-icon { width: 42px; height: 42px; border-radius: 10px; background: rgba(124,58,237,.08); border: 1.5px solid rgba(124,58,237,.2); display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0; }
-        .d-cert-icon.has { background: #f0fdf4; border-color: #86efac; }
+        .d-cert-icon.has  { background: #f0fdf4; border-color: #86efac; }
         .d-cert-icon.grey { background: rgba(156,163,175,.06); border-color: rgba(156,163,175,.15); }
         .d-cert-info { flex: 1; min-width: 0; }
-        .d-cert-name { font-weight: 700; font-size: .8rem; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .d-cert-name   { font-weight: 700; font-size: .8rem; color: var(--black); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .d-cert-course { font-size: .7rem; color: var(--blue); margin-top: 3px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .d-cert-badges { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+        .d-cert-badges  { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
         .d-cert-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--gray5); padding-top: 9px; }
         .d-cert-btn { padding: clamp(5px,1vw,7px) clamp(10px,1.5vw,14px); border-radius: 8px; font-family: var(--font); font-size: clamp(.64rem,1.1vw,.72rem); font-weight: 700; cursor: pointer; border: none; transition: all .14s; white-space: nowrap; }
-        .d-cert-btn.up { background: rgba(124,58,237,.1); color: #7c3aed; border: 1.5px solid rgba(124,58,237,.25); }
+        .d-cert-btn.up   { background: rgba(124,58,237,.1); color: #7c3aed; border: 1.5px solid rgba(124,58,237,.25); }
         .d-cert-btn.up:hover { background: rgba(124,58,237,.2); }
-        .d-cert-btn.dl { background: var(--blue-lt); color: var(--blue); border: 1.5px solid rgba(8,101,168,.25); }
+        .d-cert-btn.dl   { background: var(--blue-lt); color: var(--blue); border: 1.5px solid rgba(8,101,168,.25); }
         .d-cert-btn.dl:hover { background: var(--blue-md); }
-        .d-cert-btn.rm { background: #fef2f2; color: #dc2626; border: 1.5px solid rgba(220,38,38,.2); }
+        .d-cert-btn.rm   { background: #fef2f2; color: #dc2626; border: 1.5px solid rgba(220,38,38,.2); }
         .d-cert-btn.rm:hover { background: #fee2e2; }
         .d-cert-btn.full { width: 100%; text-align: center; justify-content: center; }
         .d-cert-btn:disabled { opacity: .45; cursor: not-allowed; }
 
         .d-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); animation: d-fadeUp .16s ease; }
-        .d-modal { background: var(--white); border-radius: 14px; padding: clamp(14px,2.5vw,20px); max-width: clamp(290px,88vw,520px); width: 100%; box-shadow: 0 16px 48px rgba(0,0,0,.15); direction: rtl; border: 2px solid rgba(124,58,237,.2); border-top: 4px solid #7c3aed; }
+        .d-modal    { background: var(--white); border-radius: 14px; padding: clamp(14px,2.5vw,20px); max-width: clamp(290px,88vw,520px); width: 100%; box-shadow: 0 16px 48px rgba(0,0,0,.15); direction: rtl; border: 2px solid rgba(124,58,237,.2); border-top: 4px solid #7c3aed; }
         .d-modal.rd-modal { border-color: rgba(220,38,38,.2); border-top-color: #dc2626; max-width: clamp(290px,92vw,540px); max-height: 90vh; overflow-y: auto; }
         .d-modal h3 { font-size: clamp(.82rem,1.5vw,.92rem); font-weight: 900; color: var(--black); margin-bottom: 3px; }
-        .d-modal p { font-size: clamp(.66rem,1.1vw,.72rem); color: var(--gray2); margin-bottom: 12px; font-family: var(--font); }
+        .d-modal p  { font-size: clamp(.66rem,1.1vw,.72rem); color: var(--gray2); margin-bottom: 12px; font-family: var(--font); }
         .d-drop { border: 2px dashed rgba(124,58,237,.35); border-radius: 12px; padding: clamp(24px,5vw,36px) 16px; text-align: center; cursor: pointer; transition: all .16s; background: rgba(124,58,237,.04); }
         .d-drop.over { border-color: #7c3aed; background: rgba(124,58,237,.1); }
         .d-drop:hover { border-color: rgba(124,58,237,.6); }
         .d-drop-icon { font-size: clamp(1.7rem,3.5vw,2.3rem); margin-bottom: 8px; }
-        .d-drop-txt { font-size: clamp(.72rem,1.4vw,.8rem); color: var(--gray1); margin-bottom: 4px; font-family: var(--font); }
-        .d-drop-sub { font-size: clamp(.62rem,1.1vw,.7rem); color: var(--gray3); }
+        .d-drop-txt  { font-size: clamp(.72rem,1.4vw,.8rem); color: var(--gray1); margin-bottom: 4px; font-family: var(--font); }
+        .d-drop-sub  { font-size: clamp(.62rem,1.1vw,.7rem); color: var(--gray3); }
         .d-modal-actions { display: flex; gap: 7px; margin-top: 18px; justify-content: flex-end; }
-        .d-modal-cancel { padding: clamp(7px,1.3vw,10px) clamp(12px,2vw,18px); border-radius: 9px; background: var(--bg); border: 1.5px solid var(--gray4); font-family: var(--font); font-size: clamp(.7rem,1.3vw,.78rem); font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .14s; }
+        .d-modal-cancel  { padding: clamp(7px,1.3vw,10px) clamp(12px,2vw,18px); border-radius: 9px; background: var(--bg); border: 1.5px solid var(--gray4); font-family: var(--font); font-size: clamp(.7rem,1.3vw,.78rem); font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .14s; }
         .d-modal-cancel:hover { border-color: var(--gray2); color: var(--black); background: var(--white); }
 
         .d-email { direction: ltr; text-align: right; color: var(--gray3); font-size: clamp(.65rem,1.15vw,.73rem); }
 
+        /* ── Refund widgets ───────────────────────────────────────────── */
         .rf-stat-bar { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 10px; margin-bottom: 20px; }
         .rf-sc { background: var(--white); border-radius: 11px; padding: 14px 16px; border: 1.5px solid var(--card-border); box-shadow: var(--shadow); display: flex; align-items: center; gap: 11px; transition: transform .2s; }
         .rf-sc:hover { transform: translateY(-2px); }
         .rf-sc-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
         .rf-sc-body { flex: 1; min-width: 0; }
-        .rf-sc-val { font-size: 1.35rem; font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; }
-        .rf-sc-lbl { font-size: .65rem; color: var(--gray2); font-weight: 700; margin-top: 3px; }
-        .rf-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: .7rem; font-weight: 700; white-space: nowrap; border: 1.5px solid transparent; }
-        .rf-amount { font-family: 'Courier New', monospace; font-weight: 900; font-size: .88rem; color: #15803d; direction: ltr; display: inline-block; }
+        .rf-sc-val  { font-size: 1.35rem; font-weight: 900; line-height: 1; font-family: 'Courier New', monospace; }
+        .rf-sc-lbl  { font-size: .65rem; color: var(--gray2); font-weight: 700; margin-top: 3px; }
+        .rf-status  { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px; font-size: .7rem; font-weight: 700; white-space: nowrap; border: 1.5px solid transparent; }
+        .rf-amount  { font-family: 'Courier New', monospace; font-weight: 900; font-size: .88rem; color: #15803d; direction: ltr; display: inline-block; }
         .rf-filter-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
         .rf-fbtn { padding: 5px 13px; border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); font-family: var(--font); font-size: .7rem; font-weight: 700; cursor: pointer; color: var(--gray2); transition: all .14s; }
         .rf-fbtn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
-        .rf-fbtn.active { background: var(--blue-md); border-color: rgba(8,101,168,.4); color: var(--blue); }
+        .rf-fbtn.active      { background: var(--blue-md); border-color: rgba(8,101,168,.4); color: var(--blue); }
         .rf-fbtn.active.pend { background: #fff8f0; border-color: rgba(245,124,0,.4); color: var(--orange); }
         .rf-fbtn.active.appr { background: #f0fdf4; border-color: #86efac; color: #16a34a; }
         .rf-fbtn.active.bank { background: var(--blue-lt); border-color: rgba(8,101,168,.35); color: var(--blue); }
         .rf-fbtn.active.rjct { background: #fef2f2; border-color: rgba(220,38,38,.35); color: #dc2626; }
         .rf-action-btn { padding: 5px 12px; border-radius: 7px; font-family: var(--font); font-size: .68rem; font-weight: 700; cursor: pointer; border: 1.5px solid; transition: all .14s; white-space: nowrap; }
         .rf-action-btn:disabled { opacity: .4; cursor: not-allowed; }
-        .rf-action-btn.view { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.3); }
+        .rf-action-btn.view    { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.3); }
         .rf-action-btn.view:hover { background: var(--blue-md); }
         .rf-action-btn.approve { background: #f0fdf4; color: #16a34a; border-color: #86efac; }
         .rf-action-btn.approve:hover { background: #dcfce7; }
-        .rf-action-btn.bank { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.35); }
+        .rf-action-btn.bank    { background: var(--blue-lt); color: var(--blue); border-color: rgba(8,101,168,.35); }
         .rf-action-btn.bank:hover { background: var(--blue-md); }
-        .rf-action-btn.reject { background: #fef2f2; color: #dc2626; border-color: rgba(220,38,38,.3); }
+        .rf-action-btn.reject  { background: #fef2f2; color: #dc2626; border-color: rgba(220,38,38,.3); }
         .rf-action-btn.reject:hover { background: #fee2e2; }
-        .rf-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+        .rf-detail    { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
         .rf-field-lbl { font-size: .58rem; color: var(--gray3); font-weight: 700; margin-bottom: 2px; }
         .rf-field-val { font-size: .74rem; color: var(--black); font-weight: 700; word-break: break-all; }
         .rf-field-val.mono { font-family: 'Courier New', monospace; direction: ltr; display: inline-block; }
-        .rf-full { grid-column: 1/-1; }
-        .rf-divider { grid-column: 1/-1; border: none; border-top: 1.5px dashed var(--gray5); margin: 2px 0; }
-        .rf-bank-block { grid-column: 1/-1; background: #f8faff; border: 1.5px solid rgba(8,101,168,.15); border-radius: 9px; padding: 9px 12px; }
-        .rf-bank-title { font-size: .68rem; font-weight: 900; color: var(--blue); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
-        .rf-bank-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; }
+        .rf-full     { grid-column: 1/-1; }
+        .rf-divider  { grid-column: 1/-1; border: none; border-top: 1.5px dashed var(--gray5); margin: 2px 0; }
+        .rf-bank-block  { grid-column: 1/-1; background: #f8faff; border: 1.5px solid rgba(8,101,168,.15); border-radius: 9px; padding: 9px 12px; }
+        .rf-bank-title  { font-size: .68rem; font-weight: 900; color: var(--blue); margin-bottom: 7px; display: flex; align-items: center; gap: 5px; }
+        .rf-bank-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; }
         .rf-action-area { margin-top: 12px; border-top: 1.5px solid var(--gray5); padding-top: 10px; }
-        .rf-action-row { display: flex; gap: 7px; flex-wrap: wrap; }
+        .rf-action-row  { display: flex; gap: 7px; flex-wrap: wrap; }
         .rf-textarea { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--gray4); background: var(--bg); font-family: var(--font); font-size: .74rem; color: var(--black); resize: vertical; min-height: 60px; outline: none; direction: rtl; margin-top: 8px; transition: border .18s; }
         .rf-textarea:focus { border-color: var(--blue); background: #fff; }
         .rf-action-confirm { padding: 8px 18px; border-radius: 8px; font-family: var(--font); font-size: .76rem; font-weight: 700; cursor: pointer; border: none; transition: all .16s; }
         .rf-action-confirm.approve { background: #16a34a; color: #fff; }
         .rf-action-confirm.approve:hover { background: #15803d; }
-        .rf-action-confirm.bank { background: var(--blue); color: #fff; }
+        .rf-action-confirm.bank    { background: var(--blue); color: #fff; }
         .rf-action-confirm.bank:hover { background: #0552a0; }
-        .rf-action-confirm.reject { background: #dc2626; color: #fff; }
+        .rf-action-confirm.reject  { background: #dc2626; color: #fff; }
         .rf-action-confirm.reject:hover { background: #b91c1c; }
         .rf-action-confirm:disabled { opacity: .5; cursor: not-allowed; }
         .rf-bank-banner { padding: 12px 16px; border-radius: 11px; font-family: var(--font); font-size: .78rem; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 16px; animation: d-slideDown .3s ease; position: relative; }
         .rf-bank-banner.success { background: #f0fdf4; border: 1.5px solid #86efac; color: #15803d; }
-        .rf-bank-banner.failed { background: #fff8f0; border: 1.5px solid rgba(245,124,0,.4); color: #b45309; }
+        .rf-bank-banner.failed  { background: #fff8f0; border: 1.5px solid rgba(245,124,0,.4); color: #b45309; }
         .rf-bank-banner-close { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1rem; color: inherit; opacity: .6; }
         .rf-bank-banner-close:hover { opacity: 1; }
 
         .d-ftr { text-align: center; margin-top: clamp(20px,3.5vw,32px); padding-top: 18px; border-top: 1.5px solid var(--gray5); color: var(--gray3); font-size: clamp(.6rem,1vw,.67rem); }
         .d-ftr strong { color: var(--blue); }
 
+        /* ── Responsive overrides ─────────────────────────────────────── */
         @media(max-width:1100px){
           :root{ --sidebar-w: 54px; }
           .d-sb-title,.d-su-info,.d-nav-label,.d-nav-badge,.d-sidebar-footer,.d-nav-label-txt { display: none; }
           .d-sidebar-brand { padding: 12px; justify-content: center; }
-          .d-sidebar-user { padding: 10px; justify-content: center; }
-          .d-sidebar-nav { padding: 8px 6px; }
-          .d-nav-btn { justify-content: center; padding: 10px 7px; }
+          .d-sidebar-user  { padding: 10px; justify-content: center; }
+          .d-sidebar-nav   { padding: 8px 5px; }
+          .d-nav-btn { justify-content: center; padding: 10px 6px; }
           .d-sb-logo,.d-su-av { width: 28px; height: 28px; }
         }
         @media(max-width:768px){
-          .d-stats { grid-template-columns: repeat(3,1fr); }
           .rf-detail,.rf-bank-grid { grid-template-columns: 1fr; }
           .d-cert-grid { grid-template-columns: 1fr!important; }
           .d-mc { max-width: 100%; }
@@ -1424,18 +1418,17 @@ const AdminDashboard = () => {
           .d-expw { align-self: flex-start; }
         }
         @media(max-width:480px){
-          .d-stats { grid-template-columns: repeat(2,1fr); }
           .d-main { padding: 12px 10px 32px; }
           ._ovr { font-size: .7rem; }
         }
         @media(min-width:1920px){
-          :root{ --sidebar-w: 220px; }
+          :root{ --sidebar-w: 230px; }
           .d-main { padding: 36px 44px 72px; }
         }
         @media print {
           .d-sidebar,.d-toolbar,.d-filter,._ovr { display: none!important; }
-          .d-root { background: #fff!important; padding-top: 0!important; }
-          .d-main { padding: 0!important; }
+          .d-root { background: #fff!important; margin-top: 0!important; height: auto!important; }
+          .d-main { overflow: visible!important; }
         }
       `}</style>
 
@@ -1549,9 +1542,7 @@ const AdminDashboard = () => {
                                 المبلغ: <strong style={{ color: '#15803d', fontFamily: 'Courier New' }}>{Number(r.amount || 0).toLocaleString()} {r.currency}</strong>
                             </p>
                             {refundActionError && (
-                                <div style={{ background: '#fef2f2', border: '1.5px solid rgba(220,38,38,.3)', color: '#dc2626', borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: '.72rem', fontFamily: '"Droid Arabic Kufi", serif' }}>
-                                    ⚠️ {refundActionError}
-                                </div>
+                                <div style={{ background: '#fef2f2', border: '1.5px solid rgba(220,38,38,.3)', color: '#dc2626', borderRadius: 8, padding: '8px 12px', marginBottom: 10, fontSize: '.72rem', fontFamily: '"Droid Arabic Kufi", serif' }}>⚠️ {refundActionError}</div>
                             )}
                             <textarea className="rf-textarea" placeholder={am.placeholder} value={refundActionNote} onChange={e => setRefundActionNote(e.target.value)} disabled={refundActionSaving} />
                             <div className="d-modal-actions">
@@ -1567,15 +1558,19 @@ const AdminDashboard = () => {
                 );
             })()}
 
+            {/* ── Fixed breadcrumb overview bar ── */}
             <div className="_ovr">
                 <span>
-                    <a href="/" className="ml-3">الصفحة الرئيسية</a>
+                    <a href="/">الصفحة الرئيسية</a>
                     <span className="sep">-</span>
                     <span className="cur">لوحة الإدارة</span>
                 </span>
             </div>
 
+            {/* ── Root flex container (sits below navbar + overview) ── */}
             <div className="d-root">
+
+                {/* ══ SIDEBAR ════════════════════════════════════════════════ */}
                 <aside className="d-sidebar">
                     <div className="d-sidebar-brand">
                         <img src={logoSrc} alt="ICEMT" className="d-sb-logo" />
@@ -1609,22 +1604,38 @@ const AdminDashboard = () => {
                     <div className="d-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
                 </aside>
 
+                {/* ══ MAIN CONTENT ════════════════════════════════════════════ */}
                 <main className="d-main">
+                    {/* Page header */}
                     <div className="d-page-hdr">
                         <div>
                             <div className="d-page-title">
-                                <span style={{ color: '#f57c00', marginLeft: 6 }}>{TABS.find(t => t.id === activeTab)?.icon}</span>
-                                {activeTab === 'users' ? 'المستخدمون والدورات' : activeTab === 'courses' ? 'الدورات والمستخدمون' : activeTab === 'attendance' ? 'سجل الحضور' : activeTab === 'certificates' ? 'الشهادات' : 'طلبات الاسترداد'}
+                                <span style={{ color: '#f57c00', marginLeft: 8 }}>{TABS.find(t => t.id === activeTab)?.icon}</span>
+                                {activeTab === 'users' ? 'المستخدمون والدورات'
+                                    : activeTab === 'courses' ? 'الدورات والمستخدمون'
+                                        : activeTab === 'attendance' ? 'سجل الحضور'
+                                            : activeTab === 'certificates' ? 'الشهادات'
+                                                : 'طلبات الاسترداد'}
                             </div>
-                            <div className="d-page-sub">{new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                            <div className="d-page-sub">
+                                {new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                            </div>
                         </div>
                     </div>
 
+                    {/* ══ STAT CARDS ══════════════════════════════════════════ */}
                     {!loading && !error && (
                         <div className="d-stats">
                             {STATS.map(s => (
-                                <div key={s.label} className="d-sc" data-icon={s.icon} style={{ borderRightColor: s.accent, borderColor: s.border }}>
-                                    <div style={{ position: 'absolute', top: 0, right: 0, width: 4, bottom: 0, background: s.accent, borderRadius: '0 var(--radius) var(--radius) 0' }} />
+                                <div key={s.label}
+                                    className="d-sc"
+                                    data-icon={s.icon}
+                                    style={{ borderTopColor: s.accent, borderColor: s.border, background: s.lightBg }}
+                                >
+                                    {/* small icon pill */}
+                                    <div className="d-sc-icon" style={{ background: s.accent + '18', color: s.accent }}>
+                                        {s.icon}
+                                    </div>
                                     <div className="d-sc-val" style={{ color: s.accent }}>{s.value}</div>
                                     <div className="d-sc-lbl">{s.label}</div>
                                     <div className="d-sc-bar" style={{ background: s.accent }} />
@@ -1639,7 +1650,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ REFUNDS TAB ══ */}
+                    {/* ══ REFUNDS TAB ══════════════════════════════════════════ */}
                     {activeTab === 'refunds' && (
                         <div>
                             {bankResultBanner && (
@@ -1756,7 +1767,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ ATTENDANCE TAB ══ */}
+                    {/* ══ ATTENDANCE TAB ══════════════════════════════════════ */}
                     {activeTab === 'attendance' && (
                         <div>
                             <div className="d-filter">
@@ -1830,7 +1841,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ CERTIFICATES TAB ══ */}
+                    {/* ══ CERTIFICATES TAB ═══════════════════════════════════ */}
                     {activeTab === 'certificates' && (
                         <div>
                             <div className="d-filter">
@@ -1844,7 +1855,6 @@ const AdminDashboard = () => {
                                         <button key={f.id} style={{ padding: '5px 12px', borderRadius: 8, border: '1.5px solid', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', transition: 'all .14s', background: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#f0fdf4' : f.id === 'pending' ? 'rgba(156,163,175,.1)' : 'var(--blue-lt)') : 'var(--bg)', borderColor: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#86efac' : f.id === 'pending' ? 'var(--gray4)' : 'rgba(8,101,168,.3)') : 'var(--gray4)', color: certStatusFilter === f.id ? (f.id === 'uploaded' ? '#15803d' : f.id === 'pending' ? 'var(--gray2)' : 'var(--blue)') : 'var(--gray2)' }} onClick={() => setCertStatusFilter(f.id)}>{f.icon} {f.label}</button>
                                     ))}
                                 </div>
-                                {/* ↻ Manual refresh button REMOVED — auto-refresh now happens on upload/update/delete */}
                                 <div className="d-expw" ref={exportCertRef}>
                                     <button className="d-expbtn" disabled={exporting} onClick={() => setExportCertMenuOpen(p => !p)}>{exporting ? '⏳ جاري...' : '⬇ تصدير ▾'}</button>
                                     {exportCertMenuOpen && (
@@ -1943,7 +1953,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {/* ══ USERS / COURSES TABS ══ */}
+                    {/* ══ USERS / COURSES TABS ════════════════════════════════ */}
                     {isExportTab && (
                         <>
                             <div className="d-toolbar">
