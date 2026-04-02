@@ -233,13 +233,21 @@ export default function FutureLeadersCouncil() {
                 <div className="h-full transition-all duration-300" style={{ width: `${scrollProgress}%`, background: `linear-gradient(to right, #f57c00, #0865a8)` }} />
             </div>
 
-            <nav className="fixed-nav-bar">
-                <span className="text-xs sm:text-sm">
-                    <a href="/" className="ml-2 font-bold text-gray-700 hover:text-black">الصفحة الرئيسية</a>
-                    <span className="text-gray-400">-</span>
-                    <span className="mr-2 font-bold text-gray-900">مجلس قادة المستقبل</span>
-                </span>
-            </nav>
+           
+            <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                    <a
+                        href="/"
+                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        onMouseEnter={e => e.target.style.color = '#f57c00'}
+                        onMouseLeave={e => e.target.style.color = '#0865a8'}
+                    >
+                        الصفحة الرئيسية
+                    </a>
+                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
+                    <span style={{ color: '#374151', marginRight: '8px' }}>مجلس قادة المستقبل</span>
+                </div>
+            </div>
 
             <div className="tech-main-wrapper">
                 <header className="hero-section">

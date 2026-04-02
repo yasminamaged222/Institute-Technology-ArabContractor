@@ -357,17 +357,24 @@ const Instructors = () => {
     };
 
     return (
-        <div dir="rtl" className="min-h-screen bg-yellow-50">
+        <div dir="rtl" className="min-h-screen bg-white-50">
             {/* Breadcrumb */}
-            <div className="border-b border-gray-300 bg-yellow-50 px-5 py-3" style={{ top: 70 }}>
-                <div className="flex flex-wrap items-center justify-center gap-2">
-                    <Link to="/" className="text-gray-700 transition-colors hover:text-blue-700">
+           
+            <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                    <a
+                        href="/"
+                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        onMouseEnter={e => e.target.style.color = '#f57c00'}
+                        onMouseLeave={e => e.target.style.color = '#0865a8'}
+                    >
                         الصفحة الرئيسية
-                    </Link>
-                    <span className="text-gray-500">-</span>
-                    <span className="text-gray-700">محاضرينا</span>
+                    </a>
+                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
+                    <span style={{ color: '#374151', marginRight: '8px' }}>محاضرينا</span>
                 </div>
             </div>
+
 
             {/* Header Section */}
             <div className="bg-gradient-to-bl from-blue-700 to-blue-600 px-5 py-10 text-center">

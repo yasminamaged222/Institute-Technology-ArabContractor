@@ -62,8 +62,20 @@ const News = () => {
         <div className="news-page-container">
 
             {/* Breadcrumb */}
-            <div className="overview_intro" style={{ position: 'relative', bottom: '50px', background: '#F5F7E1', width: '100%', zIndex: '10', padding: '5px 10px', borderBottom: '2px solid #eee', bottom: 70 }}>
-                <span className="overview"><a href="/" className="btn_go_home" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>الصفحة الرئيسية</a> - الأخبار</span>
+            
+            <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                    <a
+                        href="/"
+                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        onMouseEnter={e => e.target.style.color = '#f57c00'}
+                        onMouseLeave={e => e.target.style.color = '#0865a8'}
+                    >
+                        الصفحة الرئيسية
+                    </a>
+                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
+                    <span style={{ color: '#374151', marginRight: '8px' }}>الأخبار</span>
+                </div>
             </div>
 
             {/* Year Slider */}

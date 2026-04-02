@@ -86,46 +86,21 @@ const OnsiteTraining = () => {
             dir="rtl"
             lang="ar"
         >
-            <Box
-                sx={{
-                    position: "fixed",
-                    top: NAV_HEIGHT,
-                    left: 0,
-                    width: "100%",
-                    bgcolor: "#F5F7E1",
-                    borderBottom: "1px solid #d1d5db",
-                    px: { xs: 2, md: 5 },
-                    py: 2,
-                    zIndex: 40,
-                }}
-            >
-                <Box sx={{ textAlign: "center" }}>
-                    <Typography
-                        variant="body1"
-                        sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
-                            fontSize: { xs: "0.875rem", md: "1rem" }
-                        }}
+           
+            <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                    <a
+                        href="/"
+                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        onMouseEnter={e => e.target.style.color = '#f57c00'}
+                        onMouseLeave={e => e.target.style.color = '#0865a8'}
                     >
-                        <a
-                            href="/"
-                            style={{
-                                marginLeft: 12,
-                                color: "#374151",
-                                textDecoration: "none",
-                            }}
-                        >
-                            الصفحة الرئيسية
-                        </a>
-                        <span style={{ color: "#6b7280" }}> - </span>
-                        <span style={{ marginRight: 12, color: "#374151" }}>
-                            التدريب في الموقع
-                        </span>
-                    </Typography>
-                </Box>
-            </Box>
-
-            <Container
+                        الصفحة الرئيسية
+                    </a>
+                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
+                    <span style={{ color: '#374151', marginRight: '8px' }}>التدريب في الموقعة</span>
+                </div>
+            </div>            <Container
                 maxWidth="lg"
                 sx={{
                     pt: { xs: 18, md: 20 },

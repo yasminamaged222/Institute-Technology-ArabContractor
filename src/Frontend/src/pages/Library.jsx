@@ -95,13 +95,19 @@ export default function ModernLibrary() {
             </div>
 
             {/* Fixed Overview Bar */}
-            <div className="fixed left-0 z-30 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: '70px' }}>
-                <div className="text-center">
-                    <span className="text-base">
-                        <a href="/" className="ml-3 text-gray-700 hover:text-gray-900">الصفحة الرئيسية</a>
-                        <span className="text-gray-500">-</span>
-                        <span className="mr-3 text-gray-700">المكــتبة</span>
-                    </span>
+            
+            <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                    <a
+                        href="/"
+                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        onMouseEnter={e => e.target.style.color = '#f57c00'}
+                        onMouseLeave={e => e.target.style.color = '#0865a8'}
+                    >
+                        الصفحة الرئيسية
+                    </a>
+                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
+                    <span style={{ color: '#374151', marginRight: '8px' }}>المكــتبة</span>
                 </div>
             </div>
 

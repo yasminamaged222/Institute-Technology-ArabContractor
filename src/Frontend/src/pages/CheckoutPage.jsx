@@ -447,13 +447,29 @@ export default function CheckoutPage() {
                 .terms-shake { animation: shake 0.5s ease-in-out; }
             `}</style>
 
-            {/* Breadcrumb */}
-            <div style={{ position: 'fixed', top: 70, left: 0, right: 0, zIndex: 40, background: '#F5F7E1', borderBottom: '1px solid #d1d5db', padding: '6px 12px', textAlign: 'center', fontSize: 'clamp(0.7rem, 2vw, 0.9rem)' }}>
-                <a href="/" style={{ color: '#374151', textDecoration: 'none' }}>الصفحة الرئيسية</a>
-                <span style={{ margin: '0 6px', color: '#9ca3af' }}>-</span>
-                <Link to="/cart" style={{ color: '#374151', textDecoration: 'none' }}>سلة التسوق</Link>
-                <span style={{ margin: '0 6px', color: '#9ca3af' }}>-</span>
-                <span style={{ fontWeight: 700, color: '#111' }}>إتمام الدفع</span>
+            {/* ── Breadcrumb ── */}
+            <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                    <a
+                        href="/"
+                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        onMouseEnter={e => e.target.style.color = '#f57c00'}
+                        onMouseLeave={e => e.target.style.color = '#0865a8'}
+                    >
+                        الصفحة الرئيسية
+                    </a>
+                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
+                    <Link
+                        to="/cart"
+                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        onMouseEnter={e => e.target.style.color = '#f57c00'}
+                        onMouseLeave={e => e.target.style.color = '#0865a8'}
+                    >
+                        سلة التسوق
+                    </Link>
+                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
+                    <span style={{ color: '#374151', fontWeight: 700, marginRight: '8px' }}>إتمام الدفع</span>
+                </div>
             </div>
 
             <div dir="rtl" className="co-wrap" style={{ minHeight: '100vh', background: '#fff', paddingBottom: '4rem' }}>
