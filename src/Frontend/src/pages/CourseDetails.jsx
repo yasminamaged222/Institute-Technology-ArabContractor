@@ -909,7 +909,6 @@ const CourseDetails = () => {
                                         ) : (
                                             <>
                                                 <span style={S.paidPrice}>{course.price.toLocaleString('ar-EG')} {course.currency}</span>
-                                                {course.originalPrice > 0 && <span style={S.strikePrice}>{course.originalPrice.toLocaleString('ar-EG')} {course.currency}</span>}
                                             </>
                                         )}
                                     </div>

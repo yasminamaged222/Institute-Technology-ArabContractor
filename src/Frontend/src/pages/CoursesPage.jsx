@@ -672,9 +672,7 @@ const CoursesPage = () => {
                                             {/* Ownership / price badge — top right */}
                                             {isOwned
                                                 ? <div style={styles.ownedBadge}>✅ مسجل</div>
-                                                : isFree
-                                                    ? <div style={styles.freeBadge}>مجاناً</div>
-                                                    : <div style={styles.discountBadge}>خصم 40%</div>
+                                                : isFree && <div style={styles.freeBadge}>مجاناً</div>
                                             }
 
                                             {/* ✅ Cert ribbon — bottom left, clickable */}
@@ -721,7 +719,7 @@ const CoursesPage = () => {
                                                     ) : isFree ? (
                                                         <><span style={styles.freePriceLabel}>مجاناً</span><span style={styles.priceLabel}>دورة مجانية بالكامل</span></>
                                                     ) : (
-                                                        <><span style={styles.originalPrice}>{originalPrice?.toFixed(2)} ج.م</span><span style={styles.currentPrice}>{currentPrice?.toFixed(2)} ج.م</span><span style={styles.priceLabel}>السعر الشامل</span></>
+                                                        <><span style={styles.currentPrice}>{currentPrice?.toFixed(2)} ج.م</span><span style={styles.priceLabel}>السعر الشامل</span></>
                                                     )}
                                                 </div>
                                             </div>
