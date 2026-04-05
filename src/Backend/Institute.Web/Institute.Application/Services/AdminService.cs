@@ -207,19 +207,18 @@ namespace Institute.Application.Services
         public async Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder)
         {
             var certificate = await _certificateRepository.GetByIdAsync(dto.CertificateId);
+            if (certificate == null) return false;
 
-            if (certificate == null)
-                return false;
-
-            // delete old file
+            // حذف الملف القديم
             if (!string.IsNullOrEmpty(certificate.FileUrl))
             {
-                var oldPath = Path.Combine(uploadsFolder, Path.GetFileName(certificate.FileUrl));
+                var oldFileName = Path.GetFileName(certificate.FileUrl);
+                var oldPath = Path.Combine(uploadsFolder, oldFileName);
                 if (File.Exists(oldPath))
                     File.Delete(oldPath);
             }
 
-            // save new file
+            // حفظ الملف الجديد
             var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
             var filePath = Path.Combine(uploadsFolder, fileName);
 
@@ -228,15 +227,14 @@ namespace Institute.Application.Services
                 await dto.File.CopyToAsync(stream);
             }
 
-            // update entity
-            certificate.FileUrl = "/certificates/" + fileName;
+            // ✅ نفس الـ URL format بتاع الـ Upload
+            certificate.FileUrl = "/api/Admin/certificates/download/" + fileName;
             certificate.FileName = dto.File.FileName;
             certificate.FileSizeBytes = dto.File.Length;
             certificate.UploadedAt = DateTime.UtcNow;
 
             _certificateRepository.Update(certificate);
             await _certificateRepository.SaveChangesAsync();
-
             return true;
         }
         public async Task<bool> DeleteCertificateAsync(int certificateId, string uploadsFolder)
