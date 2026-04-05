@@ -1021,21 +1021,39 @@ const AdminDashboard = () => {
 
     const viewCert = useCallback(async (certId, url, rawUrl, filename = 'certificate', userId = null, planworkId = null) => {
         if (certId == null && !url && !rawUrl && userId == null) return;
-        let token = null; try { token = await getToken(); } catch (_) { }
+
+        let token = null;
+        try { token = await getToken(); } catch (_) { }
         const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
         let fileUrl = null;
-        if (userId != null && planworkId != null) { try { const metaRes = await fetch(`${API_BASE}/Admin/certificates/${userId}/${planworkId}`, { headers: authHeaders }); if (metaRes.ok) { const meta = await metaRes.json(); const obj = Array.isArray(meta) ? meta[0] : meta; const fu = obj?.fileUrl ?? obj?.FileUrl ?? obj?.url ?? obj?.Url ?? null; if (fu && fu !== 'uploaded') fileUrl = fu.startsWith('http') ? fu : `${API_HOST}${fu}`; } } catch (_) { } }
+
+        // جيب الـ URL من الـ API
+        if (userId != null && planworkId != null) {
+            try {
+                const metaRes = await fetch(`${API_BASE}/Admin/certificates/${userId}/${planworkId}`, { headers: authHeaders });
+                if (metaRes.ok) {
+                    const meta = await metaRes.json();
+                    const obj = Array.isArray(meta) ? meta[0] : meta;
+                    const fu = obj?.fileUrl ?? obj?.FileUrl ?? obj?.url ?? obj?.Url ?? null;
+                    if (fu && fu !== 'uploaded') {
+                        fileUrl = fu.startsWith('http') ? fu : `${API_HOST}${fu}`;
+                    }
+                }
+            } catch (_) { }
+        }
+
         if (!fileUrl && url && url !== 'uploaded') fileUrl = url;
         if (!fileUrl && rawUrl) fileUrl = rawUrl.startsWith('http') ? rawUrl : `${API_HOST}${rawUrl}`;
+
+        // ✅ افتح مباشرة بدون blob
         if (fileUrl) {
-            const isExternal = fileUrl.includes('blob.core.windows.net') || fileUrl.includes('amazonaws.com') || fileUrl.includes('storage.googleapis.com') || fileUrl.includes('cloudinary.com');
-            if (isExternal) { window.open(fileUrl, '_blank'); return; }
-            try { const fileRes = await fetch(fileUrl, { headers: authHeaders }); if (fileRes.ok) { const ct = fileRes.headers.get('content-type') ?? ''; if (!ct.includes('application/json')) { const blob = await fileRes.blob(); const blobUrl = URL.createObjectURL(blob); const fname = filename || 'certificate'; const isPdf = ct.includes('pdf') || blob.type.includes('pdf') || fname.toLowerCase().endsWith('.pdf'); if (isPdf) { const win = window.open('', '_blank'); if (win) win.document.write(`<!DOCTYPE html><html><head><title>${fname}</title></head><body style="margin:0"><iframe src="${blobUrl}" style="width:100%;height:100vh;border:none"></iframe></body></html>`); } else window.open(blobUrl, '_blank'); setTimeout(() => URL.revokeObjectURL(blobUrl), 90000); return; } } } catch (_) { }
-            window.open(fileUrl, '_blank'); return;
+            window.open(fileUrl, '_blank');
+            return;
         }
+
         setCertError('تعذّر فتح الشهادة — تأكد من صلاحية الجلسة أو تواصل مع المطور');
     }, [getToken]);
-
     const deleteCert = useCallback(async (ck, altKey = null) => {
         const cert = certificates[ck] ?? (altKey ? certificates[altKey] : undefined); const certId = cert?.certId;
         if (!window.confirm('هل تريد حذف هذه الشهادة؟')) return;

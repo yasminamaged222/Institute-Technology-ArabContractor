@@ -5,6 +5,7 @@ using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.AdminSpec.Course;
 using Institute.Domain.specifications.AdminSpec.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -183,15 +184,16 @@ namespace Institute.API.Controllers
             return Ok(new { message = "Certificate deleted successfully" });
         }
         [HttpGet("certificates/download/{fileName}")]
+        [AllowAnonymous] // ✅ عشان يفتح بدون token
         public IActionResult DownloadCertificate(string fileName)
         {
-            var uploadsFolder = Path.Combine(
+            var filePath = Path.Combine(
                 "D:\\home\\site\\userfiles\\certificates",
                 fileName
             );
 
-            if (!System.IO.File.Exists(uploadsFolder))
-                return NotFound("الملف غير موجود");
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
 
             var contentType = Path.GetExtension(fileName).ToLower() switch
             {
@@ -202,8 +204,9 @@ namespace Institute.API.Controllers
                 _ => "application/octet-stream"
             };
 
-            var fileBytes = System.IO.File.ReadAllBytes(uploadsFolder);
-            return File(fileBytes, contentType, fileName);
+            Response.Headers.Add("Content-Disposition", $"inline; filename={fileName}");
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, contentType);
         }
     }
 }
