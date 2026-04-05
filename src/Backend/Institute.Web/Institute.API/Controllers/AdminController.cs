@@ -5,6 +5,7 @@ using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.AdminSpec.Course;
 using Institute.Domain.specifications.AdminSpec.User;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
@@ -97,7 +98,8 @@ namespace Institute.API.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> UploadCertificate([FromForm] UploadCertificateDto dto)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "certificates");
+            // ✅ نفس الـ path الثابت
+            var uploadsFolder = "D:\\home\\site\\userfiles\\certificates";
 
             var result = await _adminService.UploadCertificateAsync(dto, uploadsFolder);
 
@@ -106,7 +108,6 @@ namespace Institute.API.Controllers
 
             return Ok(new { message = "Certificate uploaded successfully" });
         }
-
         [HttpGet("enrollments-with-certificates")]
         public async Task<ActionResult<IReadOnlyList<EnrollmentWithCertificateDto>>>GetEnrollmentsWithCertificates()
         {
@@ -182,6 +183,30 @@ namespace Institute.API.Controllers
 
             return Ok(new { message = "Certificate deleted successfully" });
         }
+        [HttpGet("certificates/download/{fileName}")]
+        [AllowAnonymous] // ✅ عشان يفتح بدون token
+        public IActionResult DownloadCertificate(string fileName)
+        {
+            var filePath = Path.Combine(
+                "D:\\home\\site\\userfiles\\certificates",
+                fileName
+            );
 
+            if (!System.IO.File.Exists(filePath))
+                return NotFound();
+
+            var contentType = Path.GetExtension(fileName).ToLower() switch
+            {
+                ".pdf" => "application/pdf",
+                ".png" => "image/png",
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                _ => "application/octet-stream"
+            };
+
+            Response.Headers.Add("Content-Disposition", $"inline; filename={fileName}");
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, contentType);
+        }
     }
 }
