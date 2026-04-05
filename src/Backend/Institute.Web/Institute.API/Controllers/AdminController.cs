@@ -97,7 +97,8 @@ namespace Institute.API.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> UploadCertificate([FromForm] UploadCertificateDto dto)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "certificates");
+            // ✅ نفس الـ path الثابت
+            var uploadsFolder = "D:\\home\\site\\userfiles\\certificates";
 
             var result = await _adminService.UploadCertificateAsync(dto, uploadsFolder);
 
@@ -106,7 +107,6 @@ namespace Institute.API.Controllers
 
             return Ok(new { message = "Certificate uploaded successfully" });
         }
-
         [HttpGet("enrollments-with-certificates")]
         public async Task<ActionResult<IReadOnlyList<EnrollmentWithCertificateDto>>>GetEnrollmentsWithCertificates()
         {
@@ -182,6 +182,28 @@ namespace Institute.API.Controllers
 
             return Ok(new { message = "Certificate deleted successfully" });
         }
+        [HttpGet("certificates/download/{fileName}")]
+        public IActionResult DownloadCertificate(string fileName)
+        {
+            var uploadsFolder = Path.Combine(
+                "D:\\home\\site\\userfiles\\certificates",
+                fileName
+            );
 
+            if (!System.IO.File.Exists(uploadsFolder))
+                return NotFound("الملف غير موجود");
+
+            var contentType = Path.GetExtension(fileName).ToLower() switch
+            {
+                ".pdf" => "application/pdf",
+                ".png" => "image/png",
+                ".jpg" => "image/jpeg",
+                ".jpeg" => "image/jpeg",
+                _ => "application/octet-stream"
+            };
+
+            var fileBytes = System.IO.File.ReadAllBytes(uploadsFolder);
+            return File(fileBytes, contentType, fileName);
+        }
     }
 }

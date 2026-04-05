@@ -131,7 +131,6 @@ namespace Institute.Application.Services
                 Directory.CreateDirectory(uploadsFolder);
 
             var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
-
             var filePath = Path.Combine(uploadsFolder, fileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
@@ -143,7 +142,7 @@ namespace Institute.Application.Services
             {
                 UserId = dto.UserId,
                 PlanworkId = dto.PlanworkId,
-                FileUrl = "/certificates/" + fileName,
+                FileUrl = "/api/Admin/certificates/download/" + fileName, // ✅ URL مش path
                 FileName = dto.File.FileName,
                 FileSizeBytes = dto.File.Length,
                 UploadedAt = DateTime.UtcNow
@@ -153,7 +152,6 @@ namespace Institute.Application.Services
             await _certificateRepository.SaveChangesAsync();
             return true;
         }
-
 
         public async Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId)
         {
