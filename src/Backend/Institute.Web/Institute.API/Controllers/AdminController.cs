@@ -162,7 +162,8 @@ namespace Institute.API.Controllers
         [HttpPut("certificates")]
         public async Task<IActionResult> UpdateCertificate([FromForm] UpdateCertificateDto dto)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "certificates");
+            // ✅ نفس الـ path بتاع الـ Upload
+            var uploadsFolder = "D:\\home\\site\\userfiles\\certificates";
 
             var result = await _adminService.UpdateCertificateAsync(dto, uploadsFolder);
 
