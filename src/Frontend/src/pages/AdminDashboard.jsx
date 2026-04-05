@@ -1601,7 +1601,6 @@ const AdminDashboard = () => {
                                                                         </div>
                                                                     </div>
                                                                 </div>
-                                                                // بعد ✅
                                                                 <div className="adm-cert-actions">
                                                                     {cert ? (
                                                                         <>
