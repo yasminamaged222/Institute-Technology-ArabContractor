@@ -1601,16 +1601,67 @@ const AdminDashboard = () => {
                                                                         </div>
                                                                     </div>
                                                                 </div>
+                                                                // بعد ✅
                                                                 <div className="adm-cert-actions">
                                                                     {cert ? (
                                                                         <>
-                                                                            <button className="adm-cert-btn up" disabled={uploading} onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>{uploading ? '⏳' : '🔄 تحديث'}</button>
-                                                                            <button className="adm-cert-btn rm" disabled={deleting} onClick={() => deleteCert(ck, row.altKey)}>{deleting ? '⏳' : '🗑'}</button>
+                                                                            {/* زرار View الجديد */}
+                                                                            <button
+                                                                                className="adm-cert-btn dl"
+                                                                                onClick={() => viewCert(
+                                                                                    cert.certId,
+                                                                                    cert.url,
+                                                                                    cert.rawUrl,
+                                                                                    cert.name,
+                                                                                    row.userId,
+                                                                                    row.planworkId
+                                                                                )}
+                                                                            >
+                                                                                👁 عرض
+                                                                            </button>
+
+                                                                            <button
+                                                                                className="adm-cert-btn up"
+                                                                                disabled={uploading}
+                                                                                onClick={() => setCertModal({
+                                                                                    enrollmentId: row.enrollmentId,
+                                                                                    userId: row.userId,
+                                                                                    planworkId: row.planworkId,
+                                                                                    certKey: ck,
+                                                                                    userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`,
+                                                                                    courseTitle: row.course.title
+                                                                                })}
+                                                                            >
+                                                                                {uploading ? '⏳' : '🔄 تحديث'}
+                                                                            </button>
+
+                                                                            <button
+                                                                                className="adm-cert-btn rm"
+                                                                                disabled={deleting}
+                                                                                onClick={() => deleteCert(ck, row.altKey)}
+                                                                            >
+                                                                                {deleting ? '⏳' : '🗑'}
+                                                                            </button>
                                                                         </>
                                                                     ) : canUpload ? (
-                                                                        <button className="adm-cert-btn up full" disabled={uploading} onClick={() => setCertModal({ enrollmentId: row.enrollmentId, userId: row.userId, planworkId: row.planworkId, certKey: ck, userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`, courseTitle: row.course.title })}>{uploading ? '⏳ جاري الرفع...' : '⬆ رفع شهادة'}</button>
+                                                                        <button className="adm-cert-btn up full" disabled={uploading}
+                                                                            onClick={() => setCertModal({
+                                                                                enrollmentId: row.enrollmentId,
+                                                                                userId: row.userId,
+                                                                                planworkId: row.planworkId,
+                                                                                certKey: ck,
+                                                                                userName: `${row.user.firstName || row.user.username} ${row.user.lastName}`,
+                                                                                courseTitle: row.course.title
+                                                                            })}>
+                                                                            {uploading ? '⏳ جاري الرفع...' : '⬆ رفع شهادة'}
+                                                                        </button>
                                                                     ) : (
-                                                                        <span style={{ fontSize: '.62rem', color: T.gray300, width: '100%', textAlign: 'center', fontFamily: T.font }}>سجّل الحضور أولاً لرفع الشهادة</span>
+                                                                        <span style={{
+                                                                            fontSize: '.62rem', color: T.gray300, width: '100%',
+                                                                            textAlign: 'center', fontFamily: T.font
+                                                                        }}>
+                                                                            سجّل الحضور أولاً لرفع الشهادة
+                                                                        </span>
                                                                     )}
                                                                 </div>
                                                             </div>
