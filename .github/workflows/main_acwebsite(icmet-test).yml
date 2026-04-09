@@ -73,6 +73,16 @@ jobs:
             New-Item -ItemType Directory -Path "published/wwwroot" | Out-Null
           }
           Copy-Item -Path src/Frontend/dist/* -Destination published/wwwroot -Recurse -Force
+          
+      - name: Move published files to icemt folder
+        shell: pwsh
+        run: |
+          $icemtPath = "published/wwwroot/icemt"
+          if (!(Test-Path $icemtPath)) {
+            New-Item -ItemType Directory -Path $icemtPath | Out-Null
+          }
+          Get-ChildItem -Path published/wwwroot -Exclude icemt | 
+          Move-Item -Destination $icemtPath -Force
 
       # ✅ Remove web.config from wwwroot — ASP.NET handles all routing via UseDefaultFiles + MapFallbackToFile
       #    A web.config in wwwroot causes IIS to skip "/" rewrite (treats it as a directory)
@@ -142,7 +152,6 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
-          app-name: acwebsite
-          slot-name: icmet-test
+          app-name: acwebsite-test
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: artifact/
