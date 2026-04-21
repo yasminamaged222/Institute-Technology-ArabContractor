@@ -32,9 +32,8 @@ import CEAProgram from '../pages/CEAProgram';
 import ScrollToTop from '../components/ScrollToTop'
 import SearchPage from '../pages/Searchpage';
 import Mycourses from '../pages/Mycourses';
-import AdminDashboard from '../pages/AdminDashboard';   // أو المسار الصحيح
+import AdminDashboard from '../pages/admin/Admin';
 import PaymentResultPage from '../pages/Paymentresultpage.jsx';
-
 
 
    
@@ -46,11 +45,11 @@ const AppRoutes = () => {
     <Routes>
 
       {/* <Route element={<PublicLayout />}> */}
-            <Route index element={<Home />} />
+                <Route index element={<Home />} />
             <Route path="/vocational-training" element={<VocationalTraining />} />
                 <Route path="gesr-el-suez" element={<GesrElSuezPage />} />
                 <Route path="shobra" element={<ShobraTrainingPage />} />
-        <Route path="/overview" element={<Overview />} />
+                <Route path="/overview" element={<Overview />} />
         <Route path="/mission" element={<Vision_goals />} />
         <Route path="/news" element={<News />} />
             <Route path="/courses/:slug" element={<CoursesPage />} />
@@ -76,8 +75,9 @@ const AppRoutes = () => {
             <Route path="/onsite-training" element={<OnsiteTraining />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/my-courses" element={<Mycourses />} />    
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/payment/result" element={<PaymentResultPage />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/payment/result" element={<PaymentResultPage />} />
+
 
             
 

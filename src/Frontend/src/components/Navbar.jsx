@@ -566,7 +566,7 @@ const Navbar = () => {
                             <>
                                 <ListItemButton
                                     component={Link}
-                                    to="/admin"
+                                    to="/Admin"
                                     onClick={toggleDrawer(false)}
                                     sx={{
                                         borderRadius: 1,
