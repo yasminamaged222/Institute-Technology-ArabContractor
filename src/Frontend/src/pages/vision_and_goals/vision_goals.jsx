@@ -73,8 +73,7 @@ function Vision_goals() {
                             <div className="vision-section">
                                 <h2 className="section-title text-right">الرؤية</h2>
                                 <p className="text-content text-right">
-                                    تحقيق الريادة في التعليم والتدريب المهني محليًا وإقليميًا،
-                                    وتوفير الدعم التدريبي للعاملين بالشركة.
+                                   تحقيق الريادة في التعليم ولتدريب الهندسي و  الحرف و التدريب المهني محليًا وإقليميًا، وتوفير الدعم التدريبي للعاملين بالشركة.
                                 </p>
                             </div>
 
