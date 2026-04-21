@@ -260,8 +260,8 @@ export default function Home() {
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
         /* ── Hero — shorter ── */
-        .hero-swiper{width:100%;height:clamp(300px,55vh,560px);}
-        .hero-swiper .swiper-slide{display:flex;align-items:flex-end;justify-content:flex-start;}
+        .hero-swiper{width:100%;height:clamp(300px,700vh,710px);}
+        .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:flex-start;}
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
           width:38px;height:38px;border-radius:0;
           background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
