@@ -260,29 +260,7 @@ const DynamicCoursesSection = () => {
                 />
             )}
 
-            {/* Section heading */}
-            <Box sx={{ mb: 5, textAlign: 'center' }}>
-                <Typography
-                    variant="h3"
-                    sx={{
-                        fontWeight: 700,
-                        fontFamily: '"Droid Arabic Kufi", serif',
-                        fontSize: { xs: '1.75rem', md: '3rem' },
-                        mb: 1,
-                        position: 'relative',
-                        display: 'inline-block',
-                        '&::after': {
-                            content: '""', position: 'absolute', bottom: -8, left: '50%',
-                            transform: 'translateX(-50%)', width: '80px', height: '4px',
-                            background: 'linear-gradient(90deg, #f57c00 0%, #0865a8 100%)',
-                            borderRadius: '2px',
-                        },
-                    }}
-                >
-                    أحدث الدورات التدريبية
-                </Typography>
-            </Box>
-
+            
             {/* Swiper */}
             <Box sx={{ position: 'relative', px: { lg: 5 } }}>
                 <Swiper
