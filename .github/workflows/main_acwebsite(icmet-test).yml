@@ -45,7 +45,7 @@ jobs:
         shell: pwsh
         run: |
           cd src/Frontend
-          npm install
+          npm ci
 
       # ✅ Write .env file with secrets before build
       - name: Create .env file for frontend
