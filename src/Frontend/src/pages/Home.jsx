@@ -15,13 +15,11 @@ import StarIcon from '@mui/icons-material/Star';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 import HandshakeIcon from '@mui/icons-material/Handshake';
-import GroupsIcon from '@mui/icons-material/Groups';
 import EngineeringIcon from '@mui/icons-material/Engineering';
 import SchoolIcon from '@mui/icons-material/School';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import HardwareIcon from '@mui/icons-material/Hardware';
 import CorporateFareIcon from '@mui/icons-material/CorporateFare';
@@ -29,6 +27,12 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import GroupsIcon from '@mui/icons-material/Groups';
+import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
+import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import CustomersSection from './CustomersSection';
 import TechnicalEducationSection from './TechnicalEducationSection';
@@ -57,10 +61,10 @@ const downloadItems = [
 ];
 
 const visionItems = [
-    { title: 'الرؤية', text: 'تحقيق الريادة في التعليم ولتدريب الهندسي و  الحرف و التدريب المهني محليًا وإقليميًا، وتوفير الدعم التدريبي للعاملين بالشركة.' },
-    { title: 'الرسالة', text: 'إعداد وتأهيل أجيال من الكوادر المهنية المتميزة لتلبية متطلبات الشركة وسوق العمل طبقًا لمعايير الجودة.' },
-    { title: 'إستراتيجية العمل', text: 'إعداد أجيال من الكوادر المؤهلين في بيئة مبتكرة يتمتعون بالتميز التقني والمهارات القيادية والعملية.' },
-    { title: 'الأهداف', text: 'إيجاد فرص التعاون مع الجامعات ومعاهد البحوث والهيئات الدولية وربط المسار المهني بخطط التدريب.' },
+    { title: 'الرؤية', text: 'تحقيق الريادة في التعليم والتدريب الهندسي والمهني محليًا وإقليميًا.' },
+    { title: 'الرسالة', text: 'إعداد وتأهيل أجيال من الكوادر المهنية المتميزة وفق معايير الجودة.' },
+    { title: 'إستراتيجية العمل', text: 'بيئة مبتكرة تجمع التميز التقني بالمهارات القيادية والعملية.' },
+    { title: 'الأهداف', text: 'شراكات مع جامعات وهيئات دولية وربط المسار المهني بخطط التدريب.' },
 ];
 
 const certificates = [
@@ -70,29 +74,74 @@ const certificates = [
     { title: 'Autodesk Training Center', text: 'مركز تدريب معتمد من Autodesk لأحدث برامج الهندسة والتصميم.', image: 'https://images.weserv.nl/?url=www.arabcont.com/icemt/assets/images/autodeskCert.jpg' },
 ];
 
+// ── 5 schools ─────────────────────────────────────────────────────────────────
+const schoolItems = [
+    {
+        name: 'مدرسة المقاولون العرب الفنية',
+        location: 'فروع الشركة',
+        IconComp: SchoolIcon,
+        tag: 'مدرسة فنية',
+        students: '—',
+        schedule: 'وفق الجدول الدراسي',
+        dept: 'تخصصات متعددة',
+        desc: 'مدرسة فنية متكاملة تابعة لشركة المقاولون العرب، تُعِدّ جيلًا من الكوادر المهنية المؤهلة في مجالات الهندسة والحرف الصناعية بأعلى معايير الجودة.',
+        isMakawlen: true,
+        link: '/Technical_Schools',
+    },
+    {
+        name: 'مدرسة المعدات الثقيلة الصناعية بالإسماعيلية',
+        location: 'الإسماعيلية — فرع سيناء',
+        IconComp: PrecisionManufacturingIcon,
+        tag: 'ميكانيكا معدات',
+        students: '20',
+        schedule: 'كل سبت',
+        dept: 'ميكانيكا المعدات',
+        desc: 'تدريب الطلاب على ميكانيكا المعدات بورش فرع سيناء يوم السبت، مع توفير أتوبيس لنقلهم من المدرسة إلى موقع التدريب والعودة.',
+        isMakawlen: false,
+    },
+    {
+        name: 'مدرسة أبو رواش الثانوية الصناعية المشتركة',
+        location: 'مركز تدريب شبرا',
+        IconComp: EngineeringIcon,
+        tag: 'ميكانيكا معدات',
+        students: '18',
+        schedule: 'الأربعاء والخميس',
+        dept: 'ميكانيكا المعدات',
+        desc: 'تدريب الطلاب على ميكانيكا المعدات يومين أسبوعيًا بالمعهد التكنولوجي — مركز تدريب شبرا، من بدء العام الدراسي.',
+        isMakawlen: false,
+    },
+    {
+        name: 'مدرسة الشاطبي الثانوية الصناعية',
+        location: 'ورش العامرية — الإسكندرية',
+        IconComp: ElectricBoltIcon,
+        tag: 'قسم اللحام',
+        students: '19',
+        schedule: 'وفق الجدول',
+        dept: 'اللحام',
+        desc: 'تدريب الطلاب بورش العامرية المركزية بالإسكندرية، قسم اللحام، تحت إشراف مدربين متخصصين من المعهد التكنولوجي.',
+        isMakawlen: false,
+    },
+    {
+        name: 'مدرسة مدينة نصر الثانوية الصناعية',
+        location: 'مركز تدريب شبرا',
+        IconComp: ElectricBoltIcon,
+        tag: 'قسم الكهرباء',
+        students: '20',
+        schedule: 'كل سبت',
+        dept: 'الكهرباء',
+        desc: 'التدريب يوم السبت من كل أسبوع بمركز تدريب شبرا، قسم الكهرباء، لبناء كوادر متخصصة في المجال الكهربائي الصناعي.',
+        isMakawlen: false,
+    },
+];
+
+// ── Protocols ─────────────────────────────────────────────────────────────────
 const protocols = [
-    'جمعية المحاسبين والمراجعين المصرية',
-    'مؤسسة المهندسين المدنيين البريطانيين (ICE)',
-    'مركز تحديث الصناعة',
-    'الغرفة الألمانية العربية للصناعة والتجارة',
-    'المركز الإقليمي لتعليم الكبار (أسفك) - اليونسكو',
-    'نقابة المهندسين بالقاهرة',
-];
-
-const leaderProposals = [
-    'تحويل الخلاطات للعمل بالغاز الطبيعي',
-    'تفعيل قسم الجودة في مراحل التصنيع',
-    'قاعدة بيانات شاملة للمشروعات',
-    'خطة احتياجات الموارد البشرية',
-    'استخدام الطاقة الشمسية',
-    'الخطابات باللغتين العربية والإنجليزية',
-];
-
-const teamMembers = [
-    { name: 'أحمد العصار', role: 'رئيس مجلس الإدارة', img: '/images/team4.jpg', cat: 'قيادة عليا' },
-    { name: 'شريف حمدي', role: 'مدير المعهد', img: '/images/team1.jpg', cat: 'تنفيذي' },
-    { name: 'هبه عادل', role: 'نائب المدير للشئون العلمية', img: '/images/team2.jpg', cat: 'تنفيذي' },
-    { name: 'طارق منصور', role: 'نائب المدير للشئون الفنية', img: '/images/team3.jpg', cat: 'تنفيذي' },
+    { name: 'جمعية المحاسبين والمراجعين المصرية', country: 'مصر', type: 'مهني' },
+    { name: 'مؤسسة المهندسين المدنيين البريطانيين (ICE)', country: 'المملكة المتحدة', type: 'دولي' },
+    { name: 'مركز تحديث الصناعة', country: 'مصر', type: 'صناعي' },
+    { name: 'الغرفة الألمانية العربية للصناعة والتجارة', country: 'ألمانيا', type: 'تجاري' },
+    { name: 'المركز الإقليمي لتعليم الكبار (أسفك) - اليونسكو', country: 'اليونسكو', type: 'دولي' },
+    { name: 'نقابة المهندسين بالقاهرة', country: 'مصر', type: 'مهني' },
 ];
 
 const craftItems = [
@@ -128,19 +177,20 @@ const whyJoinItems = [
     { Icon: ThumbUpAltIcon, title: 'جودة لا تُضاهى', text: 'خدمات فعّالة خالية من الأخطاء ترقى لأعلى توقعات المستفيدين.' },
 ];
 
-// ─── INTERSECTION OBSERVER ─────────────────────────────────────────────────
+// ─── INTERSECTION OBSERVER ────────────────────────────────────────────────────
 function useReveal(threshold = 0.08) {
     const ref = useRef(null);
     const [vis, setVis] = useState(false);
     useEffect(() => {
-        const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVis(true); }, { threshold });
+        const io = new IntersectionObserver(([e]) => {
+            if (e.isIntersecting) setVis(true);
+        }, { threshold });
         if (ref.current) io.observe(ref.current);
         return () => io.disconnect();
     }, []);
     return [ref, vis];
 }
 
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const F = '"Droid Arabic Kufi","Noto Kufi Arabic",serif';
 const C = {
     o: '#f57c00', od: '#e65100',
@@ -151,48 +201,37 @@ const C = {
 };
 
 // ─── ATOMS ────────────────────────────────────────────────────────────────────
-const Eyebrow = ({ children, light }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+const Eyebrow = ({ children, light, center }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, justifyContent: center ? 'center' : 'flex-start' }}>
         <div style={{ width: 32, height: 2, background: C.o }} />
-        <span style={{ fontFamily: F, fontSize: '.72rem', fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: light ? 'rgba(255,255,255,.6)' : C.o }}>
-            {children}
-        </span>
+        <span style={{ fontFamily: F, fontSize: '.72rem', fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: light ? 'rgba(255,255,255,.6)' : C.o }}>{children}</span>
+        {center && <div style={{ width: 32, height: 2, background: C.o }} />}
     </div>
 );
 
-const SplitTitle = ({ children, light, size = 'lg' }) => (
+const SplitTitle = ({ children, light, size = 'lg', center }) => (
     <h2 style={{
         fontFamily: F, fontWeight: 900, margin: 0,
         fontSize: size === 'lg' ? 'clamp(1.8rem,4vw,3.2rem)' : 'clamp(1.4rem,2.8vw,2.2rem)',
         lineHeight: 1.15, letterSpacing: '-0.02em',
         color: light ? C.w : C.k,
+        textAlign: center ? 'center' : 'inherit',
     }}>{children}</h2>
-);
-
-const Pill = ({ children, dark }) => (
-    <span style={{
-        display: 'inline-block', fontFamily: F, fontSize: '.68rem', fontWeight: 700,
-        letterSpacing: 2, textTransform: 'uppercase',
-        padding: '4px 14px', borderRadius: 2,
-        background: dark ? 'rgba(245,124,0,.15)' : C.o,
-        color: dark ? C.o : C.w,
-        border: dark ? `1px solid rgba(245,124,0,.3)` : 'none',
-    }}>{children}</span>
 );
 
 const ArrowBtn = ({ to, children, inv }) => (
     <Link to={to} style={{
         display: 'inline-flex', alignItems: 'center', gap: 10,
-        fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.9rem)', fontWeight: 700,
-        color: inv ? C.w : C.k,
-        textDecoration: 'none',
-        borderBottom: `2px solid ${C.o}`,
-        paddingBottom: 3,
-        transition: 'gap .2s, opacity .2s',
+        fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', fontWeight: 700,
+        color: inv ? C.w : C.b, textDecoration: 'none',
+        background: inv ? 'rgba(255,255,255,.1)' : 'rgba(8,101,168,.08)',
+        border: `1.5px solid ${inv ? 'rgba(255,255,255,.25)' : 'rgba(8,101,168,.25)'}`,
+        padding: '9px 20px', borderRadius: 40,
+        transition: 'all .25s cubic-bezier(.22,1,.36,1)',
     }}
-        onMouseEnter={e => e.currentTarget.style.gap = '16px'}
-        onMouseLeave={e => e.currentTarget.style.gap = '10px'}
-    >{children} <NorthEastIcon sx={{ fontSize: 15 }} /></Link>
+        onMouseEnter={e => { e.currentTarget.style.background = inv ? 'rgba(255,255,255,.18)' : C.b; e.currentTarget.style.color = C.w; e.currentTarget.style.borderColor = inv ? 'rgba(255,255,255,.5)' : C.b; e.currentTarget.style.gap = '14px'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = inv ? 'rgba(255,255,255,.1)' : 'rgba(8,101,168,.08)'; e.currentTarget.style.color = inv ? C.w : C.b; e.currentTarget.style.borderColor = inv ? 'rgba(255,255,255,.25)' : 'rgba(8,101,168,.25)'; e.currentTarget.style.gap = '10px'; }}
+    >{children} <NorthEastIcon sx={{ fontSize: 14 }} /></Link>
 );
 
 const SolidBtn = ({ to, href, children, orange, small }) => {
@@ -202,8 +241,7 @@ const SolidBtn = ({ to, href, children, orange, small }) => {
         color: C.w, textDecoration: 'none',
         background: orange ? C.o : C.b,
         padding: small ? '8px 20px' : 'clamp(10px,1.3vw,13px) clamp(22px,3vw,34px)',
-        borderRadius: 4,
-        transition: 'transform .2s, opacity .2s',
+        borderRadius: 4, transition: 'transform .2s, opacity .2s',
     };
     const hover = e => { e.currentTarget.style.opacity = '.85'; e.currentTarget.style.transform = 'translateY(-1px)'; };
     const leave = e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = ''; };
@@ -216,7 +254,6 @@ export default function Home() {
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
 
-    // Reveal refs — one per major section
     const [statsRef, statsVis] = useReveal(0.05);
     const [featRef, featVis] = useReveal(0.08);
     const [aboutRef, aboutVis] = useReveal(0.06);
@@ -224,10 +261,12 @@ export default function Home() {
     const [dlRef, dlVis] = useReveal(0.08);
     const [certRef, certVis] = useReveal(0.06);
     const [protoRef, protoVis] = useReveal(0.06);
-    const [teamRef, teamVis] = useReveal(0.05);
     const [craftRef, craftVis] = useReveal(0.06);
     const [libRef, libVis] = useReveal(0.05);
     const [newsRef, newsVis] = useReveal(0.06);
+    const [coursesRef, coursesVis] = useReveal(0.06);
+    const [techRef, techVis] = useReveal(0.06);
+    const [schoolsRef, schoolsVis] = useReveal(0.05);
 
     useEffect(() => { document.title = 'المعهد التكنولوجي — ICMET'; }, []);
     useEffect(() => {
@@ -245,76 +284,56 @@ export default function Home() {
             <style>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-        /* ══ IMMERSIVE REVEAL SYSTEM ══ */
-        /* Base hidden state */
-        .rv       { opacity:0; transform:translateY(32px); transition:opacity .75s cubic-bezier(.22,1,.36,1), transform .75s cubic-bezier(.22,1,.36,1); }
-        .rv-left  { opacity:0; transform:translateX(32px); transition:opacity .75s cubic-bezier(.22,1,.36,1), transform .75s cubic-bezier(.22,1,.36,1); }
-        .rv-scale { opacity:0; transform:scale(.96); transition:opacity .75s cubic-bezier(.22,1,.36,1), transform .75s cubic-bezier(.22,1,.36,1); }
-        /* Visible state */
-        .rv.on, .rv-left.on, .rv-scale.on { opacity:1; transform:none; }
-        /* Stagger delays */
-        .d1{transition-delay:.08s;} .d2{transition-delay:.16s;} .d3{transition-delay:.24s;}
-        .d4{transition-delay:.32s;} .d5{transition-delay:.40s;} .d6{transition-delay:.48s;}
+        /* ══ SCROLL REVEAL ══ */
+        .rv      {opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
+        .rv-left {opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
+        .rv-scale{opacity:0;transform:scale(.94);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
+        .rv.on,.rv-left.on,.rv-scale.on{opacity:1;transform:none;}
+        .d1{transition-delay:.06s;}.d2{transition-delay:.14s;}.d3{transition-delay:.22s;}
+        .d4{transition-delay:.30s;}.d5{transition-delay:.38s;}.d6{transition-delay:.46s;}
 
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
-        /* ── Hero — shorter ── */
-        .hero-swiper{width:100%;height:clamp(300px,700vh,710px);}
-        .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:flex-start;}
+        /* ── Hero ── */
+        .hero-swiper{width:100%;height:clamp(300px,100vh,710px);}
+        .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;}
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
-          width:38px;height:38px;border-radius:0;
-          background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
-          color:#fff!important;right:24px!important;left:auto!important;
-          transition:background .2s;
+          width:46px;height:46px;border-radius:50%;
+          background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);
+          color:#fff!important;top:50%!important;transform:translateY(-50%);
+          transition:background .25s,border-color .25s,transform .25s;backdrop-filter:blur(6px);
         }
-        .hero-swiper .swiper-button-prev{top:calc(50% + 24px)!important;}
-        .hero-swiper .swiper-button-next{top:calc(50% - 24px)!important;}
-        .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:10px!important;font-weight:900;}
-        .hero-swiper .swiper-button-prev:hover,.hero-swiper .swiper-button-next:hover{background:${C.o};border-color:${C.o};}
-        .hero-swiper .swiper-pagination{bottom:20px!important;right:auto!important;left:clamp(16px,4vw,56px)!important;width:auto!important;display:flex;gap:6px;}
-        .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.4);opacity:1;width:20px;height:2px;border-radius:0;transition:all .3s;}
-        .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:36px;}
+        .hero-swiper .swiper-button-prev{right:24px!important;left:auto!important;}
+        .hero-swiper .swiper-button-next{left:24px!important;right:auto!important;}
+        .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:12px!important;font-weight:900;}
+        .hero-swiper .swiper-button-prev:hover,.hero-swiper .swiper-button-next:hover{background:${C.o};border-color:${C.o};transform:translateY(-50%) scale(1.08);}
+        .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;}
+        .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
+        .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:44px;}
 
-        /* ── Stats bar ── */
-        .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+        /* ── Stats ── */
+        .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);}
         @media(max-width:760px){.stats-bar{grid-template-columns:repeat(2,1fr);}}
         .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;}
         .stat-cell:last-child{border-left:none;}
 
-        /* ══ FEATURE LIST — editorial redesign ══ */
-        .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid ${C.g3};}
+        /* ── Feature cards ── */
+        .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid ${C.g3};}
         @media(max-width:780px){.feat-grid{grid-template-columns:1fr;}}
-        .feat-card{
-          padding:clamp(28px,4vw,48px) clamp(22px,3vw,36px);
-          border-left:1px solid ${C.g3};
-          position:relative;overflow:hidden;
-          transition:background .3s;
-          cursor:default;
-        }
+        .feat-card{padding:clamp(32px,4vw,52px) clamp(24px,3vw,40px);border-left:1px solid ${C.g3};position:relative;overflow:hidden;transition:background .3s;display:flex;flex-direction:column;align-items:center;text-align:center;}
         .feat-card:last-child{border-left:none;}
         @media(max-width:780px){.feat-card{border-left:none;border-bottom:1px solid ${C.g3};}.feat-card:last-child{border-bottom:none;}}
-        .feat-card::before{
-          content:'';position:absolute;bottom:0;right:0;
-          width:100%;height:3px;background:${C.o};
-          transform:scaleX(0);transform-origin:left;
-          transition:transform .35s cubic-bezier(.22,1,.36,1);
-        }
-        .feat-card:hover{background:${C.g1};}
-        .feat-card:hover::before{transform:scaleX(1);}
-        .feat-num{
-          font-family:${F};font-size:clamp(2.2rem,4vw,3.5rem);font-weight:900;
-          color:${C.g3};line-height:1;margin-bottom:16px;letter-spacing:-2px;
-          transition:color .3s;
-        }
+        .feat-card::before{content:'';position:absolute;bottom:0;right:0;width:100%;height:3px;background:${C.o};transform:scaleX(0);transform-origin:center;transition:transform .35s cubic-bezier(.22,1,.36,1);}
+        .feat-card:hover{background:${C.g1};}.feat-card:hover::before{transform:scaleX(1);}
+        .feat-num{font-family:${F};font-size:clamp(2.4rem,4vw,3.8rem);font-weight:900;color:${C.g3};line-height:1;margin-bottom:20px;letter-spacing:-2px;transition:color .3s;}
         .feat-card:hover .feat-num{color:${C.o};}
 
-        /* ── DL cards ── */
+        /* ── Downloads ── */
         .dl-row{display:flex;align-items:center;gap:16px;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08);text-decoration:none;color:${C.w};transition:background .2s;}
-        .dl-row:last-child{border-bottom:none;}
-        .dl-row:hover{background:rgba(255,255,255,.04);}
+        .dl-row:last-child{border-bottom:none;}.dl-row:hover{background:rgba(255,255,255,.04);}
 
-        /* ── Vision items ── */
+        /* ── Vision ── */
         .vis-item{padding:28px;border-radius:2px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;}
         .vis-item:hover{border-color:${C.o};box-shadow:0 4px 24px rgba(245,124,0,.10);}
 
@@ -322,28 +341,39 @@ export default function Home() {
         .cert-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:2px;padding:24px;color:${C.w};transition:background .25s,border-color .25s;height:100%;display:flex;flex-direction:column;gap:14px;}
         .cert-card:hover{background:rgba(255,255,255,.1);border-color:rgba(245,124,0,.4);}
 
-        /* ── Proto chips ── */
-        .proto-chip{display:flex;align-items:center;gap:12px;padding:18px 20px;border:1px solid ${C.g3};border-radius:2px;background:${C.w};transition:border-color .25s,transform .25s;}
-        .proto-chip:hover{border-color:${C.b};transform:translateX(-3px);}
+        /* ══ PROTOCOLS — card grid (new style) ══ */
+        .proto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+        @media(max-width:900px){.proto-grid{grid-template-columns:repeat(2,1fr);}}
+        @media(max-width:560px){.proto-grid{grid-template-columns:1fr;}}
+        .proto-card{
+          position:relative;overflow:hidden;border-radius:8px;
+          background:${C.w};border:1px solid ${C.g3};
+          padding:24px 20px;display:flex;flex-direction:column;gap:12px;
+          transition:border-color .25s,transform .25s,box-shadow .25s;
+        }
+        .proto-card:hover{border-color:${C.b};transform:translateY(-4px);box-shadow:0 8px 28px rgba(8,101,168,.12);}
+        .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;
+          background:linear-gradient(180deg,${C.o},${C.b});
+          transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
+        .proto-card:hover::after{transform:scaleY(1);}
 
-        /* ── Team card ── */
-        .team-card{overflow:hidden;border-radius:2px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,transform .25s;}
-        .team-card:hover{border-color:${C.o};transform:translateY(-4px);}
-        .team-img{width:100%;height:clamp(160px,18vw,220px);background:linear-gradient(135deg,${C.b},${C.bd});display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
-        .team-img img{width:100%;height:100%;object-fit:cover;}
+        /* ══ SCHOOLS ══ */
+        .school-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+        @media(max-width:960px){.school-grid{grid-template-columns:repeat(2,1fr);}}
+        @media(max-width:560px){.school-grid{grid-template-columns:1fr;}}
+        .school-card{border-radius:8px;border:1px solid ${C.g3};background:${C.w};display:flex;flex-direction:column;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;}
+        .school-card:hover{border-color:${C.b};transform:translateY(-5px);box-shadow:0 12px 32px rgba(8,101,168,.12);}
+        .sc-meta{font-family:${F};font-size:.7rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
 
-        /* ── Craft card ── */
+        /* ── Craft ── */
         .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:2px;background:${C.w};transition:border-color .25s,transform .25s;}
         .craft-card:hover{border-color:${C.o};transform:translateY(-4px);}
 
-        /* ── News card ── */
+        /* ── News ── */
         .news-card{overflow:hidden;border-radius:2px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,transform .25s;height:100%;}
         .news-card:hover{border-color:${C.b};transform:translateY(-4px);}
-
-        /* ── News swiper ── */
-        .news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{width:44px;height:44px;border-radius:0;background:${C.w};border:1px solid ${C.g3};color:${C.b}!important;transition:all .25s;}
-        .news-swiper .swiper-button-prev{right:-24px;}
-        .news-swiper .swiper-button-next{left:-24px;right:auto;}
+        .news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{width:44px;height:44px;border-radius:50%;background:${C.w};border:1px solid ${C.g3};color:${C.b}!important;transition:all .25s;}
+        .news-swiper .swiper-button-prev{right:-24px;}.news-swiper .swiper-button-next{left:-24px;right:auto;}
         .news-swiper .swiper-button-prev::after,.news-swiper .swiper-button-next::after{font-size:12px!important;font-weight:900;}
         .news-swiper .swiper-button-prev:hover,.news-swiper .swiper-button-next:hover{background:${C.b};border-color:${C.b};color:#fff!important;}
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
@@ -356,71 +386,48 @@ export default function Home() {
         @media(max-width:1080px){.g4{grid-template-columns:repeat(2,minmax(0,1fr));}}
         @media(max-width:840px){.g3{grid-template-columns:repeat(2,minmax(0,1fr));}}
         @media(max-width:580px){.g2,.g3,.g4{grid-template-columns:1fr;}}
-
-        /* ── About split ── */
         .ab-split{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,6vw,80px);align-items:start;}
         @media(max-width:780px){.ab-split{grid-template-columns:1fr;}}
-
-        /* ── Programs grid ── */
         .prog-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 24px;}
         @media(max-width:480px){.prog-grid{grid-template-columns:1fr;}}
-
-        /* ── Overview stats strip ── */
         .ov-stats{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;background:${C.w};border:1px solid ${C.g3};border-radius:2px;margin-bottom:clamp(20px,3vw,32px);}
         @media(max-width:560px){.ov-stats{grid-template-columns:1fr;}}
         .ov-stat{padding:clamp(16px,2.5vw,24px) 16px;text-align:center;border-left:1px solid ${C.g3};}
         .ov-stat:last-child{border-left:none;}
-
-        /* ── Why join cards ── */
         .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:2px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
         .why-card:hover{border-color:${C.o};transform:translateY(-3px);}
-
-        /* ── Orange outline btn ── */
         a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:4px;transition:background .2s,color .2s;}
         a.ob-outline:hover{background:${C.o};color:#fff;}
-
-        /* ── Scroll indicator ── */
-        @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(6px);}}
-        .scroll-ind{animation:bounce 1.8s ease-in-out infinite;}
-
-        /* ── Section divider line ── */
-        .s-divider{width:40px;height:3px;background:${C.o};margin:16px 0 0;}
-
-        @media(max-width:480px){.hero-h1{font-size:1.5rem!important;}}
+        @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
+        .scroll-ind{animation:bounce 2s ease-in-out infinite;}
+        @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
       `}</style>
 
-            {/* ════════════════════════════════════════
-          1. HERO  (shorter — 55 vh)
-      ════════════════════════════════════════ */}
+            {/* 1 ─ HERO ──────────────────────────────────────────────────────── */}
             <section style={{ position: 'relative' }}>
-                <Swiper
-                    className="hero-swiper"
-                    modules={[Autoplay, Navigation, Pagination]}
+                <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
                     autoplay={{ delay: 7000, disableOnInteraction: false }}
-                    navigation pagination={{ clickable: true }} loop speed={800}
-                >
+                    navigation pagination={{ clickable: true }} loop speed={800}>
                     {slides.map((sl, i) => (
                         <SwiperSlide key={i}>
                             <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${sl.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg,rgba(4,20,40,.92) 0%,rgba(4,20,40,.65) 45%,rgba(4,20,40,.22) 100%)' }} />
-                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.55) 0%,transparent 55%)' }} />
-                            <div className="W" style={{ position: 'relative', zIndex: 2, width: '100%', paddingBottom: 'clamp(36px,5vh,60px)' }}>
-                                <div style={{ maxWidth: 560 }}>
-                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: F, fontSize: '.68rem', fontWeight: 700, letterSpacing: 2.5, textTransform: 'uppercase', color: C.o, marginBottom: 14 }}>
-                                        <div style={{ width: 24, height: 2, background: C.o }} />
-                                        {sl.tag}
-                                    </div>
-                                    <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.9rem)', color: 'rgba(255,255,255,.55)', marginBottom: 8, fontWeight: 600, letterSpacing: .5 }}>{sl.subtitle}</p>
-                                    <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.6rem,4.5vw,3.6rem)', color: C.w, lineHeight: 1.12, letterSpacing: '-0.02em', marginBottom: 24 }}>{sl.title}</h1>
-                                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                                        <SolidBtn to={sl.link} orange>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
-                                        <ArrowBtn to="/overview" inv>تعرف على المعهد</ArrowBtn>
-                                    </div>
+                            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(4,20,40,.82) 0%, rgba(4,20,40,.58) 60%, rgba(4,20,40,.28) 100%)' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
+                            <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: F, fontSize: '.68rem', fontWeight: 700, letterSpacing: 2.5, textTransform: 'uppercase', color: C.o, marginBottom: 14 }}>
+                                    <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
+                                </div>
+                                <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.9rem)', color: 'rgba(255,255,255,.55)', marginBottom: 10, fontWeight: 600 }}>{sl.subtitle}</p>
+                                <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.7rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.12, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
+                                <div style={{ width: 56, height: 3, background: C.o, margin: '0 auto 28px', borderRadius: 2 }} />
+                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+                                    <SolidBtn to={sl.link} orange>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
+                                    <ArrowBtn to="/overview" inv>تعرف على المعهد</ArrowBtn>
                                 </div>
                             </div>
-                            <div className="scroll-ind" style={{ position: 'absolute', bottom: 20, right: 'clamp(16px,4vw,56px)', zIndex: 3 }}>
-                                <div style={{ width: 20, height: 32, border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 10, display: 'flex', justifyContent: 'center', paddingTop: 5 }}>
-                                    <div style={{ width: 3, height: 7, background: C.o, borderRadius: 2 }} />
+                            <div className="scroll-ind" style={{ position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', zIndex: 3 }}>
+                                <div style={{ width: 22, height: 34, border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 11, display: 'flex', justifyContent: 'center', paddingTop: 5 }}>
+                                    <div style={{ width: 3, height: 8, background: C.o, borderRadius: 2 }} />
                                 </div>
                             </div>
                         </SwiperSlide>
@@ -428,17 +435,12 @@ export default function Home() {
                 </Swiper>
             </section>
 
-            {/* ════════════════════════════════════════
-          2. STATS BAR  (first visible section after fold)
-      ════════════════════════════════════════ */}
+            {/* 2 ─ STATS ─────────────────────────────────────────────────────── */}
             <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}` }}>
                 <div className="W">
                     <div className="stats-bar">
                         {stats.map((s, i) => (
-                            <div
-                                key={i}
-                                className={`stat-cell rv${statsVis ? ' on' : ''} d${i + 1}`}
-                            >
+                            <div key={i} className={`stat-cell rv${statsVis ? ' on' : ''} d${i + 1}`}>
                                 <div style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>{s.n}</div>
                                 <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
                             </div>
@@ -447,59 +449,40 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* ════════════════════════════════════════
-          3. FEATURE LIST  (editorial card redesign)
-      ════════════════════════════════════════ */}
+            {/* 3 ─ FEATURES ──────────────────────────────────────────────────── */}
             <section style={{ background: C.w }} ref={featRef}>
                 <div className="W" style={{ paddingTop: 'clamp(48px,6vw,80px)', paddingBottom: 0 }}>
-                    <div className={`rv${featVis ? ' on' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
-                        <div>
-                            <Eyebrow>ما يميزنا</Eyebrow>
-                            <SplitTitle>لماذا المعهد؟</SplitTitle>
+                    <div className={`rv${featVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 36 }}>
+                        <Eyebrow center>ما يميزنا</Eyebrow>
+                        <SplitTitle center>لماذا المعهد؟</SplitTitle>
+                        <div style={{ width: 56, height: 3, background: C.o, margin: '16px auto 24px', borderRadius: 2 }} />
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <ArrowBtn to="/overview">تعرف على المزيد</ArrowBtn>
                         </div>
-                        <ArrowBtn to="/overview">تعرف على المزيد</ArrowBtn>
                     </div>
                 </div>
-
-                {/* Full-bleed card strip — no wrapper padding on sides */}
                 <div className="feat-grid" style={{ maxWidth: '100%', borderRight: `1px solid ${C.g3}`, borderLeft: `1px solid ${C.g3}` }}>
                     {features.map((f, i) => (
                         <div key={i} className={`feat-card rv${featVis ? ' on' : ''} d${i + 1}`}>
-                            {/* Large ghost number */}
                             <div className="feat-num">{f.num}</div>
-
-                            {/* Icon */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                                <img src={f.icon} alt="" style={{ width: 36, height: 36, objectFit: 'contain', flexShrink: 0 }} />
-                                <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.3 }}>{f.title}</h3>
-                            </div>
-
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', color: C.g5, lineHeight: 1.85, marginBottom: 20 }}>{f.subtitle}</p>
-
+                            <div style={{ marginBottom: 16 }}><img src={f.icon} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} /></div>
+                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.3, marginBottom: 10 }}>{f.title}</h3>
+                            <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', color: C.g5, lineHeight: 1.85, marginBottom: 22 }}>{f.subtitle}</p>
                             <Link to={f.link} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 2, transition: 'gap .2s' }}
                                 onMouseEnter={e => e.currentTarget.style.gap = '10px'}
-                                onMouseLeave={e => e.currentTarget.style.gap = '6px'}
-                            >
+                                onMouseLeave={e => e.currentTarget.style.gap = '6px'}>
                                 استعرض <NorthEastIcon sx={{ fontSize: 13 }} />
                             </Link>
                         </div>
                     ))}
                 </div>
-
-                {/* Orange accent strip below the feature cards */}
                 <div style={{ height: 4, background: `linear-gradient(90deg,${C.o},${C.b})` }} />
             </section>
 
-            {/* ════════════════════════════════════════
-          4. ABOUT  (condensed)
-      ════════════════════════════════════════ */}
+            {/* 4 ─ ABOUT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={aboutRef}>
                 <div className="W">
-
-                    {/* Row 1: image + text */}
                     <div className={`ab-split rv${aboutVis ? ' on' : ''}`} style={{ marginBottom: 'clamp(28px,4vw,44px)' }}>
-
-                        {/* Image */}
                         <div className={`rv-scale${aboutVis ? ' on' : ''} d1`} style={{ position: 'relative' }}>
                             <div style={{ position: 'absolute', top: -12, right: -12, width: 52, height: 52, background: C.o, zIndex: 0 }} />
                             <img src={logo} alt="المعهد" style={{ width: '100%', display: 'block', borderRadius: 2, aspectRatio: '4/3', objectFit: 'cover', position: 'relative', zIndex: 1 }} />
@@ -508,38 +491,29 @@ export default function Home() {
                                 <div style={{ fontFamily: F, fontSize: '.68rem', color: 'rgba(255,255,255,.5)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 }}>تأسيس المعهد</div>
                             </div>
                         </div>
-
-                        {/* Text */}
                         <div className={`rv${aboutVis ? ' on' : ''} d2`}>
                             <Eyebrow>نبذة عامة</Eyebrow>
-                            <SplitTitle>رائد في التدريب<br />الهندسي والإداري</SplitTitle>
+                            <SplitTitle>رائد في التدريب<br />الهندسي والإداري والحرفي</SplitTitle>
                             <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
-
                             <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: C.g7, lineHeight: 2, marginBottom: 18, textAlign: 'justify' }}>
                                 أول شركة مقاولات في الشرق الأوسط تُنشئ معهدًا للتدريب منذ أكثر من 45 عامًا. نُعِدّ أجيالًا متميزة في التشييد والإدارة والتقنية، ونخدم الوزارات والهيئات والقطاع الخاص بمعايير الجودة الدولية.
                             </p>
-
-                            {/* Mini programs */}
                             <div className="prog-grid">
                                 {trainingPrograms.map((p, i) => (
                                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: `1px solid ${C.g3}`, borderRadius: 2, background: C.w, transition: 'border-color .2s' }}
                                         onMouseEnter={e => e.currentTarget.style.borderColor = C.o}
-                                        onMouseLeave={e => e.currentTarget.style.borderColor = C.g3}
-                                    >
+                                        onMouseLeave={e => e.currentTarget.style.borderColor = C.g3}>
                                         <p.Icon sx={{ fontSize: 18, color: C.o, flexShrink: 0 }} />
                                         <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', fontWeight: 700, color: C.k }}>{p.label}</span>
                                     </div>
                                 ))}
                             </div>
-
                             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                 <SolidBtn to="/overview" orange>تعرف على المعهد</SolidBtn>
                                 <Link to="/mission" className="ob-outline">الرؤية والرسالة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></Link>
                             </div>
                         </div>
                     </div>
-
-                    {/* Row 2: stats strip */}
                     <div className={`ov-stats rv${aboutVis ? ' on' : ''} d3`}>
                         {overviewStats.map((s, i) => (
                             <div key={i} className="ov-stat">
@@ -549,8 +523,6 @@ export default function Home() {
                             </div>
                         ))}
                     </div>
-
-                    {/* Row 3: why join */}
                     <div className={`rv${aboutVis ? ' on' : ''} d4`}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
                             <div style={{ width: 3, height: 22, background: C.o }} />
@@ -559,7 +531,7 @@ export default function Home() {
                         <div className="g4" style={{ gap: 12 }}>
                             {whyJoinItems.map((item, i) => (
                                 <div key={i} className="why-card">
-                                    <div style={{ width: 44, height: 44, borderRadius: 2, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <div style={{ width: 44, height: 44, borderRadius: 2, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <item.Icon sx={{ fontSize: 22, color: C.b }} />
                                     </div>
                                     <h4 style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.92rem)', fontWeight: 800, color: C.k }}>{item.title}</h4>
@@ -568,13 +540,10 @@ export default function Home() {
                             ))}
                         </div>
                     </div>
-
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-          5. VISION
-      ════════════════════════════════════════ */}
+            {/* 5 ─ VISION ────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={visionRef}>
                 <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'linear-gradient(270deg,rgba(8,101,168,.12) 0%,transparent 100%)', pointerEvents: 'none' }} />
                 <div className="W">
@@ -603,9 +572,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-          6. DOWNLOADS
-      ════════════════════════════════════════ */}
+            {/* 6 ─ DOWNLOADS ─────────────────────────────────────────────────── */}
             <div ref={dlRef} style={{ background: C.b }}>
                 <div className={`rv${dlVis ? ' on' : ''}`}>
                     <div className="W" style={{ padding: 'clamp(28px,4vw,48px) clamp(16px,4vw,56px)' }}>
@@ -633,21 +600,19 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* ════════════════════════════════════════
-          7. COURSES
-      ════════════════════════════════════════ */}
-            <section style={{ background: C.w, paddingBottom: 24 }}>
+            {/* 7 ─ COURSES ───────────────────────────────────────────────────── */}
+            <section style={{ background: C.w, paddingBottom: 24 }} ref={coursesRef}>
                 <div className="W" style={{ paddingTop: 'clamp(48px,7vw,80px)' }}>
-                    <Eyebrow>دوراتنا</Eyebrow>
-                    <SplitTitle>أحدث الدورات التدريبية</SplitTitle>
-                    <div style={{ width: 40, height: 3, background: C.o, margin: '16px 0 40px' }} />
+                    <div className={`rv${coursesVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 40 }}>
+                        <Eyebrow center>دوراتنا</Eyebrow>
+                        <SplitTitle center>أحدث الدورات التدريبية</SplitTitle>
+                        <div style={{ width: 56, height: 3, background: C.o, margin: '16px auto 0', borderRadius: 2 }} />
+                    </div>
                 </div>
                 <DynamicCoursesSection />
             </section>
 
-            {/* ════════════════════════════════════════
-          8. CERTIFICATIONS
-      ════════════════════════════════════════ */}
+            {/* 8 ─ CERTIFICATIONS ────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.k, position: 'relative', overflow: 'hidden' }} ref={certRef}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
                 <div className="W">
@@ -659,13 +624,10 @@ export default function Home() {
                         <div className={`rv${certVis ? ' on' : ''} d2`}><ArrowBtn to="/certifications" inv>عرض الكل</ArrowBtn></div>
                     </div>
                     <div className={`rv${certVis ? ' on' : ''} d3`}>
-                        <Swiper
-                            modules={[Autoplay, Pagination]}
-                            autoplay={{ delay: 4500, disableOnInteraction: false }}
+                        <Swiper modules={[Autoplay, Pagination]} autoplay={{ delay: 4500, disableOnInteraction: false }}
                             pagination={{ clickable: true }} loop spaceBetween={16}
                             breakpoints={{ 0: { slidesPerView: 1 }, 560: { slidesPerView: 2 }, 900: { slidesPerView: 3 } }}
-                            style={{ paddingBottom: 44 }}
-                        >
+                            style={{ paddingBottom: 44 }}>
                             {certificates.map((c, i) => (
                                 <SwiperSlide key={i} style={{ height: 'auto' }}>
                                     <div className="cert-card">
@@ -681,104 +643,137 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-          9. TECHNICAL EDUCATION
-      ════════════════════════════════════════ */}
-            <section style={{ background: C.g1 }}>
+            {/* 9 ─ TECHNICAL EDUCATION + SCHOOLS ─────────────────────────────── */}
+            <section style={{ background: C.g1 }} ref={techRef}>
+                {/* Compact header */}
                 <div className="W" style={{ paddingTop: 'clamp(48px,7vw,80px)' }}>
-                    <Eyebrow>برامجنا</Eyebrow>
-                    <SplitTitle>التعليم الفني والتدريب المهني</SplitTitle>
-                    <div style={{ width: 40, height: 3, background: C.o, margin: '16px 0 40px' }} />
+                    <div className={`rv${techVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 20 }}>
+                        <Eyebrow center>برامجنا</Eyebrow>
+                        <SplitTitle center >المدارس المشاركة في البروتوكول التدريبي</SplitTitle>
+                        <div style={{ width: 56, height: 3, background: C.o, margin: '14px auto 16px', borderRadius: 2 }} />
+                        <p style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: C.g5, lineHeight: 1.8, maxWidth: 640, margin: '0 auto' }}>
+                            نتعاون مع وزارة التربية والتعليم لتأهيل طلاب الثانويات الصناعية عمليًا داخل ورش ومراكز تدريب المعهد في عدة محافظات.
+                        </p>
+                    </div>
                 </div>
-                <TechnicalEducationSection />
-                <div style={{ textAlign: 'center', padding: 'clamp(28px,4vw,48px) 0 clamp(48px,7vw,80px)' }}>
-                    <SolidBtn to="/technical-education" orange>عرض تطوير التعليم الفني <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
-                </div>
-            </section>
+                {/* Schools grid */}
+                <div className="W" style={{ paddingTop: 'clamp(36px,5vw,56px)', paddingBottom: 'clamp(48px,7vw,80px)' }} ref={schoolsRef}>
+                    <div className="school-grid">
+                        {schoolItems.map((sc, i) => (
+                            <div key={i} className={`school-card rv${schoolsVis ? ' on' : ''} d${Math.min(i + 1, 6)}`} >
 
-            {/* ════════════════════════════════════════
-          10. PROTOCOLS
-      ════════════════════════════════════════ */}
-            <section className="S" style={{ background: C.w, borderTop: `1px solid ${C.g3}` }} ref={protoRef}>
-                <div className="W">
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'clamp(32px,6vw,80px)', alignItems: 'start' }}>
-                        <div className={`rv${protoVis ? ' on' : ''} d1`}>
-                            <Eyebrow>شراكاتنا</Eyebrow>
-                            <SplitTitle size="sm">البروتوكولات والاتفاقيات</SplitTitle>
-                            <div style={{ width: 40, height: 3, background: C.o, margin: '16px 0 20px' }} />
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.92rem)', color: C.g5, lineHeight: 1.9, marginBottom: 24 }}>
-                                بروتوكولات تعاون استراتيجية مع جامعات وهيئات دولية معتمدة.
-                            </p>
-                            <SolidBtn to="/protocols" orange>عرض الكل</SolidBtn>
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            {protocols.map((p, i) => (
-                                <div key={i} className={`proto-chip rv${protoVis ? ' on' : ''} d${Math.min(i + 2, 6)}`}>
-                                    <div style={{ width: 36, height: 36, borderRadius: 2, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <HandshakeIcon sx={{ color: C.b, fontSize: 18 }} />
+                                {/* Head */}
+                                <div style={{
+                                    padding: '22px 20px 18px',
+                                    borderBottom: `1px solid ${C.g3}`,
+                                    background: sc.isMakawlen ? `linear-gradient(135deg,${C.b} 0%,${C.bd} 100%)` : C.w,
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
+                                        <div style={{
+                                            width: 50, height: 50, borderRadius: 8, flexShrink: 0,
+                                            background: sc.isMakawlen ? 'rgba(255,255,255,.15)' : 'rgba(8,101,168,.08)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        }}>
+                                            <sc.IconComp sx={{ fontSize: 26, color: sc.isMakawlen ? C.w : C.b }} />
+                                        </div>
+                                        {/* Tag pill */}
+                                        <span style={{
+                                            fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2,
+                                            padding: '3px 10px', borderRadius: 20,
+                                            background: sc.isMakawlen ? 'rgba(255,255,255,.15)' : 'rgba(8,101,168,.1)',
+                                            color: sc.isMakawlen ? C.w : C.b,
+                                            border: sc.isMakawlen ? '1px solid rgba(255,255,255,.25)' : '1px solid rgba(8,101,168,.2)',
+                                        }}>{sc.tag}</span>
                                     </div>
-                                    <span style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.92rem)', fontWeight: 700, color: C.k, flex: 1 }}>{p}</span>
-                                    <Pill dark>اتفاقية</Pill>
+                                    <h3 style={{ fontFamily: F, fontSize: 'clamp(.84rem,1.2vw,.96rem)', fontWeight: 800, lineHeight: 1.45, color: sc.isMakawlen ? C.w : C.k, margin: 0 }}>{sc.name}</h3>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </section>
 
-            {/* ════════════════════════════════════════
-          11. TEAM
-      ════════════════════════════════════════ */}
-            <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={teamRef}>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: '30%', height: 3, background: C.o }} />
-                <div className="W">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
-                        <div className={`rv${teamVis ? ' on' : ''} d1`}>
-                            <Eyebrow light>قيادتنا</Eyebrow>
-                            <SplitTitle light size="sm">فريق العمل والقيادة</SplitTitle>
-                        </div>
-                        <div className={`rv${teamVis ? ' on' : ''} d2`} style={{ display: 'flex', gap: 10 }}>
-                            <ArrowBtn to="/future-leaders" inv>مجلس قادة المستقبل</ArrowBtn>
-                            <ArrowBtn to="/team" inv>فريق العمل</ArrowBtn>
-                        </div>
-                    </div>
-                    <div className="g4">
-                        {teamMembers.map((m, i) => (
-                            <div key={i} className={`team-card rv${teamVis ? ' on' : ''} d${i + 1}`}>
-                                <div className="team-img">
-                                    <img src={m.img} alt={m.name} onError={e => e.target.style.display = 'none'} />
-                                    <GroupsIcon sx={{ color: 'rgba(255,255,255,.2)', fontSize: 52, position: 'absolute' }} />
-                                </div>
-                                <div style={{ padding: '14px 16px' }}>
-                                    <span style={{ display: 'inline-block', fontFamily: F, fontSize: '.66rem', fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', color: i === 0 ? C.od : C.b, marginBottom: 6 }}>{m.cat}</span>
-                                    <div style={{ fontFamily: F, fontSize: 'clamp(.84rem,1.2vw,.96rem)', fontWeight: 800, color: C.k }}>{m.name}</div>
-                                    <div style={{ fontFamily: F, fontSize: '.74rem', color: C.g5, lineHeight: 1.4, marginTop: 3 }}>{m.role}</div>
+                                {/* Body */}
+                                <div style={{ padding: '16px 20px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                    <p style={{ fontFamily: F, fontSize: 'clamp(.74rem,1vw,.84rem)', color: C.g5, lineHeight: 1.8, marginBottom: 16, flex: 1 }}>{sc.desc}</p>
+
+                                    {/* Meta */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
+                                        <span className="sc-meta"><LocationOnIcon sx={{ fontSize: 14, color: C.b }} />{sc.location}</span>
+                                        <span className="sc-meta"><CalendarTodayIcon sx={{ fontSize: 13, color: C.b }} />{sc.schedule}</span>
+                                        <span className="sc-meta"><GroupsIcon sx={{ fontSize: 14, color: C.b }} />{sc.students !== '—' ? `${sc.students} طالب` : 'متعدد'}</span>
+                                    </div>
+
+                                    {/* CTA */}
+                                    {sc.isMakawlen ? (
+                                        <SolidBtn to={sc.link} orange small>
+                                            اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} />
+                                        </SolidBtn>
+                                    ) : (
+                                        <Link to="/technical-education" style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: 6,
+                                            fontFamily: F, fontSize: '.76rem', fontWeight: 700,
+                                            color: C.b, textDecoration: 'none',
+                                            borderBottom: `1px solid ${C.b}`, paddingBottom: 2,
+                                            transition: 'gap .2s',
+                                        }}
+                                            onMouseEnter={e => e.currentTarget.style.gap = '10px'}
+                                            onMouseLeave={e => e.currentTarget.style.gap = '6px'}>
+                                            عرض تطوير التعليم الفني <OpenInNewIcon sx={{ fontSize: 12 }} />
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                         ))}
                     </div>
-                    <div className={`rv${teamVis ? ' on' : ''} d5`} style={{ marginTop: 40, border: '1px solid rgba(255,255,255,.08)', borderRadius: 2, padding: 'clamp(20px,3vw,32px)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                            <div style={{ width: 3, height: 24, background: C.o }} />
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.15rem)', fontWeight: 800, color: C.w }}>
-                                مقترحات <span style={{ color: C.o }}>مجلس قادة المستقبل</span>
-                            </h3>
+                </div>
+            </section>
+
+            {/* 10 ─ PROTOCOLS (redesigned) ────────────────────────────────────── */}
+            <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={protoRef}>
+                {/* Decorative circles */}
+                <div style={{ position: 'absolute', bottom: -80, left: -80, width: 340, height: 340, borderRadius: '50%', border: '1px solid rgba(8,101,168,.15)', pointerEvents: 'none' }} />
+                <div style={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(245,124,0,.1)', pointerEvents: 'none' }} />
+
+                <div className="W" style={{ position: 'relative', zIndex: 1 }}>
+                    {/* Header row */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 12 }}>
+                        <div className={`rv${protoVis ? ' on' : ''} d1`}>
+                            <Eyebrow light>شراكاتنا</Eyebrow>
+                            <SplitTitle light size="sm">البروتوكولات والاتفاقيات</SplitTitle>
+                            <div style={{ width: 44, height: 3, background: C.o, marginTop: 16 }} />
                         </div>
-                        <div className="g2" style={{ gap: 10 }}>
-                            {leaderProposals.map((p, i) => (
-                                <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 14px', border: '1px solid rgba(255,255,255,.06)', borderRadius: 2 }}>
-                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.o, flexShrink: 0, marginTop: 7 }} />
-                                    <span style={{ fontFamily: F, fontSize: 'clamp(.74rem,1.1vw,.86rem)', color: 'rgba(255,255,255,.65)', lineHeight: 1.7 }}>{p}</span>
+                        <div className={`rv${protoVis ? ' on' : ''} d2`}>
+                            <SolidBtn to="/protocols" orange>عرض الكل <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
+                        </div>
+                    </div>
+
+                    <p className={`rv${protoVis ? ' on' : ''} d2`} style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: 'rgba(255,255,255,.5)', lineHeight: 1.8, marginBottom: 36, maxWidth: 560 }}>
+                        بروتوكولات تعاون استراتيجية مع مؤسسات وهيئات دولية معتمدة لتعزيز جودة التدريب والاعتماد المهني.
+                    </p>
+
+                    {/* Cards */}
+                    <div className="proto-grid">
+                        {protocols.map((p, i) => (
+                            <div key={i} className={`proto-card rv${protoVis ? ' on' : ''} d${Math.min(i + 1, 6)}`}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div style={{ width: 42, height: 42, borderRadius: 8, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <HandshakeIcon sx={{ color: C.b, fontSize: 22 }} />
+                                    </div>
+                                    <span style={{
+                                        fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2,
+                                        padding: '3px 10px', borderRadius: 20,
+                                        background: 'rgba(245,124,0,.1)', border: '1px solid rgba(245,124,0,.2)',
+                                        color: C.o,
+                                    }}>{p.type}</span>
                                 </div>
-                            ))}
-                        </div>
+                                <h4 style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.94rem)', fontWeight: 800, color: C.k, lineHeight: 1.45, margin: 0 }}>{p.name}</h4>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <LocationOnIcon sx={{ fontSize: 13, color: C.g5 }} />
+                                    <span style={{ fontFamily: F, fontSize: '.7rem', color: C.g5, fontWeight: 600 }}>{p.country}</span>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-          12. NEWS
-      ════════════════════════════════════════ */}
+            {/* 11 ─ NEWS ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={newsRef}>
                 <div className="W">
                     <div className={`rv${newsVis ? ' on' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
@@ -790,14 +785,11 @@ export default function Home() {
                     </div>
                     {!newsLoading && newsItems.length > 0 && (
                         <div className={`rv${newsVis ? ' on' : ''} d2`}>
-                            <Swiper
-                                className="news-swiper"
-                                modules={[Autoplay, Navigation, Pagination]}
+                            <Swiper className="news-swiper" modules={[Autoplay, Navigation, Pagination]}
                                 autoplay={{ delay: 5000, disableOnInteraction: false }}
                                 navigation pagination={{ clickable: true }} loop spaceBetween={16}
                                 breakpoints={{ 0: { slidesPerView: 1 }, 560: { slidesPerView: 2 }, 900: { slidesPerView: 3 } }}
-                                style={{ paddingBottom: 44 }}
-                            >
+                                style={{ paddingBottom: 44 }}>
                                 {newsItems.map(n => (
                                     <SwiperSlide key={n.id} style={{ height: 'auto' }}>
                                         <div className="news-card">
@@ -822,16 +814,13 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-          13. CRAFT + TECHNICAL + EXAMS
-      ════════════════════════════════════════ */}
+            {/* 12 ─ CRAFT + TECHNICAL + EXAMS ─────────────────────────────────── */}
             <section className="S" style={{ background: C.w, borderTop: `1px solid ${C.g3}` }} ref={craftRef}>
                 <div className="W">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
-                        <div className={`rv${craftVis ? ' on' : ''} d1`}>
-                            <Eyebrow>خدمات متخصصة</Eyebrow>
-                            <SplitTitle size="sm">التدريب الحرفي والفني والتقييم</SplitTitle>
-                        </div>
+                    <div className={`rv${craftVis ? ' on' : ''} d1`} style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
+                        <Eyebrow center>خدمات متخصصة</Eyebrow>
+                        <SplitTitle center size="sm">التدريب الحرفي والفني والتقييم</SplitTitle>
+                        <div style={{ width: 48, height: 3, background: C.o, margin: '16px auto 0', borderRadius: 2 }} />
                     </div>
                     <div className="g3">
                         {craftItems.map((c, i) => (
@@ -849,9 +838,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-          14. LIBRARY
-      ════════════════════════════════════════ */}
+            {/* 13 ─ LIBRARY ──────────────────────────────────────────────────── */}
             <section style={{ background: C.k }} ref={libRef}>
                 <div className={`rv${libVis ? ' on' : ''}`}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 'clamp(260px,36vw,440px)' }}>
@@ -884,9 +871,10 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-          15. CUSTOMERS
-      ════════════════════════════════════════ */}
+            {/* ── Gap spacer before Customers ── */}
+            <div style={{ height: 'clamp(48px,7vw,80px)', background: C.w }} />
+
+            {/* 14 ─ CUSTOMERS ────────────────────────────────────────────────── */}
             <div><CustomersSection /></div>
         </div>
     );
