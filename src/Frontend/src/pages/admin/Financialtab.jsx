@@ -8,7 +8,6 @@ import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend
 } from 'recharts';
-
 // ════════════════════════════════════════════════════════════════════════════
 // DESIGN TOKENS
 // ════════════════════════════════════════════════════════════════════════════
