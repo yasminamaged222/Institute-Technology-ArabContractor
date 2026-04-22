@@ -283,7 +283,7 @@ builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.Authority = builder.Configuration["Clerk:Authority"];
+        //options.Authority = builder.Configuration["Clerk:Authority"];
         options.RequireHttpsMetadata = true;
         options.MapInboundClaims = false;
 
@@ -292,7 +292,7 @@ builder.Services
             ValidateIssuer = false,
             ValidateAudience = false,
             ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
+            ValidateIssuerSigningKey = false,  // from true to false
             NameClaimType = "sub"
         };
 
