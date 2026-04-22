@@ -57,6 +57,7 @@ namespace Institute.Application.Services
                     {
                         EnrollmentId = e.Id,           // ← أضف
                         Title = e.Planwork.ServiceTitle,
+                        CoursePrice= e.Planwork.PlanCost,       // ← أضف
                         EnrolledAt = e.EnrolledAt,
                         Attended = e.Attended
                     })
