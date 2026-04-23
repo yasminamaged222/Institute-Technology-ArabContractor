@@ -87,7 +87,7 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 //builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
-
+builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<BankPaymentService>();
 builder.Services.AddScoped<IRefundService, RefundService>();
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
