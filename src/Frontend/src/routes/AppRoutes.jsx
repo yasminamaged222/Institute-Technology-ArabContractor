@@ -36,6 +36,7 @@ import AdminDashboard from '../pages/admin/Admin';
 import PaymentResultPage from '../pages/Paymentresultpage.jsx';
 import Mohadren from '../pages/admin/mohadren';
 import NewsTab from '../pages/admin/NewsTab';
+import BooksTab from '../pages/admin/BooksTab';
 
 
    
@@ -81,6 +82,7 @@ const AppRoutes = () => {
                 <Route path="/payment/result" element={<PaymentResultPage />} />
                 <Route path="/mohadren" element={<Mohadren />} />
                 <Route path="/admin/news" element={<NewsTab />} />
+                <Route path="/admin/books" element={<BooksTab />} />
 
 
             

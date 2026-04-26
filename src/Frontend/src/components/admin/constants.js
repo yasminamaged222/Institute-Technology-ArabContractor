@@ -63,8 +63,8 @@ export const TABS = [
     { id: 'refunds', label: 'المستردات', icon: '💳' },
     { id: 'financial', label: 'المالية', icon: '💰' }, // ← NEW
     { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },
-    { id: 'news', label: 'الأخبار', icon: '📰' }
-
+    { id: 'news', label: 'الأخبار', icon: '📰' },
+    { id: 'books', label: 'المكتبة', icon: '📖' } // ← ADDED
 
 ];
 
@@ -80,5 +80,5 @@ export const TAB_TITLES = {
     financial: { tag: 'المالية', title: ['البيانات', 'المالية'] },
     lecturers: { tag: 'إدارة المحاضرين', title: ['بيانات', 'المحاضرين'] },
     news: { tag: 'إدارة المحتوى', title: ['إدارة', 'الأخبار'] },
-
+    books: { tag: 'إدارة المحتوى', title: ['مكتبة', 'الكتب'] }, // ← ADDED
 };

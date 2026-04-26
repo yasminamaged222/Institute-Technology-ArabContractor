@@ -24,7 +24,7 @@ import RefundDetailModal from '../../components/admin/modals/RefundDetailModal';
 import RefundActionModal from '../../components/admin/modals/RefundActionModal';
 import LecturersTab from './mohadren';  // ← ADD
 import NewsTab from './NewsTab';
-
+import BooksTab from './BooksTab'; // ← ADDED
 
 
 const TABS = [
@@ -35,8 +35,8 @@ const TABS = [
     { id: 'refunds', label: 'المستردات', icon: '💳' },
     { id: 'financial', label: 'المالية', icon: '💰' },
     { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },  // ← ADD
-    { id: 'news', label: 'الأخبار', icon: '📰' }
-
+    { id: 'news', label: 'الأخبار', icon: '📰' },
+    { id: 'books', label: 'الكتب', icon: '📖' }, // ← ADDED
 
 ];
 
@@ -91,7 +91,10 @@ const AdminDashboard = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
-
+    // -- Books state --
+    const [booksData, setBooksData] = useState([]);
+    const [booksPage, setBooksPage] = useState(1);
+    const [booksSearch, setBooksSearch] = useState('');
     // ── Pagination ──
     const [usersPage, setUsersPage] = useState(1);
     const [coursesPage, setCoursesPage] = useState(1);
@@ -101,7 +104,8 @@ const AdminDashboard = () => {
 
     // ── Effects ──
     useEffect(() => { injectAdminStyles(); }, []);
-    useEffect(() => { setUsersPage(1); setCoursesPage(1); setExpandedRow(null); }, [activeTab]);
+    useEffect(() => {
+        setUsersPage(1); setCoursesPage(1); setBooksPage(1); setExpandedRow(null); }, [activeTab]);
     useEffect(() => { setUsersPage(1); setExpandedRow(null); }, [searchQuery, dateFrom, dateTo]);
     useEffect(() => { setAttPage(1); }, [attCourseFilter, attUserSearch]);
     useEffect(() => { setCertPage(1); }, [certSearch, certStatusFilter]);
@@ -129,6 +133,21 @@ const AdminDashboard = () => {
         return fetch(url, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
     }, [getToken]);
 
+    const loadBooks = useCallback(async () => {
+        try {
+            const res = await authFetch(`${API_BASE}/Admin/books`);
+            if (res.ok) {
+                const data = await res.json();
+                setBooksData(Array.isArray(data) ? data : data.result || []);
+            }
+        } catch (err) {
+            console.error("Failed to load books:", err);
+        }
+    }, [authFetch]);
+
+    useEffect(() => {
+        if (activeTab === 'books') loadBooks();
+    }, [activeTab, loadBooks]);
     // ── Load main data ──
     useEffect(() => {
         const load = async () => {
@@ -521,6 +540,18 @@ const AdminDashboard = () => {
                         {activeTab === 'news' &&(
                             <NewsTab />)}
 
+                        {activeTab === 'books' && (
+                            <BooksTab
+                                data={booksData}
+                                loading={loading}
+                                search={booksSearch}
+                                setSearch={setBooksSearch}
+                                currentPage={booksPage}
+                                setCurrentPage={setBooksPage}
+                                authFetch={authFetch}
+                                onRefresh={loadBooks}
+                            />
+                        )}
                     </div>
 
                     <div className="adm-footer">
