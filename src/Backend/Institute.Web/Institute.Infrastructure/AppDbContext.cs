@@ -58,6 +58,8 @@ public partial class AppDbContext : DbContext
 
     //// Custom DbSets for the new entities
     public virtual DbSet<AppUser> AppUsers { get; set; }
+    public DbSet<Permission> Permissions { get; set; }
+    public DbSet<UserPermission> UserPermissions { get; set; }
     public virtual DbSet<Cart> Carts { get; set; }
     public virtual DbSet<CartItem> CartItems { get; set; }
     public virtual DbSet<Order> Orders { get; set; }
@@ -135,7 +137,20 @@ public partial class AppDbContext : DbContext
                   .WithOne(o => o.User)
                   .HasForeignKey(o => o.UserId);
         });
+        modelBuilder.Entity<UserPermission>()
+            .HasIndex(x => new { x.AppUserId, x.PermissionId })
+            .IsUnique();
+        modelBuilder.Entity<UserPermission>()
+            .HasOne(x => x.AppUser)
+            .WithMany(x => x.Permissions)
+            .HasForeignKey(x => x.AppUserId)
+            .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<UserPermission>()
+            .HasOne(x => x.Permission)
+            .WithMany()
+            .HasForeignKey(x => x.PermissionId)
+            .OnDelete(DeleteBehavior.Cascade);
         // Cart
         modelBuilder.Entity<Cart>(entity =>
         {
