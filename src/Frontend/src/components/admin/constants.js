@@ -62,6 +62,8 @@ export const TABS = [
     { id: 'certificates', label: 'الشهادات',   icon: '📜' },
     { id: 'refunds', label: 'المستردات', icon: '💳' },
     { id: 'financial', label: 'المالية', icon: '💰' }, // ← NEW
+    { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },
+
 
 ];
 
@@ -75,4 +77,5 @@ export const TAB_TITLES = {
     certificates: { tag: 'إدارة الشهادات',   title: ['',            'الشهادات', ' الإلكترونية'] },
     refunds: { tag: 'المالية', title: ['طلبات', 'الاسترداد'] },
     financial: { tag: 'المالية', title: ['البيانات', 'المالية'] },
+    lecturers: { tag: 'إدارة المحاضرين', title: ['بيانات', 'المحاضرين'] },
 };

@@ -22,6 +22,8 @@ import RefundsTab from '../../components/admin/tabs/RefundsTab';
 import CertUploadModal from '../../components/admin/modals/CertUploadModal';
 import RefundDetailModal from '../../components/admin/modals/RefundDetailModal';
 import RefundActionModal from '../../components/admin/modals/RefundActionModal';
+import LecturersTab from './mohadren';  // ← ADD
+
 
 const TABS = [
     { id: 'users', label: 'المستخدمون', icon: '👤' },
@@ -30,6 +32,8 @@ const TABS = [
     { id: 'certificates', label: 'الشهادات', icon: '📜' },
     { id: 'refunds', label: 'المستردات', icon: '💳' },
     { id: 'financial', label: 'المالية', icon: '💰' },
+    { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },  // ← ADD
+
 ];
 
 const AdminDashboard = () => {
@@ -504,6 +508,10 @@ const AdminDashboard = () => {
                                 API_BASE={API_BASE}
                                 API_HOST={API_HOST}
                             />
+                        )}
+
+                        {activeTab === 'lecturers' && (
+                            <LecturersTab />
                         )}
                     </div>
 
