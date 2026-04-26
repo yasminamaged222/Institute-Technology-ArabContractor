@@ -23,6 +23,8 @@ import CertUploadModal from '../../components/admin/modals/CertUploadModal';
 import RefundDetailModal from '../../components/admin/modals/RefundDetailModal';
 import RefundActionModal from '../../components/admin/modals/RefundActionModal';
 import LecturersTab from './mohadren';  // ← ADD
+import NewsTab from './NewsTab';
+
 
 
 const TABS = [
@@ -33,6 +35,8 @@ const TABS = [
     { id: 'refunds', label: 'المستردات', icon: '💳' },
     { id: 'financial', label: 'المالية', icon: '💰' },
     { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },  // ← ADD
+    { id: 'news', label: 'الأخبار', icon: '📰' }
+
 
 ];
 
@@ -513,6 +517,10 @@ const AdminDashboard = () => {
                         {activeTab === 'lecturers' && (
                             <LecturersTab />
                         )}
+
+                        {activeTab === 'news' &&(
+                            <NewsTab />)}
+
                     </div>
 
                     <div className="adm-footer">

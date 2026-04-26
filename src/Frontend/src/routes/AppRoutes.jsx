@@ -35,6 +35,7 @@ import Mycourses from '../pages/Mycourses';
 import AdminDashboard from '../pages/admin/Admin';
 import PaymentResultPage from '../pages/Paymentresultpage.jsx';
 import Mohadren from '../pages/admin/mohadren';
+import NewsTab from '../pages/admin/NewsTab';
 
 
    
@@ -79,6 +80,7 @@ const AppRoutes = () => {
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/payment/result" element={<PaymentResultPage />} />
                 <Route path="/mohadren" element={<Mohadren />} />
+                <Route path="/admin/news" element={<NewsTab />} />
 
 
             

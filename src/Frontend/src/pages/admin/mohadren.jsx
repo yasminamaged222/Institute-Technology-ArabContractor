@@ -1,11 +1,8 @@
 // src/components/admin/tabs/LecturersTab.jsx
-// ─────────────────────────────────────────────────────────────────────────────
-// Lecturer management — fully integrated into the admin dashboard architecture.
-// Uses adm-* CSS classes, same Pagination component patterns, same toolbar/card.
-// ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useRef, useCallback } from 'react';
 import { T } from "../../components/admin/constants";
-// ── Initial data ───────────────────────────────────────────────────────────────
+
+// ── Initial data ──────────────────────────────────────────────────────────────
 const INITIAL_LECTURERS = [
     {
         id: 41, name: 'د.م / عمرو رمضان محمد المنياوي', specialty: 'إدارة الأزمات والمخاطر',
@@ -33,7 +30,7 @@ function initials(name = '') {
     return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '؟';
 }
 
-// ── Textarea sub-component ────────────────────────────────────────────────────────
+// ── Textarea sub-component ─────────────────────────────────────────────────────
 function LecTextArea({ icon, label, sub, name, value, onChange, placeholder, rows }) {
     const count = value ? value.split('\n').filter(l => l.trim()).length : 0;
     return (
@@ -55,9 +52,7 @@ function LecTextArea({ icon, label, sub, name, value, onChange, placeholder, row
     );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// LecturersTab — integrated into adm-root layout
-// ─────────────────────────────────────────────────────────────────────────────
+// ── Main component ─────────────────────────────────────────────────────────────
 const LecturersTab = () => {
     const [lecturers, setLecturers] = useState(INITIAL_LECTURERS);
     const [selected, setSelected] = useState(INITIAL_LECTURERS[0]);
@@ -74,17 +69,14 @@ const LecturersTab = () => {
         l.specialty.toLowerCase().includes(search.toLowerCase())
     );
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
     const toast = (msg, type = 'success') => {
         setNotification({ msg, type });
         setTimeout(() => setNotification(null), 3500);
     };
 
     const pick = (lec) => {
-        setSelected(lec);
-        setForm({ ...lec });
-        setIsNew(false);
-        setDeleteConfirm(false);
+        setSelected(lec); setForm({ ...lec });
+        setIsNew(false); setDeleteConfirm(false);
     };
 
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -102,9 +94,7 @@ const LecturersTab = () => {
             const newId = Math.max(0, ...lecturers.map(l => l.id)) + 1;
             const newLec = { ...form, id: newId };
             setLecturers(prev => [newLec, ...prev]);
-            setSelected(newLec);
-            setForm({ ...newLec });
-            setIsNew(false);
+            setSelected(newLec); setForm({ ...newLec }); setIsNew(false);
             toast('تم إضافة المحاضر بنجاح');
         } else {
             const updated = { ...form };
@@ -115,118 +105,101 @@ const LecturersTab = () => {
     };
 
     const handleNew = () => {
-        setForm({ ...BLANK });
-        setSelected(null);
-        setIsNew(true);
-        setDeleteConfirm(false);
+        setForm({ ...BLANK }); setSelected(null);
+        setIsNew(true); setDeleteConfirm(false);
     };
 
     const handleDelete = () => {
         if (!deleteConfirm) { setDeleteConfirm(true); return; }
         const rest = lecturers.filter(l => l.id !== selected.id);
-        setLecturers(rest);
-        setDeleteConfirm(false);
-        if (rest.length) { pick(rest[0]); } else { handleNew(); }
+        setLecturers(rest); setDeleteConfirm(false);
+        if (rest.length) pick(rest[0]); else handleNew();
         toast('تم حذف المحاضر', 'error');
     };
 
     const handleReset = () => {
-        if (isNew) { setForm({ ...BLANK }); } else { setForm({ ...selected }); }
+        if (isNew) setForm({ ...BLANK }); else setForm({ ...selected });
         setDeleteConfirm(false);
         toast('تم إلغاء التغييرات', 'info');
     };
 
-    // ── Render ────────────────────────────────────────────────────────────────
+    // ── Render ─────────────────────────────────────────────────────────────────
     return (
-        <div className="adm-root" style={{ marginTop: 0, minHeight: 'unset', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-            {/* ══ SIDEBAR ══ */}
-            <aside className="adm-sidebar">
-                <div className="adm-sidebar-brand">
-                    <div className="adm-su-av">📋</div>
-                    <div>
-                        <div className="adm-sb-name">ICEMT</div>
-                        <div className="adm-sb-sub">إدارة المحاضرين</div>
-                    </div>
+            {/* Notification */}
+            {notification && (
+                <div className={`lec-notif lec-notif-${notification.type}`} style={{ marginBottom: 12 }}>
+                    <span>{notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}</span>
+                    {notification.msg}
                 </div>
+            )}
 
-                {/* Search */}
-                <div style={{ padding: '14px 14px 8px' }}>
-                    <div className="adm-search lec-search-wrap">
-                        <input
-                            type="text"
-                            placeholder="بحث بالاسم أو التخصص..."
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                        />
-                        {search && (
-                            <button className="lec-search-clear" onClick={() => setSearch('')}>✕</button>
-                        )}
-                    </div>
-                </div>
+            <div className="lec-layout">
 
-                {/* List header */}
-                <div className="adm-section-hdr" style={{ padding: '4px 16px 8px', marginBottom: 0, borderBottom: 'none' }}>
-                    <span style={{ color: '#475569', fontSize: 11, fontWeight: 700 }}>
-                        المحاضرون
-                        <span style={{ background: 'rgba(245,124,0,0.2)', color: T.orangeLight, borderRadius: 20, padding: '1px 8px', marginRight: 6, fontSize: 10 }}>
-                            {filtered.length}
+                {/* ══ LEFT PANEL — list ══ */}
+                <div className="lec-panel">
+
+                    {/* Header */}
+                    <div className="lec-panel-hdr">
+                        <span className="lec-count-badge">{filtered.length}</span>
+                        <span style={{ fontWeight: 800, fontSize: '.8rem', color: '#0a0a0a', flex: 1, textAlign: 'center' }}>
+                            المحاضرون
                         </span>
-                    </span>
-                    <button className="adm-expbtn" onClick={handleNew}>+ جديد</button>
-                </div>
+                        <button className="lec-new-btn" onClick={handleNew}>+ جديد</button>
+                    </div>
 
-                {/* Lecturer list */}
-                <div className="adm-sidebar-nav lec-list">
-                    {filtered.length === 0 && (
-                        <div className="adm-empty" style={{ padding: '32px 12px' }}>
-                            <div className="adm-emi">🔍</div>
-                            <p>لا توجد نتائج</p>
+                    {/* Search */}
+                    <div style={{ padding: '10px 10px 6px', position: 'relative' }}>
+                        <div className="adm-search" style={{ minWidth: 'unset' }}>
+                            <input
+                                type="text"
+                                placeholder="بحث بالاسم أو التخصص..."
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                style={{ fontSize: '.76rem' }}
+                            />
+                            {search && (
+                                <button
+                                    className="lec-search-clear"
+                                    onClick={() => setSearch('')}
+                                >✕</button>
+                            )}
                         </div>
-                    )}
-                    {filtered.map(lec => (
-                        <div
-                            key={lec.id}
-                            className={`lec-row${selected?.id === lec.id ? ' active' : ''}`}
-                            onClick={() => pick(lec)}
-                        >
-                            <div className="lec-avatar">
-                                {lec.photo
-                                    ? <img src={lec.photo} alt="" />
-                                    : <span>{initials(lec.name)}</span>
-                                }
+                    </div>
+
+                    {/* List */}
+                    <div className="lec-list">
+                        {filtered.length === 0 && (
+                            <div className="adm-empty" style={{ padding: '32px 12px' }}>
+                                <div className="adm-emi">🔍</div>
+                                <p>لا توجد نتائج</p>
                             </div>
-                            <div className="lec-row-info">
-                                <div className="lec-row-name">{lec.name || 'بدون اسم'}</div>
-                                <div className="lec-row-spec">{lec.specialty || '—'}</div>
+                        )}
+                        {filtered.map(lec => (
+                            <div
+                                key={lec.id}
+                                className={`lec-row${selected?.id === lec.id ? ' active' : ''}`}
+                                onClick={() => pick(lec)}
+                            >
+                                <div className="lec-avatar">
+                                    {lec.photo
+                                        ? <img src={lec.photo} alt="" />
+                                        : <span>{initials(lec.name)}</span>
+                                    }
+                                </div>
+                                <div className="lec-row-info">
+                                    <div className="lec-row-name">{lec.name || 'بدون اسم'}</div>
+                                    <div className="lec-row-spec">{lec.specialty || '—'}</div>
+                                </div>
+                                <div className="lec-row-id">#{lec.id}</div>
                             </div>
-                            <div className="lec-row-id">#{lec.id}</div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
 
-                {/* Sidebar footer */}
-                <div className="adm-sidebar-footer">
-                    <div style={{ color: '#64748b', fontSize: 10 }}>الإدارة</div>
-                </div>
-            </aside>
-
-            {/* ══ MAIN CONTENT ══ */}
-            <main className="adm-main">
-
-                
-                {/* Content area */}
-                <div className="adm-content">
-
-                    {/* Notification */}
-                    {notification && (
-                        <div className={`lec-notif lec-notif-${notification.type}`}>
-                            <span>{notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}</span>
-                            {notification.msg}
-                        </div>
-                    )}
-
-                    {/* Form card */}
+                {/* ══ FORM AREA ══ */}
+                <div className="lec-form-wrap">
                     <div className="adm-card lec-form-card">
 
                         {/* Card header */}
@@ -249,10 +222,10 @@ const LecturersTab = () => {
 
                         <div className="lec-form-body">
 
-                            {/* ── Photo + fields row ── */}
+                            {/* Photo + fields */}
                             <div className="lec-top-row">
 
-                                {/* Photo upload zone */}
+                                {/* Photo */}
                                 <div className="lec-photo-col">
                                     <label className="lec-label">صورة المحاضر</label>
                                     <div
@@ -328,10 +301,8 @@ const LecturersTab = () => {
                                 </div>
                             </div>
 
-                            {/* Divider */}
                             <div className="lec-divider" />
 
-                            {/* Certificates */}
                             <LecTextArea
                                 icon="🎓" label="الشهادات والمؤهلات" sub="كل شهادة في سطر مستقل"
                                 name="certificates" value={form.certificates} onChange={handleChange}
@@ -339,7 +310,6 @@ const LecturersTab = () => {
                                 rows={5}
                             />
 
-                            {/* Details */}
                             <LecTextArea
                                 icon="📋" label="التفاصيل والخبرات العملية" sub="المشاريع والإنجازات والخبرات"
                                 name="details" value={form.details} onChange={handleChange}
@@ -347,7 +317,7 @@ const LecturersTab = () => {
                                 rows={6}
                             />
 
-                            {/* ── Actions ── */}
+                            {/* Actions */}
                             <div className="lec-actions">
                                 <button className="lec-act-btn save" onClick={handleSave}>💾 حفظ</button>
                                 <button className="lec-act-btn new" onClick={handleNew}>➕ محاضر جديد</button>
@@ -370,7 +340,8 @@ const LecturersTab = () => {
                         </div>
                     </div>
                 </div>
-            </main>
+
+            </div>
         </div>
     );
 };

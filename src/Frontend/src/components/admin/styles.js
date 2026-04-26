@@ -463,7 +463,7 @@ export const ADMIN_STYLES = `
     /* ── Lecturers layout ── */
     .lec-layout {
         display: flex;
-        gap: clamp(14px,2vw,22px);
+        gap: clamp(10px, 1.5vw, 18px);
         align-items: flex-start;
     }
 
@@ -477,10 +477,9 @@ export const ADMIN_STYLES = `
         box-shadow: 0 2px 10px rgba(0,0,0,0.06);
         display: flex;
         flex-direction: column;
-        height: 100vh;        /* ياخد طول الشاشة */
-        max-height: 100vh;        
+        height: 100vh;
+        max-height: 100vh;
         position: sticky;
-        max-height: 100vh;        
         top: 16px;
         overflow: hidden;
     }
@@ -634,18 +633,78 @@ export const ADMIN_STYLES = `
     .lec-delete-confirm { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fef2f2; border:1.5px solid rgba(220,38,38,.3); border-radius:3px; padding:9px 14px; border-right:4px solid #dc2626; }
     .lec-delete-warn    { font-size:.78rem; color:#dc2626; font-weight:700; }
 
-    /* ── Responsive ── */
-    @media(max-width:900px){
-        .lec-layout { flex-direction:column; }
-        .lec-panel  { width:100%; max-height:260px; position:static; }
-        .lec-fields-grid { grid-template-columns:1fr; }
+    /* ══ RESPONSIVE ══ */
+
+    /* 2000px+ */
+    @media(min-width:2000px){
+        .lec-panel        { width: 360px; }
+        .lec-form-body    { padding: 36px; }
+        .lec-inp, .lec-textarea { font-size: .9rem; }
+        .lec-form-title   { font-size: 1.3rem; }
+        .lec-fields-grid  { grid-template-columns: 1fr 1fr 1fr; }
     }
-    @media(max-width:480px){
-        .lec-top-row { flex-direction:column; }
-        .lec-photo-zone { width:100%; height:110px; }
+
+    /* 1600px–1999px */
+    @media(min-width:1600px) and (max-width:1999px){
+        .lec-panel        { width: 320px; }
+        .lec-fields-grid  { grid-template-columns: 1fr 1fr 1fr; }
+    }
+
+    /* ≤1100px */
+    @media(max-width:1100px){
+        .lec-panel { width: clamp(190px, 26vw, 250px); }
+    }
+
+    /* ≤900px — panel becomes top horizontal strip */
+    @media(max-width:900px){
+        .lec-layout       { flex-direction: column; }
+        .lec-panel        { width: 100% !important; height: auto !important; max-height: none !important; position: static !important; }
+        .lec-list         { display: flex; flex-direction: row; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; max-height: 80px; gap: 6px; padding: 6px 8px 10px; }
+        .lec-list::-webkit-scrollbar         { height: 4px; width: unset; }
+        .lec-list::-webkit-scrollbar-thumb   { background: rgba(245,124,0,0.35); border-radius: 2px; }
+        .lec-row          { flex: 0 0 auto; width: clamp(160px, 44vw, 220px); margin-bottom: 0; }
+        .lec-row-spec     { display: none; }
+        .lec-form-wrap    { width: 100%; }
+        .lec-top-row      { flex-direction: column; }
+        .lec-photo-col    { width: 100%; }
+        .lec-photo-zone   { width: 100%; height: 120px; }
+        .lec-fields-grid  { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ≤640px */
+    @media(max-width:640px){
+        .lec-panel-hdr    { flex-wrap: wrap; gap: 6px; }
+        .lec-search-wrap  { padding: 8px 10px 4px; }
+        .lec-list         { max-height: 74px; }
+        .lec-row          { width: clamp(150px, 55vw, 200px); }
+        .lec-fields-grid  { grid-template-columns: 1fr; }
+        .lec-form-hdr     { flex-direction: column; gap: 8px; }
+        .lec-stat-pill    { align-self: flex-start; }
+        .lec-form-body    { padding: clamp(12px, 3vw, 18px); }
+        .lec-actions      { flex-direction: column; align-items: stretch; }
+        .lec-act-btn      { width: 100%; justify-content: center; }
+        .lec-delete-confirm { flex-direction: column; align-items: stretch; }
+        .lec-delete-confirm .lec-act-btn,
+        .lec-delete-confirm .adm-fclear { width: 100%; justify-content: center; text-align: center; }
+        .lec-textarea-hdr { flex-wrap: wrap; }
+        .lec-textarea-count { margin-right: auto; }
+    }
+
+    /* ≤400px */
+    @media(max-width:400px){
+        .lec-panel-hdr    { padding: 10px; }
+        .lec-new-btn      { padding: 4px 10px; font-size: .68rem; }
+        .lec-count-badge  { font-size: .6rem; }
+        .lec-row          { width: clamp(140px, 60vw, 180px); }
+        .lec-form-body    { padding: 10px; }
+        .lec-inp          { padding: 8px 10px; font-size: .76rem; }
+        .lec-textarea     { padding: 10px 12px; font-size: .76rem; }
+        .lec-photo-zone   { height: 100px; }
+        .lec-act-btn      { padding: 8px 14px; font-size: .76rem; }
     }
 
 // ═══ END ═══
+
 `;
 
 export function injectAdminStyles() {
