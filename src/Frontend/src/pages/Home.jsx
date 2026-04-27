@@ -156,25 +156,11 @@ const stats = [
     { n: '200+', l: 'برنامج تدريبي' },
     { n: '1978', l: 'سنة التأسيس' },
 ];
-
-const overviewStats = [
-    { n: '+60', l: 'عميل', desc: 'نساهم في تطوير صناعة التشييد فنتيح لجميع الوزارات والهيئات الاستفادة من إمكانيات الإدارة في التدريب.' },
-    { n: '+2500', l: 'مادة تدريبية', desc: 'نمتلك العديد من المواد العلمية والتدريبية موضوعة من خلال مجموعة منتقاة من الخبراء وأساتذة الجامعات.' },
-    { n: '176,418', l: 'متدرب', desc: 'إجمالى عدد المتدربين منذ إنشاء المعهد وحتى الآن.' },
-];
-
 const trainingPrograms = [
     { Icon: BuildCircleIcon, label: 'برامج للتدريب التحويلى' },
     { Icon: PeopleAltIcon, label: 'تكوين فرق التنفيذ الذاتى' },
     { Icon: MenuBookIcon, label: 'الحلول التدريبية المتكاملة' },
     { Icon: HardwareIcon, label: 'التدريب فى موقع العمل' },
-];
-
-const whyJoinItems = [
-    { Icon: CorporateFareIcon, title: 'خدمات متميزة', text: 'برامج تدريبية، مدارس فنية، وخدمات للشركات والجهات الحكومية.' },
-    { Icon: PeopleAltIcon, title: 'مدربون متميزون', text: 'كفاءات بشرية فريدة تتسم بقدر عالٍ من المهارة والخبرة الميدانية.' },
-    { Icon: VerifiedIcon, title: 'اعتمادات دولية', text: 'حاصلون على ISO 9001:2015 ومعتمدون من PMI مع تحديث سنوي مستمر.' },
-    { Icon: ThumbUpAltIcon, title: 'جودة لا تُضاهى', text: 'خدمات فعّالة خالية من الأخطاء ترقى لأعلى توقعات المستفيدين.' },
 ];
 
 // ─── INTERSECTION OBSERVER ────────────────────────────────────────────────────
@@ -299,14 +285,14 @@ export default function Home() {
         .hero-swiper{width:100%;height:clamp(300px,100vh,710px);}
         .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;}
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
-          width:46px;height:46px;border-radius:50%;
+          width:50px;height:50px;border-radius:50%;
           background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);
-          color:#fff!important;top:50%!important;transform:translateY(-50%);
+          color:#fff!important;top:90%!important;transform:translateY(-50%);
           transition:background .25s,border-color .25s,transform .25s;backdrop-filter:blur(6px);
         }
-        .hero-swiper .swiper-button-prev{right:24px!important;left:auto!important;}
-        .hero-swiper .swiper-button-next{left:24px!important;right:auto!important;}
-        .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:12px!important;font-weight:900;}
+        .hero-swiper .swiper-button-prev{right:60px!important;left:auto!important;}
+        .hero-swiper .swiper-button-next{left:60px!important;right:auto!important;}
+        .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:20px!important;font-weight:500;}
         .hero-swiper .swiper-button-prev:hover,.hero-swiper .swiper-button-next:hover{background:${C.o};border-color:${C.o};transform:translateY(-50%) scale(1.08);}
         .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;}
         .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
@@ -512,32 +498,6 @@ export default function Home() {
                                 <SolidBtn to="/overview" orange>تعرف على المعهد</SolidBtn>
                                 <Link to="/mission" className="ob-outline">الرؤية والرسالة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></Link>
                             </div>
-                        </div>
-                    </div>
-                    <div className={`ov-stats rv${aboutVis ? ' on' : ''} d3`}>
-                        {overviewStats.map((s, i) => (
-                            <div key={i} className="ov-stat">
-                                <div style={{ fontFamily: F, fontSize: 'clamp(1.4rem,2.5vw,2rem)', fontWeight: 900, color: C.o, lineHeight: 1, marginBottom: 4 }}>{s.n}</div>
-                                <div style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.9rem)', fontWeight: 800, color: C.k, marginBottom: 6 }}>{s.l}</div>
-                                <div style={{ fontFamily: F, fontSize: 'clamp(.7rem,.95vw,.8rem)', color: C.g5, lineHeight: 1.65 }}>{s.desc}</div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className={`rv${aboutVis ? ' on' : ''} d4`}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-                            <div style={{ width: 3, height: 22, background: C.o }} />
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.1rem)', fontWeight: 900, color: C.k }}>لماذا تشترك بمعهد التدريب؟</h3>
-                        </div>
-                        <div className="g4" style={{ gap: 12 }}>
-                            {whyJoinItems.map((item, i) => (
-                                <div key={i} className="why-card">
-                                    <div style={{ width: 44, height: 44, borderRadius: 2, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <item.Icon sx={{ fontSize: 22, color: C.b }} />
-                                    </div>
-                                    <h4 style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.92rem)', fontWeight: 800, color: C.k }}>{item.title}</h4>
-                                    <p style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', color: C.g5, lineHeight: 1.75 }}>{item.text}</p>
-                                </div>
-                            ))}
                         </div>
                     </div>
                 </div>
