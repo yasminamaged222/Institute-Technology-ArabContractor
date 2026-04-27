@@ -3,10 +3,12 @@ using Institute.API.DTOs;
 using Institute.API.Helpers;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
+using Institute.Application.Security;
 using Institute.Application.Services;
 using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -78,6 +80,22 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
     });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("News", policy =>
+        policy.Requirements.Add(new PermissionRequirement("News")));
+
+    options.AddPolicy("Books", policy =>
+        policy.Requirements.Add(new PermissionRequirement("Books")));
+
+    options.AddPolicy("Lecturers", policy =>
+        policy.Requirements.Add(new PermissionRequirement("Lecturers")));
+
+    options.AddPolicy("Courses", policy =>
+        policy.Requirements.Add(new PermissionRequirement("Courses")));
+});
+
+
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
@@ -87,6 +105,7 @@ builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 //builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<BankPaymentService>();
