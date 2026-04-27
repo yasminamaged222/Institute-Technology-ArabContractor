@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Institute.API.Controllers
 {
-    //[HasPermission("Books")]
+    [HasPermission("Books")]
     [Route("api/admin/[controller]")]
     [ApiController]
     public class BookAdminController : ControllerBase
