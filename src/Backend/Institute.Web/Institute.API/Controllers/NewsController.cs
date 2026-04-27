@@ -19,33 +19,18 @@ namespace Institute.API.Controllers
     {
         // In your controller
 
-        private readonly IReadOnlyService<Dailynews> _bookService;
+        private readonly IReadOnlyService<Dailynews> _newsService;
         private readonly IMapper _mapper;
         private readonly IRepository<Dailynews> _repo;
 
-        public NewsController(IReadOnlyService<Dailynews> bookService, IMapper mapper,IRepository<Dailynews>  Repo )
+        public NewsController(IReadOnlyService<Dailynews> newsService, IMapper mapper,IRepository<Dailynews>  Repo )
         {
-            _bookService = bookService;
+            _newsService = newsService;
 
             _mapper = mapper;
             _repo = Repo;
         }
 
-
-
-
-
-        //[HttpGet("getAllNews")]
-        //public async Task<IActionResult> GetAllNews()
-        //{
-        //    var spec = new NewsWithMainPicSpec();
-
-        //    var news = await _bookService.GetAllWithSpec(spec);
-
-        //    var result = _mapper.Map<IReadOnlyList<NewsListDto>>(news);
-
-        //    return Ok(result);
-        //}
 
         [HttpGet("getAllNews")]
         public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews(
@@ -83,7 +68,7 @@ namespace Institute.API.Controllers
 
             var spec = new NewsWithDetailsSpec(id);
 
-            var news = await _bookService.GetEntityWithSpec(spec);
+            var news = await _newsService.GetEntityWithSpec(spec);
 
             if (news == null)
                 return NotFound();

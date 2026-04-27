@@ -11,5 +11,6 @@ namespace Institute.Application.Interfaces.IService
         Task AssignAsync(int userId, int permissionId);
         Task RemoveAsync(int userId, int permissionId);
         Task<List<string>> GetUserPermissionsAsync(int userId);
+        Task<List<string>> GetPermissionsByClerkId(string clerkId);
     }
 }
