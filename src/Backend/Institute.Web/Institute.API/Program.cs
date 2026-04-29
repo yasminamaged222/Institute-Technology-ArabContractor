@@ -74,6 +74,7 @@ builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>)
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsListDto>>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsDetailsDto>>();
+builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
