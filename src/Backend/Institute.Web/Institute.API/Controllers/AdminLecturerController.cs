@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/admin/[controller]")]
 public class AdminLecturerController : ControllerBase
 {
     private readonly ILecturerService _service;

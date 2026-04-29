@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Institute.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/admin/[controller]")]
     [ApiController]
     public class AdminNewsController : ControllerBase
     {
