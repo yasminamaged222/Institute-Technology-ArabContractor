@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
-public class LecturerController : ControllerBase
+public class AdminLecturerController : ControllerBase
 {
     private readonly ILecturerService _service;
 
-    public LecturerController(ILecturerService service)
+    public AdminLecturerController(ILecturerService service)
     {
         _service = service;
     }

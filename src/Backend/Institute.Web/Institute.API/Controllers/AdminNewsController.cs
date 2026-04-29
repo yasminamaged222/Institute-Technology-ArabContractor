@@ -17,14 +17,14 @@ namespace Institute.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class NewsController : ControllerBase
+    public class AdminNewsController : ControllerBase
     {
         private readonly IReadOnlyService<Dailynews> _newsService;
         private readonly IMapper _mapper;
         private readonly IRepository<Dailynews> _repo;
         private readonly INewsService _newsWriteService;
 
-        public NewsController(
+        public AdminNewsController(
             IReadOnlyService<Dailynews> newsService,
             IMapper mapper,
             IRepository<Dailynews> repo,
