@@ -74,7 +74,6 @@ const certificates = [
     { title: 'Autodesk Training Center', text: 'مركز تدريب معتمد من Autodesk لأحدث برامج الهندسة والتصميم.', image: 'https://images.weserv.nl/?url=www.arabcont.com/icemt/assets/images/autodeskCert.jpg' },
 ];
 
-// ── 5 schools ─────────────────────────────────────────────────────────────────
 const schoolItems = [
     {
         name: 'مدرسة المقاولون العرب الفنية',
@@ -134,7 +133,6 @@ const schoolItems = [
     },
 ];
 
-// ── Protocols ─────────────────────────────────────────────────────────────────
 const protocols = [
     { name: 'جمعية المحاسبين والمراجعين المصرية', country: 'مصر', type: 'مهني' },
     { name: 'مؤسسة المهندسين المدنيين البريطانيين (ICE)', country: 'المملكة المتحدة', type: 'دولي' },
@@ -157,24 +155,11 @@ const stats = [
     { n: '1978', l: 'سنة التأسيس' },
 ];
 
-const overviewStats = [
-    { n: '+60', l: 'عميل', desc: 'نساهم في تطوير صناعة التشييد فنتيح لجميع الوزارات والهيئات الاستفادة من إمكانيات الإدارة في التدريب.' },
-    { n: '+2500', l: 'مادة تدريبية', desc: 'نمتلك العديد من المواد العلمية والتدريبية موضوعة من خلال مجموعة منتقاة من الخبراء وأساتذة الجامعات.' },
-    { n: '176,418', l: 'متدرب', desc: 'إجمالى عدد المتدربين منذ إنشاء المعهد وحتى الآن.' },
-];
-
 const trainingPrograms = [
     { Icon: BuildCircleIcon, label: 'برامج للتدريب التحويلى' },
     { Icon: PeopleAltIcon, label: 'تكوين فرق التنفيذ الذاتى' },
     { Icon: MenuBookIcon, label: 'الحلول التدريبية المتكاملة' },
     { Icon: HardwareIcon, label: 'التدريب فى موقع العمل' },
-];
-
-const whyJoinItems = [
-    { Icon: CorporateFareIcon, title: 'خدمات متميزة', text: 'برامج تدريبية، مدارس فنية، وخدمات للشركات والجهات الحكومية.' },
-    { Icon: PeopleAltIcon, title: 'مدربون متميزون', text: 'كفاءات بشرية فريدة تتسم بقدر عالٍ من المهارة والخبرة الميدانية.' },
-    { Icon: VerifiedIcon, title: 'اعتمادات دولية', text: 'حاصلون على ISO 9001:2015 ومعتمدون من PMI مع تحديث سنوي مستمر.' },
-    { Icon: ThumbUpAltIcon, title: 'جودة لا تُضاهى', text: 'خدمات فعّالة خالية من الأخطاء ترقى لأعلى توقعات المستفيدين.' },
 ];
 
 // ─── INTERSECTION OBSERVER ────────────────────────────────────────────────────
@@ -213,7 +198,8 @@ const SplitTitle = ({ children, light, size = 'lg', center }) => (
     <h2 style={{
         fontFamily: F, fontWeight: 900, margin: 0,
         fontSize: size === 'lg' ? 'clamp(1.8rem,4vw,3.2rem)' : 'clamp(1.4rem,2.8vw,2.2rem)',
-        lineHeight: 1.15, letterSpacing: '-0.02em',
+        lineHeight: 1.4,
+        letterSpacing: '-0.02em',
         color: light ? C.w : C.k,
         textAlign: center ? 'center' : 'inherit',
     }}>{children}</h2>
@@ -226,7 +212,7 @@ const ArrowBtn = ({ to, children, inv }) => (
         color: inv ? C.w : C.b, textDecoration: 'none',
         background: inv ? 'rgba(255,255,255,.1)' : 'rgba(8,101,168,.08)',
         border: `1.5px solid ${inv ? 'rgba(255,255,255,.25)' : 'rgba(8,101,168,.25)'}`,
-        padding: '9px 20px', borderRadius: 40,
+        padding: '9px 20px', borderRadius: 8,
         transition: 'all .25s cubic-bezier(.22,1,.36,1)',
     }}
         onMouseEnter={e => { e.currentTarget.style.background = inv ? 'rgba(255,255,255,.18)' : C.b; e.currentTarget.style.color = C.w; e.currentTarget.style.borderColor = inv ? 'rgba(255,255,255,.5)' : C.b; e.currentTarget.style.gap = '14px'; }}
@@ -241,7 +227,8 @@ const SolidBtn = ({ to, href, children, orange, small }) => {
         color: C.w, textDecoration: 'none',
         background: orange ? C.o : C.b,
         padding: small ? '8px 20px' : 'clamp(10px,1.3vw,13px) clamp(22px,3vw,34px)',
-        borderRadius: 4, transition: 'transform .2s, opacity .2s',
+        borderRadius: 8,
+        transition: 'transform .2s, opacity .2s',
     };
     const hover = e => { e.currentTarget.style.opacity = '.85'; e.currentTarget.style.transform = 'translateY(-1px)'; };
     const leave = e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = ''; };
@@ -284,7 +271,6 @@ export default function Home() {
             <style>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 
-        /* ══ SCROLL REVEAL ══ */
         .rv      {opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
         .rv-left {opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
         .rv-scale{opacity:0;transform:scale(.94);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
@@ -299,14 +285,14 @@ export default function Home() {
         .hero-swiper{width:100%;height:clamp(300px,100vh,710px);}
         .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;}
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
-          width:46px;height:46px;border-radius:50%;
+          width:50px;height:50px;border-radius:50%;
           background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);
-          color:#fff!important;top:50%!important;transform:translateY(-50%);
+          color:#fff!important;top:90%!important;transform:translateY(-50%);
           transition:background .25s,border-color .25s,transform .25s;backdrop-filter:blur(6px);
         }
-        .hero-swiper .swiper-button-prev{right:24px!important;left:auto!important;}
-        .hero-swiper .swiper-button-next{left:24px!important;right:auto!important;}
-        .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:12px!important;font-weight:900;}
+        .hero-swiper .swiper-button-prev{right:60px!important;left:auto!important;}
+        .hero-swiper .swiper-button-next{left:60px!important;right:auto!important;}
+        .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:20px!important;font-weight:500;}
         .hero-swiper .swiper-button-prev:hover,.hero-swiper .swiper-button-next:hover{background:${C.o};border-color:${C.o};transform:translateY(-50%) scale(1.08);}
         .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;}
         .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
@@ -329,48 +315,44 @@ export default function Home() {
         .feat-num{font-family:${F};font-size:clamp(2.4rem,4vw,3.8rem);font-weight:900;color:${C.g3};line-height:1;margin-bottom:20px;letter-spacing:-2px;transition:color .3s;}
         .feat-card:hover .feat-num{color:${C.o};}
 
-        /* ── Downloads ── */
-        .dl-row{display:flex;align-items:center;gap:16px;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08);text-decoration:none;color:${C.w};transition:background .2s;}
-        .dl-row:last-child{border-bottom:none;}.dl-row:hover{background:rgba(255,255,255,.04);}
-
-        /* ── Vision ── */
-        .vis-item{padding:28px;border-radius:2px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;}
+        /* ── Vision grid ── */
+        .vision-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,20px);}
+        @media(max-width:500px){.vision-grid{grid-template-columns:1fr!important;}}
+        .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;}
         .vis-item:hover{border-color:${C.o};box-shadow:0 4px 24px rgba(245,124,0,.10);}
 
+        /* ── Downloads ── */
+        .dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,2vw,16px);}
+        @media(max-width:560px){.dl-grid{grid-template-columns:1fr!important;}}
+
         /* ── Cert cards ── */
-        .cert-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:2px;padding:24px;color:${C.w};transition:background .25s,border-color .25s;height:100%;display:flex;flex-direction:column;gap:14px;}
+        .cert-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:24px;color:${C.w};transition:background .25s,border-color .25s;height:100%;display:flex;flex-direction:column;gap:14px;}
         .cert-card:hover{background:rgba(255,255,255,.1);border-color:rgba(245,124,0,.4);}
 
-        /* ══ PROTOCOLS — card grid (new style) ══ */
+        /* ── Protocols ── */
         .proto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
         @media(max-width:900px){.proto-grid{grid-template-columns:repeat(2,1fr);}}
         @media(max-width:560px){.proto-grid{grid-template-columns:1fr;}}
-        .proto-card{
-          position:relative;overflow:hidden;border-radius:8px;
-          background:${C.w};border:1px solid ${C.g3};
-          padding:24px 20px;display:flex;flex-direction:column;gap:12px;
-          transition:border-color .25s,transform .25s,box-shadow .25s;
-        }
+        .proto-card{position:relative;overflow:hidden;border-radius:8px;background:${C.w};border:1px solid ${C.g3};padding:24px 20px;display:flex;flex-direction:column;gap:12px;transition:border-color .25s,transform .25s,box-shadow .25s;}
         .proto-card:hover{border-color:${C.b};transform:translateY(-4px);box-shadow:0 8px 28px rgba(8,101,168,.12);}
-        .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;
-          background:linear-gradient(180deg,${C.o},${C.b});
-          transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
+        .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:linear-gradient(180deg,${C.o},${C.b});transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
         .proto-card:hover::after{transform:scaleY(1);}
 
-        /* ══ SCHOOLS ══ */
-        .school-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
-        @media(max-width:960px){.school-grid{grid-template-columns:repeat(2,1fr);}}
-        @media(max-width:560px){.school-grid{grid-template-columns:1fr;}}
+        /* ── Schools ── */
+        .schools-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:stretch;}
+        .schools-sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+        @media(max-width:900px){.schools-split{grid-template-columns:1fr!important;}.schools-sub-grid{grid-template-columns:1fr 1fr!important;}}
+        @media(max-width:500px){.schools-sub-grid{grid-template-columns:1fr!important;}}
         .school-card{border-radius:8px;border:1px solid ${C.g3};background:${C.w};display:flex;flex-direction:column;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;}
         .school-card:hover{border-color:${C.b};transform:translateY(-5px);box-shadow:0 12px 32px rgba(8,101,168,.12);}
         .sc-meta{font-family:${F};font-size:.7rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
 
         /* ── Craft ── */
-        .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:2px;background:${C.w};transition:border-color .25s,transform .25s;}
+        .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;}
         .craft-card:hover{border-color:${C.o};transform:translateY(-4px);}
 
         /* ── News ── */
-        .news-card{overflow:hidden;border-radius:2px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,transform .25s;height:100%;}
+        .news-card{overflow:hidden;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,transform .25s;height:100%;}
         .news-card:hover{border-color:${C.b};transform:translateY(-4px);}
         .news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{width:44px;height:44px;border-radius:50%;background:${C.w};border:1px solid ${C.g3};color:${C.b}!important;transition:all .25s;}
         .news-swiper .swiper-button-prev{right:-24px;}.news-swiper .swiper-button-next{left:-24px;right:auto;}
@@ -378,6 +360,10 @@ export default function Home() {
         .news-swiper .swiper-button-prev:hover,.news-swiper .swiper-button-next:hover{background:${C.b};border-color:${C.b};color:#fff!important;}
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
         @media(max-width:600px){.news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{display:none!important;}}
+
+        /* ── Library ── */
+        .lib-split{display:flex;flex-direction:row;min-height:clamp(240px,32vw,440px);}
+        @media(max-width:680px){.lib-split{flex-direction:column!important;min-height:unset!important;}.lib-split>div{flex:unset!important;width:100%!important;}}
 
         /* ── Grids ── */
         .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,24px);}
@@ -390,13 +376,13 @@ export default function Home() {
         @media(max-width:780px){.ab-split{grid-template-columns:1fr;}}
         .prog-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 24px;}
         @media(max-width:480px){.prog-grid{grid-template-columns:1fr;}}
-        .ov-stats{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;background:${C.w};border:1px solid ${C.g3};border-radius:2px;margin-bottom:clamp(20px,3vw,32px);}
+        .ov-stats{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;background:${C.w};border:1px solid ${C.g3};border-radius:8px;margin-bottom:clamp(20px,3vw,32px);}
         @media(max-width:560px){.ov-stats{grid-template-columns:1fr;}}
         .ov-stat{padding:clamp(16px,2.5vw,24px) 16px;text-align:center;border-left:1px solid ${C.g3};}
         .ov-stat:last-child{border-left:none;}
-        .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:2px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
+        .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
         .why-card:hover{border-color:${C.o};transform:translateY(-3px);}
-        a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:4px;transition:background .2s,color .2s;}
+        a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
         a.ob-outline:hover{background:${C.o};color:#fff;}
         @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
         .scroll-ind{animation:bounce 2s ease-in-out infinite;}
@@ -418,7 +404,7 @@ export default function Home() {
                                     <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
                                 </div>
                                 <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.9rem)', color: 'rgba(255,255,255,.55)', marginBottom: 10, fontWeight: 600 }}>{sl.subtitle}</p>
-                                <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.7rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.12, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
+                                <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.7rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.3, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
                                 <div style={{ width: 56, height: 3, background: C.o, margin: '0 auto 28px', borderRadius: 2 }} />
                                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
                                     <SolidBtn to={sl.link} orange>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
@@ -466,7 +452,7 @@ export default function Home() {
                         <div key={i} className={`feat-card rv${featVis ? ' on' : ''} d${i + 1}`}>
                             <div className="feat-num">{f.num}</div>
                             <div style={{ marginBottom: 16 }}><img src={f.icon} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} /></div>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.3, marginBottom: 10 }}>{f.title}</h3>
+                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.5, marginBottom: 10 }}>{f.title}</h3>
                             <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', color: C.g5, lineHeight: 1.85, marginBottom: 22 }}>{f.subtitle}</p>
                             <Link to={f.link} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 2, transition: 'gap .2s' }}
                                 onMouseEnter={e => e.currentTarget.style.gap = '10px'}
@@ -500,7 +486,7 @@ export default function Home() {
                             </p>
                             <div className="prog-grid">
                                 {trainingPrograms.map((p, i) => (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: `1px solid ${C.g3}`, borderRadius: 2, background: C.w, transition: 'border-color .2s' }}
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', border: `1px solid ${C.g3}`, borderRadius: 8, background: C.w, transition: 'border-color .2s' }}
                                         onMouseEnter={e => e.currentTarget.style.borderColor = C.o}
                                         onMouseLeave={e => e.currentTarget.style.borderColor = C.g3}>
                                         <p.Icon sx={{ fontSize: 18, color: C.o, flexShrink: 0 }} />
@@ -514,32 +500,6 @@ export default function Home() {
                             </div>
                         </div>
                     </div>
-                    <div className={`ov-stats rv${aboutVis ? ' on' : ''} d3`}>
-                        {overviewStats.map((s, i) => (
-                            <div key={i} className="ov-stat">
-                                <div style={{ fontFamily: F, fontSize: 'clamp(1.4rem,2.5vw,2rem)', fontWeight: 900, color: C.o, lineHeight: 1, marginBottom: 4 }}>{s.n}</div>
-                                <div style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.9rem)', fontWeight: 800, color: C.k, marginBottom: 6 }}>{s.l}</div>
-                                <div style={{ fontFamily: F, fontSize: 'clamp(.7rem,.95vw,.8rem)', color: C.g5, lineHeight: 1.65 }}>{s.desc}</div>
-                            </div>
-                        ))}
-                    </div>
-                    <div className={`rv${aboutVis ? ' on' : ''} d4`}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}>
-                            <div style={{ width: 3, height: 22, background: C.o }} />
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.1rem)', fontWeight: 900, color: C.k }}>لماذا تشترك بمعهد التدريب؟</h3>
-                        </div>
-                        <div className="g4" style={{ gap: 12 }}>
-                            {whyJoinItems.map((item, i) => (
-                                <div key={i} className="why-card">
-                                    <div style={{ width: 44, height: 44, borderRadius: 2, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <item.Icon sx={{ fontSize: 22, color: C.b }} />
-                                    </div>
-                                    <h4 style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.92rem)', fontWeight: 800, color: C.k }}>{item.title}</h4>
-                                    <p style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', color: C.g5, lineHeight: 1.75 }}>{item.text}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </section>
 
@@ -547,27 +507,27 @@ export default function Home() {
             <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={visionRef}>
                 <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'linear-gradient(270deg,rgba(8,101,168,.12) 0%,transparent 100%)', pointerEvents: 'none' }} />
                 <div className="W">
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'clamp(32px,6vw,80px)', alignItems: 'start' }}>
-                        <div className={`rv${visionVis ? ' on' : ''} d1`}>
-                            <Eyebrow light>استراتيجيتنا</Eyebrow>
-                            <SplitTitle light>الرؤية والأهداف</SplitTitle>
-                            <div style={{ width: 44, height: 3, background: C.o, margin: '20px 0 24px' }} />
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.55)', lineHeight: 1.9, marginBottom: 28 }}>
-                                نسعى نحو مستقبل تدريبي يرتكز على الابتكار والتميز وبناء القدرات البشرية.
-                            </p>
-                            <SolidBtn to="/mission" orange>عرض الرؤية كاملاً</SolidBtn>
-                        </div>
-                        <div className="g2" style={{ gap: 14 }}>
-                            {visionItems.map((v, i) => (
-                                <div key={i} className={`vis-item rv${visionVis ? ' on' : ''} d${i + 2}`}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                                        <CheckCircleOutlineIcon sx={{ color: C.o, fontSize: 18 }} />
-                                        <h4 style={{ fontFamily: F, fontSize: 'clamp(.88rem,1.3vw,1rem)', fontWeight: 800, color: C.k }}>{v.title}</h4>
-                                    </div>
-                                    <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', color: C.g5, lineHeight: 1.85 }}>{v.text}</p>
+                    {/* Full-width header */}
+                    <div className={`rv${visionVis ? ' on' : ''} d1`} style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,48px)' }}>
+                        <Eyebrow center light>استراتيجيتنا</Eyebrow>
+                        <SplitTitle light center>الرؤية والأهداف</SplitTitle>
+                        <div style={{ width: 44, height: 3, background: C.o, margin: '20px auto 20px', borderRadius: 2 }} />
+                        <p style={{ fontFamily: F, fontSize: 'clamp(.84rem,1.2vw,.95rem)', color: 'rgba(255,255,255,.55)', lineHeight: 2, maxWidth: 560, margin: '0 auto 28px' }}>
+                            نسعى نحو مستقبل تدريبي يرتكز على الابتكار والتميز وبناء القدرات البشرية.
+                        </p>
+                        <SolidBtn to="/mission" orange>عرض الرؤية كاملاً</SolidBtn>
+                    </div>
+                    {/* 2×2 cards */}
+                    <div className="vision-grid">
+                        {visionItems.map((v, i) => (
+                            <div key={i} className={`vis-item rv${visionVis ? ' on' : ''} d${i + 2}`}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                    <CheckCircleOutlineIcon sx={{ color: C.o, fontSize: 18 }} />
+                                    <h4 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.3vw,1.05rem)', fontWeight: 800, color: C.k, lineHeight: 1.5 }}>{v.title}</h4>
                                 </div>
-                            ))}
-                        </div>
+                                <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', color: C.g5, lineHeight: 2 }}>{v.text}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </section>
@@ -576,25 +536,35 @@ export default function Home() {
             <div ref={dlRef} style={{ background: C.b }}>
                 <div className={`rv${dlVis ? ' on' : ''}`}>
                     <div className="W" style={{ padding: 'clamp(28px,4vw,48px) clamp(16px,4vw,56px)' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'clamp(24px,4vw,56px)', alignItems: 'center' }}>
-                            <div>
-                                <Eyebrow light>وثائق</Eyebrow>
-                                <h3 style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.2 }}>تحميل الملفات والتقارير</h3>
-                            </div>
-                            <div style={{ borderRight: '1px solid rgba(255,255,255,.15)', paddingRight: 'clamp(20px,3vw,40px)' }}>
-                                {downloadItems.map((item, i) => (
-                                    <a key={i} href={item.pdfUrl} target="_blank" rel="noopener noreferrer" className="dl-row">
-                                        <div style={{ width: 44, height: 44, borderRadius: 2, background: 'rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                            <item.Icon sx={{ color: C.o, fontSize: '1.5rem' }} />
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.94rem)', fontWeight: 700, color: C.w }}>{item.title}</div>
-                                            <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 2 }}>{item.desc}</div>
-                                        </div>
-                                        <NorthEastIcon sx={{ color: 'rgba(255,255,255,.35)', fontSize: 18 }} />
-                                    </a>
-                                ))}
-                            </div>
+                        {/* Full-width header */}
+                        <div style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)' }}>
+                            <Eyebrow center light>وثائق</Eyebrow>
+                            <h3 style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.5 }}>تحميل الملفات والتقارير</h3>
+                        </div>
+                        {/* 3 items side by side */}
+                        <div className="dl-grid">
+                            {downloadItems.map((item, i) => (
+                                <a key={i} href={item.pdfUrl} target="_blank" rel="noopener noreferrer"
+                                    style={{
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+                                        padding: 'clamp(16px,2.5vw,24px) clamp(12px,2vw,20px)',
+                                        background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)',
+                                        borderRadius: 8, textDecoration: 'none', color: C.w, textAlign: 'center',
+                                        transition: 'background .2s, transform .2s',
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.13)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.transform = ''; }}
+                                >
+                                    <div style={{ width: 52, height: 52, borderRadius: 8, background: 'rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <item.Icon sx={{ color: C.o, fontSize: '1.6rem' }} />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.9rem)', fontWeight: 700, color: C.w, lineHeight: 1.6, marginBottom: 4 }}>{item.title}</div>
+                                        <div style={{ fontFamily: F, fontSize: 'clamp(.66rem,.9vw,.72rem)', color: 'rgba(255,255,255,.45)', lineHeight: 1.6 }}>{item.desc}</div>
+                                    </div>
+                                    <NorthEastIcon sx={{ color: 'rgba(255,255,255,.4)', fontSize: 16, marginTop: 'auto' }} />
+                                </a>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -632,9 +602,9 @@ export default function Home() {
                                 <SwiperSlide key={i} style={{ height: 'auto' }}>
                                     <div className="cert-card">
                                         <div style={{ display: 'flex', gap: 3 }}>{[...Array(5)].map((_, j) => <StarIcon key={j} sx={{ color: C.o, fontSize: 13 }} />)}</div>
-                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.06rem)', fontWeight: 800, color: C.w, margin: 0 }}>{c.title}</h3>
-                                        <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', lineHeight: 1.8, color: 'rgba(255,255,255,.65)', flex: 1, margin: 0 }}>{c.text}</p>
-                                        <img src={c.image} alt={c.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 100, background: C.w, padding: 8, borderRadius: 2 }} />
+                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.06rem)', fontWeight: 800, color: C.w, margin: 0, lineHeight: 1.5 }}>{c.title}</h3>
+                                        <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', lineHeight: 1.9, color: 'rgba(255,255,255,.65)', flex: 1, margin: 0 }}>{c.text}</p>
+                                        <img src={c.image} alt={c.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 100, background: C.w, padding: 8, borderRadius: 8 }} />
                                     </div>
                                 </SwiperSlide>
                             ))}
@@ -643,95 +613,85 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 9 ─ TECHNICAL EDUCATION + SCHOOLS ─────────────────────────────── */}
+            {/* 9 ─ SCHOOLS ────────────────────────────────────────────────────── */}
             <section style={{ background: C.g1 }} ref={techRef}>
-                {/* Compact header */}
                 <div className="W" style={{ paddingTop: 'clamp(48px,7vw,80px)' }}>
                     <div className={`rv${techVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 20 }}>
                         <Eyebrow center>برامجنا</Eyebrow>
-                        <SplitTitle center >المدارس المشاركة في البروتوكول التدريبي</SplitTitle>
+                        <SplitTitle center>المدارس المشاركة في البروتوكول التدريبي</SplitTitle>
                         <div style={{ width: 56, height: 3, background: C.o, margin: '14px auto 16px', borderRadius: 2 }} />
-                        <p style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: C.g5, lineHeight: 1.8, maxWidth: 640, margin: '0 auto' }}>
+                        <p style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: C.g5, lineHeight: 1.9, maxWidth: 640, margin: '0 auto' }}>
                             نتعاون مع وزارة التربية والتعليم لتأهيل طلاب الثانويات الصناعية عمليًا داخل ورش ومراكز تدريب المعهد في عدة محافظات.
                         </p>
                     </div>
                 </div>
-                {/* Schools grid */}
+
                 <div className="W" style={{ paddingTop: 'clamp(36px,5vw,56px)', paddingBottom: 'clamp(48px,7vw,80px)' }} ref={schoolsRef}>
-                    <div className="school-grid">
-                        {schoolItems.map((sc, i) => (
-                            <div key={i} className={`school-card rv${schoolsVis ? ' on' : ''} d${Math.min(i + 1, 6)}`} >
-
-                                {/* Head */}
-                                <div style={{
-                                    padding: '22px 20px 18px',
-                                    borderBottom: `1px solid ${C.g3}`,
-                                    background: sc.isMakawlen ? `linear-gradient(135deg,${C.b} 0%,${C.bd} 100%)` : C.w,
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 14 }}>
-                                        <div style={{
-                                            width: 50, height: 50, borderRadius: 8, flexShrink: 0,
-                                            background: sc.isMakawlen ? 'rgba(255,255,255,.15)' : 'rgba(8,101,168,.08)',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        }}>
-                                            <sc.IconComp sx={{ fontSize: 26, color: sc.isMakawlen ? C.w : C.b }} />
+                    <div className="schools-split">
+                        {/* RIGHT — featured card */}
+                        {(() => {
+                            const sc = schoolItems[0];
+                            return (
+                                <div className={`school-card rv${schoolsVis ? ' on' : ''} d1`} style={{ borderColor: C.b }}>
+                                    <div style={{ padding: '28px 24px 22px', borderBottom: `1px solid ${C.g3}`, background: `linear-gradient(135deg,${C.b} 0%,${C.bd} 100%)`, flex: 'none' }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 18 }}>
+                                            <div style={{ width: 58, height: 58, borderRadius: 10, flexShrink: 0, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <sc.IconComp sx={{ fontSize: 30, color: C.w }} />
+                                            </div>
+                                            <span style={{ fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 12px', borderRadius: 8, background: 'rgba(255,255,255,.15)', color: C.w, border: '1px solid rgba(255,255,255,.25)' }}>{sc.tag}</span>
                                         </div>
-                                        {/* Tag pill */}
-                                        <span style={{
-                                            fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2,
-                                            padding: '3px 10px', borderRadius: 20,
-                                            background: sc.isMakawlen ? 'rgba(255,255,255,.15)' : 'rgba(8,101,168,.1)',
-                                            color: sc.isMakawlen ? C.w : C.b,
-                                            border: sc.isMakawlen ? '1px solid rgba(255,255,255,.25)' : '1px solid rgba(8,101,168,.2)',
-                                        }}>{sc.tag}</span>
+                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,1.6vw,1.2rem)', fontWeight: 800, lineHeight: 1.5, color: C.w, margin: 0 }}>{sc.name}</h3>
                                     </div>
-                                    <h3 style={{ fontFamily: F, fontSize: 'clamp(.84rem,1.2vw,.96rem)', fontWeight: 800, lineHeight: 1.45, color: sc.isMakawlen ? C.w : C.k, margin: 0 }}>{sc.name}</h3>
+                                    <div style={{ padding: '22px 24px 28px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <p style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.1vw,.92rem)', color: C.g5, lineHeight: 1.9, marginBottom: 24, flex: 1 }}>{sc.desc}</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 22 }}>
+                                            <span className="sc-meta"><LocationOnIcon sx={{ fontSize: 14, color: C.b }} />{sc.location}</span>
+                                            <span className="sc-meta"><CalendarTodayIcon sx={{ fontSize: 13, color: C.b }} />{sc.schedule}</span>
+                                            <span className="sc-meta"><GroupsIcon sx={{ fontSize: 14, color: C.b }} />متعدد</span>
+                                        </div>
+                                        <SolidBtn to={sc.link} orange small>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
+                                    </div>
                                 </div>
+                            );
+                        })()}
 
-                                {/* Body */}
-                                <div style={{ padding: '16px 20px 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                    <p style={{ fontFamily: F, fontSize: 'clamp(.74rem,1vw,.84rem)', color: C.g5, lineHeight: 1.8, marginBottom: 16, flex: 1 }}>{sc.desc}</p>
-
-                                    {/* Meta */}
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 18 }}>
-                                        <span className="sc-meta"><LocationOnIcon sx={{ fontSize: 14, color: C.b }} />{sc.location}</span>
-                                        <span className="sc-meta"><CalendarTodayIcon sx={{ fontSize: 13, color: C.b }} />{sc.schedule}</span>
-                                        <span className="sc-meta"><GroupsIcon sx={{ fontSize: 14, color: C.b }} />{sc.students !== '—' ? `${sc.students} طالب` : 'متعدد'}</span>
+                        {/* LEFT — 2×2 sub-grid */}
+                        <div className="schools-sub-grid">
+                            {schoolItems.slice(1).map((sc, i) => (
+                                <div key={i} className={`school-card rv${schoolsVis ? ' on' : ''} d${i + 2}`}>
+                                    <div style={{ padding: '18px 16px 14px', borderBottom: `1px solid ${C.g3}`, background: C.w }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 12 }}>
+                                            <div style={{ width: 44, height: 44, borderRadius: 8, flexShrink: 0, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <sc.IconComp sx={{ fontSize: 22, color: C.b }} />
+                                            </div>
+                                            <span style={{ fontFamily: F, fontSize: '.58rem', fontWeight: 700, letterSpacing: 1, padding: '3px 8px', borderRadius: 8, background: 'rgba(8,101,168,.1)', color: C.b, border: '1px solid rgba(8,101,168,.2)' }}>{sc.tag}</span>
+                                        </div>
+                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.88rem)', fontWeight: 800, lineHeight: 1.5, color: C.k, margin: 0 }}>{sc.name}</h3>
                                     </div>
-
-                                    {/* CTA */}
-                                    {sc.isMakawlen ? (
-                                        <SolidBtn to={sc.link} orange small>
-                                            اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} />
-                                        </SolidBtn>
-                                    ) : (
-                                        <Link to="/technical-education" style={{
-                                            display: 'inline-flex', alignItems: 'center', gap: 6,
-                                            fontFamily: F, fontSize: '.76rem', fontWeight: 700,
-                                            color: C.b, textDecoration: 'none',
-                                            borderBottom: `1px solid ${C.b}`, paddingBottom: 2,
-                                            transition: 'gap .2s',
-                                        }}
+                                    <div style={{ padding: '12px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                        <p style={{ fontFamily: F, fontSize: 'clamp(.7rem,.95vw,.8rem)', color: C.g5, lineHeight: 1.85, marginBottom: 12, flex: 1 }}>{sc.desc}</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14 }}>
+                                            <span className="sc-meta"><LocationOnIcon sx={{ fontSize: 13, color: C.b }} />{sc.location}</span>
+                                            <span className="sc-meta"><CalendarTodayIcon sx={{ fontSize: 12, color: C.b }} />{sc.schedule}</span>
+                                        </div>
+                                        <Link to="/technical-education" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.72rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 2, transition: 'gap .2s' }}
                                             onMouseEnter={e => e.currentTarget.style.gap = '10px'}
                                             onMouseLeave={e => e.currentTarget.style.gap = '6px'}>
-                                            عرض تطوير التعليم الفني <OpenInNewIcon sx={{ fontSize: 12 }} />
+                                            عرض تطوير التعليم الفني <OpenInNewIcon sx={{ fontSize: 11 }} />
                                         </Link>
-                                    )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* 10 ─ PROTOCOLS (redesigned) ────────────────────────────────────── */}
+            {/* 10 ─ PROTOCOLS ─────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={protoRef}>
-                {/* Decorative circles */}
                 <div style={{ position: 'absolute', bottom: -80, left: -80, width: 340, height: 340, borderRadius: '50%', border: '1px solid rgba(8,101,168,.15)', pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(245,124,0,.1)', pointerEvents: 'none' }} />
-
                 <div className="W" style={{ position: 'relative', zIndex: 1 }}>
-                    {/* Header row */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 12 }}>
                         <div className={`rv${protoVis ? ' on' : ''} d1`}>
                             <Eyebrow light>شراكاتنا</Eyebrow>
@@ -742,12 +702,9 @@ export default function Home() {
                             <SolidBtn to="/protocols" orange>عرض الكل <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
                         </div>
                     </div>
-
-                    <p className={`rv${protoVis ? ' on' : ''} d2`} style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: 'rgba(255,255,255,.5)', lineHeight: 1.8, marginBottom: 36, maxWidth: 560 }}>
+                    <p className={`rv${protoVis ? ' on' : ''} d2`} style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: 'rgba(255,255,255,.5)', lineHeight: 1.9, marginBottom: 36, maxWidth: 560 }}>
                         بروتوكولات تعاون استراتيجية مع مؤسسات وهيئات دولية معتمدة لتعزيز جودة التدريب والاعتماد المهني.
                     </p>
-
-                    {/* Cards */}
                     <div className="proto-grid">
                         {protocols.map((p, i) => (
                             <div key={i} className={`proto-card rv${protoVis ? ' on' : ''} d${Math.min(i + 1, 6)}`}>
@@ -755,14 +712,9 @@ export default function Home() {
                                     <div style={{ width: 42, height: 42, borderRadius: 8, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <HandshakeIcon sx={{ color: C.b, fontSize: 22 }} />
                                     </div>
-                                    <span style={{
-                                        fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2,
-                                        padding: '3px 10px', borderRadius: 20,
-                                        background: 'rgba(245,124,0,.1)', border: '1px solid rgba(245,124,0,.2)',
-                                        color: C.o,
-                                    }}>{p.type}</span>
+                                    <span style={{ fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 10px', borderRadius: 8, background: 'rgba(245,124,0,.1)', border: '1px solid rgba(245,124,0,.2)', color: C.o }}>{p.type}</span>
                                 </div>
-                                <h4 style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.94rem)', fontWeight: 800, color: C.k, lineHeight: 1.45, margin: 0 }}>{p.name}</h4>
+                                <h4 style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.94rem)', fontWeight: 800, color: C.k, lineHeight: 1.5, margin: 0 }}>{p.name}</h4>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                     <LocationOnIcon sx={{ fontSize: 13, color: C.g5 }} />
                                     <span style={{ fontFamily: F, fontSize: '.7rem', color: C.g5, fontWeight: 600 }}>{p.country}</span>
@@ -800,7 +752,7 @@ export default function Home() {
                                                 </div>
                                             </div>
                                             <div style={{ padding: '16px' }}>
-                                                <p style={{ margin: '0 0 14px', fontWeight: 700, fontFamily: F, lineHeight: 1.5, fontSize: 'clamp(.84rem,1.2vw,.96rem)', color: C.k, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 52 }}>{n.title}</p>
+                                                <p style={{ margin: '0 0 14px', fontWeight: 700, fontFamily: F, lineHeight: 1.6, fontSize: 'clamp(.84rem,1.2vw,.96rem)', color: C.k, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 52 }}>{n.title}</p>
                                                 <Link to={`/news/${n.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 1 }}>
                                                     اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} />
                                                 </Link>
@@ -814,7 +766,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 12 ─ CRAFT + TECHNICAL + EXAMS ─────────────────────────────────── */}
+            {/* 12 ─ CRAFT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.w, borderTop: `1px solid ${C.g3}` }} ref={craftRef}>
                 <div className="W">
                     <div className={`rv${craftVis ? ' on' : ''} d1`} style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
@@ -825,12 +777,12 @@ export default function Home() {
                     <div className="g3">
                         {craftItems.map((c, i) => (
                             <div key={i} className={`craft-card rv${craftVis ? ' on' : ''} d${i + 2}`}>
-                                <div style={{ width: 56, height: 56, borderRadius: 2, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
+                                <div style={{ width: 56, height: 56, borderRadius: 8, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
                                     <c.Icon sx={{ fontSize: 28, color: C.b }} />
                                 </div>
                                 <div style={{ width: 32, height: 2, background: C.o, marginBottom: 14 }} />
-                                <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.06rem)', fontWeight: 800, color: C.k, marginBottom: 10 }}>{c.title}</h3>
-                                <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', color: C.g5, lineHeight: 1.85, flex: 1, marginBottom: 20 }}>{c.text}</p>
+                                <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.06rem)', fontWeight: 800, color: C.k, marginBottom: 10, lineHeight: 1.5 }}>{c.title}</h3>
+                                <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', color: C.g5, lineHeight: 1.9, flex: 1, marginBottom: 20 }}>{c.text}</p>
                                 <SolidBtn to={c.link} small>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
                             </div>
                         ))}
@@ -841,28 +793,30 @@ export default function Home() {
             {/* 13 ─ LIBRARY ──────────────────────────────────────────────────── */}
             <section style={{ background: C.k }} ref={libRef}>
                 <div className={`rv${libVis ? ' on' : ''}`}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 'clamp(260px,36vw,440px)' }}>
-                        <div style={{ background: C.o, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(36px,5vw,64px)', position: 'relative', overflow: 'hidden' }}>
+                    <div className="lib-split">
+                        {/* Orange panel */}
+                        <div style={{ flex: '0 0 50%', background: C.o, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,5vw,64px)', position: 'relative', overflow: 'hidden' }}>
                             <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, right: -110, pointerEvents: 'none' }} />
                             <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-                                <LibraryBooksIcon sx={{ fontSize: 'clamp(40px,5.5vw,64px)', color: C.w, marginBottom: 12 }} />
-                                <div style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.7rem)', fontWeight: 900, color: C.w, lineHeight: 1.1, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
+                                <LibraryBooksIcon sx={{ fontSize: 'clamp(36px,5vw,64px)', color: C.w, marginBottom: 12 }} />
+                                <div style={{ fontFamily: F, fontSize: 'clamp(1rem,1.8vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
                                 <div style={{ width: 32, height: 2, background: 'rgba(255,255,255,.5)', margin: '0 auto 16px' }} />
                                 <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
                                     {['5,000+ كتاب', '200+ دورية', 'رقمية'].map((t, i) => (
-                                        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,.15)', color: C.w, borderRadius: 2, padding: '4px 12px', fontSize: '.7rem', fontFamily: F, fontWeight: 700 }}>
+                                        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,.15)', color: C.w, borderRadius: 8, padding: '4px 12px', fontSize: 'clamp(.62rem,.9vw,.7rem)', fontFamily: F, fontWeight: 700 }}>
                                             <AutoStoriesIcon sx={{ fontSize: 12 }} /> {t}
                                         </span>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                        <div style={{ padding: 'clamp(36px,5vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        {/* Dark panel */}
+                        <div style={{ flex: '0 0 50%', padding: 'clamp(28px,5vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                             <Eyebrow light>المكتبة</Eyebrow>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.2, marginBottom: 16 }}>
+                            <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,1.8vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 16 }}>
                                 مرجعك العلمي الأشمل في علوم التشييد والإدارة
                             </h3>
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 28 }}>
+                            <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 28 }}>
                                 مفتوحة لجميع المتدربين والباحثين. تضم آلاف المراجع الهندسية والمالية والإدارية مع قواعد بيانات رقمية متكاملة.
                             </p>
                             <div><SolidBtn to="/library" orange>زيارة المكتبة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn></div>
@@ -871,7 +825,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ── Gap spacer before Customers ── */}
             <div style={{ height: 'clamp(48px,7vw,80px)', background: C.w }} />
 
             {/* 14 ─ CUSTOMERS ────────────────────────────────────────────────── */}

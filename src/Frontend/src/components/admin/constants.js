@@ -27,6 +27,7 @@ export const ADMIN_EMAILS = [
     'amrshamy91@gmail.com',
     'abdelmawla1642@gmail.com',
     'mostafa.awaad@gmail.com',
+    'samiryousri96@gmail.com',
 ];
 
 export const API_BASE     = 'https://acwebsite-icmet-test.azurewebsites.net/api';
