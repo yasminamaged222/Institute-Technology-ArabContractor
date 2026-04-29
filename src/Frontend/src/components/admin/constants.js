@@ -65,8 +65,8 @@ export const TABS = [
     { id: 'financial', label: 'المالية', icon: '💰' }, // ← NEW
     { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },
     { id: 'news', label: 'الأخبار', icon: '📰' },
-    { id: 'books', label: 'المكتبة', icon: '📖' } // ← ADDED
-
+    { id: 'books', label: 'المكتبة', icon: '📖' }, // ← ADDED
+    { id: 'planwork', label: 'خطة العمل', icon: '📋' }, // ← NEW
 ];
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -82,4 +82,5 @@ export const TAB_TITLES = {
     lecturers: { tag: 'إدارة المحاضرين', title: ['بيانات', 'المحاضرين'] },
     news: { tag: 'إدارة المحتوى', title: ['إدارة', 'الأخبار'] },
     books: { tag: 'إدارة المحتوى', title: ['مكتبة', 'الكتب'] }, // ← ADDED
+    planwork: { tag: 'إدارة خطة العمل', title: ['خطة', 'العمل'] }, // ← NEW
 };

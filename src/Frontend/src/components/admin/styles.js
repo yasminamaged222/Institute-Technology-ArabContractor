@@ -1282,6 +1282,236 @@ export const ADMIN_STYLES = `
 
 // ═══ END ═══
 
+
+// ═══ PLANWORK TAB ═══
+
+    /* sidebar nav accent */
+    .adm-nav-btn.pw-nav::before   { background: #7c3aed; }
+    .adm-nav-btn.pw-nav.active    { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.35); }
+    .adm-nav-badge.pw             { background: #7c3aed; }
+
+    /* page-hero variant */
+    .adm-page-hero.pw-hero        { background: linear-gradient(135deg,#1e1b4b 0%,#312e81 55%,#3730a3 100%); }
+    .adm-hero-accent.pw           { background: linear-gradient(to bottom,#7c3aed,#a78bfa); }
+    .adm-hero-tag.pw              { background: #7c3aed; }
+    .adm-hero-title span.pw       { color: #c4b5fd; }
+    .adm-section-hdr.pw           { border-bottom-color: #7c3aed; }
+    .adm-section-tag.pw           { background: #7c3aed; }
+    .adm-section-title span.pw    { color: #7c3aed; }
+    .adm-card.pw::before          { background: linear-gradient(to left,#7c3aed,#0865a8); }
+
+    /* ── Tree viewer ── */
+    .pw-tree-panel {
+        flex-shrink: 0;
+        border-top: 2px solid #f0f1f2;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        min-height: 0;
+    }
+    .pw-tree-header {
+        padding: 9px 14px 7px;
+        font-size: .8rem;
+        font-weight: 900;
+        color: #0a0a0a;
+        background: #f8f9fa;
+        border-bottom: 1.5px solid #e2e8f0;
+        flex-shrink: 0;
+        text-align: right;
+        letter-spacing: .02em;
+    }
+    .pw-tree-scroll {
+        overflow-y: auto;
+        flex: 1;
+        padding: 4px 2px 10px;
+        min-height: 140px;
+        max-height: 42vh;
+        background: #fff;
+    }
+    .pw-tree-scroll::-webkit-scrollbar { width: 5px; }
+    .pw-tree-scroll::-webkit-scrollbar-thumb { background: #c8cdd4; border-radius: 2px; }
+
+    /* base row */
+    .pw-tree-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 4px 10px 4px 4px;
+        cursor: pointer;
+        direction: rtl;
+        transition: background .11s;
+        border-right: 3px solid transparent;
+        text-align: right;
+        line-height: 1.55;
+        user-select: none;
+    }
+    .pw-tree-row:hover { background: rgba(8,101,168,0.05); }
+    .pw-tree-row.active { background: rgba(8,101,168,0.09); border-right-color: #0865a8; }
+
+    /* depth 0 — root (الخطة التدريبية) */
+    .pw-tree-d0 { font-size: .78rem; font-weight: 900; color: #0a0a0a; background: #f0f4f8; border-bottom: 1px solid #d0d3d8; }
+    .pw-tree-d0:hover { background: #e4eaf2; }
+    .pw-tree-d0.active { background: #dce8f4; border-right-color: #0865a8; }
+
+    /* depth 1 — parent category */
+    .pw-tree-d1 { font-size: .75rem; font-weight: 800; color: #1a3a5c; background: #f7f9fc; border-bottom: 1px solid #eaecef; }
+    .pw-tree-d1:hover { background: #edf2f9; }
+    .pw-tree-d1.active { background: #dce8f4; border-right-color: #0865a8; }
+
+    /* depth 2 — sub-category */
+    .pw-tree-d2 { font-size: .73rem; font-weight: 700; color: #374151; }
+    .pw-tree-d2:hover { background: rgba(8,101,168,0.05); }
+    .pw-tree-d2.active { background: rgba(8,101,168,0.09); border-right-color: #0865a8; }
+
+    /* depth 3 — leaf / course */
+    .pw-tree-d3 { font-size: .7rem; font-weight: 400; color: #555f6e; }
+    .pw-tree-d3:hover { background: rgba(245,124,0,0.04); }
+    .pw-tree-d3.active { background: rgba(245,124,0,0.09); border-right-color: #f57c00; color: #bf5200; font-weight: 600; }
+
+    /* left border accent per depth on children wrap */
+    .pw-tree-children { border-right: 1.5px solid #e2e8f0; margin-right: 18px; }
+    .pw-tree-children.pw-children-d0 { border-right-color: #c8d8ea; }
+    .pw-tree-children.pw-children-d1 { border-right-color: #dde6ef; }
+    .pw-tree-children.pw-children-d2 { border-right-color: #eaeef2; }
+
+    /* toggle icon */
+    .pw-tree-toggle {
+        flex-shrink: 0;
+        width: 16px;
+        font-size: .72rem;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 1px;
+    }
+    .pw-tree-label { flex: 1; }
+
+    /* ── Files section ── */
+    .pw-files-section {
+        background: #f8f9fa;
+        border: 1.5px solid #d0d3d8;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 4px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .pw-files-hdr {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: #044478;
+        border-bottom: 1.5px solid rgba(245,124,0,0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    .pw-files-hdr::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: linear-gradient(rgba(245,124,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(245,124,0,0.06) 1px,transparent 1px);
+        background-size: 28px 28px;
+        pointer-events: none;
+    }
+    .pw-files-icon  { font-size: 1.2rem; position: relative; z-index: 1; }
+    .pw-files-title { font-size: .84rem; font-weight: 900; color: #fff; position: relative; z-index: 1; }
+    .pw-files-sub   { font-size: .68rem; color: rgba(255,255,255,.45); margin-top: 2px; position: relative; z-index: 1; }
+
+    .pw-files-body {
+        display: flex;
+        gap: 18px;
+        padding: 16px;
+        flex-wrap: wrap;
+    }
+
+    /* form side */
+    .pw-files-form {
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+        flex: 1;
+        min-width: 220px;
+    }
+    .pw-files-actions {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding-top: 6px;
+    }
+
+    /* Select File button */
+    .pw-select-file-btn {
+        padding: 7px 12px;
+        border-radius: 3px;
+        border: 1.5px solid #d0d3d8;
+        background: #f0f1f2;
+        font-family: inherit;
+        font-size: .74rem;
+        font-weight: 700;
+        cursor: pointer;
+        color: #374151;
+        white-space: nowrap;
+        transition: all .14s;
+        flex-shrink: 0;
+    }
+    .pw-select-file-btn:hover { border-color: #f57c00; color: #f57c00; background: rgba(245,124,0,0.06); }
+
+    /* table side */
+    .pw-files-table-wrap {
+        flex: 1;
+        min-width: 200px;
+        border: 1.5px solid #d0d3d8;
+        border-radius: 3px;
+        overflow: hidden;
+        background: #fff;
+        align-self: flex-start;
+    }
+    .pw-files-tbl {
+        width: 100%;
+        border-collapse: collapse;
+        direction: rtl;
+        font-family: inherit;
+    }
+    .pw-files-tbl thead th {
+        background: #374151;
+        color: #fff;
+        padding: 8px 14px;
+        font-size: .74rem;
+        font-weight: 700;
+        text-align: right;
+        border-bottom: 2px solid #f57c00;
+        white-space: nowrap;
+    }
+    .pw-files-tbl tbody tr {
+        border-bottom: 1px solid #f0f1f2;
+        cursor: pointer;
+        transition: background .12s;
+    }
+    .pw-files-tbl tbody tr:last-child { border-bottom: none; }
+    .pw-files-tbl tbody tr:hover  { background: rgba(8,101,168,0.05); }
+    .pw-files-tbl tbody tr.active { background: rgba(124,58,237,0.08); border-right: 3px solid #7c3aed; }
+    .pw-files-tbl tbody tr:nth-child(even) { background: #fafbfc; }
+    .pw-files-tbl tbody tr:nth-child(even):hover  { background: rgba(8,101,168,0.05); }
+    .pw-files-tbl tbody tr.active:nth-child(even) { background: rgba(124,58,237,0.08); }
+    .pw-files-tbl td {
+        padding: 8px 14px;
+        font-size: .74rem;
+        color: #374151;
+        text-align: right;
+    }
+
+    /* ── Responsive ── */
+    @media(max-width:900px){
+        .pw-files-body   { flex-direction: column; }
+        .pw-tree-scroll  { max-height: 220px; }
+    }
+    @media(max-width:640px){
+        .pw-files-form   { min-width: unset; }
+        .pw-files-actions { flex-direction: column; align-items: stretch; }
+    }
+
+// ═══ END PLANWORK STYLES ═══
+
 `;
 
 export function injectAdminStyles() {

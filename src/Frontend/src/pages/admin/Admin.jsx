@@ -25,6 +25,7 @@ import RefundActionModal from '../../components/admin/modals/RefundActionModal';
 import LecturersTab from './mohadren';  // ← ADD
 import NewsTab from './NewsTab';
 import BooksTab from './BooksTab'; // ← ADDED
+import PlanworkTab from './PlanworkTab'; // ← ADD
 
 
 const TABS = [
@@ -37,6 +38,7 @@ const TABS = [
     { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },  // ← ADD
     { id: 'news', label: 'الأخبار', icon: '📰' },
     { id: 'books', label: 'الكتب', icon: '📖' }, // ← ADDED
+    { id: 'planwork', label: 'خطة العمل', icon: '📋' }, // ← ADD
 
 ];
 
@@ -551,6 +553,10 @@ const AdminDashboard = () => {
                                 authFetch={authFetch}
                                 onRefresh={loadBooks}
                             />
+                        )}
+
+                        {activeTab === 'planwork' && (
+                            <PlanworkTab />
                         )}
                     </div>
 
