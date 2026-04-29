@@ -2280,7 +2280,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { T } from "../../components/admin/constants";
 
 // ── API base ──────────────────────────────────────────────────────────────────
-const API_BASE = 'https://localhost:7177/api/admin/AdminLecturer';
+const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api/admin/AdminLecturer';
 
 // ── Map API response → internal form shape ────────────────────────────────────
 function apiToForm(apiLec) {
