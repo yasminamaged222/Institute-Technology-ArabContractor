@@ -127,11 +127,10 @@ export const ADMIN_STYLES = `
 
     /* ── Toolbar ── */
     .adm-toolbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom: clamp(12px,2vw,18px); background:${T.white}; border:1.5px solid ${T.gray300}; border-radius:3px; padding: clamp(10px,1.5vw,14px) clamp(12px,2vw,18px); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .adm-search { flex:1; min-width:160px; position:relative; }
     .adm-search input { width:100%; padding: clamp(8px,1.2vw,11px) 34px clamp(8px,1.2vw,11px) clamp(10px,1.5vw,14px); border-radius:3px; border:1.5px solid ${T.gray300}; background:${T.gray100}; color:${T.black}; font-family:${T.font}; font-size:clamp(.72rem,1.3vw,.8rem); outline:none; direction:rtl; transition: border .18s, box-shadow .18s; }
     .adm-search input::placeholder { color:${T.gray500}; }
     .adm-search input:focus { border-color:${T.orange}; background:${T.white}; box-shadow:0 0 0 3px rgba(245,124,0,0.1); }
-    .adm-search::after { content:'🔍'; position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:.68rem; pointer-events:none; opacity:.5; }
+    .adm-search::after { content:''; position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:.68rem; pointer-events:none; opacity:.5; }
     .adm-fdate { padding: clamp(7px,1.1vw,10px) clamp(8px,1.2vw,12px); border-radius:3px; border:1.5px solid ${T.gray300}; background:${T.gray100}; color:${T.black}; font-family:${T.font}; font-size:clamp(.7rem,1.2vw,.78rem); outline:none; direction:ltr; transition: border .18s; }
     .adm-fdate:focus { border-color:${T.orange}; background:${T.white}; }
     .adm-fsel { padding: clamp(7px,1.1vw,10px) clamp(8px,1.2vw,12px); border-radius:3px; border:1.5px solid ${T.gray300}; background:${T.gray100}; color:${T.black}; font-family:${T.font}; font-size:clamp(.7rem,1.2vw,.78rem); outline:none; cursor:pointer; }
