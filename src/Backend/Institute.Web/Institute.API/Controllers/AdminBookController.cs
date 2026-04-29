@@ -11,10 +11,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Institute.API.Controllers
 {
-    [HasPermission("Books")]
+    //[HasPermission("Books")]
     [Route("api/admin/[controller]")]
     [ApiController]
-    public class BookAdminController : ControllerBase
+    public class AdminBookController : ControllerBase
     {
         private readonly IReadOnlyService<Book> _bookService;
         private readonly IMapper _mapper;
@@ -22,7 +22,7 @@ namespace Institute.API.Controllers
         private readonly IBookService _service;
 
 
-        public BookAdminController(IReadOnlyService<Book> bookService, IMapper mapper, IRepository<Book> repository, IBookService service)
+        public AdminBookController(IReadOnlyService<Book> bookService, IMapper mapper, IRepository<Book> repository, IBookService service)
         {
             _bookService = bookService;
             _service = service;
