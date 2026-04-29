@@ -104,6 +104,7 @@ builder.Services.AddHttpClient<ClerkService>();
 builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 //builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
