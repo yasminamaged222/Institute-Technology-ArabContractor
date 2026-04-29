@@ -74,6 +74,7 @@ builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>)
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsListDto>>();
 builder.Services.AddScoped<NewsPictureUrlResolver<NewsDetailsDto>>();
+builder.Services.AddScoped<INewsService, NewsService>();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -104,6 +105,7 @@ builder.Services.AddScoped(typeof(IClerkService), typeof(ClerkService));
 builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IBooksTypeService, BooksTypeService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 //builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
