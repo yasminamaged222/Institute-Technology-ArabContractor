@@ -36,23 +36,24 @@ const STATIC_TREE = [
     }
 ];
 
-// ── Static records (matching tree labels so clicks fill form) ─────────────────
+function flattenTree(nodes, acc = []) {
+    nodes.forEach(n => { acc.push({ id: n.id, label: n.label }); if (n.children?.length) flattenTree(n.children, acc); });
+    return acc;
+}
+const ALL_TREE_NODES = flattenTree(STATIC_TREE);
+
+// ── Initial records ───────────────────────────────────────────────────────────
 const INITIAL_RECORDS = [
-    { id: 1, priority: 1, days: 5, username: 'admin1', password: '', name: 'الخطة التدريبية', show: true, hasDetails: true, showOnHome: true, category: '', price: '1500', description: 'الخطة التدريبية الرئيسية للمعهد', place: 'القاهرة', date: '2025-01-15', details: '' },
-    { id: 2, priority: 2, days: 3, username: 'admin2', password: '', name: 'برامج موجهة للمهندسين', show: true, hasDetails: true, showOnHome: false, category: '', price: '2000', description: 'برامج تدريبية متخصصة للمهندسين', place: 'الجيزة', date: '2025-02-10', details: '' },
-    { id: 3, priority: 3, days: 7, username: 'admin3', password: '', name: 'برامج تأهيلية للمهندسين', show: true, hasDetails: false, showOnHome: false, category: '', price: '2500', description: 'برامج تأهيل وتطوير مهني', place: 'الإسكندرية', date: '2025-03-05', details: '' },
-    { id: 4, priority: 4, days: 4, username: 'admin4', password: '', name: 'برامج موجهة للماليين', show: false, hasDetails: true, showOnHome: false, category: '', price: '1800', description: 'برامج مالية ومحاسبية متقدمة', place: 'القاهرة', date: '2025-04-20', details: '' },
-    { id: 5, priority: 5, days: 2, username: 'admin5', password: '', name: 'برامج موجهة للأمن', show: true, hasDetails: false, showOnHome: true, category: '', price: '1200', description: 'برامج أمنية وسلامة مهنية', place: 'مركز جسر السويس', date: '2025-05-12', details: '' },
-    { id: 6, priority: 6, days: 6, username: 'admin6', password: '', name: 'برامج مركز جسر السويس', show: true, hasDetails: true, showOnHome: true, category: '', price: '3000', description: 'برامج مركز التدريب الإقليمي', place: 'جسر السويس', date: '2025-06-01', details: '' },
-    { id: 7, priority: 7, days: 3, username: 'admin7', password: '', name: 'برامج مركز شبرا', show: true, hasDetails: false, showOnHome: false, category: '', price: '1400', description: 'برامج فرع شبرا التدريبي', place: 'شبرا', date: '2025-06-15', details: '' },
-    { id: 8, priority: 8, days: 5, username: 'admin8', password: '', name: 'برامج مالية موجهه لغير الماليين', show: false, hasDetails: true, showOnHome: false, category: '', price: '1600', description: 'تأسيس مالي لغير المتخصصين', place: 'القاهرة', date: '2025-07-08', details: '' },
-    { id: 9, priority: 9, days: 10, username: 'admin9', password: '', name: 'برامج القطاع القانوني والعقارى', show: true, hasDetails: true, showOnHome: true, category: '', price: '3500', description: 'تدريب قانوني وعقاري متخصص', place: 'القاهرة', date: '2025-08-20', details: '' },
-    { id: 10, priority: 10, days: 4, username: 'admin10', password: '', name: 'دورات مستحدثة', show: true, hasDetails: false, showOnHome: true, category: '', price: '900', description: 'دورات جديدة ومتجددة', place: 'أونلاين', date: '2025-09-01', details: '' },
-    { id: 21, priority: 1, days: 3, username: 'admin21', password: '', name: 'برامج تأهيلية', show: true, hasDetails: true, showOnHome: false, category: '', price: '2200', description: 'برامج تأهيل المهندسين الجدد', place: 'القاهرة', date: '2025-03-01', details: '' },
-    { id: 211, priority: 1, days: 5, username: 'admin211', password: '', name: 'برنامج إعداد وتأهيل مهندس حديث مدني وعمارة', show: true, hasDetails: true, showOnHome: true, category: '', price: '2800', description: 'برنامج شامل لتأهيل مهندس مدني حديث', place: 'القاهرة', date: '2025-04-01', details: '' },
-    { id: 212, priority: 2, days: 4, username: 'admin212', password: '', name: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الأولى ( أعمال الهيكل الخرساني)', show: true, hasDetails: true, showOnHome: false, category: '', price: '1800', description: 'المرحلة الأولى - أعمال الهيكل الخرساني', place: 'القاهرة', date: '2025-04-10', details: '' },
-    { id: 213, priority: 3, days: 4, username: 'admin213', password: '', name: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الثانيه ( أعمال التشطيبات الأساسية)', show: true, hasDetails: false, showOnHome: false, category: '', price: '1800', description: 'المرحلة الثانية - أعمال التشطيبات', place: 'الجيزة', date: '2025-05-01', details: '' },
-    { id: 214, priority: 4, days: 4, username: 'admin214', password: '', name: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الثالثة (إدارة المشروعات والمالية)', show: true, hasDetails: true, showOnHome: false, category: '', price: '1800', description: 'المرحلة الثالثة - إدارة المشروعات', place: 'القاهرة', date: '2025-05-15', details: '' },
+    { id: 1, parentId: null, priority: 1, days: 5, name: 'الخطة التدريبية', slug: 'training-plan', sku: 'TP-001', show: true, hasDetails: true, showOnHome: true, price: '1500', description: 'الخطة التدريبية الرئيسية للمعهد', place: 'القاهرة', date: '2025-01-15', details: '' },
+    { id: 2, parentId: 1, priority: 2, days: 3, name: 'برامج موجهة للمهندسين', slug: 'engineers-programs', sku: 'EP-001', show: true, hasDetails: true, showOnHome: false, price: '2000', description: 'برامج تدريبية متخصصة للمهندسين', place: 'الجيزة', date: '2025-02-10', details: '' },
+    { id: 3, parentId: 1, priority: 3, days: 7, name: 'برامج تأهيلية للمهندسين', slug: 'engineers-qualify', sku: 'EQ-001', show: true, hasDetails: false, showOnHome: false, price: '2500', description: 'برامج تأهيل وتطوير مهني', place: 'الإسكندرية', date: '2025-03-05', details: '' },
+    { id: 4, parentId: 1, priority: 4, days: 4, name: 'برامج موجهة للماليين', slug: 'finance-programs', sku: 'FP-001', show: false, hasDetails: true, showOnHome: false, price: '1800', description: 'برامج مالية ومحاسبية متقدمة', place: 'القاهرة', date: '2025-04-20', details: '' },
+    { id: 5, parentId: 1, priority: 5, days: 2, name: 'برامج موجهة للأمن', slug: 'security-programs', sku: 'SP-001', show: true, hasDetails: false, showOnHome: true, price: '1200', description: 'برامج أمنية وسلامة مهنية', place: 'مركز جسر السويس', date: '2025-05-12', details: '' },
+    { id: 6, parentId: 1, priority: 6, days: 6, name: 'برامج مركز جسر السويس', slug: 'suez-bridge-center', sku: 'SB-001', show: true, hasDetails: true, showOnHome: true, price: '3000', description: 'برامج مركز التدريب الإقليمي', place: 'جسر السويس', date: '2025-06-01', details: '' },
+    { id: 7, parentId: 1, priority: 7, days: 3, name: 'برامج مركز شبرا', slug: 'shubra-center', sku: 'SC-001', show: true, hasDetails: false, showOnHome: false, price: '1400', description: 'برامج فرع شبرا التدريبي', place: 'شبرا', date: '2025-06-15', details: '' },
+    { id: 21, parentId: 2, priority: 1, days: 3, name: 'برامج تأهيلية', slug: 'qualify-sub', sku: 'QS-001', show: true, hasDetails: true, showOnHome: false, price: '2200', description: 'برامج تأهيل المهندسين الجدد', place: 'القاهرة', date: '2025-03-01', details: '' },
+    { id: 211, parentId: 21, priority: 1, days: 5, name: 'برنامج إعداد وتأهيل مهندس حديث مدني وعمارة', slug: 'civil-eng-program', sku: 'CE-001', show: true, hasDetails: true, showOnHome: true, price: '2800', description: 'برنامج شامل لتأهيل مهندس مدني حديث', place: 'القاهرة', date: '2025-04-01', details: '' },
+    { id: 212, parentId: 21, priority: 2, days: 4, name: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الأولى ( أعمال الهيكل الخرساني)', slug: 'civil-phase-1', sku: 'CE-002', show: true, hasDetails: true, showOnHome: false, price: '1800', description: 'المرحلة الأولى - أعمال الهيكل الخرساني', place: 'القاهرة', date: '2025-04-10', details: '' },
 ];
 
 // ── Static files ──────────────────────────────────────────────────────────────
@@ -62,7 +63,7 @@ const INITIAL_FILES = {
     6: [{ id: 5, name: 'pdf.55002', order: 1, title: 'خطة مركز جسر السويس', file: null }],
 };
 
-const BLANK = { id: 0, priority: '', days: '', username: '', password: '', name: '', show: false, hasDetails: false, showOnHome: false, category: '', price: '', description: '', place: '', date: '', details: '' };
+const BLANK = { id: 0, parentId: null, priority: '', days: '', name: '', slug: '', sku: '', show: false, hasDetails: false, showOnHome: false, price: '', description: '', place: '', date: '', details: '' };
 const FILE_BLANK = { id: 0, name: '', order: '', title: '', file: null };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -79,6 +80,9 @@ function wrapSelectionWithStyle(prop, val) {
     try { range.surroundContents(span); } catch { const f = range.extractContents(); span.appendChild(f); range.insertNode(span); }
     sel.removeAllRanges(); const nr = document.createRange(); nr.selectNodeContents(span); sel.addRange(nr);
 }
+function toSlug(str) {
+    return str.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u0600-\u06FF-]/g, '').replace(/-+/g, '-').slice(0, 60);
+}
 const FONT_FAMILIES = [
     { label: 'افتراضي', value: 'inherit' }, { label: 'Cairo', value: "'Cairo', sans-serif" },
     { label: 'Tajawal', value: "'Tajawal', sans-serif" }, { label: 'Amiri', value: "'Amiri', serif" },
@@ -87,7 +91,7 @@ const FONT_FAMILIES = [
 ];
 
 // ══════════════════════════════════════════════════════════════════════════════
-// RichTextEditor — no font-size
+// RichTextEditor
 // ══════════════════════════════════════════════════════════════════════════════
 function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, minHeight = 120 }) {
     const editorRef = useRef(null), savedSelRef = useRef(null), lastValueRef = useRef(null), urlInputRef = useRef(null);
@@ -121,7 +125,9 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                 <button className="lec-tb-btn italic" onClick={() => exec('italic')}>I</button>
                 <button className="lec-tb-btn under" onClick={() => exec('underline')}>U</button>
                 <div className="lec-rte-sep" />
-                <select className="lec-tb-font-select" value={fontFamily} onChange={e => { const ff = e.target.value; setFontFamily(ff); restoreSelection(); editorRef.current?.focus(); wrapSelectionWithStyle('fontFamily', ff); emitChange(); }} onMouseDown={saveSelection}>
+                <select className="lec-tb-font-select" value={fontFamily}
+                    onChange={e => { const ff = e.target.value; setFontFamily(ff); restoreSelection(); editorRef.current?.focus(); wrapSelectionWithStyle('fontFamily', ff); emitChange(); }}
+                    onMouseDown={saveSelection}>
                     {FONT_FAMILIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
                 </select>
                 <div className="lec-rte-sep" />
@@ -129,15 +135,20 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                     <button className="lec-tb-color-btn" onMouseDown={saveSelection}>
                         <span className="color-letter" style={{ color: fontColor }}>A</span>
                         <span className="color-bar" style={{ background: fontColor }} />
-                        <input type="color" className="lec-tb-color-input" value={fontColor} onChange={e => { const c = e.target.value; setFontColor(c); restoreSelection(); exec('foreColor', c); }} />
+                        <input type="color" className="lec-tb-color-input" value={fontColor}
+                            onChange={e => { const c = e.target.value; setFontColor(c); restoreSelection(); exec('foreColor', c); }} />
                     </button>
                 </div>
                 <div className="lec-rte-sep" />
                 <div className="lec-tb-url-wrap">
-                    <button className={`lec-tb-btn${urlOpen ? ' active' : ''}`} onClick={() => { saveSelection(); setUrlValue('https://'); setUrlOpen(true); }} onMouseDown={saveSelection}>🔗</button>
+                    <button className={`lec-tb-btn${urlOpen ? ' active' : ''}`}
+                        onClick={() => { saveSelection(); setUrlValue('https://'); setUrlOpen(true); }}
+                        onMouseDown={saveSelection}>🔗</button>
                     {urlOpen && (
                         <div className="lec-url-popover">
-                            <input ref={urlInputRef} type="url" placeholder="https://example.com" value={urlValue} onChange={e => setUrlValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { restoreSelection(); exec('createLink', urlValue.trim()); setUrlOpen(false); emitChange(); } if (e.key === 'Escape') { setUrlOpen(false); restoreSelection(); } }} />
+                            <input ref={urlInputRef} type="url" placeholder="https://example.com" value={urlValue}
+                                onChange={e => setUrlValue(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') { restoreSelection(); exec('createLink', urlValue.trim()); setUrlOpen(false); emitChange(); } if (e.key === 'Escape') { setUrlOpen(false); restoreSelection(); } }} />
                             <button className="lec-url-popover-ok" onClick={() => { restoreSelection(); exec('createLink', urlValue.trim()); setUrlOpen(false); emitChange(); }}>إدراج</button>
                             <button className="lec-url-popover-cancel" onClick={() => { setUrlOpen(false); restoreSelection(); }}>إلغاء</button>
                         </div>
@@ -145,7 +156,8 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                 </div>
                 <button className="lec-tb-btn" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
             </div>
-            <div ref={editorRef} contentEditable suppressContentEditableWarning className="lec-rte-editor" data-placeholder={placeholder} style={{ minHeight }}
+            <div ref={editorRef} contentEditable suppressContentEditableWarning className="lec-rte-editor"
+                data-placeholder={placeholder} style={{ minHeight }}
                 onInput={emitChange}
                 onKeyDown={e => { if (e.ctrlKey || e.metaKey) { if (e.key === 'b') { e.preventDefault(); exec('bold'); } if (e.key === 'i') { e.preventDefault(); exec('italic'); } if (e.key === 'u') { e.preventDefault(); exec('underline'); } } }}
                 onMouseUp={saveSelection} onKeyUp={saveSelection} />
@@ -154,28 +166,23 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// TreeNode — depth-aware, click sets form directly via records lookup
+// TreeNode — only the tree, no records list on right panel
 // ══════════════════════════════════════════════════════════════════════════════
 function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
     const [open, setOpen] = useState(node.expanded ?? false);
     const hasChildren = node.children && node.children.length > 0;
     const depthClass = ['pw-tree-d0', 'pw-tree-d1', 'pw-tree-d2', 'pw-tree-d3'][Math.min(depth, 3)];
-
     return (
         <div>
-            <div
-                className={`pw-tree-row ${depthClass}${selectedId === node.id ? ' active' : ''}`}
+            <div className={`pw-tree-row ${depthClass}${selectedId === node.id ? ' active' : ''}`}
                 style={{ paddingRight: 10 + depth * 14 }}
-                onClick={e => { e.stopPropagation(); onSelect(node); if (hasChildren) setOpen(o => !o); }}
-            >
+                onClick={e => { e.stopPropagation(); onSelect(node); if (hasChildren) setOpen(o => !o); }}>
                 <span className="pw-tree-toggle">{hasChildren ? (open ? '⊟' : '⊞') : ''}</span>
                 <span className="pw-tree-label">{node.label}</span>
             </div>
             {hasChildren && open && (
                 <div className={`pw-tree-children pw-children-d${Math.min(depth, 2)}`}>
-                    {node.children.map(child => (
-                        <TreeNode key={child.id} node={child} selectedId={selectedId} onSelect={onSelect} depth={depth + 1} />
-                    ))}
+                    {node.children.map(child => <TreeNode key={child.id} node={child} selectedId={selectedId} onSelect={onSelect} depth={depth + 1} />)}
                 </div>
             )}
         </div>
@@ -183,7 +190,7 @@ function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// FilesSection
+// FilesSection — auto-generates next file id based on planwork
 // ══════════════════════════════════════════════════════════════════════════════
 function FilesSection({ planworkId, planworkName }) {
     const [files, setFiles] = useState(() => INITIAL_FILES[planworkId] ? [...INITIAL_FILES[planworkId]] : []);
@@ -193,20 +200,33 @@ function FilesSection({ planworkId, planworkName }) {
     const [fileNotif, setFileNotif] = useState(null);
     const [fileDelConfirm, setFileDelConfirm] = useState(false);
     const fileInputRef = useRef(null);
-    const nextFileId = useRef(200);
+    // auto id: planworkId * 1000 + sequence
+    const nextFileId = useRef(planworkId * 1000 + (INITIAL_FILES[planworkId]?.length || 0) + 1);
 
     useEffect(() => {
         setFiles(INITIAL_FILES[planworkId] ? [...INITIAL_FILES[planworkId]] : []);
         setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); setFileDelConfirm(false);
+        nextFileId.current = planworkId * 1000 + (INITIAL_FILES[planworkId]?.length || 0) + 1;
     }, [planworkId]);
 
     const fileToast = (msg, type = 'success') => { setFileNotif({ msg, type }); setTimeout(() => setFileNotif(null), 3000); };
     const pickFile = rec => { setSelectedFile(rec); setFileForm({ ...rec }); setIsNewFile(false); setFileDelConfirm(false); };
 
+    // auto-generate name from file + auto order
+    const handleFileInput = e => {
+        const f = e.target.files[0];
+        if (!f) return;
+        const autoOrder = files.length + 1;
+        setFileForm(prev => ({ ...prev, name: f.name, file: f, order: prev.order || String(autoOrder) }));
+    };
+
     const handleFileSave = () => {
         if (!fileForm.name.trim()) { fileToast('اسم الملف مطلوب', 'error'); return; }
         if (isNewFile) {
-            const id = nextFileId.current++, newFile = { ...fileForm, id };
+            const id = nextFileId.current++;
+            // auto order if empty
+            const order = fileForm.order || String(files.length + 1);
+            const newFile = { ...fileForm, id, order };
             setFiles(prev => [...prev, newFile]); setSelectedFile(newFile); setFileForm({ ...newFile }); setIsNewFile(false); fileToast('تم الإضافة');
         } else {
             const updated = { ...fileForm }; setFiles(prev => prev.map(f => f.id === updated.id ? updated : f)); setSelectedFile(updated); fileToast('تم الحفظ');
@@ -214,7 +234,8 @@ function FilesSection({ planworkId, planworkName }) {
     };
     const handleFileDelete = () => {
         if (!fileDelConfirm) { setFileDelConfirm(true); return; }
-        const rest = files.filter(f => f.id !== selectedFile.id); setFiles(rest); setFileDelConfirm(false); setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); fileToast('تم الحذف', 'error');
+        const rest = files.filter(f => f.id !== selectedFile.id); setFiles(rest); setFileDelConfirm(false);
+        setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); fileToast('تم الحذف', 'error');
     };
 
     return (
@@ -227,32 +248,28 @@ function FilesSection({ planworkId, planworkName }) {
                 </div>
                 <span className="lec-count-badge" style={{ position: 'relative', zIndex: 1 }}>{files.length}</span>
             </div>
-
             {fileNotif && (
                 <div className={`lec-notif lec-notif-${fileNotif.type}`} style={{ margin: '10px 14px 0' }}>
-                    <span>{fileNotif.type === 'success' ? '✅' : fileNotif.type === 'error' ? '❌' : 'ℹ️'}</span>
-                    {fileNotif.msg}
+                    <span>{fileNotif.type === 'success' ? '✅' : fileNotif.type === 'error' ? '❌' : 'ℹ️'}</span>{fileNotif.msg}
                 </div>
             )}
-
             <div className="pw-files-body">
-                {/* form */}
                 <div className="pw-files-form">
                     <div className="lec-field">
                         <label className="lec-label">الرقم</label>
-                        <input className="lec-inp" value={isNewFile ? 'تلقائي' : fileForm.id} disabled style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed' }} />
+                        <input className="lec-inp" value={isNewFile ? `${planworkId * 1000 + files.length + 1} (تلقائي)` : fileForm.id} disabled style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
                     </div>
                     <div className="lec-field">
                         <label className="lec-label">اسم الملف</label>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                             <input className="lec-inp" name="name" value={fileForm.name} onChange={e => setFileForm(f => ({ ...f, name: e.target.value }))} placeholder="اسم الملف..." style={{ flex: 1 }} />
                             <button className="pw-select-file-btn" onClick={() => fileInputRef.current.click()}>📂 Select File</button>
-                            <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={e => { const f = e.target.files[0]; if (f) setFileForm(prev => ({ ...prev, name: f.name, file: f })); }} />
+                            <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileInput} />
                         </div>
                     </div>
                     <div className="lec-field">
                         <label className="lec-label">الترتيب</label>
-                        <input className="lec-inp" name="order" type="number" min="1" value={fileForm.order} onChange={e => setFileForm(f => ({ ...f, order: e.target.value }))} placeholder="الترتيب..." />
+                        <input className="lec-inp" name="order" type="number" min="1" value={fileForm.order} onChange={e => setFileForm(f => ({ ...f, order: e.target.value }))} placeholder={`${files.length + 1} (تلقائي)`} />
                     </div>
                     <div className="lec-field">
                         <label className="lec-label">عنوان الملف</label>
@@ -267,8 +284,6 @@ function FilesSection({ planworkId, planworkName }) {
                         )}
                     </div>
                 </div>
-
-                {/* table */}
                 <div className="pw-files-table-wrap">
                     {files.length === 0 ? (
                         <div className="adm-empty" style={{ padding: '28px 12px' }}><div className="adm-emi">📂</div><p>لا توجد ملفات</p></div>
@@ -287,6 +302,35 @@ function FilesSection({ planworkId, planworkName }) {
                     )}
                 </div>
             </div>
+        </div>
+    );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ParentSelector
+// ══════════════════════════════════════════════════════════════════════════════
+function ParentSelector({ parentId, onChange, records }) {
+    const recOptions = records.filter(r => r.id !== 0).map(r => ({ id: r.id, label: r.name }));
+    const merged = [...ALL_TREE_NODES];
+    recOptions.forEach(ro => { if (!merged.find(m => m.id === ro.id)) merged.push(ro); });
+    merged.sort((a, b) => a.id - b.id);
+    return (
+        <div className="pw-parent-wrap">
+            <div style={{ flex: '0 0 80px' }}>
+                <select className="lec-inp pw-parent-id-sel" value={parentId ?? ''} onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}>
+                    <option value="">—</option>
+                    {merged.map(m => <option key={m.id} value={m.id}>{m.id}</option>)}
+                </select>
+            </div>
+            <div style={{ flex: 1 }}>
+                <select className="lec-inp" value={parentId ?? ''} onChange={e => { const found = merged.find(m => m.id === Number(e.target.value)); onChange(found ? found.id : null); }}>
+                    <option value="">— بدون أب (رئيسي) —</option>
+                    {merged.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                </select>
+            </div>
+            {parentId != null && (
+                <button className="pw-parent-clear" title="إزالة الأب" onClick={() => onChange(null)}>✕</button>
+            )}
         </div>
     );
 }
@@ -312,38 +356,41 @@ const PlanworkTab = () => {
     );
 
     const toast = (msg, type = 'success') => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 3500); };
-
     const pick = rec => { setSelected(rec); setForm({ ...rec }); setIsNew(false); setDeleteConfirm(false); };
 
-    // ── tree click: find matching record by label=name, or prefill name only ──
     const handleTreeSelect = node => {
         setTreeSelected(node);
-        const match = records.find(r => r.name === node.label);
-        if (match) {
-            pick(match);
-        } else {
-            setSelected(null);
-            setForm({ ...BLANK, name: node.label });
-            setIsNew(true);
-            setDeleteConfirm(false);
-        }
+        const match = records.find(r => r.name === node.label || r.id === node.id);
+        if (match) pick(match);
+        // if no match, just store selection for "+ جديد"
+    };
+
+    const handleNew = () => {
+        const parentId = treeSelected ? treeSelected.id : null;
+        setForm({ ...BLANK, parentId });
+        setSelected(null); setIsNew(true); setDeleteConfirm(false);
     };
 
     const handleChange = e => {
         const { name, value, type, checked } = e.target;
-        setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
+        setForm(f => {
+            const updated = { ...f, [name]: type === 'checkbox' ? checked : value };
+            if (name === 'name' && !f._slugManual) updated.slug = toSlug(value);
+            if (name === 'slug') updated._slugManual = value.length > 0;
+            return updated;
+        });
     };
 
     const handleSave = () => {
         if (!form.name.trim()) { toast('الأسم مطلوب', 'error'); return; }
+        const clean = { ...form }; delete clean._slugManual;
         if (isNew) {
-            const id = nextId.current++, newRec = { ...form, id };
-            setRecords(prev => [newRec, ...prev]); setSelected(newRec); setForm({ ...newRec }); setIsNew(false); toast('تم الإضافة');
+            const id = nextId.current++, newRec = { ...clean, id };
+            setRecords(prev => [...prev, newRec]); setSelected(newRec); setForm({ ...newRec }); setIsNew(false); toast('تم الإضافة');
         } else {
-            const updated = { ...form }; setRecords(prev => prev.map(r => r.id === updated.id ? updated : r)); setSelected(updated); toast('تم الحفظ');
+            setRecords(prev => prev.map(r => r.id === clean.id ? clean : r)); setSelected(clean); setForm({ ...clean }); toast('تم الحفظ');
         }
     };
-    const handleNew = () => { setForm({ ...BLANK }); setSelected(null); setIsNew(true); setDeleteConfirm(false); };
     const handleReset = () => { if (isNew) setForm({ ...BLANK }); else setForm({ ...selected }); setDeleteConfirm(false); toast('تم الإلغاء', 'info'); };
     const handleDelete = () => {
         if (!deleteConfirm) { setDeleteConfirm(true); return; }
@@ -351,6 +398,10 @@ const PlanworkTab = () => {
         if (rest.length) pick(rest[0]); else handleNew();
         toast('تم الحذف', 'error');
     };
+
+    const parentName = form.parentId != null
+        ? (records.find(r => r.id === form.parentId)?.name || ALL_TREE_NODES.find(n => n.id === form.parentId)?.label || `#${form.parentId}`)
+        : null;
 
     const Field = ({ label, children, full }) => (
         <div className="lec-field" style={full ? { gridColumn: '1/-1' } : {}}>
@@ -370,7 +421,7 @@ const PlanworkTab = () => {
 
             <div className="lec-layout">
 
-                {/* ══ LEFT PANEL ══ */}
+                {/* ══ LEFT PANEL — only tree, no records list ══ */}
                 <div className="lec-panel pw-left-panel">
                     <div className="lec-panel-hdr">
                         <span className="lec-count-badge">{filtered.length}</span>
@@ -378,38 +429,24 @@ const PlanworkTab = () => {
                         <button className="lec-new-btn" onClick={handleNew}>+ جديد</button>
                     </div>
 
-                    <div style={{ padding: '10px 10px 6px', position: 'relative' }}>
-                        <div className="adm-search" style={{ minWidth: 'unset' }}>
-                            <input type="text" placeholder="بحث..." value={search} onChange={e => setSearch(e.target.value)} style={{ fontSize: '.76rem' }} />
-                            {search && <button className="lec-search-clear" onClick={() => setSearch('')}>✕</button>}
+                    {/* Tree only — full height */}
+                    <div className="pw-tree-panel" style={{ borderTop: 'none', flex: 1 }}>
+                        <div className="pw-tree-header">
+                            خطه المعهد
+                            {treeSelected && (
+                                <span className="pw-tree-selected-badge">← {treeSelected.label.slice(0, 22)}{treeSelected.label.length > 22 ? '…' : ''}</span>
+                            )}
                         </div>
-                    </div>
-
-                    {/* Records list */}
-                    <div className="lec-list pw-records-list">
-                        {filtered.length === 0 && (
-                            <div className="adm-empty" style={{ padding: '20px 12px' }}><div className="adm-emi">📋</div><p>{records.length === 0 ? 'لا توجد سجلات' : 'لا توجد نتائج'}</p></div>
-                        )}
-                        {filtered.map(rec => (
-                            <div key={rec.id} className={`lec-row${selected?.id === rec.id ? ' active' : ''}`} onClick={() => pick(rec)}>
-                                <div className="lec-avatar"><span style={{ fontSize: '.7rem', fontWeight: 900 }}>{rec.priority || '#'}</span></div>
-                                <div className="lec-row-info">
-                                    <div className="lec-row-name">{rec.name || 'بدون اسم'}</div>
-                                    <div className="lec-row-spec">{rec.place || rec.date || '—'}</div>
-                                </div>
-                                <div className="lec-row-id">#{rec.id}</div>
+                        <div className="pw-tree-scroll" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+                            {STATIC_TREE.map(node => <TreeNode key={node.id} node={node} selectedId={treeSelected?.id} onSelect={handleTreeSelect} />)}
+                        </div>
+                        {treeSelected && (
+                            <div className="pw-tree-footer">
+                                <span style={{ fontSize: '.7rem', color: '#6b7280' }}>الأب المحدد:</span>
+                                <span className="pw-tree-footer-name">{treeSelected.label}</span>
+                                <button className="pw-tree-footer-clear" onClick={() => setTreeSelected(null)}>✕ إلغاء</button>
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Tree */}
-                    <div className="pw-tree-panel">
-                        <div className="pw-tree-header">خطه المعهد</div>
-                        <div className="pw-tree-scroll">
-                            {STATIC_TREE.map(node => (
-                                <TreeNode key={node.id} node={node} selectedId={treeSelected?.id} onSelect={handleTreeSelect} />
-                            ))}
-                        </div>
+                        )}
                     </div>
                 </div>
 
@@ -420,6 +457,7 @@ const PlanworkTab = () => {
                             <div>
                                 <div className="adm-hero-tag" style={{ marginBottom: 6, position: 'relative', zIndex: 1 }}>
                                     {isNew ? 'سجل جديد' : `ID: #${selected?.id}`}
+                                    {form.parentId != null && <span style={{ marginRight: 8, fontSize: '.72rem', opacity: .8 }}>↳ {parentName}</span>}
                                 </div>
                                 <h2 className="lec-form-title">{isNew ? '➕ إضافة سجل جديد' : '✏️ تعديل بيانات خطة العمل'}</h2>
                                 {!isNew && selected && <p className="lec-form-sub">{selected.name}</p>}
@@ -429,23 +467,30 @@ const PlanworkTab = () => {
 
                         <div className="lec-form-body">
                             <div className="lec-fields-grid" style={{ marginBottom: 20 }}>
+
                                 <Field label="الرقم">
                                     <input className="lec-inp" value={isNew ? 'تلقائي' : form.id} disabled style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed' }} />
                                 </Field>
+
+                                <div className="lec-field pw-parent-field">
+                                    <label className="lec-label">أساسى (الأب)</label>
+                                    <ParentSelector parentId={form.parentId} onChange={v => setForm(f => ({ ...f, parentId: v }))} records={records} />
+                                </div>
+
                                 <Field label="الأولويه">
                                     <input className="lec-inp" name="priority" type="number" min="1" value={form.priority} onChange={handleChange} placeholder="الأولويه..." />
                                 </Field>
                                 <Field label="عدد الأيام">
                                     <input className="lec-inp" name="days" type="number" min="1" value={form.days} onChange={handleChange} placeholder="عدد الأيام..." />
                                 </Field>
-                                <Field label="اسم المستخدم">
-                                    <input className="lec-inp" name="username" value={form.username} onChange={handleChange} placeholder="اسم المستخدم..." />
-                                </Field>
-                                <Field label="كلمه السر">
-                                    <input className="lec-inp" name="password" type="password" value={form.password} onChange={handleChange} placeholder="كلمه السر..." />
-                                </Field>
-                                <Field label="الأسم">
+                                <Field label="الأسم" full>
                                     <input className="lec-inp" name="name" value={form.name} onChange={handleChange} placeholder="الأسم..." />
+                                </Field>
+                                <Field label="Slug" full>
+                                    <input className="lec-inp" name="slug" value={form.slug || ''} onChange={handleChange} placeholder="auto-generated-slug" style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
+                                </Field>
+                                <Field label="SKU">
+                                    <input className="lec-inp" name="sku" value={form.sku || ''} onChange={handleChange} placeholder="SKU-001" style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
                                 </Field>
                                 <Field label="السعر">
                                     <input className="lec-inp" name="price" value={form.price} onChange={handleChange} placeholder="السعر..." />
@@ -459,6 +504,7 @@ const PlanworkTab = () => {
                                 <Field label="الوصف" full>
                                     <input className="lec-inp" name="description" value={form.description} onChange={handleChange} placeholder="الوصف..." />
                                 </Field>
+
                                 <div className="lec-field" style={{ gridColumn: '1/-1' }}>
                                     <label className="lec-label">الخيارات</label>
                                     <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', padding: '10px 12px', border: '1.5px solid #d0d3d8', borderRadius: 3, background: '#fff' }}>
@@ -474,7 +520,9 @@ const PlanworkTab = () => {
 
                             <div className="lec-divider" />
 
-                            <RichTextEditor icon="📄" label="تفاصيل الكورس" sub="حدد النص ثم اختر الخط أو اللون" name="details" value={form.details} onChange={handleChange} placeholder="أدخل تفاصيل الكورس هنا..." minHeight={150} />
+                            <RichTextEditor icon="📄" label="تفاصيل الكورس" sub="حدد النص ثم اختر الخط أو اللون"
+                                name="details" value={form.details} onChange={handleChange}
+                                placeholder="أدخل تفاصيل الكورس هنا..." minHeight={150} />
 
                             <div className="lec-actions">
                                 <button className="lec-act-btn save" onClick={handleSave}>💾 حفظ</button>
@@ -488,7 +536,6 @@ const PlanworkTab = () => {
                             </div>
 
                             <div className="lec-divider" style={{ marginTop: 8 }} />
-
                             {!isNew && selected && <FilesSection planworkId={selected.id} planworkName={selected.name} />}
                         </div>
                     </div>
