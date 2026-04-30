@@ -1,13 +1,17 @@
 // ════════════════════════════════════════════════════════════════════════════
-// FINANCIAL TAB — تبويب المالية (Updated with Charts + Mock Data)
+// FINANCIAL TAB — تبويب المالية
 // ════════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import logoSrc from '../../../assets/finaaaaal logo  ara. white .png';
 import * as XLSX from 'xlsx';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-    XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend
+    XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
+import { rtlExport } from '../helpers';
+import { exportExcel, exportPDF, exportWord, withExport } from '../exportHelpers';
+
 // ════════════════════════════════════════════════════════════════════════════
 // DESIGN TOKENS
 // ════════════════════════════════════════════════════════════════════════════
@@ -24,11 +28,10 @@ const T = {
 };
 
 const CHART_COLORS = [T.blue, T.orange, T.green, T.purple, '#ec4899', '#06b6d4', '#f59e0b', '#84cc16'];
-
 const ITEMS_PER_PAGE = 15;
 
 // ════════════════════════════════════════════════════════════════════════════
-// MOCK DATA — يُستبدل بالـ API لما يجهز
+// MOCK DATA
 // ════════════════════════════════════════════════════════════════════════════
 const MOCK_USERS_DATA = [
     { id: 1, firstName: 'أحمد', lastName: 'محمد', username: 'ahmed.m', email: 'ahmed@example.com', enrolledCourses: [{ id: 1, title: 'AutoCAD للمبتدئين', coursePrice: 1500, date: '2025-01-10' }, { id: 2, title: 'Revit Architecture', coursePrice: 2200, date: '2025-02-05' }] },
@@ -107,8 +110,6 @@ const FIN_STYLES = `
     .fin-chart-body { padding:14px 8px 8px; }
     .fin-charts-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:22px; }
     @media(max-width:800px) { .fin-charts-row{ grid-template-columns:1fr; } }
-    .fin-stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(10px,1.5vw,16px); margin-bottom:clamp(16px,2.5vw,22px); }
-    @media(max-width:900px){ .fin-stats-row{ grid-template-columns:repeat(2,1fr); } }
     .fin-sc { background:${T.white}; border-radius:6px; border:1.5px solid ${T.gray300}; padding:clamp(14px,2vw,20px) clamp(12px,1.8vw,16px); display:flex; align-items:center; gap:12px; box-shadow:0 2px 10px rgba(0,0,0,0.06); position:relative; overflow:hidden; transition:transform .25s,box-shadow .25s; }
     .fin-sc::before { content:''; position:absolute; top:0; right:0; width:4px; height:100%; background:${T.orange}; transform:scaleY(0); transform-origin:bottom; transition:transform .3s cubic-bezier(.4,0,.2,1); }
     .fin-sc:hover { transform:translateY(-4px); box-shadow:0 10px 28px rgba(0,0,0,0.1); }
@@ -152,14 +153,14 @@ const FIN_STYLES = `
     .fin-pg-info { font-size:.72rem; color:${T.gray500}; font-weight:700; }
     .fin-pg-info strong { color:${T.black}; }
     .fin-expw { position:relative; }
-    .fin-expbtn { display:flex; align-items:center; gap:6px; padding:9px 20px; background:${T.orange}; color:${T.white}; border:none; border-radius:6px; font-family:${T.font}; font-size:.8rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .22s; box-shadow:0 4px 14px rgba(245,124,0,0.3); }
-    .fin-expbtn:hover    { background:${T.orangeDark}; transform:translateY(-2px); box-shadow:0 6px 20px rgba(245,124,0,0.38); }
+    .fin-expbtn { display:flex; align-items:center; gap:6px; padding:9px 20px; background:${T.green}; color:${T.white}; border:none; border-radius:6px; font-family:${T.font}; font-size:.8rem; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .22s; box-shadow:0 4px 14px rgba(22,163,74,0.3); }
+    .fin-expbtn:hover    { background:#15803d; transform:translateY(-2px); box-shadow:0 6px 20px rgba(22,163,74,0.38); }
     .fin-expbtn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
-    .fin-expmenu { position:absolute; top:calc(100% + 6px); left:0; background:${T.white}; border:1.5px solid ${T.gray300}; border-radius:6px; box-shadow:0 10px 32px rgba(0,0,0,0.12); overflow:hidden; z-index:400; min-width:190px; border-top:3px solid ${T.orange}; animation:fin-slide .15s ease; }
+    .fin-expmenu { position:absolute; top:calc(100% + 6px); left:0; background:${T.white}; border:1.5px solid ${T.gray300}; border-radius:6px; box-shadow:0 10px 32px rgba(0,0,0,0.12); overflow:hidden; z-index:400; min-width:210px; border-top:3px solid ${T.green}; animation:fin-slide .15s ease; }
     @keyframes fin-slide { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
     .fin-expitem { display:flex; align-items:center; gap:9px; width:100%; padding:12px 18px; background:none; border:none; border-bottom:1px solid ${T.gray100}; font-family:${T.font}; font-size:.8rem; font-weight:700; color:${T.gray700}; direction:rtl; cursor:pointer; transition:background .12s,color .12s; }
     .fin-expitem:last-child { border-bottom:none; }
-    .fin-expitem:hover { background:rgba(245,124,0,0.06); color:${T.orange}; }
+    .fin-expitem:hover { background:rgba(22,163,74,0.06); color:${T.green}; }
     .fin-search-input { padding:9px 14px; border-radius:6px; border:1.5px solid ${T.gray300}; background:${T.gray100}; color:${T.black}; font-family:${T.font}; font-size:.8rem; outline:none; direction:rtl; transition:border .18s,box-shadow .18s; min-width:220px; }
     .fin-search-input:focus { border-color:${T.orange}; background:${T.white}; box-shadow:0 0 0 3px rgba(245,124,0,0.1); }
     .fin-search-input::placeholder { color:${T.gray500}; }
@@ -204,14 +205,6 @@ function fmtMoney(n) {
     if (n == null || isNaN(Number(n))) return '0';
     return Number(n).toLocaleString('ar-EG');
 }
-function triggerDownload(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-}
 
 // ════════════════════════════════════════════════════════════════════════════
 // DATA BUILDER
@@ -230,41 +223,24 @@ function buildFinancialRows(usersData, coursesData) {
         const price = Number(c.cost ?? c.price ?? c.Price ?? c.Cost ?? 0);
         if (c.id != null && price > 0) costByCourse[Number(c.id)] = price;
     });
-
     return usersData
         .filter(u => u.enrolledCourses && u.enrolledCourses.length > 0)
         .map(u => {
             const courses = u.enrolledCourses.map(c => {
-                // السعر: coursePrice هو الـ field الصح من /api/Admin/users
                 let price = Number(c.coursePrice ?? c.CoursePrice ?? c.course_price ?? c.price ?? c.Price ?? 0);
-                if (price === 0 && c.id != null && costByCourse[Number(c.id)] != null) {
-                    price = costByCourse[Number(c.id)];
-                }
-                // التاريخ: enrolledAt هو الـ field الصح من الـ API
+                if (price === 0 && c.id != null && costByCourse[Number(c.id)] != null) price = costByCourse[Number(c.id)];
                 const rawDate = c.enrolledAt ?? c.date ?? c.enrollDate ?? null;
-                return {
-                    title: c.title,
-                    date: formatEnrolledAt(rawDate),   // formatted للعرض
-                    rawDate,                            // raw للـ charts
-                    price,
-                    enrollmentId: c.enrollmentId ?? c.id ?? null,
-                    attended: c.attended ?? null,
-                };
+                return { title: c.title, date: formatEnrolledAt(rawDate), rawDate, price, enrollmentId: c.enrollmentId ?? c.id ?? null, attended: c.attended ?? null };
             });
             const totalPaid = courses.reduce((s, c) => s + c.price, 0);
-            return {
-                id: u.id,
-                firstName: u.firstName, lastName: u.lastName,
-                username: u.username, email: u.email,
-                courses, totalPaid,
-            };
+            return { id: u.id, firstName: u.firstName, lastName: u.lastName, username: u.username, email: u.email, courses, totalPaid };
         });
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// EXPORT HELPERS
+// EXPORT ROW BUILDER — produces headers + rows for shared exportHelpers
 // ════════════════════════════════════════════════════════════════════════════
-function buildExportData(rows, grandTotal) {
+function buildFinancialExportRows(rows, grandTotal) {
     const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'سعر الدورة (EGP)', 'إجمالي المستخدم (EGP)'];
     const dataRows = [];
     let n = 1;
@@ -275,26 +251,13 @@ function buildExportData(rows, grandTotal) {
                 : ['', '', '', c.title, c.price, '']);
         });
     });
+    // Grand total footer row
     dataRows.push(['', '', '', '', 'الإجمالي الكلي للمعهد', grandTotal]);
-    const rtlHeaders = [...headers].reverse();
-    const rtlDataRows = dataRows.map(r => [...r].reverse());
-    return { headers, dataRows, rtlHeaders, rtlDataRows };
-}
-
-async function exportFinancialExcel(rows, grandTotal) {
-    const reportDate = new Date().toLocaleDateString('ar-EG');
-    const { rtlHeaders, rtlDataRows } = buildExportData(rows, grandTotal);
-    const wsData = [['التقرير المالي — إيرادات المعهد'], [`تاريخ التقرير: ${reportDate}`], [], rtlHeaders, ...rtlDataRows];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = rtlHeaders.map((h, i) => ({ wch: Math.min(Math.max(h.length, ...rtlDataRows.map(r => String(r[i] ?? '').length)) + 6, 55) }));
-    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: rtlHeaders.length - 1 } }, { s: { r: 1, c: 0 }, e: { r: 1, c: rtlHeaders.length - 1 } }];
-    const wb = XLSX.utils.book_new(); wb.Workbook = { Views: [{ RTL: true }] };
-    XLSX.utils.book_append_sheet(wb, ws, 'التقرير المالي');
-    XLSX.writeFile(wb, 'التقرير-المالي.xlsx');
+    return { headers, rows: dataRows };
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// CUSTOM CHART TOOLTIP
+// CHART TOOLTIPS
 // ════════════════════════════════════════════════════════════════════════════
 const CustomTooltip = ({ active, payload, label, suffix = 'EGP' }) => {
     if (!active || !payload?.length) return null;
@@ -329,7 +292,8 @@ const CustomPieTooltip = ({ active, payload }) => {
 const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     if (totalPages <= 1) return null;
-    const start = (currentPage - 1) * itemsPerPage + 1, end = Math.min(currentPage * itemsPerPage, totalItems);
+    const start = (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(currentPage * itemsPerPage, totalItems);
     const buildPages = () => {
         const pages = [], delta = 2;
         for (let i = 1; i <= totalPages; i++) { if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) pages.push(i); }
@@ -359,28 +323,25 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => 
 
 // ════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
-// Props: usersData, coursesData, refunds (optional)
-// Falls back to MOCK_USERS_DATA if usersData is empty (dev mode)
 // ════════════════════════════════════════════════════════════════════════════
-const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
+const FinancialTab = ({ usersData = [], coursesData = [], refunds = [], setExporting: setParentExporting, setExportError: setParentExportError }) => {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [sortBy, setSortBy] = useState('total_desc');
     const [page, setPage] = useState(1);
     const [expanded, setExpanded] = useState(null);
     const [exporting, setExporting] = useState(false);
-    const [exportMenuOpen, setExportMenuOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
     const [exportError, setExportError] = useState(null);
     const exportRef = useRef(null);
 
-    // Flag: using mock data while backend isn't ready
     const isMockData = usersData.length === 0 && coursesData.length === 0;
     const effectiveUsers = isMockData ? MOCK_USERS_DATA : usersData;
 
     useEffect(() => { injectFinStyles(); }, []);
 
     useEffect(() => {
-        const h = e => { if (exportRef.current && !exportRef.current.contains(e.target)) setExportMenuOpen(false); };
+        const h = e => { if (exportRef.current && !exportRef.current.contains(e.target)) setMenuOpen(false); };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
     }, []);
@@ -391,24 +352,16 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
         return () => clearTimeout(t);
     }, [effectiveUsers]);
 
-    // ── Core financial rows ──────────────────────────────────────────────
-    const allRows = useMemo(
-        () => buildFinancialRows(effectiveUsers, coursesData),
-        [effectiveUsers, coursesData]
-    );
+    const allRows = useMemo(() => buildFinancialRows(effectiveUsers, coursesData), [effectiveUsers, coursesData]);
 
-    // ── Aggregate KPIs ───────────────────────────────────────────────────
     const grandTotal = allRows.reduce((s, r) => s + r.totalPaid, 0);
     const totalEnrollments = allRows.reduce((s, r) => s + r.courses.length, 0);
     const avgPerUser = allRows.length > 0 ? Math.round(grandTotal / allRows.length) : 0;
     const maxPayer = allRows.length > 0 ? allRows.reduce((a, b) => a.totalPaid > b.totalPaid ? a : b) : null;
 
-    // ── Refunds ──────────────────────────────────────────────────────────
-    const totalRefunds = refunds.reduce((sum, r) =>
-        (r.status === 'Approved' || r.status === 'Sent') ? sum + (r.amount || 0) : sum, 0);
+    const totalRefunds = refunds.reduce((sum, r) => (r.status === 'Approved' || r.status === 'Sent') ? sum + (r.amount || 0) : sum, 0);
     const netRevenue = grandTotal - totalRefunds;
 
-    // ── Course revenue breakdown ─────────────────────────────────────────
     const courseRevenue = useMemo(() => {
         const map = {};
         allRows.forEach(r => r.courses.forEach(c => {
@@ -419,37 +372,27 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
     }, [allRows]);
     const maxCourseRev = courseRevenue[0]?.total || 1;
 
-    // ── Pie chart data ────────────────────────────────────────────────────
     const pieData = useMemo(() => {
         const top5 = courseRevenue.slice(0, 5);
         const otherTotal = courseRevenue.slice(5).reduce((s, c) => s + c.total, 0);
         const all = otherTotal > 0 ? [...top5, { title: 'أخرى', total: otherTotal, count: 0 }] : top5;
-        return all.map(c => ({
-            name: c.title,
-            value: c.total,
-            fill: CHART_COLORS[all.indexOf(c) % CHART_COLORS.length],
-            percent: grandTotal > 0 ? Math.round(c.total / grandTotal * 100) : 0,
-        }));
+        return all.map(c => ({ name: c.title, value: c.total, fill: CHART_COLORS[all.indexOf(c) % CHART_COLORS.length], percent: grandTotal > 0 ? Math.round(c.total / grandTotal * 100) : 0 }));
     }, [courseRevenue, grandTotal]);
 
-    // ── Monthly data: rawDate = enrolledAt من /api/Admin/users ──────────
     const monthlyData = isMockData ? MOCK_MONTHLY_DATA : (() => {
         const map = {};
         const monthNames = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
         allRows.forEach(r => r.courses.forEach(c => {
-            // rawDate يحمل enrolledAt الـ ISO string من الـ API
             if (!c.rawDate) return;
             const d = new Date(c.rawDate);
             if (isNaN(d.getTime())) return;
             const key = monthNames[d.getMonth()];
             if (!map[key]) map[key] = { month: key, revenue: 0, enrollments: 0, order: d.getMonth() };
-            map[key].revenue += c.price;
-            map[key].enrollments += 1;
+            map[key].revenue += c.price; map[key].enrollments += 1;
         }));
         return Object.values(map).sort((a, b) => a.order - b.order);
     })();
 
-    // ── Filtered / sorted / paginated ─────────────────────────────────────
     const q = search.toLowerCase();
     const filtered = allRows.filter(r =>
         `${r.firstName} ${r.lastName} ${r.username} ${r.email}`.toLowerCase().includes(q) ||
@@ -464,14 +407,31 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
     });
     const paginated = sorted.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-    const withExport = fn => async () => {
-        setExporting(true); setExportMenuOpen(false); setExportError(null);
-        try { await fn(); }
-        catch (e) { setExportError('فشل التصدير: ' + (e?.message || 'خطأ')); }
-        finally { setExporting(false); }
-    };
+    // ── Export wiring using shared exportHelpers ──────────────────────────
+    // Use parent's state if provided (overlay spinner), else local state
+    const _setExp = setParentExporting ?? setExporting;
+    const _setErr = setParentExportError ?? setExportError;
 
-    // ── KPI cards config ─────────────────────────────────────────────────
+    const wrap = withExport(_setExp, _setErr, () => setMenuOpen(false));
+
+    const doExcel = wrap(async () => {
+        const { headers, rows: r } = buildFinancialExportRows(sorted, grandTotal);
+        const { headers: rh, rows: rr } = rtlExport(headers, r);
+        await exportExcel('التقرير-المالي.xlsx', 'التقرير المالي — إيرادات المعهد', rh, rr, logoSrc);
+    });
+
+    const doPDF = wrap(async () => {
+        const { headers, rows: r } = buildFinancialExportRows(sorted, grandTotal);
+        const { headers: rh, rows: rr } = rtlExport(headers, r);
+        await exportPDF('التقرير-المالي.pdf', 'التقرير المالي — إيرادات المعهد', rh, rr, 'ICEMT', logoSrc);
+    });
+
+    const doWord = wrap(async () => {
+        const { headers, rows: r } = buildFinancialExportRows(sorted, grandTotal);
+        const { headers: rh, rows: rr } = rtlExport(headers, r);
+        await exportWord('التقرير-المالي.docx', 'التقرير المالي — إيرادات المعهد', 'ICEMT', rh, rr, logoSrc);
+    });
+
     const kpis = [
         { icon: '💰', val: `${fmtMoney(grandTotal)} EGP`, lbl: 'إجمالي الإيرادات', sub: 'قبل المرتجعات', cls: 'orange', color: T.orange },
         { icon: '🔻', val: `${fmtMoney(totalRefunds)} EGP`, lbl: 'إجمالي المرتجعات', sub: refunds.length + ' طلب مرتجع', cls: 'red', color: T.red },
@@ -485,8 +445,6 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
     // ════════════════════════════════════════════════════════════════════════
     return (
         <div className="fin-wrap">
-
-            {/* Section header */}
             <div className="fin-section-hdr">
                 <div>
                     <div className="fin-section-tag">التقارير المالية</div>
@@ -494,15 +452,13 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                 </div>
             </div>
 
-            {/* Mock data banner */}
             {isMockData && (
                 <div className="fin-mock-banner">
                     <div className="fin-mock-dot" />
-                    <strong>بيانات تجريبية</strong> — يتم عرض بيانات وهمية ريثما يجهز API الـ Backend. سيتم استبدالها تلقائياً عند توفر usersData.
+                    <strong>بيانات تجريبية</strong> — يتم عرض بيانات وهمية ريثما يجهز API الـ Backend.
                 </div>
             )}
 
-            {/* Hero total banner */}
             {!loading && (
                 <div className="fin-income-hero">
                     <div style={{ position: 'relative', zIndex: 1 }}>
@@ -527,7 +483,6 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                 </div>
             )}
 
-            {/* ── KPI Cards ── */}
             {!loading && (
                 <div className="fin-kpi-grid">
                     {kpis.map(k => (
@@ -541,16 +496,11 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                 </div>
             )}
 
-            {/* ── Charts Row 1: Line + Pie ── */}
             {!loading && monthlyData.length > 0 && (
                 <div className="fin-charts-grid">
-                    {/* Monthly revenue line chart */}
                     <div className="fin-chart-card">
                         <div className="fin-chart-hdr">
-                            <div>
-                                <div className="fin-chart-title">📈 الإيرادات الشهرية</div>
-                                <div className="fin-chart-sub">تطور الإيرادات عبر الأشهر</div>
-                            </div>
+                            <div><div className="fin-chart-title">📈 الإيرادات الشهرية</div><div className="fin-chart-sub">تطور الإيرادات عبر الأشهر</div></div>
                         </div>
                         <div className="fin-chart-body">
                             <ResponsiveContainer width="100%" height={240}>
@@ -564,22 +514,15 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                             </ResponsiveContainer>
                         </div>
                     </div>
-
-                    {/* Pie chart - course revenue distribution */}
                     <div className="fin-chart-card">
                         <div className="fin-chart-hdr">
-                            <div>
-                                <div className="fin-chart-title">🥧 توزيع إيرادات الدورات</div>
-                                <div className="fin-chart-sub">نسبة كل دورة من الإجمالي</div>
-                            </div>
+                            <div><div className="fin-chart-title">🥧 توزيع إيرادات الدورات</div><div className="fin-chart-sub">نسبة كل دورة من الإجمالي</div></div>
                         </div>
                         <div className="fin-chart-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <ResponsiveContainer width="100%" height={180}>
                                 <PieChart>
                                     <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" paddingAngle={3}>
-                                        {pieData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />
-                                        ))}
+                                        {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.fill} stroke="none" />)}
                                     </Pie>
                                     <Tooltip content={<CustomPieTooltip />} />
                                 </PieChart>
@@ -597,16 +540,11 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                 </div>
             )}
 
-            {/* ── Charts Row 2: Bar enrollments + Course bars ── */}
             {!loading && (
                 <div className="fin-charts-row">
-                    {/* Monthly enrollments bar */}
                     <div className="fin-chart-card">
                         <div className="fin-chart-hdr">
-                            <div>
-                                <div className="fin-chart-title">📊 الاشتراكات الشهرية</div>
-                                <div className="fin-chart-sub">عدد التسجيلات لكل شهر</div>
-                            </div>
+                            <div><div className="fin-chart-title">📊 الاشتراكات الشهرية</div><div className="fin-chart-sub">عدد التسجيلات لكل شهر</div></div>
                         </div>
                         <div className="fin-chart-body">
                             <ResponsiveContainer width="100%" height={200}>
@@ -620,32 +558,19 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                             </ResponsiveContainer>
                         </div>
                     </div>
-
-                    {/* Revenue vs Refunds bar */}
                     <div className="fin-chart-card">
                         <div className="fin-chart-hdr">
-                            <div>
-                                <div className="fin-chart-title">📉 الإيرادات vs المرتجعات</div>
-                                <div className="fin-chart-sub">مقارنة الصافي بالمرتجعات</div>
-                            </div>
+                            <div><div className="fin-chart-title">📉 الإيرادات vs المرتجعات</div><div className="fin-chart-sub">مقارنة الصافي بالمرتجعات</div></div>
                         </div>
                         <div className="fin-chart-body">
                             <ResponsiveContainer width="100%" height={200}>
-                                <BarChart
-                                    data={[
-                                        { name: 'الإيرادات الكلية', value: grandTotal },
-                                        { name: 'المرتجعات', value: totalRefunds },
-                                        { name: 'الصافي', value: netRevenue },
-                                    ]}
-                                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                                <BarChart data={[{ name: 'الإيرادات الكلية', value: grandTotal }, { name: 'المرتجعات', value: totalRefunds }, { name: 'الصافي', value: netRevenue }]} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke={T.gray100} />
                                     <XAxis dataKey="name" tick={{ fontFamily: T.font, fontSize: 10, fill: T.gray500 }} axisLine={false} tickLine={false} />
                                     <YAxis tick={{ fontFamily: 'Cairo', fontSize: 10, fill: T.gray500 }} axisLine={false} tickLine={false} tickFormatter={v => fmtMoney(v)} width={65} />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                                        <Cell fill={T.blue} />
-                                        <Cell fill={T.red} />
-                                        <Cell fill={T.green} />
+                                        <Cell fill={T.blue} /><Cell fill={T.red} /><Cell fill={T.green} />
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
@@ -654,7 +579,6 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                 </div>
             )}
 
-            {/* ── Course Revenue Bars ── */}
             {!loading && courseRevenue.length > 0 && (
                 <div className="fin-card" style={{ marginBottom: 22 }}>
                     <div style={{ padding: '16px 20px 4px', borderBottom: `1.5px solid ${T.gray100}` }}>
@@ -674,7 +598,7 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                 </div>
             )}
 
-            {/* ── Toolbar ── */}
+            {/* ── Toolbar with Export ── */}
             <div className="fin-toolbar">
                 <input className="fin-search-input" type="text" placeholder="ابحث باسم المستخدم، البريد، أو الدورة..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
                 {search && <button style={{ padding: '7px 12px', borderRadius: 4, border: `1.5px solid ${T.gray300}`, background: T.gray100, cursor: 'pointer', color: T.gray500, fontFamily: T.font, fontSize: '.72rem', fontWeight: 700 }} onClick={() => { setSearch(''); setPage(1); }}>✕ مسح</button>}
@@ -684,13 +608,17 @@ const FinancialTab = ({ usersData = [], coursesData = [], refunds = [] }) => {
                     <option value="courses_desc">ترتيب: الأكثر دورات</option>
                     <option value="name">ترتيب: الاسم أبجديًا</option>
                 </select>
+
+                {/* Export button — same pattern as all other tabs */}
                 <div className="fin-expw" ref={exportRef} style={{ marginRight: 'auto' }}>
-                    <button className="fin-expbtn" disabled={exporting} onClick={() => setExportMenuOpen(p => !p)}>
+                    <button className="fin-expbtn" disabled={exporting} onClick={() => setMenuOpen(p => !p)}>
                         {exporting ? '⏳ جاري التصدير...' : '⬇ تصدير التقرير المالي ▾'}
                     </button>
-                    {exportMenuOpen && (
+                    {menuOpen && (
                         <div className="fin-expmenu">
-                            <button className="fin-expitem" onClick={withExport(() => exportFinancialExcel(sorted, grandTotal))}>📊 Excel (.xlsx) — كل المستخدمين</button>
+                            <button className="fin-expitem" onClick={doExcel}>📊 Excel (.xlsx)</button>
+                            <button className="fin-expitem" onClick={doPDF}>📄 PDF</button>
+                            <button className="fin-expitem" onClick={doWord}>📝 Word (.docx)</button>
                         </div>
                     )}
                 </div>

@@ -118,7 +118,7 @@ const Footer = () => {
                                 sx={{ color: '#f57c00', fontSize: '1.1rem' }}
                             />
                             <MuiLink
-                                href="mailto:icemt@arabcont.com"
+                                href="mailto:icemt.mark@arabcont.com"
                                 color="inherit"
                                 underline="hover"
                                 sx={{
@@ -463,7 +463,7 @@ const Footer = () => {
                                     boxShadow: '0 4px 12px rgba(24, 119, 242, 0.4)'
                                 }
                             }}
-                            href="https://ar-ar.facebook.com/arabcont2017/"
+                            href="https://www.facebook.com/arabcont.icemt"
                             target="_blank"
                             rel="noopener noreferrer"
                         >

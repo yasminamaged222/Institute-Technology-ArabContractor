@@ -22,7 +22,7 @@ const FloatingSocialBar = () => {
       <Tooltip title="تابعنا على فيسبوك" placement="right">
         <IconButton
           component="a"
-                  href="https://ar-ar.facebook.com/arabcont2017/" // غيري بالرابط الرسمي
+                  href="https://www.facebook.com/arabcont.icemt" // غيري بالرابط الرسمي
           target="_blank"
           sx={{
             bgcolor: 'white',
@@ -82,10 +82,10 @@ const FloatingSocialBar = () => {
         </IconButton>
       </Tooltip>
 
-      <Tooltip title="اتصل بنا: +2 02 23892120" placement="right">
+          <Tooltip title="اتصل بنا: +20 11 09754459  " placement="right">
         <IconButton
           component="a"
-          href="tel:+20223892120"
+                  href="tel:+201109754459"
           sx={{
             bgcolor: 'white',
             color: '#25D366',

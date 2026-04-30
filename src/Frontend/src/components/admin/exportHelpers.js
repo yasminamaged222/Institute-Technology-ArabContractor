@@ -1,4 +1,3 @@
-
 import * as XLSX from 'xlsx';
 import { getLogoBase64, triggerDownload } from './helpers';
 import { REFUND_STATUS_META } from './constants';
@@ -56,7 +55,8 @@ export async function exportExcel(filename, reportTitle, headers, rows, logoSrc)
         const logoB64 = await getLogoBase64(logoSrc);
         if (logoB64) {
             const imgId = wb.addImage({ base64: logoB64.split(',')[1], extension: 'png' });
-            ws.addImage(imgId, { tl: { col: 0, row: 0 }, br: { col: 2, row: 5 } });
+            // FIX: tighter bounding box — was { col:0,row:0 }→{ col:2,row:5 }
+            ws.addImage(imgId, { tl: { col: 0, row: 0 }, br: { col: 1, row: 3 } });
         }
         ws.mergeCells(1, 1, 2, headers.length);
         const titleCell = ws.getCell('A1');
@@ -133,8 +133,10 @@ export async function exportPDF(filename, reportTitle, headers, rows, subtitle =
         doc.setFillColor(...BLUE); doc.rect(0, 0, pageW, 34, 'F');
         doc.setFillColor(...ORANGE); doc.rect(0, 34, pageW, 2.5, 'F');
         if (logoDataUrl) {
-            doc.setFillColor(255, 255, 255); doc.roundedRect(5, 4, 36, 26, 3, 3, 'F');
-            try { doc.addImage(logoDataUrl, 'PNG', 6, 5, 34, 24); } catch (_) { }
+            // FIX: smaller white bg box — was roundedRect(5,4,36,26) → now (5,6,24,22)
+            doc.setFillColor(255, 255, 255); doc.roundedRect(5, 6, 24, 22, 2, 2, 'F');
+            // FIX: smaller logo image — was addImage(…,6,5,34,24) → now (6,7,22,20)
+            try { doc.addImage(logoDataUrl, 'PNG', 6, 7, 22, 20); } catch (_) { }
         }
         const titleImg = renderTextToImage(reportTitle, { fontSize: 17, bold: true, color: '#FFFFFF', width: 520, height: 44, align: 'center' });
         doc.addImage(titleImg, 'PNG', pageW / 2 - 85, 3, 170, 17);
@@ -191,12 +193,20 @@ export async function exportPDF(filename, reportTitle, headers, rows, subtitle =
 export async function exportWord(filename, reportTitle, subtitle, headers, rows, logoSrc) {
     const reportDate = new Date().toLocaleDateString('ar-EG');
     const logoDataUrl = await getLogoBase64(logoSrc);
-    let logoBase64Raw = null, logoW = 90, logoH = 60;
+    // FIX: smaller default dimensions — was logoW=90, logoH=60
+    let logoBase64Raw = null, logoW = 60, logoH = 40;
     if (logoDataUrl) {
         logoBase64Raw = logoDataUrl.split(',')[1];
         await new Promise(res => {
             const img = new Image();
-            img.onload = () => { if (img.naturalHeight > 0) { logoH = 60; logoW = Math.round((img.naturalWidth / img.naturalHeight) * logoH); } res(); };
+            img.onload = () => {
+                if (img.naturalHeight > 0) {
+                    // FIX: reduced target height from 60 → 40 pts to keep logo compact
+                    logoH = 40;
+                    logoW = Math.round((img.naturalWidth / img.naturalHeight) * logoH);
+                }
+                res();
+            };
             img.onerror = res; img.src = logoDataUrl;
         });
     }
