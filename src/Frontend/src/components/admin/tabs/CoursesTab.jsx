@@ -2,7 +2,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React, { useRef, useState } from 'react';
-import logoSrc from '../../../assets/finaaaaallogoara.white.png';
+import logoSrc from '../../../assets/white.png';
 import { T, ITEMS_PER_PAGE } from '../constants';
 import { rtlExport } from '../helpers';
 import { exportExcel, exportPDF, exportWord, buildCoursesRows, withExport } from '../exportHelpers';

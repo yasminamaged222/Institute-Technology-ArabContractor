@@ -1,3 +1,5 @@
+// helpers.js
+// ─────────────────────────────────────────────────────────────────────────────
 import { API_HOST } from './constants';
 
 export function fmtDate(val) {
@@ -49,12 +51,6 @@ export function triggerDownload(blob, filename) {
 }
 
 let _logoCache = null;
-
-/** Call this whenever you swap the logo asset so the old version is not re-used. */
-export function clearLogoCache() {
-    _logoCache = null;
-}
-
 export function getLogoBase64(logoSrc) {
     return new Promise(resolve => {
         if (_logoCache) { resolve(_logoCache); return; }

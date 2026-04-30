@@ -1,6 +1,6 @@
 // Sidebar.jsx
 // ─────────────────────────────────────────────────────────────────────────────
-import logoSrc from '../../assets/finaaaaallogoara.white.png';
+import logoSrc from '../../assets/white.png';
 
 export function Sidebar({ user, activeTab, tabs, totalCerts, pendingRefunds, onTabChange }) {
     return (
