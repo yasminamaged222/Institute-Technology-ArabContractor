@@ -3,7 +3,8 @@
 // ════════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import logoSrc from "../../../assets/finaaaaallogoara.white.png"; import * as XLSX from 'xlsx';
+import logoSrc from "../../../assets/finaaaaallogoara.white.png";
+import * as XLSX from 'xlsx';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
