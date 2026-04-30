@@ -12,7 +12,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
 import { Link, useNavigate } from 'react-router-dom';
-import logo from '../assets/logo-removebg-preview.png';
+import logo from '../assets/finaaaaal logo arabic.png';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import HistoryIcon from '@mui/icons-material/History';
@@ -296,7 +296,7 @@ const Navbar = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
                         {isMobile && (<IconButton onClick={toggleDrawer(true)} sx={{ color: '#0865a8', '&:hover': { bgcolor: 'rgba(8,101,168,0.08)' } }}><MenuIcon /></IconButton>)}
                         <Stack direction="row" alignItems="center" component={Link} to="/" sx={{ textDecoration: 'none', color: 'inherit', flexShrink: 0 }}>
-                            <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: 50, width: 'auto', minWidth: 50, flexShrink: 0 }} />
+                            <Box component="img" src={logo} alt="ICEMT Logo" sx={{ height: 62, width: 'auto', minWidth: 62, flexShrink: 0 }} />
                             {!isSmallMobile && (<Box sx={{ mr: 1, textAlign: 'left' }}>
                                 <Typography variant="body2" sx={{ fontWeight: 'bold', color: '#0865a8', fontSize: '0.8rem', whiteSpace: 'nowrap', fontFamily: '"Droid Arabic Kufi",serif' }}>المقاولون العرب</Typography>
                                 <Typography variant="caption" sx={{ color: '#000', display: { xs: 'none', md: 'block' }, fontFamily: '"Droid Arabic Kufi",serif' }}>المعهد التكنولوجى لهندسة التشييد والإدارة</Typography>

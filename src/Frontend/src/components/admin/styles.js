@@ -47,7 +47,7 @@ export const ADMIN_STYLES = `
         display: flex; align-items: center; gap: 10px;
         background: rgba(0,0,0,0.25); flex-shrink: 0;
     }
-    .adm-sb-logo  { width: 36px; height: 36px; object-fit: contain; filter: brightness(0) invert(1); flex-shrink:0; }
+    .adm-sb-logo  { width: 36px; height: 36px; object-fit: contain; flex-shrink:0; }
     .adm-sb-name  { font-size: .86rem; font-weight: 900; color: ${T.white}; white-space:nowrap; }
     .adm-sb-sub   { font-size: .6rem; color: rgba(255,255,255,.45); margin-top:2px; }
     .adm-sidebar-user {

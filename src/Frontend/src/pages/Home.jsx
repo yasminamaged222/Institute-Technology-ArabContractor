@@ -22,11 +22,8 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import HardwareIcon from '@mui/icons-material/Hardware';
-import CorporateFareIcon from '@mui/icons-material/CorporateFare';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import BuildCircleIcon from '@mui/icons-material/BuildCircle';
-import VerifiedIcon from '@mui/icons-material/Verified';
-import ThumbUpAltIcon from '@mui/icons-material/ThumbUpAlt';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
@@ -35,7 +32,6 @@ import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 import CustomersSection from './CustomersSection';
-import TechnicalEducationSection from './TechnicalEducationSection';
 import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
 
@@ -44,7 +40,7 @@ const slides = [
     { title: 'خدمات تدريبية مميزة', subtitle: 'التشييد والإدارة', tag: 'برامج تدريبية', link: '/training-methods', image: '/images/banner6.jpg' },
     { title: 'ورش الميكانيكا والكهرباء', subtitle: 'تأهيل الكوادر الهندسية', tag: 'تدريب تقني', link: '/shobra', image: '/images/banner3.jpg' },
     { title: 'التدريب في موقع العمل', subtitle: 'تدريب ميداني احترافي', tag: 'ميداني', link: '/onsite-training', image: '/images/banner4.jpg' },
-    { title: 'برنامج التدريب المهني في الهندسة التجاريةالمتميز', subtitle: 'الهندسة التجارية', tag: 'CEA', link: '/cea-program', image: '/images/banner8.jpg' },
+    { title: 'برنامج التدريب المهني في الهندسة التجارية المتميز', subtitle: 'الهندسة التجارية', tag: 'CEA', link: '/cea-program', image: '/images/banner8.jpg' },
     { title: 'مدرسة المقاولون العرب الفنية', subtitle: 'جيل مهني متميز', tag: 'تعليم فني', link: '/Technical_Schools', image: '/images/banner7.jpg' },
 ];
 
@@ -74,63 +70,21 @@ const certificates = [
     { title: 'Autodesk Training Center', text: 'مركز تدريب معتمد من Autodesk لأحدث برامج الهندسة والتصميم.', image: 'https://images.weserv.nl/?url=www.arabcont.com/icemt/assets/images/autodeskCert.jpg' },
 ];
 
-const schoolItems = [
-    {
-        name: 'مدرسة المقاولون العرب الفنية',
-        location: 'فروع الشركة',
-        IconComp: SchoolIcon,
-        tag: 'مدرسة فنية',
-        students: '—',
-        schedule: 'وفق الجدول الدراسي',
-        dept: 'تخصصات متعددة',
-        desc: 'مدرسة فنية متكاملة تابعة لشركة المقاولون العرب، تُعِدّ جيلًا من الكوادر المهنية المؤهلة في مجالات الهندسة والحرف الصناعية بأعلى معايير الجودة.',
-        isMakawlen: true,
-        link: '/Technical_Schools',
-    },
-    {
-        name: 'مدرسة المعدات الثقيلة الصناعية بالإسماعيلية',
-        location: 'الإسماعيلية — فرع سيناء',
-        IconComp: PrecisionManufacturingIcon,
-        tag: 'ميكانيكا معدات',
-        students: '20',
-        schedule: 'كل سبت',
-        dept: 'ميكانيكا المعدات',
-        desc: 'تدريب الطلاب على ميكانيكا المعدات بورش فرع سيناء يوم السبت، مع توفير أتوبيس لنقلهم من المدرسة إلى موقع التدريب والعودة.',
-        isMakawlen: false,
-    },
-    {
-        name: 'مدرسة أبو رواش الثانوية الصناعية المشتركة',
-        location: 'مركز تدريب شبرا',
-        IconComp: EngineeringIcon,
-        tag: 'ميكانيكا معدات',
-        students: '18',
-        schedule: 'الأربعاء والخميس',
-        dept: 'ميكانيكا المعدات',
-        desc: 'تدريب الطلاب على ميكانيكا المعدات يومين أسبوعيًا بالمعهد التكنولوجي — مركز تدريب شبرا، من بدء العام الدراسي.',
-        isMakawlen: false,
-    },
-    {
-        name: 'مدرسة الشاطبي الثانوية الصناعية',
-        location: 'ورش العامرية — الإسكندرية',
-        IconComp: ElectricBoltIcon,
-        tag: 'قسم اللحام',
-        students: '19',
-        schedule: 'وفق الجدول',
-        dept: 'اللحام',
-        desc: 'تدريب الطلاب بورش العامرية المركزية بالإسكندرية، قسم اللحام، تحت إشراف مدربين متخصصين من المعهد التكنولوجي.',
-        isMakawlen: false,
-    },
-    {
-        name: 'مدرسة مدينة نصر الثانوية الصناعية',
-        location: 'مركز تدريب شبرا',
-        IconComp: ElectricBoltIcon,
-        tag: 'قسم الكهرباء',
-        students: '20',
-        schedule: 'كل سبت',
-        dept: 'الكهرباء',
-        desc: 'التدريب يوم السبت من كل أسبوع بمركز تدريب شبرا، قسم الكهرباء، لبناء كوادر متخصصة في المجال الكهربائي الصناعي.',
-        isMakawlen: false,
-    },
+const makawlenSchool = {
+    name: 'مدرسة المقاولون العرب الفنية',
+    location: 'فروع الشركة',
+    IconComp: SchoolIcon,
+    tag: 'مدرسة فنية',
+    schedule: 'وفق الجدول الدراسي',
+    desc: 'مدرسة فنية متكاملة تابعة لشركة المقاولون العرب، تُعِدّ جيلًا من الكوادر المهنية المؤهلة في مجالات الهندسة والحرف الصناعية بأعلى معايير الجودة.',
+    link: '/Technical_Schools',
+};
+
+const otherSchools = [
+    { name: 'مدرسة المعدات الثقيلة الصناعية بالإسماعيلية', location: 'الإسماعيلية — فرع سيناء', IconComp: PrecisionManufacturingIcon, tag: 'ميكانيكا معدات', students: '20', schedule: 'كل سبت', desc: 'تدريب الطلاب على ميكانيكا المعدات بورش فرع سيناء يوم السبت، مع توفير أتوبيس لنقلهم من المدرسة إلى موقع التدريب والعودة.' },
+    { name: 'مدرسة أبو رواش الثانوية الصناعية المشتركة', location: 'مركز تدريب شبرا', IconComp: EngineeringIcon, tag: 'ميكانيكا معدات', students: '18', schedule: 'الأربعاء والخميس', desc: 'تدريب الطلاب على ميكانيكا المعدات يومين أسبوعيًا بالمعهد التكنولوجي — مركز تدريب شبرا، من بدء العام الدراسي.' },
+    { name: 'مدرسة الشاطبي الثانوية الصناعية', location: 'ورش العامرية — الإسكندرية', IconComp: ElectricBoltIcon, tag: 'قسم اللحام', students: '19', schedule: 'وفق الجدول', desc: 'تدريب الطلاب بورش العامرية المركزية بالإسكندرية، قسم اللحام، تحت إشراف مدربين متخصصين من المعهد التكنولوجي.' },
+    { name: 'مدرسة مدينة نصر الثانوية الصناعية', location: 'مركز تدريب شبرا', IconComp: ElectricBoltIcon, tag: 'قسم الكهرباء', students: '20', schedule: 'كل سبت', desc: 'التدريب يوم السبت من كل أسبوع بمركز تدريب شبرا، قسم الكهرباء، لبناء كوادر متخصصة في المجال الكهربائي الصناعي.' },
 ];
 
 const protocols = [
@@ -198,8 +152,7 @@ const SplitTitle = ({ children, light, size = 'lg', center }) => (
     <h2 style={{
         fontFamily: F, fontWeight: 900, margin: 0,
         fontSize: size === 'lg' ? 'clamp(1.8rem,4vw,3.2rem)' : 'clamp(1.4rem,2.8vw,2.2rem)',
-        lineHeight: 1.4,
-        letterSpacing: '-0.02em',
+        lineHeight: 1.4, letterSpacing: '-0.02em',
         color: light ? C.w : C.k,
         textAlign: center ? 'center' : 'inherit',
     }}>{children}</h2>
@@ -227,8 +180,7 @@ const SolidBtn = ({ to, href, children, orange, small }) => {
         color: C.w, textDecoration: 'none',
         background: orange ? C.o : C.b,
         padding: small ? '8px 20px' : 'clamp(10px,1.3vw,13px) clamp(22px,3vw,34px)',
-        borderRadius: 8,
-        transition: 'transform .2s, opacity .2s',
+        borderRadius: 8, transition: 'transform .2s, opacity .2s',
     };
     const hover = e => { e.currentTarget.style.opacity = '.85'; e.currentTarget.style.transform = 'translateY(-1px)'; };
     const leave = e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = ''; };
@@ -305,25 +257,32 @@ export default function Home() {
         .stat-cell:last-child{border-left:none;}
 
         /* ── Feature cards ── */
-        .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid ${C.g3};}
+        .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.5vw,28px);}
         @media(max-width:780px){.feat-grid{grid-template-columns:1fr;}}
-        .feat-card{padding:clamp(32px,4vw,52px) clamp(24px,3vw,40px);border-left:1px solid ${C.g3};position:relative;overflow:hidden;transition:background .3s;display:flex;flex-direction:column;align-items:center;text-align:center;}
-        .feat-card:last-child{border-left:none;}
-        @media(max-width:780px){.feat-card{border-left:none;border-bottom:1px solid ${C.g3};}.feat-card:last-child{border-bottom:none;}}
-        .feat-card::before{content:'';position:absolute;bottom:0;right:0;width:100%;height:3px;background:${C.o};transform:scaleX(0);transform-origin:center;transition:transform .35s cubic-bezier(.22,1,.36,1);}
-        .feat-card:hover{background:${C.g1};}.feat-card:hover::before{transform:scaleX(1);}
+        .feat-card{
+          padding:clamp(32px,4vw,52px) clamp(24px,3vw,40px);
+          border:2px solid ${C.g3};border-radius:12px;
+          background:${C.g1};
+          box-shadow:0 4px 18px rgba(0,0,0,.07);
+          position:relative;overflow:hidden;
+          transition:background .3s,box-shadow .3s,transform .3s,border-color .3s;
+          display:flex;flex-direction:column;align-items:center;text-align:center;
+        }
+        .feat-card:hover{background:${C.w};border-color:${C.o};box-shadow:0 8px 32px rgba(245,124,0,.18);transform:translateY(-6px);}
+        .feat-card::before{content:'';position:absolute;bottom:0;right:0;width:100%;height:4px;background:linear-gradient(90deg,${C.o},${C.od});transform:scaleX(0);transform-origin:center;transition:transform .35s cubic-bezier(.22,1,.36,1);}
+        .feat-card:hover::before{transform:scaleX(1);}
         .feat-num{font-family:${F};font-size:clamp(2.4rem,4vw,3.8rem);font-weight:900;color:${C.g3};line-height:1;margin-bottom:20px;letter-spacing:-2px;transition:color .3s;}
         .feat-card:hover .feat-num{color:${C.o};}
 
         /* ── Vision grid ── */
         .vision-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,20px);}
-        @media(max-width:500px){.vision-grid{grid-template-columns:1fr!important;}}
+        @media(max-width:500px){.vision-grid{grid-template-columns:1fr;}}
         .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;}
         .vis-item:hover{border-color:${C.o};box-shadow:0 4px 24px rgba(245,124,0,.10);}
 
-        /* ── Downloads ── */
+        /* ── Downloads grid ── */
         .dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,2vw,16px);}
-        @media(max-width:560px){.dl-grid{grid-template-columns:1fr!important;}}
+        @media(max-width:600px){.dl-grid{grid-template-columns:1fr;}}
 
         /* ── Cert cards ── */
         .cert-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:24px;color:${C.w};transition:background .25s,border-color .25s;height:100%;display:flex;flex-direction:column;gap:14px;}
@@ -338,14 +297,37 @@ export default function Home() {
         .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:linear-gradient(180deg,${C.o},${C.b});transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
         .proto-card:hover::after{transform:scaleY(1);}
 
-        /* ── Schools ── */
-        .schools-split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:stretch;}
-        .schools-sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-        @media(max-width:900px){.schools-split{grid-template-columns:1fr!important;}.schools-sub-grid{grid-template-columns:1fr 1fr!important;}}
-        @media(max-width:500px){.schools-sub-grid{grid-template-columns:1fr!important;}}
-        .school-card{border-radius:8px;border:1px solid ${C.g3};background:${C.w};display:flex;flex-direction:column;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;}
+        /* ══ SCHOOLS layout ══
+           featured card (right) is narrower: minmax(0,280px)
+           other-grid (left) fills the rest
+        */
+        .schools-layout{
+          display:grid;
+          grid-template-columns:minmax(0,280px) 1fr;
+          gap:20px;
+          align-items:stretch;
+        }
+        @media(max-width:960px){.schools-layout{grid-template-columns:1fr;}}
+
+        .school-featured{
+          border-radius:12px;
+          border:2px solid ${C.b};
+          background:linear-gradient(160deg,${C.b} 0%,${C.bd} 100%);
+          display:flex;flex-direction:column;overflow:hidden;
+          transition:transform .3s,box-shadow .3s;
+        }
+        .school-featured:hover{transform:translateY(-6px);box-shadow:0 20px 48px rgba(8,101,168,.25);}
+
+        .schools-other-grid{
+          display:grid;
+          grid-template-columns:repeat(2,1fr);
+          gap:16px;
+        }
+        @media(max-width:600px){.schools-other-grid{grid-template-columns:1fr;}}
+
+        .school-card{border-radius:10px;border:1px solid ${C.g3};background:${C.w};display:flex;flex-direction:column;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;}
         .school-card:hover{border-color:${C.b};transform:translateY(-5px);box-shadow:0 12px 32px rgba(8,101,168,.12);}
-        .sc-meta{font-family:${F};font-size:.7rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
+        .sc-meta{font-family:${F};font-size:.68rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
 
         /* ── Craft ── */
         .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;}
@@ -361,9 +343,9 @@ export default function Home() {
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
         @media(max-width:600px){.news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{display:none!important;}}
 
-        /* ── Library ── */
-        .lib-split{display:flex;flex-direction:row;min-height:clamp(240px,32vw,440px);}
-        @media(max-width:680px){.lib-split{flex-direction:column!important;min-height:unset!important;}.lib-split>div{flex:unset!important;width:100%!important;}}
+        /* ── ob-outline ── */
+        a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
+        a.ob-outline:hover{background:${C.o};color:#fff;}
 
         /* ── Grids ── */
         .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,24px);}
@@ -376,14 +358,17 @@ export default function Home() {
         @media(max-width:780px){.ab-split{grid-template-columns:1fr;}}
         .prog-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 24px;}
         @media(max-width:480px){.prog-grid{grid-template-columns:1fr;}}
-        .ov-stats{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;background:${C.w};border:1px solid ${C.g3};border-radius:8px;margin-bottom:clamp(20px,3vw,32px);}
-        @media(max-width:560px){.ov-stats{grid-template-columns:1fr;}}
-        .ov-stat{padding:clamp(16px,2.5vw,24px) 16px;text-align:center;border-left:1px solid ${C.g3};}
-        .ov-stat:last-child{border-left:none;}
         .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
         .why-card:hover{border-color:${C.o};transform:translateY(-3px);}
-        a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
-        a.ob-outline:hover{background:${C.o};color:#fff;}
+
+        /* ── Library ── */
+        .lib-split{display:grid;grid-template-columns:1fr 1fr;min-height:clamp(260px,36vw,480px);}
+        @media(max-width:680px){.lib-split{grid-template-columns:1fr;min-height:unset;}}
+        .lib-visual{background:${C.o};display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);position:relative;overflow:hidden;}
+        .lib-content{padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);display:flex;flex-direction:column;justify-content:center;}
+        .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
+        .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
+
         @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
         .scroll-ind{animation:bounce 2s ease-in-out infinite;}
         @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
@@ -437,7 +422,7 @@ export default function Home() {
 
             {/* 3 ─ FEATURES ──────────────────────────────────────────────────── */}
             <section style={{ background: C.w }} ref={featRef}>
-                <div className="W" style={{ paddingTop: 'clamp(48px,6vw,80px)', paddingBottom: 0 }}>
+                <div className="W" style={{ paddingTop: 'clamp(48px,6vw,80px)' }}>
                     <div className={`rv${featVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 36 }}>
                         <Eyebrow center>ما يميزنا</Eyebrow>
                         <SplitTitle center>لماذا المعهد؟</SplitTitle>
@@ -447,12 +432,12 @@ export default function Home() {
                         </div>
                     </div>
                 </div>
-                <div className="feat-grid" style={{ maxWidth: '100%', borderRight: `1px solid ${C.g3}`, borderLeft: `1px solid ${C.g3}` }}>
+                <div className="W feat-grid" style={{ paddingBottom: 'clamp(48px,6vw,80px)' }}>
                     {features.map((f, i) => (
                         <div key={i} className={`feat-card rv${featVis ? ' on' : ''} d${i + 1}`}>
                             <div className="feat-num">{f.num}</div>
                             <div style={{ marginBottom: 16 }}><img src={f.icon} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} /></div>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.5, marginBottom: 10 }}>{f.title}</h3>
+                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.4, marginBottom: 10 }}>{f.title}</h3>
                             <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', color: C.g5, lineHeight: 1.85, marginBottom: 22 }}>{f.subtitle}</p>
                             <Link to={f.link} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 2, transition: 'gap .2s' }}
                                 onMouseEnter={e => e.currentTarget.style.gap = '10px'}
@@ -468,11 +453,11 @@ export default function Home() {
             {/* 4 ─ ABOUT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={aboutRef}>
                 <div className="W">
-                    <div className={`ab-split rv${aboutVis ? ' on' : ''}`} style={{ marginBottom: 'clamp(28px,4vw,44px)' }}>
+                    <div className={`ab-split rv${aboutVis ? ' on' : ''}`}>
                         <div className={`rv-scale${aboutVis ? ' on' : ''} d1`} style={{ position: 'relative' }}>
                             <div style={{ position: 'absolute', top: -12, right: -12, width: 52, height: 52, background: C.o, zIndex: 0 }} />
-                            <img src={logo} alt="المعهد" style={{ width: '100%', display: 'block', borderRadius: 2, aspectRatio: '4/3', objectFit: 'cover', position: 'relative', zIndex: 1 }} />
-                            <div style={{ position: 'absolute', bottom: 20, left: 0, background: C.k, padding: '12px 18px', zIndex: 2 }}>
+                            <img src={logo} alt="المعهد" style={{ width: '100%', display: 'block', borderRadius: 8, aspectRatio: '4/3', objectFit: 'cover', position: 'relative', zIndex: 1 }} />
+                            <div style={{ position: 'absolute', bottom: 20, left: 0, background: C.k, padding: '12px 18px', zIndex: 2, borderRadius: '0 8px 8px 0' }}>
                                 <div style={{ fontFamily: F, fontSize: 'clamp(1rem,1.8vw,1.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>1978</div>
                                 <div style={{ fontFamily: F, fontSize: '.68rem', color: 'rgba(255,255,255,.5)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 }}>تأسيس المعهد</div>
                             </div>
@@ -541,7 +526,7 @@ export default function Home() {
                             <Eyebrow center light>وثائق</Eyebrow>
                             <h3 style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.5 }}>تحميل الملفات والتقارير</h3>
                         </div>
-                        {/* 3 items side by side */}
+                        {/* 3 cards side by side */}
                         <div className="dl-grid">
                             {downloadItems.map((item, i) => (
                                 <a key={i} href={item.pdfUrl} target="_blank" rel="noopener noreferrer"
@@ -550,7 +535,7 @@ export default function Home() {
                                         padding: 'clamp(16px,2.5vw,24px) clamp(12px,2vw,20px)',
                                         background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)',
                                         borderRadius: 8, textDecoration: 'none', color: C.w, textAlign: 'center',
-                                        transition: 'background .2s, transform .2s',
+                                        transition: 'background .2s,transform .2s',
                                     }}
                                     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.13)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                                     onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.transform = ''; }}
@@ -604,7 +589,7 @@ export default function Home() {
                                         <div style={{ display: 'flex', gap: 3 }}>{[...Array(5)].map((_, j) => <StarIcon key={j} sx={{ color: C.o, fontSize: 13 }} />)}</div>
                                         <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.06rem)', fontWeight: 800, color: C.w, margin: 0, lineHeight: 1.5 }}>{c.title}</h3>
                                         <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', lineHeight: 1.9, color: 'rgba(255,255,255,.65)', flex: 1, margin: 0 }}>{c.text}</p>
-                                        <img src={c.image} alt={c.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 100, background: C.w, padding: 8, borderRadius: 8 }} />
+                                        <img src={c.image} alt={c.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 100, background: C.w, padding: 8, borderRadius: 6 }} />
                                     </div>
                                 </SwiperSlide>
                             ))}
@@ -627,52 +612,65 @@ export default function Home() {
                 </div>
 
                 <div className="W" style={{ paddingTop: 'clamp(36px,5vw,56px)', paddingBottom: 'clamp(48px,7vw,80px)' }} ref={schoolsRef}>
-                    <div className="schools-split">
-                        {/* RIGHT — featured card */}
-                        {(() => {
-                            const sc = schoolItems[0];
-                            return (
-                                <div className={`school-card rv${schoolsVis ? ' on' : ''} d1`} style={{ borderColor: C.b }}>
-                                    <div style={{ padding: '28px 24px 22px', borderBottom: `1px solid ${C.g3}`, background: `linear-gradient(135deg,${C.b} 0%,${C.bd} 100%)`, flex: 'none' }}>
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 18 }}>
-                                            <div style={{ width: 58, height: 58, borderRadius: 10, flexShrink: 0, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <sc.IconComp sx={{ fontSize: 30, color: C.w }} />
-                                            </div>
-                                            <span style={{ fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 12px', borderRadius: 8, background: 'rgba(255,255,255,.15)', color: C.w, border: '1px solid rgba(255,255,255,.25)' }}>{sc.tag}</span>
-                                        </div>
-                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,1.6vw,1.2rem)', fontWeight: 800, lineHeight: 1.5, color: C.w, margin: 0 }}>{sc.name}</h3>
-                                    </div>
-                                    <div style={{ padding: '22px 24px 28px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                        <p style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.1vw,.92rem)', color: C.g5, lineHeight: 1.9, marginBottom: 24, flex: 1 }}>{sc.desc}</p>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 22 }}>
-                                            <span className="sc-meta"><LocationOnIcon sx={{ fontSize: 14, color: C.b }} />{sc.location}</span>
-                                            <span className="sc-meta"><CalendarTodayIcon sx={{ fontSize: 13, color: C.b }} />{sc.schedule}</span>
-                                            <span className="sc-meta"><GroupsIcon sx={{ fontSize: 14, color: C.b }} />متعدد</span>
-                                        </div>
-                                        <SolidBtn to={sc.link} orange small>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
-                                    </div>
-                                </div>
-                            );
-                        })()}
+                    <div className={`schools-layout rv${schoolsVis ? ' on' : ''}`}>
 
-                        {/* LEFT — 2×2 sub-grid */}
-                        <div className="schools-sub-grid">
-                            {schoolItems.slice(1).map((sc, i) => (
+                        {/* ── Featured card — narrow rectangle ── */}
+                        <div className="school-featured">
+                            <div style={{ padding: '24px 20px 18px', borderBottom: '1px solid rgba(255,255,255,.15)' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 16 }}>
+                                    <div style={{ width: 54, height: 54, borderRadius: 10, flexShrink: 0, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <SchoolIcon sx={{ fontSize: 28, color: C.w }} />
+                                    </div>
+                                    <span style={{ fontFamily: F, fontSize: '.6rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 10px', borderRadius: 20, background: 'rgba(255,255,255,.15)', color: C.w, border: '1px solid rgba(255,255,255,.25)' }}>
+                                        {makawlenSchool.tag}
+                                    </span>
+                                </div>
+                                <h3 style={{ fontFamily: F, fontSize: 'clamp(.92rem,1.4vw,1.08rem)', fontWeight: 900, lineHeight: 1.5, color: C.w, margin: 0 }}>
+                                    {makawlenSchool.name}
+                                </h3>
+                            </div>
+                            <div style={{ padding: '18px 20px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1vw,.88rem)', color: 'rgba(255,255,255,.75)', lineHeight: 1.9, marginBottom: 20, flex: 1 }}>
+                                    {makawlenSchool.desc}
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 22 }}>
+                                    {[
+                                        { Icon: LocationOnIcon, text: makawlenSchool.location },
+                                        { Icon: CalendarTodayIcon, text: makawlenSchool.schedule },
+                                        { Icon: GroupsIcon, text: 'متعدد التخصصات' },
+                                    ].map(({ Icon, text }, idx) => (
+                                        <span key={idx} style={{ fontFamily: F, fontSize: '.68rem', fontWeight: 700, color: 'rgba(255,255,255,.65)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                            <Icon sx={{ fontSize: 14, color: 'rgba(255,255,255,.45)' }} />{text}
+                                        </span>
+                                    ))}
+                                </div>
+                                <SolidBtn to={makawlenSchool.link} orange small>
+                                    اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} />
+                                </SolidBtn>
+                            </div>
+                        </div>
+
+                        {/* ── Other 4 schools — 2×2 grid ── */}
+                        <div className="schools-other-grid">
+                            {otherSchools.map((sc, i) => (
                                 <div key={i} className={`school-card rv${schoolsVis ? ' on' : ''} d${i + 2}`}>
-                                    <div style={{ padding: '18px 16px 14px', borderBottom: `1px solid ${C.g3}`, background: C.w }}>
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 12 }}>
+                                    <div style={{ padding: '16px 16px 12px', borderBottom: `1px solid ${C.g3}`, background: C.w }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
                                             <div style={{ width: 44, height: 44, borderRadius: 8, flexShrink: 0, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <sc.IconComp sx={{ fontSize: 22, color: C.b }} />
                                             </div>
-                                            <span style={{ fontFamily: F, fontSize: '.58rem', fontWeight: 700, letterSpacing: 1, padding: '3px 8px', borderRadius: 8, background: 'rgba(8,101,168,.1)', color: C.b, border: '1px solid rgba(8,101,168,.2)' }}>{sc.tag}</span>
+                                            <span style={{ fontFamily: F, fontSize: '.58rem', fontWeight: 700, letterSpacing: 1, padding: '3px 8px', borderRadius: 20, background: 'rgba(8,101,168,.1)', color: C.b, border: '1px solid rgba(8,101,168,.2)' }}>
+                                                {sc.tag}
+                                            </span>
                                         </div>
-                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.88rem)', fontWeight: 800, lineHeight: 1.5, color: C.k, margin: 0 }}>{sc.name}</h3>
+                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.05vw,.88rem)', fontWeight: 800, lineHeight: 1.5, color: C.k, margin: 0 }}>{sc.name}</h3>
                                     </div>
                                     <div style={{ padding: '12px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                        <p style={{ fontFamily: F, fontSize: 'clamp(.7rem,.95vw,.8rem)', color: C.g5, lineHeight: 1.85, marginBottom: 12, flex: 1 }}>{sc.desc}</p>
+                                        <p style={{ fontFamily: F, fontSize: 'clamp(.7rem,.9vw,.8rem)', color: C.g5, lineHeight: 1.8, marginBottom: 12, flex: 1 }}>{sc.desc}</p>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14 }}>
                                             <span className="sc-meta"><LocationOnIcon sx={{ fontSize: 13, color: C.b }} />{sc.location}</span>
                                             <span className="sc-meta"><CalendarTodayIcon sx={{ fontSize: 12, color: C.b }} />{sc.schedule}</span>
+                                            <span className="sc-meta"><GroupsIcon sx={{ fontSize: 12, color: C.b }} />{sc.students} طالب</span>
                                         </div>
                                         <Link to="/technical-education" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.72rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 2, transition: 'gap .2s' }}
                                             onMouseEnter={e => e.currentTarget.style.gap = '10px'}
@@ -712,7 +710,7 @@ export default function Home() {
                                     <div style={{ width: 42, height: 42, borderRadius: 8, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <HandshakeIcon sx={{ color: C.b, fontSize: 22 }} />
                                     </div>
-                                    <span style={{ fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 10px', borderRadius: 8, background: 'rgba(245,124,0,.1)', border: '1px solid rgba(245,124,0,.2)', color: C.o }}>{p.type}</span>
+                                    <span style={{ fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 10px', borderRadius: 20, background: 'rgba(245,124,0,.1)', border: '1px solid rgba(245,124,0,.2)', color: C.o }}>{p.type}</span>
                                 </div>
                                 <h4 style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.94rem)', fontWeight: 800, color: C.k, lineHeight: 1.5, margin: 0 }}>{p.name}</h4>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -747,7 +745,7 @@ export default function Home() {
                                         <div className="news-card">
                                             <div style={{ position: 'relative', paddingTop: '58%' }}>
                                                 <img src={n.imageUrl} alt={n.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                <div style={{ position: 'absolute', top: 0, left: 0, background: C.b, color: C.w, padding: '5px 14px', fontFamily: F, fontSize: '.66rem', fontWeight: 700, letterSpacing: 1 }}>
+                                                <div style={{ position: 'absolute', top: 0, left: 0, background: C.b, color: C.w, padding: '5px 14px', fontFamily: F, fontSize: '.66rem', fontWeight: 700, letterSpacing: 1, borderRadius: '0 0 6px 0' }}>
                                                     {new Date(n.publishedAt).toLocaleDateString('ar-EG', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                 </div>
                                             </div>
@@ -794,26 +792,22 @@ export default function Home() {
             <section style={{ background: C.k }} ref={libRef}>
                 <div className={`rv${libVis ? ' on' : ''}`}>
                     <div className="lib-split">
-                        {/* Orange panel */}
-                        <div style={{ flex: '0 0 50%', background: C.o, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(28px,5vw,64px)', position: 'relative', overflow: 'hidden' }}>
+                        <div className="lib-visual">
                             <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, right: -110, pointerEvents: 'none' }} />
-                            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
-                                <LibraryBooksIcon sx={{ fontSize: 'clamp(36px,5vw,64px)', color: C.w, marginBottom: 12 }} />
-                                <div style={{ fontFamily: F, fontSize: 'clamp(1rem,1.8vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
-                                <div style={{ width: 32, height: 2, background: 'rgba(255,255,255,.5)', margin: '0 auto 16px' }} />
-                                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
+                                <LibraryBooksIcon sx={{ fontSize: 'clamp(36px,5.5vw,64px)', color: C.w, marginBottom: 10 }} />
+                                <div style={{ fontFamily: F, fontSize: 'clamp(.95rem,2vw,1.7rem)', fontWeight: 900, color: C.w, lineHeight: 1.3, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
+                                <div style={{ width: 32, height: 2, background: 'rgba(255,255,255,.5)', margin: '0 auto 14px' }} />
+                                <div className="lib-tags">
                                     {['5,000+ كتاب', '200+ دورية', 'رقمية'].map((t, i) => (
-                                        <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(255,255,255,.15)', color: C.w, borderRadius: 8, padding: '4px 12px', fontSize: 'clamp(.62rem,.9vw,.7rem)', fontFamily: F, fontWeight: 700 }}>
-                                            <AutoStoriesIcon sx={{ fontSize: 12 }} /> {t}
-                                        </span>
+                                        <span key={i} className="lib-tag"><AutoStoriesIcon sx={{ fontSize: 11 }} /> {t}</span>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                        {/* Dark panel */}
-                        <div style={{ flex: '0 0 50%', padding: 'clamp(28px,5vw,64px)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div className="lib-content">
                             <Eyebrow light>المكتبة</Eyebrow>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,1.8vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 16 }}>
+                            <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 14 }}>
                                 مرجعك العلمي الأشمل في علوم التشييد والإدارة
                             </h3>
                             <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 28 }}>

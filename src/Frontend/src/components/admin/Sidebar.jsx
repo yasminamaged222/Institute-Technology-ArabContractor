@@ -1,6 +1,6 @@
 // Sidebar.jsx
 // ─────────────────────────────────────────────────────────────────────────────
-import logoSrc from '../../assets/logo-removebg-preview.png';
+import logoSrc from '../../assets/finaaaaal logo  ara. white .png';
 
 export function Sidebar({ user, activeTab, tabs, totalCerts, pendingRefunds, onTabChange }) {
     return (
