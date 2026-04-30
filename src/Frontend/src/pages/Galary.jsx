@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import './galary.css';
 
 // ─── Photo Albums with categories ───────────────────────────────────────────
-// Categories: 'inside' | 'outside' | 'training' | 'workshops'
+// Main categories: 'activities' | 'training' | 'library' | 'labs' | 'protocols'
+// Each album also has an optional `subcategory`.
 
 const albums = [
-    // ── داخل مصر ──
+    // ── المعامل والقاعات ──
     {
         id: 'album11',
         title: 'مركز جسر السويس',
         imageUrl: '/images/pic11a1.jpg',
         photosCount: 24,
         photoPrefix: 'pic11a',
-        category: 'inside',
+        category: 'labs',
+        subcategory: 'gisr_suez',
     },
     {
         id: 'album12',
@@ -20,15 +22,19 @@ const albums = [
         imageUrl: '/images/pic12a1.jpg',
         photosCount: 11,
         photoPrefix: 'pic12a',
-        category: 'inside',
+        category: 'labs',
+        subcategory: 'shobra',
     },
+
+    // ── الدورات التدريبية > تدريب الطلبة ──
     {
         id: 'album7',
         title: 'زيارة طلاب التدريب الصيفى إلى العاصمة الإدارية الجديدة 2017-07-1',
         imageUrl: '/images/pic07a1.jpg',
         photosCount: 16,
         photoPrefix: 'pic07a',
-        category: 'inside',
+        category: 'training',
+        subcategory: 'students',
     },
     {
         id: 'album8',
@@ -36,7 +42,8 @@ const albums = [
         imageUrl: '/images/pic08a1.jpg',
         photosCount: 4,
         photoPrefix: 'pic08a',
-        category: 'inside',
+        category: 'training',
+        subcategory: 'students',
     },
     {
         id: 'album9',
@@ -44,25 +51,30 @@ const albums = [
         imageUrl: '/images/pic09a1.jpg',
         photosCount: 8,
         photoPrefix: 'pic09a',
-        category: 'inside',
+        category: 'training',
+        subcategory: 'students',
     },
+
+    // ── الأنشطة والفعاليات > ورش العمل ──
     {
         id: 'album16',
         title: 'السلامة فى اعمال الرفع والتصبين_مشروع معالجة مياه بحر البقر',
         imageUrl: '/images/pic16a1.jpg',
         photosCount: 6,
         photoPrefix: 'pic16a',
-        category: 'inside',
+        category: 'activities',
+        subcategory: 'workshops',
     },
 
-    // ── خارج مصر ──
+    // ── الدورات التدريبية > خارج مصر ──
     {
         id: 'album2',
         title: 'التدريب فى المانيا',
         imageUrl: '/images/pic02a1.jpg',
         photosCount: 4,
         photoPrefix: 'pic02a',
-        category: 'outside',
+        category: 'training',
+        subcategory: 'outside',
     },
     {
         id: 'album6',
@@ -70,7 +82,8 @@ const albums = [
         imageUrl: '/images/pic06a1.jpg',
         photosCount: 23,
         photoPrefix: 'pic06a',
-        category: 'outside',
+        category: 'training',
+        subcategory: 'outside',
     },
     {
         id: 'album3',
@@ -78,7 +91,8 @@ const albums = [
         imageUrl: '/images/pic03a1.jpg',
         photosCount: 3,
         photoPrefix: 'pic03a',
-        category: 'outside',
+        category: 'training',
+        subcategory: 'outside',
     },
     {
         id: 'album5',
@@ -86,7 +100,8 @@ const albums = [
         imageUrl: '/images/gazan0.jpg',
         photosCount: 17,
         photoPrefix: 'gazan',
-        category: 'outside',
+        category: 'training',
+        subcategory: 'outside',
     },
     {
         id: 'album13',
@@ -94,18 +109,22 @@ const albums = [
         imageUrl: '/images/pic13a1.jpg',
         photosCount: 27,
         photoPrefix: 'pic13a',
-        category: 'outside',
+        category: 'training',
+        subcategory: 'outside',
     },
+
+    // ── زيارات وبروتوكولات > زيارات الوفود ──
     {
         id: 'album10',
         title: 'زيارة وفد دولة موريتانيا إلى مدرسة المقاولون العرب الثانوية النموذجية 2017-12-17',
         imageUrl: '/images/pic10a1.jpg',
         photosCount: 5,
         photoPrefix: 'pic10a',
-        category: 'outside',
+        category: 'protocols',
+        subcategory: 'delegations',
     },
 
-    // ── دورات تدريبية ──
+    // ── الدورات التدريبية > داخل مصر ──
     {
         id: 'albumZ',
         title: 'CEA المجموعة الرابعة',
@@ -113,6 +132,7 @@ const albums = [
         photosCount: 11,
         photoPrefix: 'PicCEA',
         category: 'training',
+        subcategory: 'inside',
     },
     {
         id: 'album15',
@@ -121,6 +141,7 @@ const albums = [
         photosCount: 17,
         photoPrefix: 'Askry',
         category: 'training',
+        subcategory: 'inside',
     },
     {
         id: 'album17',
@@ -129,6 +150,7 @@ const albums = [
         photosCount: 14,
         photoPrefix: 'pic17a',
         category: 'training',
+        subcategory: 'inside',
     },
     {
         id: 'album4',
@@ -137,41 +159,86 @@ const albums = [
         photosCount: 3,
         photoPrefix: 'pic04a',
         category: 'training',
+        subcategory: 'inside',
     },
 
-    // ── ورش عمل وبروتوكولات ──
+    // ── زيارات وبروتوكولات ──
     {
         id: 'album1',
         title: 'بروتوكول تعاون مع جمعية المحاسبين المصريين',
         imageUrl: '/images/pic01a1.jpg',
         photosCount: 1,
         photoPrefix: 'pic01a',
-        category: 'workshops',
+        category: 'protocols',
+        subcategory: 'signing',
     },
+
+    // ── الأنشطة والفعاليات > الندوات والمؤتمرات ──
     {
         id: 'album14',
         title: 'ندوة عقود الفيديك - د شريف الهجان',
         imageUrl: '/images/pic14a1.jpg',
         photosCount: 5,
         photoPrefix: 'pic14a',
-        category: 'workshops',
+        category: 'activities',
+        subcategory: 'seminars',
     },
 ];
 
-// ─── Photo category definitions ──────────────────────────────────────────────
+// ─── Photo category definitions (with sub-filters) ───────────────────────────
 const photoCategories = [
-    { key: 'all', label: 'الكل' },
-    { key: 'inside', label: 'داخل مصر' },
-    { key: 'outside', label: 'خارج مصر' },
-    { key: 'training', label: 'دورات تدريبية' },
-    { key: 'workshops', label: 'ورش عمل وبروتوكولات' },
+    { key: 'all', label: 'الكل', subs: [] },
+    {
+        key: 'activities', label: 'الأنشطة والفعاليات',
+        subs: [
+            { key: 'seminars', label: 'الندوات والمؤتمرات' },
+            { key: 'workshops', label: 'ورش العمل' },
+            { key: 'official_visits', label: 'الزيارات الرسمية' },
+        ],
+    },
+    {
+        key: 'training', label: 'الدورات التدريبية',
+        subs: [
+            { key: 'inside', label: 'داخل مصر' },
+            { key: 'outside', label: 'خارج مصر' },
+            { key: 'students', label: 'تدريب الطلبة' },
+        ],
+    },
+    { key: 'library', label: 'مكتبة المعهد وسفارة المعرفة', subs: [] },
+    {
+        key: 'labs', label: 'المعامل والقاعات',
+        subs: [
+            { key: 'nasr_city', label: 'مركز تدريب مدينة نصر' },
+            { key: 'gisr_suez', label: 'مركز تدريب جسر السويس' },
+            { key: 'shobra', label: 'مركز تدريب شبرا' },
+        ],
+    },
+    {
+        key: 'protocols', label: 'زيارات وبروتوكولات التعاون',
+        subs: [
+            { key: 'delegations', label: 'زيارات الوفود' },
+            { key: 'signing', label: 'توقيع البروتوكولات' },
+            { key: 'local_intl', label: 'التعاون مع جهات محلية ودولية' },
+            { key: 'ac_events', label: 'فعاليات مع شركة المقاولون العرب' },
+        ],
+    },
 ];
 
-// ─── Video category definitions ──────────────────────────────────────────────
+// ─── Video category definitions (with sub-filters) ───────────────────────────
 const videoCategories = [
-    { key: 'all', label: 'الكل' },
-    { key: 'aboutAC', label: 'عن المقاولون العرب' },
-    { key: 'cea', label: 'آراء المهندسين — CEA' },
+    { key: 'all', label: 'الكل', subs: [] },
+    {
+        key: 'introductory', label: 'فيديوهات تعريفية وإعلامية',
+        subs: [
+            { key: 'about_institute', label: 'فيديو تعريفي عن المعهد' },
+            { key: 'management', label: 'كلمة إدارة المعهد' },
+            { key: 'media', label: 'لقاءات إعلامية' },
+            { key: 'opinions', label: 'آراء المتدربين والمحاضرين' },
+            { key: 'reports', label: 'تقارير مصورة' },
+        ],
+    },
+    { key: 'aboutAC', label: 'عن المقاولون العرب', subs: [] },
+    { key: 'cea', label: 'آراء المهندسين — CEA', subs: [] },
 ];
 
 // ─── Video data ───────────────────────────────────────────────────────────────
@@ -241,41 +308,81 @@ const videoSections = [
     },
 ];
 
-// ─── Shared filter bar ────────────────────────────────────────────────────────
-const CategoryBar = ({ categories, active, onChange }) => (
-    <div style={{
-        display: 'flex',
-        flexWrap: 'wrap',
-        gap: 8,
-        justifyContent: 'center',
-        padding: '12px 16px',
-        backgroundColor: '#fff',
-        borderBottom: '1px solid #e5e7eb',
-    }}>
-        {categories.map(cat => (
-            <button
-                key={cat.key}
-                onClick={() => onChange(cat.key)}
-                style={{
-                    padding: '7px 16px',
-                    borderRadius: 20,
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    fontWeight: active === cat.key ? 700 : 400,
-                    background: active === cat.key
-                        ? 'linear-gradient(to right, #2563eb, #60a5fa)'
-                        : '#f3f4f6',
-                    color: active === cat.key ? '#fff' : '#374151',
-                    transition: 'all 0.2s',
-                    boxShadow: active === cat.key ? '0 2px 8px rgba(37,99,235,0.25)' : 'none',
-                }}
-            >
-                {cat.label}
-            </button>
-        ))}
-    </div>
-);
+// ─── Shared filter bar (with sub-filters) ────────────────────────────────────
+const CategoryBar = ({ categories, active, activeSub, onChange, onChangeSub }) => {
+    const activeCat = categories.find(c => c.key === active);
+    const hasSubs = activeCat && activeCat.subs && activeCat.subs.length > 0;
+
+    return (
+        <div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 8, padding: '12px 16px' }}>
+                {categories.map(cat => (
+                    <button
+                        key={cat.key}
+                        onClick={() => { onChange(cat.key); onChangeSub('all'); }}
+                        style={{
+                            padding: '7px 16px',
+                            borderRadius: 20,
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            fontWeight: active === cat.key ? 700 : 400,
+                            background: active === cat.key
+                                ? 'linear-gradient(to right, #2563eb, #60a5fa)'
+                                : '#f3f4f6',
+                            color: active === cat.key ? '#fff' : '#374151',
+                            transition: 'all 0.2s',
+                            boxShadow: active === cat.key ? '0 2px 8px rgba(37,99,235,0.25)' : 'none',
+                        }}
+                    >
+                        {cat.label}
+                    </button>
+                ))}
+            </div>
+            {hasSubs && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 6, padding: '0 16px 12px' }}>
+                    <button
+                        onClick={() => onChangeSub('all')}
+                        style={{
+                            padding: '5px 12px',
+                            borderRadius: 16,
+                            border: '1px solid #e5e7eb',
+                            cursor: 'pointer',
+                            fontSize: 12,
+                            background: activeSub === 'all' ? '#eff6ff' : '#fff',
+                            color: activeSub === 'all' ? '#1d4ed8' : '#4b5563',
+                            fontWeight: activeSub === 'all' ? 700 : 400,
+                            borderColor: activeSub === 'all' ? '#2563eb' : '#e5e7eb',
+                            transition: 'all 0.2s',
+                        }}
+                    >
+                        الكل
+                    </button>
+                    {activeCat.subs.map(sub => (
+                        <button
+                            key={sub.key}
+                            onClick={() => onChangeSub(sub.key)}
+                            style={{
+                                padding: '5px 12px',
+                                borderRadius: 16,
+                                border: '1px solid #e5e7eb',
+                                cursor: 'pointer',
+                                fontSize: 12,
+                                background: activeSub === sub.key ? '#eff6ff' : '#fff',
+                                color: activeSub === sub.key ? '#1d4ed8' : '#4b5563',
+                                fontWeight: activeSub === sub.key ? 700 : 400,
+                                borderColor: activeSub === sub.key ? '#2563eb' : '#e5e7eb',
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            {sub.label}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 // ─── Video components ─────────────────────────────────────────────────────────
 const VideoCard = ({ videoId, title, color }) => {
@@ -289,22 +396,18 @@ const VideoCard = ({ videoId, title, color }) => {
             <div className="training-video-thumbnail">
                 {!imageError ? (
                     <img
-                        src={`https://img.youtube.com/vi/${videoId}/mqdefault.jpg`}
+                        src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
                         alt={title}
                         onError={() => setImageError(true)}
                     />
                 ) : (
                     <div className="training-video-error">
-                        <svg width="50" height="50" viewBox="0 0 24 24" fill="#999">
-                            <path d="M4 6h16v12H4z" />
-                        </svg>
+                        <span>صورة غير متاحة</span>
                     </div>
                 )}
                 <div className="training-video-overlay" />
                 <div className="training-play-button">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
-                        <path d="M8 5v14l11-7z" />
-                    </svg>
+                    <span style={{ color: '#fff', fontSize: 22 }}>▶</span>
                 </div>
                 <div className="training-video-title">
                     <span>{title}</span>
@@ -315,16 +418,15 @@ const VideoCard = ({ videoId, title, color }) => {
 };
 
 const VideoSection = ({ section }) => (
-    <div className="training-section">
-        <div
-            className="training-section-header"
-            style={{ background: `linear-gradient(135deg, ${section.color} 0%, ${section.color}cc 100%)` }}
-        >
-            <h2>{section.title}</h2>
+    <div style={{ margin: '24px 16px' }}>
+        <div style={{ marginBottom: 12 }}>
+            <h3 style={{ color: section.color, fontSize: 18, fontWeight: 'bold', textAlign: 'right' }}>
+                {section.title}
+            </h3>
         </div>
-        <div className="training-videos-grid">
-            {section.videos.map((video, i) => (
-                <VideoCard key={i} videoId={video.id} title={video.title} color={section.color} />
+        <div className="training-videos-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+            {section.videos.map((video) => (
+                <VideoCard key={video.id} videoId={video.id} title={video.title} color={section.color} />
             ))}
         </div>
     </div>
@@ -332,6 +434,7 @@ const VideoSection = ({ section }) => (
 
 const VideoGalleryPage = () => {
     const [activeVideoCategory, setActiveVideoCategory] = useState('all');
+    const [activeVideoSub, setActiveVideoSub] = useState('all');
 
     const filtered = activeVideoCategory === 'all'
         ? videoSections
@@ -342,18 +445,11 @@ const VideoGalleryPage = () => {
         activeVideoCategory === 'all' || activeVideoCategory === 'cea';
 
     return (
-        <div className="training-plan-container">
+        <div>
             <style>{`
-                .training-plan-container { width: 100%; padding: 20px; }
-                .training-section { background: white; border-radius: 16px; margin-bottom: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); overflow: hidden; }
-                .training-section-header { padding: 20px; text-align: center; }
-                .training-section-header h2 { color: white; font-size: 20px; font-weight: bold; margin: 0; }
-                .training-cea-header { background: linear-gradient(135deg, #6A1B9A 0%, #9C27B0 100%); color: white; padding: 16px; margin-bottom: 24px; border-radius: 12px; text-align: center; }
-                .training-cea-header h2 { font-size: 24px; font-weight: bold; margin: 0; }
-                .training-videos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; padding: 16px; }
-                @media (min-width: 600px) { .training-videos-grid { grid-template-columns: repeat(2, 1fr); } }
-                @media (min-width: 1200px) { .training-videos-grid { grid-template-columns: repeat(3, 1fr); } }
-                .training-video-card { border-radius: 12px; overflow: hidden; cursor: pointer; background-color: #f5f5f5; border: 2px solid; transition: transform 0.2s, box-shadow 0.2s; aspect-ratio: 16 / 10; }
+                @media (min-width: 600px) { .training-videos-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+                @media (min-width: 1200px) { .training-videos-grid { grid-template-columns: repeat(3, 1fr) !important; } }
+                .training-video-card { border-radius: 12px; overflow: hidden; cursor: pointer; background-color: #f5f5f5; border: 2px solid; transition: transform 0.2s, box-shadow 0.2s; aspect-ratio: 16 / 10; position: relative; }
                 .training-video-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.15); }
                 .training-video-thumbnail { position: relative; width: 100%; height: 100%; }
                 .training-video-thumbnail img { width: 100%; height: 100%; object-fit: cover; }
@@ -368,14 +464,14 @@ const VideoGalleryPage = () => {
             <CategoryBar
                 categories={videoCategories}
                 active={activeVideoCategory}
+                activeSub={activeVideoSub}
                 onChange={setActiveVideoCategory}
+                onChangeSub={setActiveVideoSub}
             />
 
-            <div style={{ height: 20 }} />
-
-            {showCeaBanner && activeVideoCategory !== 'aboutAC' && (
-                <div className="training-cea-header">
-                    <h2>رأي بعض المهندسين في البرنامج CEA</h2>
+            {showCeaBanner && activeVideoCategory !== 'aboutAC' && activeVideoCategory !== 'introductory' && (
+                <div style={{ margin: 16, padding: 14, borderRadius: 12, background: 'linear-gradient(to right, #fff7ed, #ffedd5)', textAlign: 'center' }}>
+                    <h3 style={{ color: '#9a3412', fontWeight: 'bold' }}>رأي بعض المهندسين في البرنامج CEA</h3>
                 </div>
             )}
 
@@ -401,15 +497,13 @@ const AlbumDetailPage = ({ album, onBack }) => {
         <div className="album-detail-page">
             <div className="album-detail-header">
                 <div className="album-header-content">
-                    <div className="album-title">{album.title}</div>
-                    <div className="album-counter">
+                    <h2 className="album-title">{album.title}</h2>
+                    <p className="album-counter">
                         صورة {currentPhotoIndex + 1} من {photos.length}
-                    </div>
+                    </p>
                 </div>
-                <button onClick={onBack} className="back-button">
-                    <svg className="back-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
+                <button className="back-button" onClick={onBack}>
+                    <span className="back-icon">←</span>
                 </button>
             </div>
 
@@ -419,22 +513,20 @@ const AlbumDetailPage = ({ album, onBack }) => {
                         <div className="photo-wrapper">
                             {imageLoading[currentPhotoIndex] && (
                                 <div className="photo-loading">
-                                    <div className="spinner"></div>
-                                    <div className="loading-text">جاري تحميل الصورة...</div>
+                                    <div className="spinner" />
+                                    <p className="loading-text">جاري تحميل الصورة...</p>
                                 </div>
                             )}
                             {imageError[currentPhotoIndex] ? (
                                 <div className="photo-error">
-                                    <svg className="error-icon" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                    </svg>
-                                    <div className="error-text">لا يمكن تحميل الصورة</div>
-                                    <div className="error-url">{photos[currentPhotoIndex]}</div>
+                                    <div className="error-icon">⚠</div>
+                                    <p className="error-text">لا يمكن تحميل الصورة</p>
+                                    <p className="error-url">{photos[currentPhotoIndex]}</p>
                                 </div>
                             ) : (
                                 <img
                                     src={photos[currentPhotoIndex]}
-                                    alt={`Photo ${currentPhotoIndex + 1}`}
+                                    alt={`${album.title} ${currentPhotoIndex + 1}`}
                                     className="main-photo"
                                     onLoad={() => setImageLoading(prev => ({ ...prev, [currentPhotoIndex]: false }))}
                                     onError={() => {
@@ -457,19 +549,17 @@ const AlbumDetailPage = ({ album, onBack }) => {
                         disabled={currentPhotoIndex >= photos.length - 1}
                         className="nav-button"
                     >
-                        <span>التالي</span>
+                        التالي
                     </button>
-
-                    <div className="page-indicator">
+                    <span className="page-indicator">
                         {currentPhotoIndex + 1} / {photos.length}
-                    </div>
-
+                    </span>
                     <button
                         onClick={() => currentPhotoIndex > 0 && setCurrentPhotoIndex(i => i - 1)}
                         disabled={currentPhotoIndex <= 0}
                         className="nav-button"
                     >
-                        <span>السابق</span>
+                        السابق
                     </button>
                 </div>
 
@@ -483,12 +573,11 @@ const AlbumDetailPage = ({ album, onBack }) => {
                             >
                                 <img
                                     src={photo}
-                                    alt={`Thumbnail ${index + 1}`}
+                                    alt={`thumb ${index + 1}`}
                                     className="thumbnail-image"
-                                    onError={e => {
+                                    onError={(e) => {
                                         e.target.style.display = 'none';
-                                        e.target.parentElement.innerHTML =
-                                            '<div class="thumbnail-error"><svg class="thumbnail-error-icon" fill="currentColor" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>';
+                                        e.target.parentElement.innerHTML = '<div class="thumbnail-error"></div>';
                                     }}
                                 />
                             </button>
@@ -505,6 +594,7 @@ const PhotoGallery = () => {
     const [showPhotos, setShowPhotos] = useState(true);
     const [selectedAlbum, setSelectedAlbum] = useState(null);
     const [activePhotoCategory, setActivePhotoCategory] = useState('all');
+    const [activePhotoSub, setActivePhotoSub] = useState('all');
     const [imageLoading, setImageLoading] = useState({});
     const [imageError, setImageError] = useState({});
 
@@ -531,29 +621,33 @@ const PhotoGallery = () => {
         return <AlbumDetailPage album={selectedAlbum} onBack={() => setSelectedAlbum(null)} />;
     }
 
-    const filteredAlbums = activePhotoCategory === 'all'
-        ? albums
-        : albums.filter(a => a.category === activePhotoCategory);
+    const filteredAlbums = albums.filter(a => {
+        if (activePhotoCategory === 'all') return true;
+        if (a.category !== activePhotoCategory) return false;
+        if (activePhotoSub === 'all') return true;
+        return a.subcategory === activePhotoSub;
+    });
 
     return (
-        <div dir="rtl" className="photo-gallery">
+        <div className="photo-gallery">
             {/* Breadcrumb */}
-            <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
-                    <a
-                        href="/"
-                        style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
-                        onMouseEnter={e => e.target.style.color = '#f57c00'}
-                        onMouseLeave={e => e.target.style.color = '#0865a8'}
-                    >
-                        الصفحة الرئيسية
-                    </a>
-                    <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
-                    <span style={{ color: '#374151', marginRight: '8px' }}>مكتبة الصور والفيديوهات</span>
+            <div className="breadcrumb-bar">
+                <div className="breadcrumb-content">
+                    <span className="breadcrumb-text">
+                        <a
+                            href="/"
+                            className="breadcrumb-link"
+                            style={{ color: '#0865a8' }}
+                            onMouseEnter={e => (e.target.style.color = '#f57c00')}
+                            onMouseLeave={e => (e.target.style.color = '#0865a8')}
+                        >
+                            الصفحة الرئيسية
+                        </a>
+                        <span className="breadcrumb-separator">•</span>
+                        <span className="breadcrumb-current">مكتبة الصور والفيديوهات</span>
+                    </span>
                 </div>
             </div>
-
-            <br /><br />
 
             {/* Tab switcher */}
             <div className="gallery-header">
@@ -573,12 +667,14 @@ const PhotoGallery = () => {
                 </div>
             </div>
 
-            {/* Category filter bar — shown only for the active tab */}
+            {/* Category filter bar — shown only for the photos tab */}
             {showPhotos && (
                 <CategoryBar
                     categories={photoCategories}
                     active={activePhotoCategory}
+                    activeSub={activePhotoSub}
                     onChange={setActivePhotoCategory}
+                    onChangeSub={setActivePhotoSub}
                 />
             )}
 
@@ -586,13 +682,13 @@ const PhotoGallery = () => {
                 {showPhotos ? (
                     <div className="albums-grid-wrapper">
                         {filteredAlbums.length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: '60px 20px', color: '#9ca3af', fontSize: 16 }}>
+                            <div style={{ padding: 60, textAlign: 'center', color: '#6b7280', fontSize: 16 }}>
                                 لا توجد ألبومات في هذا القسم
                             </div>
                         ) : (
                             <div
                                 className="albums-grid"
-                                style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+                                style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}
                             >
                                 {filteredAlbums.map(album => (
                                     <button
@@ -603,15 +699,13 @@ const PhotoGallery = () => {
                                         <div className="album-image-container">
                                             {imageLoading[album.id] && (
                                                 <div className="album-loading">
-                                                    <div className="spinner"></div>
+                                                    <div className="spinner" />
                                                 </div>
                                             )}
                                             {imageError[album.id] ? (
                                                 <div className="album-error">
-                                                    <svg className="album-error-icon" fill="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                                    </svg>
-                                                    <div className="album-error-text">ألبوم الصور</div>
+                                                    <div className="album-error-icon">🖼</div>
+                                                    <p className="album-error-text">ألبوم الصور</p>
                                                 </div>
                                             ) : (
                                                 <img
@@ -628,15 +722,13 @@ const PhotoGallery = () => {
                                             )}
                                         </div>
                                         <div className="album-info">
-                                            <div className="album-info-title">{album.title}</div>
+                                            <h3 className="album-info-title">{album.title}</h3>
                                             <div className="album-footer">
-                                                <div className="album-action">
-                                                    <svg className="album-action-icon" fill="currentColor" viewBox="0 0 24 24">
-                                                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                                                    </svg>
+                                                <span className="album-action">
+                                                    <span className="album-action-icon">▶</span>
                                                     <span className="album-action-text">عرض الألبوم</span>
-                                                </div>
-                                                <div className="album-count">{album.photosCount} صورة</div>
+                                                </span>
+                                                <span className="album-count">{album.photosCount} صورة</span>
                                             </div>
                                         </div>
                                     </button>
