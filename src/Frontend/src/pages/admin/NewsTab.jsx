@@ -22,11 +22,9 @@ function toInputDate(dateStr) {
     if (!dateStr) return '';
     try { return new Date(dateStr).toISOString().slice(0, 10); } catch { return ''; }
 }
-function validUrl(url) { return url && url !== 'N/A' && url !== 'pending' && url.startsWith('http'); }
 function resolveImg(url) {
     if (!url || url === 'N/A' || url === 'pending') return null;
     if (url.startsWith('http')) return url;
-    // server returns just the filename — prepend base
     return `${BASE}/${url.replace(/^\//, '')}`;
 }
 
@@ -93,18 +91,81 @@ const CSS = `
 .news-inp::placeholder{color:${T.gray500};}
 .news-inp:disabled{background:${T.gray100};color:${T.gray500};cursor:not-allowed;}
 .news-divider{height:1px;background:${T.gray100};margin:4px 0 20px;}
-.news-img-zone{width:100%;min-height:130px;border-radius:3px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;transition:border-color .18s,background .18s;}
-.news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.04);}
-.news-img-preview{width:100%;height:130px;object-fit:cover;display:block;}
-.news-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
-.news-img-zone:hover .news-img-overlay{opacity:1;}
-.news-img-overlay-txt{color:#fff;font-size:.72rem;font-weight:700;margin-top:4px;}
-.news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px 12px;}
+
+/* ── IMAGE ZONE — full image, no crop, auto height ── */
+.news-img-zone{
+    width:100%;
+    border-radius:6px;
+    border:2px dashed ${T.gray300};
+    background:${T.gray50};
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    position:relative;
+    transition:border-color .18s,background .18s;
+    min-height:60px;
+    overflow:visible; /* let image define height */
+}
+.news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.03);}
+
+.news-img-zone.has-image{
+    border-style:solid;
+    border-color:${T.gray300};
+    border-radius:8px;
+    overflow:hidden;  /* clip rounded corners */
+    background:#000;
+}
+.news-img-zone.has-image:hover{ border-color:${T.orange}; }
+
+/* ── Full image — 100% wide, height follows natural aspect ratio, NO crop ── */
+.news-img-preview{
+    width:100%;
+    height:auto;          /* natural height — no fixed px, no crop */
+    display:block;
+    object-fit:fill;      /* fill = stretch to box, but since height:auto the box = image */
+}
+
+/* dim overlay on hover */
+.news-img-overlay{
+    position:absolute;inset:0;
+    background:rgba(0,0,0,.42);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    opacity:0;transition:opacity .2s;
+}
+.news-img-zone.has-image:hover .news-img-overlay{opacity:1;}
+.news-img-overlay-txt{color:#fff;font-size:.78rem;font-weight:700;margin-top:6px;}
+
+.news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:24px 12px;}
 .news-img-icon{font-size:2rem;}
 .news-img-hint{color:${T.gray500};font-size:.68rem;font-weight:600;text-align:center;line-height:1.6;}
 .news-img-types{color:${T.gray300};font-size:.62rem;background:${T.gray100};padding:2px 10px;border-radius:2px;}
-.news-remove-img{background:#fef2f2;color:#dc2626;border:1.5px solid rgba(220,38,38,.3);border-radius:2px;padding:6px;font-size:.72rem;font-weight:700;cursor:pointer;width:100%;font-family:inherit;margin-top:6px;transition:background .14s;}
+
+/* meta bar — always visible below image (not hover-only) */
+.news-img-meta{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:6px 12px;
+    background:rgba(0,0,0,.6);
+    width:100%;
+    box-sizing:border-box;
+    pointer-events:none;
+    position:absolute;
+    bottom:0;left:0;right:0;
+}
+.news-img-meta-txt{color:rgba(255,255,255,.75);font-size:.62rem;font-family:'Courier New',monospace;}
+
+.news-remove-img{
+    background:#fef2f2;color:#dc2626;
+    border:1.5px solid rgba(220,38,38,.3);
+    border-radius:3px;padding:7px;
+    font-size:.72rem;font-weight:700;
+    cursor:pointer;width:100%;
+    font-family:inherit;margin-top:8px;
+    transition:background .14s;
+}
 .news-remove-img:hover{background:#fee2e2;}
+
 .news-ta-block{border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
 .news-ta-hdr{background:${T.gray50};padding:10px 16px;border-bottom:1.5px solid ${T.gray100};display:flex;align-items:center;gap:9px;}
 .news-ta-icon{font-size:1.1rem;}
@@ -176,8 +237,6 @@ function buildFormData(form, imageFile, isNew) {
     fd.append('Title', form.title || '');
     fd.append('Details', form.details || '');
     fd.append('Date', form.date ? `${form.date}T00:00:00.000Z` : '');
-    // If uploading a file, server will generate the URL; send placeholder
-    // If we already have a real URL (edit), keep it
     fd.append('ImageUrl', form.imageUrl && form.imageUrl !== 'N/A' ? form.imageUrl : (imageFile ? 'pending' : 'N/A'));
     if (imageFile) fd.append('Image', imageFile);
     return fd;
@@ -198,8 +257,9 @@ export default function NewsTab() {
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailL] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [imageFile, setImageFile] = useState(null);   // actual File object
-    const [previewSrc, setPreviewSrc] = useState(null);   // local blob or remote URL
+    const [imageFile, setImageFile] = useState(null);
+    const [previewSrc, setPreviewSrc] = useState(null);
+    const [imgNaturalSize, setImgNaturalSize] = useState(null); // { w, h }
     const fileRef = useRef();
 
     const toast = (msg, type = 'success') => {
@@ -231,11 +291,11 @@ export default function NewsTab() {
         setDelConf(false);
         setIsNew(false);
         setImageFile(null);
-        // Optimistic: set from list item first
+        setImgNaturalSize(null);
         if (listItem) {
             setSelected(listItem);
             setForm({ id: listItem.id, title: listItem.title, details: '', date: toInputDate(listItem.publishedAt), imageUrl: listItem.imageUrl, image: null });
-            setPreviewSrc(listItem.imageUrl || null);
+            setPreviewSrc(resolveImg(listItem.imageUrl));
         }
         try {
             const item = await apiFetch(`/api/admin/AdminNews/${id}`);
@@ -249,7 +309,7 @@ export default function NewsTab() {
                 };
                 setSelected(mapped);
                 setForm(mapped);
-                setPreviewSrc(item.imageUrl || null);
+                setPreviewSrc(resolveImg(item.imageUrl));
             }
         } catch (e) {
             toast('فشل تحميل تفاصيل الخبر', 'error');
@@ -263,8 +323,14 @@ export default function NewsTab() {
     const applyImage = (file) => {
         if (!file || !file.type.startsWith('image/')) return;
         setImageFile(file);
-        setPreviewSrc(URL.createObjectURL(file));
+        setImgNaturalSize(null);
+        const blobUrl = URL.createObjectURL(file);
+        setPreviewSrc(blobUrl);
         setForm(f => ({ ...f, imageUrl: null }));
+    };
+
+    const handleImgLoad = (e) => {
+        setImgNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight });
     };
 
     // ── Save ──
@@ -300,6 +366,7 @@ export default function NewsTab() {
         setDelConf(false);
         setImageFile(null);
         setPreviewSrc(null);
+        setImgNaturalSize(null);
     };
 
     const handleDelete = async () => {
@@ -320,8 +387,13 @@ export default function NewsTab() {
     };
 
     const handleReset = () => {
-        if (isNew) { setForm({ ...BLANK }); setPreviewSrc(null); setImageFile(null); }
-        else if (selected) { setForm({ ...selected }); setPreviewSrc(resolveImg(selected.imageUrl)); setImageFile(null); }
+        if (isNew) { setForm({ ...BLANK }); setPreviewSrc(null); setImageFile(null); setImgNaturalSize(null); }
+        else if (selected) {
+            setForm({ ...selected });
+            setPreviewSrc(resolveImg(selected.imageUrl));
+            setImageFile(null);
+            setImgNaturalSize(null);
+        }
         setDelConf(false);
         toast('تم إلغاء التغييرات', 'info');
     };
@@ -332,6 +404,7 @@ export default function NewsTab() {
     );
 
     const wordCount = form.details ? form.details.trim().split(/\s+/).filter(Boolean).length : 0;
+    const hasImage = !!previewSrc;
 
     return (
         <div className="news-root">
@@ -438,23 +511,60 @@ export default function NewsTab() {
                                 </div>
                             </div>
 
-                            {/* Image upload */}
+                            {/* ── Image upload — full size, contain ── */}
                             <div className="news-field" style={{ marginBottom: 20 }}>
-                                <label className="news-label">صورة الخبر (اختياري)</label>
+                                <label className="news-label" style={{ marginBottom: 6 }}>
+                                    صورة الخبر (اختياري)
+                                    {imgNaturalSize && (
+                                        <span style={{
+                                            marginRight: 8,
+                                            background: T.gray100,
+                                            color: T.gray500,
+                                            fontSize: '.6rem',
+                                            fontWeight: 700,
+                                            padding: '1px 8px',
+                                            borderRadius: 2,
+                                            fontFamily: "'Courier New', monospace",
+                                        }}>
+                                            {imgNaturalSize.w} × {imgNaturalSize.h}
+                                        </span>
+                                    )}
+                                </label>
+
                                 <div
-                                    className={`news-img-zone${dragOver ? ' over' : ''}`}
+                                    className={`news-img-zone${hasImage ? ' has-image' : ''}${dragOver ? ' over' : ''}`}
                                     onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                                     onDragLeave={() => setDragOver(false)}
                                     onDrop={e => { e.preventDefault(); setDragOver(false); applyImage(e.dataTransfer.files[0]); }}
                                     onClick={() => fileRef.current.click()}
                                 >
-                                    {previewSrc ? (
+                                    {hasImage ? (
                                         <>
-                                            <img src={previewSrc} alt="خبر" className="news-img-preview" />
+                                            {/* Full image — auto height, contain */}
+                                            <img
+                                                src={previewSrc}
+                                                alt="معاينة الخبر"
+                                                className="news-img-preview"
+                                                onLoad={handleImgLoad}
+                                            />
+                                            {/* Hover overlay */}
                                             <div className="news-img-overlay">
-                                                <span style={{ fontSize: '1.6rem' }}>🖼️</span>
-                                                <span className="news-img-overlay-txt">تغيير الصورة</span>
+                                                <span style={{ fontSize: '1.8rem' }}>🖼️</span>
+                                                <span className="news-img-overlay-txt">اضغط لتغيير الصورة</span>
                                             </div>
+                                            {/* Dimensions bar */}
+                                            {imgNaturalSize && (
+                                                <div className="news-img-meta">
+                                                    <span className="news-img-meta-txt">
+                                                        {imgNaturalSize.w} × {imgNaturalSize.h} px
+                                                    </span>
+                                                    <span className="news-img-meta-txt">
+                                                        {imageFile
+                                                            ? `${(imageFile.size / 1024).toFixed(0)} KB`
+                                                            : 'مُحمَّلة من الخادم'}
+                                                    </span>
+                                                </div>
+                                            )}
                                         </>
                                     ) : (
                                         <div className="news-img-placeholder">
@@ -464,9 +574,25 @@ export default function NewsTab() {
                                         </div>
                                     )}
                                 </div>
-                                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => applyImage(e.target.files[0])} />
-                                {previewSrc && (
-                                    <button className="news-remove-img" onClick={() => { setPreviewSrc(null); setImageFile(null); setForm(f => ({ ...f, imageUrl: null })); }}>
+
+                                <input
+                                    ref={fileRef}
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={e => applyImage(e.target.files[0])}
+                                />
+
+                                {hasImage && (
+                                    <button
+                                        className="news-remove-img"
+                                        onClick={() => {
+                                            setPreviewSrc(null);
+                                            setImageFile(null);
+                                            setImgNaturalSize(null);
+                                            setForm(f => ({ ...f, imageUrl: null }));
+                                        }}
+                                    >
                                         ✕ حذف الصورة
                                     </button>
                                 )}

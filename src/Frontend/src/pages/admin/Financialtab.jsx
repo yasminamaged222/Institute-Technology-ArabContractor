@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import * as XLSX from 'xlsx';
+import { getLogoBase64, triggerDownload, rtlExport } from '../../components/admin/helpers';
+import { exportExcel, exportPDF, exportWord } from '../../components/admin/exportHelpers';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from 'recharts';
 
 const BASE = 'https://acwebsite-icmet-test.azurewebsites.net';
+const LOGO_SRC = new URL('../../assets/black.png', import.meta.url).href;
 
 const T = {
     orange: '#f57c00', orangeLight: '#ff9a3c', orangeDark: '#bf5200',
@@ -14,22 +16,24 @@ const T = {
     gray50: '#f8f9fa', gray100: '#f0f1f2', gray300: '#d0d3d8',
     gray500: '#6b7280', gray700: '#374151',
     green: '#16a34a', greenLight: '#f0fdf4', greenBorder: '#86efac',
-    red: '#dc2626', redLight: '#fef2f2', purple: '#7c3aed',
+    red: '#dc2626', purple: '#7c3aed',
     font: '"Noto Kufi Arabic",sans-serif',
 };
 const CHART_COLORS = [T.blue, T.orange, T.green, T.purple, '#ec4899', '#06b6d4', '#f59e0b', '#84cc16'];
 const ITEMS_PER_PAGE = 15;
+const REPORT_TITLE = 'التقرير المالي — إيرادات المعهد';
+const FIN_HEADERS = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'سعر الدورة (EGP)', 'تاريخ التسجيل', 'الحضور', 'إجمالي المستخدم (EGP)'];
 
 // ── Auth ──
 async function getToken() {
     try {
+        if (window.parent?.Clerk?.session) return await window.parent.Clerk.session.getToken();
         if (window.Clerk?.session) return await window.Clerk.session.getToken();
-        const match = document.cookie.match(/(?:^|;\s*)__session=([^;]+)/);
-        if (match) return match[1];
-    } catch (e) { }
+        const m = document.cookie.match(/(?:^|;\s*)__session=([^;]+)/);
+        if (m) return m[1];
+    } catch { }
     return null;
 }
-
 async function apiFetch(path) {
     const token = await getToken();
     const headers = {};
@@ -49,159 +53,129 @@ function formatDateAr(raw) {
     try { return new Date(raw).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }); }
     catch { return raw; }
 }
-function triggerDownload(blob, filename) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-}
-
-// ── Excel Export ──
-function exportExcel(rows, grandTotal) {
-    const reportDate = new Date().toLocaleDateString('ar-EG');
-    const headers = ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'سعر الدورة (EGP)', 'تاريخ التسجيل', 'الحضور', 'إجمالي المستخدم (EGP)'];
-    const dataRows = [];
+function buildExportRows(rows, grandTotal) {
+    const data = [];
     let n = 1;
     rows.forEach(r => {
         r.courses.forEach((c, i) => {
-            dataRows.push(i === 0
+            data.push(i === 0
                 ? [n++, r.username, r.email, c.title, c.price, c.date || '—', c.attended == null ? '—' : c.attended ? 'حضر' : 'غائب', r.totalPaid]
                 : ['', '', '', c.title, c.price, c.date || '—', c.attended == null ? '—' : c.attended ? 'حضر' : 'غائب', '']
             );
         });
     });
-    dataRows.push(['', '', '', '', '', '', 'الإجمالي الكلي', grandTotal]);
-
-    const wsData = [
-        [`التقرير المالي — إيرادات المعهد`],
-        [`تاريخ التقرير: ${reportDate}`],
-        [],
-        headers,
-        ...dataRows,
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols'] = headers.map((h, i) => ({ wch: Math.min(Math.max(h.length, ...dataRows.map(r => String(r[i] ?? '').length)) + 6, 55) }));
-    ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } },
-        { s: { r: 1, c: 0 }, e: { r: 1, c: headers.length - 1 } },
-    ];
-    const wb = XLSX.utils.book_new();
-    wb.Workbook = { Views: [{ RTL: true }] };
-    XLSX.utils.book_append_sheet(wb, ws, 'التقرير المالي');
-    XLSX.writeFile(wb, 'التقرير-المالي.xlsx');
+    data.push(['', '', '', '', '', '', 'الإجمالي الكلي', grandTotal]);
+    return data;
 }
 
 // ── Styles ──
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
-.fin-wrap{direction:rtl;font-family:${T.font};}
-.fin-income-hero{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;background:linear-gradient(135deg,${T.blueDark} 0%,#073f6e 50%,#0a3a5c 100%);border-radius:6px;padding:clamp(20px,3vw,32px) clamp(20px,3.5vw,40px);margin-bottom:clamp(18px,2.5vw,24px);position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(4,68,120,0.35);border:1.5px solid rgba(245,124,0,0.3);}
+.fin-wrap{direction:rtl;font-family:"Noto Kufi Arabic",sans-serif;}
+.fin-income-hero{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;background:linear-gradient(135deg,#044478 0%,#073f6e 50%,#0a3a5c 100%);border-radius:6px;padding:clamp(20px,3vw,32px) clamp(20px,3.5vw,40px);margin-bottom:clamp(18px,2.5vw,24px);position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(4,68,120,0.35);border:1.5px solid rgba(245,124,0,0.3);}
 .fin-income-hero::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(245,124,0,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(245,124,0,0.06) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;}
-.fin-income-hero::after{content:'';position:absolute;top:0;right:0;width:5px;height:100%;background:linear-gradient(to bottom,${T.orange},${T.orangeLight});}
+.fin-income-hero::after{content:'';position:absolute;top:0;right:0;width:5px;height:100%;background:linear-gradient(to bottom,#f57c00,#ff9a3c);}
 .fin-total-label{font-size:clamp(.72rem,1.3vw,.82rem);color:rgba(255,255,255,.55);font-weight:700;margin-bottom:6px;}
-.fin-total-amount{font-size:clamp(2rem,4.5vw,3.2rem);font-weight:900;color:${T.white};line-height:1;letter-spacing:-1px;text-shadow:0 2px 12px rgba(245,124,0,0.35);}
-.fin-total-amount .fin-currency{font-size:clamp(.9rem,1.8vw,1.3rem);color:${T.orangeLight};margin-right:6px;font-weight:700;}
+.fin-total-amount{font-size:clamp(2rem,4.5vw,3.2rem);font-weight:900;color:#fff;line-height:1;letter-spacing:-1px;text-shadow:0 2px 12px rgba(245,124,0,0.35);}
+.fin-total-amount .fin-currency{font-size:clamp(.9rem,1.8vw,1.3rem);color:#ff9a3c;margin-right:6px;font-weight:700;}
 .fin-total-sub{font-size:clamp(.65rem,1.15vw,.74rem);color:rgba(255,255,255,.4);margin-top:4px;}
 .fin-income-pills{display:flex;gap:10px;flex-wrap:wrap;position:relative;z-index:1;}
 .fin-ip{display:flex;flex-direction:column;align-items:center;padding:12px 18px;border-radius:6px;min-width:110px;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.12);transition:all .2s;}
 .fin-ip:hover{background:rgba(255,255,255,0.12);border-color:rgba(245,124,0,0.5);transform:translateY(-2px);}
-.fin-ip-val{font-size:clamp(1rem,2.2vw,1.4rem);font-weight:900;color:${T.white};}
+.fin-ip-val{font-size:clamp(1rem,2.2vw,1.4rem);font-weight:900;color:#fff;}
 .fin-ip-lbl{font-size:clamp(.58rem,1vw,.65rem);color:rgba(255,255,255,.5);margin-top:3px;font-weight:700;text-align:center;}
 .fin-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
 @media(max-width:1100px){.fin-kpi-grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:680px){.fin-kpi-grid{grid-template-columns:repeat(2,1fr);}}
-.fin-kpi{background:${T.white};border-radius:6px;border:1.5px solid ${T.gray300};padding:16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 10px rgba(0,0,0,0.06);position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s;}
+.fin-kpi{background:#fff;border-radius:6px;border:1.5px solid #d0d3d8;padding:16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 10px rgba(0,0,0,0.06);position:relative;overflow:hidden;transition:transform .25s,box-shadow .25s;}
 .fin-kpi::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
-.fin-kpi.orange::after{background:${T.orange};}.fin-kpi.blue::after{background:${T.blue};}.fin-kpi.green::after{background:${T.green};}.fin-kpi.red::after{background:${T.red};}.fin-kpi.purple::after{background:${T.purple};}
+.fin-kpi.orange::after{background:#f57c00;}.fin-kpi.blue::after{background:#0865a8;}.fin-kpi.green::after{background:#16a34a;}.fin-kpi.red::after{background:#dc2626;}.fin-kpi.purple::after{background:#7c3aed;}
 .fin-kpi:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.1);}
 .fin-kpi-icon{font-size:1.6rem;line-height:1;}
 .fin-kpi-val{font-size:clamp(1rem,2.5vw,1.4rem);font-weight:900;line-height:1.1;word-break:break-all;}
-.fin-kpi-lbl{font-size:.68rem;color:${T.gray500};font-weight:700;}
-.fin-kpi-sub{font-size:.62rem;color:${T.gray500};}
+.fin-kpi-lbl{font-size:.68rem;color:#6b7280;font-weight:700;}
+.fin-kpi-sub{font-size:.62rem;color:#6b7280;}
 .fin-charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:22px;}
 @media(max-width:900px){.fin-charts-grid{grid-template-columns:1fr;}}
 .fin-charts-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px;}
 @media(max-width:800px){.fin-charts-row{grid-template-columns:1fr;}}
-.fin-chart-card{background:${T.white};border-radius:6px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
-.fin-chart-hdr{padding:14px 20px 10px;border-bottom:1px solid ${T.gray100};}
-.fin-chart-title{font-weight:900;font-size:.88rem;color:${T.black};}
-.fin-chart-sub{font-size:.65rem;color:${T.gray500};}
+.fin-chart-card{background:#fff;border-radius:6px;border:1.5px solid #d0d3d8;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);}
+.fin-chart-hdr{padding:14px 20px 10px;border-bottom:1px solid #f0f1f2;}
+.fin-chart-title{font-weight:900;font-size:.88rem;color:#0a0a0a;}
+.fin-chart-sub{font-size:.65rem;color:#6b7280;}
 .fin-chart-body{padding:14px 8px 8px;}
 .fin-cb-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
-.fin-cb-name{font-size:.74rem;font-weight:700;color:${T.black};min-width:clamp(100px,22vw,180px);max-width:clamp(100px,22vw,180px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;}
-.fin-cb-track{flex:1;height:8px;background:${T.gray100};border-radius:4px;overflow:hidden;}
-.fin-cb-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,${T.orange},${T.orangeLight});transition:width .8s cubic-bezier(.4,0,.2,1);}
-.fin-cb-fill.blue{background:linear-gradient(90deg,${T.blue},${T.blueLight});}
-.fin-cb-amt{font-size:.72rem;font-weight:900;color:${T.orange};min-width:75px;text-align:left;}
-.fin-cb-count{font-size:.62rem;color:${T.gray500};min-width:48px;text-align:left;}
-.fin-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;background:${T.white};border:1.5px solid ${T.gray300};border-radius:6px;padding:12px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
-.fin-search-input{padding:9px 14px;border-radius:6px;border:1.5px solid ${T.gray300};background:${T.gray100};color:${T.black};font-family:${T.font};font-size:.8rem;outline:none;direction:rtl;transition:border .18s,box-shadow .18s;min-width:220px;}
-.fin-search-input:focus{border-color:${T.orange};background:${T.white};box-shadow:0 0 0 3px rgba(245,124,0,0.1);}
-.fin-search-input::placeholder{color:${T.gray500};}
-.fin-sort-sel{padding:9px 12px;border-radius:6px;border:1.5px solid ${T.gray300};background:${T.gray100};color:${T.black};font-family:${T.font};font-size:.78rem;outline:none;cursor:pointer;}
+.fin-cb-name{font-size:.74rem;font-weight:700;color:#0a0a0a;min-width:clamp(100px,22vw,180px);max-width:clamp(100px,22vw,180px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;}
+.fin-cb-track{flex:1;height:8px;background:#f0f1f2;border-radius:4px;overflow:hidden;}
+.fin-cb-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#f57c00,#ff9a3c);transition:width .8s cubic-bezier(.4,0,.2,1);}
+.fin-cb-fill.blue{background:linear-gradient(90deg,#0865a8,#1a84d4);}
+.fin-cb-amt{font-size:.72rem;font-weight:900;color:#f57c00;min-width:75px;text-align:left;}
+.fin-cb-count{font-size:.62rem;color:#6b7280;min-width:48px;text-align:left;}
+.fin-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;background:#fff;border:1.5px solid #d0d3d8;border-radius:6px;padding:12px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);}
+.fin-search-input{padding:9px 14px;border-radius:6px;border:1.5px solid #d0d3d8;background:#f0f1f2;color:#0a0a0a;font-family:"Noto Kufi Arabic",sans-serif;font-size:.8rem;outline:none;direction:rtl;transition:border .18s,box-shadow .18s;min-width:220px;}
+.fin-search-input:focus{border-color:#f57c00;background:#fff;box-shadow:0 0 0 3px rgba(245,124,0,0.1);}
+.fin-search-input::placeholder{color:#6b7280;}
+.fin-sort-sel{padding:9px 12px;border-radius:6px;border:1.5px solid #d0d3d8;background:#f0f1f2;color:#0a0a0a;font-family:"Noto Kufi Arabic",sans-serif;font-size:.78rem;outline:none;cursor:pointer;}
 .fin-expw{position:relative;}
-.fin-expbtn{display:flex;align-items:center;gap:6px;padding:9px 20px;background:${T.orange};color:${T.white};border:none;border-radius:6px;font-family:${T.font};font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .22s;box-shadow:0 4px 14px rgba(245,124,0,0.3);}
-.fin-expbtn:hover{background:${T.orangeDark};transform:translateY(-2px);}
+.fin-expbtn{display:flex;align-items:center;gap:6px;padding:9px 20px;background:#f57c00;color:#fff;border:none;border-radius:6px;font-family:"Noto Kufi Arabic",sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .22s;box-shadow:0 4px 14px rgba(245,124,0,0.3);}
+.fin-expbtn:hover{background:#bf5200;transform:translateY(-2px);}
 .fin-expbtn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-.fin-expmenu{position:absolute;top:calc(100% + 6px);left:0;background:${T.white};border:1.5px solid ${T.gray300};border-radius:6px;box-shadow:0 10px 32px rgba(0,0,0,0.12);overflow:hidden;z-index:400;min-width:200px;border-top:3px solid ${T.orange};animation:fin-slide .15s ease;}
+.fin-expmenu{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1.5px solid #d0d3d8;border-radius:6px;box-shadow:0 10px 32px rgba(0,0,0,0.12);overflow:hidden;z-index:400;min-width:200px;border-top:3px solid #f57c00;animation:fin-slide .15s ease;}
 @keyframes fin-slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-.fin-expitem{display:flex;align-items:center;gap:9px;width:100%;padding:12px 18px;background:none;border:none;border-bottom:1px solid ${T.gray100};font-family:${T.font};font-size:.8rem;font-weight:700;color:${T.gray700};direction:rtl;cursor:pointer;transition:background .12s,color .12s;}
+.fin-expitem{display:flex;align-items:center;gap:9px;width:100%;padding:12px 18px;background:none;border:none;border-bottom:1px solid #f0f1f2;font-family:"Noto Kufi Arabic",sans-serif;font-size:.8rem;font-weight:700;color:#374151;direction:rtl;cursor:pointer;transition:background .12s,color .12s;}
 .fin-expitem:last-child{border-bottom:none;}
-.fin-expitem:hover{background:rgba(245,124,0,0.06);color:${T.orange};}
+.fin-expitem:hover{background:rgba(245,124,0,0.06);color:#f57c00;}
 .fin-table-wrap{overflow-x:auto;}
 .fin-tbl{width:100%;border-collapse:collapse;min-width:700px;}
-.fin-tbl thead th{background:${T.blueDark};color:${T.white};padding:14px 16px;font-family:${T.font};font-size:.76rem;font-weight:700;text-align:right;white-space:nowrap;border-bottom:3px solid ${T.orange};}
+.fin-tbl thead th{background:#044478;color:#fff;padding:14px 16px;font-family:"Noto Kufi Arabic",sans-serif;font-size:.76rem;font-weight:700;text-align:right;white-space:nowrap;border-bottom:3px solid #f57c00;}
 .fin-tbl thead th.c{text-align:center;}
-.fin-tbl thead th.gr{background:${T.green};border-bottom-color:${T.greenBorder};}
-.fin-tbl thead th.or{background:${T.orange};border-bottom-color:rgba(255,255,255,0.3);}
-.fin-tbl tbody tr{border-bottom:1px solid ${T.gray100};transition:background .12s;}
+.fin-tbl thead th.gr{background:#16a34a;border-bottom-color:#86efac;}
+.fin-tbl thead th.or{background:#f57c00;border-bottom-color:rgba(255,255,255,0.3);}
+.fin-tbl tbody tr{border-bottom:1px solid #f0f1f2;transition:background .12s;}
 .fin-tbl tbody tr:hover{background:rgba(8,101,168,0.04);}
 .fin-tbl tbody tr:nth-child(even){background:#fafbfc;}
-.fin-tbl td{padding:11px 16px;font-family:${T.font};font-size:.76rem;color:${T.gray700};vertical-align:middle;}
+.fin-tbl td{padding:11px 16px;font-family:"Noto Kufi Arabic",sans-serif;font-size:.76rem;color:#374151;vertical-align:middle;}
 .fin-tbl td.c{text-align:center;}
 .fin-tbl .fin-xrow td{padding:0!important;border:none;}
 .fin-xin{padding:14px 20px;background:rgba(8,101,168,0.03);border-top:2px solid rgba(8,101,168,0.08);}
-.fin-course-chip{display:inline-flex;align-items:center;gap:7px;background:${T.white};border:1.5px solid ${T.gray300};border-radius:4px;padding:7px 12px;margin:4px;font-size:.72rem;transition:border-color .15s;}
-.fin-course-chip:hover{border-color:${T.orange};}
-.fin-course-chip-name{font-weight:700;color:${T.black};}
-.fin-course-chip-price{font-weight:900;color:${T.green};font-size:.78rem;}
-.fin-user-total{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:3px;background:${T.greenLight};border:1.5px solid ${T.greenBorder};font-size:.78rem;font-weight:900;color:${T.green};}
-.fin-pill{display:inline-block;padding:4px 12px;border-radius:3px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid rgba(8,101,168,0.3);color:${T.blue};background:rgba(8,101,168,0.07);user-select:none;transition:all .14s;font-family:${T.font};}
+.fin-course-chip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid #d0d3d8;border-radius:4px;padding:7px 12px;margin:4px;font-size:.72rem;transition:border-color .15s;}
+.fin-course-chip:hover{border-color:#f57c00;}
+.fin-course-chip-name{font-weight:700;color:#0a0a0a;}
+.fin-course-chip-price{font-weight:900;color:#16a34a;font-size:.78rem;}
+.fin-user-total{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:3px;background:#f0fdf4;border:1.5px solid #86efac;font-size:.78rem;font-weight:900;color:#16a34a;}
+.fin-pill{display:inline-block;padding:4px 12px;border-radius:3px;font-size:.7rem;font-weight:700;cursor:pointer;border:1.5px solid rgba(8,101,168,0.3);color:#0865a8;background:rgba(8,101,168,0.07);user-select:none;transition:all .14s;font-family:"Noto Kufi Arabic",sans-serif;}
 .fin-pill:hover,.fin-pill.op{background:rgba(8,101,168,0.14);border-color:rgba(8,101,168,0.55);}
-.fin-av{width:36px;height:36px;border-radius:6px;background:${T.blue};color:${T.white};display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:.68rem;flex-shrink:0;}
+.fin-av{width:36px;height:36px;border-radius:6px;background:#0865a8;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:.68rem;flex-shrink:0;}
 .fin-uc{display:flex;align-items:center;gap:9px;}
-.fin-uname{font-weight:700;color:${T.black};font-size:.8rem;}
-.fin-email{font-size:.68rem;color:${T.gray500};direction:ltr;display:block;}
-.fin-pg{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;border-top:1.5px solid ${T.gray300};background:${T.gray100};font-family:${T.font};direction:rtl;}
-.fin-pg-info{font-size:.72rem;color:${T.gray500};font-weight:700;}
-.fin-pg-info strong{color:${T.black};}
-.fin-card{background:${T.white};border-radius:6px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);position:relative;}
-.fin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to left,${T.orange},${T.blue});z-index:2;}
-.fin-section-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid ${T.orange};}
-.fin-section-tag{display:inline-block;background:${T.blue};color:${T.white};font-size:11px;font-weight:700;padding:4px 14px;border-radius:3px;margin-bottom:4px;}
-.fin-section-title{font-size:clamp(15px,2vw,20px);font-weight:900;color:${T.black};}
-.fin-section-title span{color:${T.orange};}
-.fin-err{background:#fef2f2;border:1.5px solid rgba(220,38,38,.3);color:#dc2626;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:.76rem;display:flex;align-items:center;gap:9px;border-right:4px solid #dc2626;font-family:${T.font};}
+.fin-uname{font-weight:700;color:#0a0a0a;font-size:.8rem;}
+.fin-email{font-size:.68rem;color:#6b7280;direction:ltr;display:block;}
+.fin-pg{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:14px 18px;border-top:1.5px solid #d0d3d8;background:#f0f1f2;font-family:"Noto Kufi Arabic",sans-serif;direction:rtl;}
+.fin-pg-info{font-size:.72rem;color:#6b7280;font-weight:700;}
+.fin-pg-info strong{color:#0a0a0a;}
+.fin-card{background:#fff;border-radius:6px;border:1.5px solid #d0d3d8;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);position:relative;}
+.fin-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to left,#f57c00,#0865a8);z-index:2;}
+.fin-section-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:3px solid #f57c00;}
+.fin-section-tag{display:inline-block;background:#0865a8;color:#fff;font-size:11px;font-weight:700;padding:4px 14px;border-radius:3px;margin-bottom:4px;}
+.fin-section-title{font-size:clamp(15px,2vw,20px);font-weight:900;color:#0a0a0a;}
+.fin-section-title span{color:#f57c00;}
+.fin-err{background:#fef2f2;border:1.5px solid rgba(220,38,38,.3);color:#dc2626;border-radius:6px;padding:10px 14px;margin-bottom:14px;font-size:.76rem;display:flex;align-items:center;gap:9px;border-right:4px solid #dc2626;font-family:"Noto Kufi Arabic",sans-serif;}
 .fin-ld{text-align:center;padding:60px 20px;}
-.fin-sp{width:40px;height:40px;border:3px solid ${T.gray300};border-top-color:${T.blue};border-radius:50%;animation:fin-spin .7s linear infinite;margin:0 auto 16px;}
+.fin-sp{width:40px;height:40px;border:3px solid #d0d3d8;border-top-color:#0865a8;border-radius:50%;animation:fin-spin .7s linear infinite;margin:0 auto 16px;}
 @keyframes fin-spin{to{transform:rotate(360deg)}}
-.fin-ld p{color:${T.gray500};font-size:.8rem;font-family:${T.font};}
-.fin-empty{text-align:center;padding:60px 20px;}
-.fin-empty p{color:${T.gray300};font-size:.8rem;font-family:${T.font};}
+.fin-ld p,.fin-empty p{color:#6b7280;font-size:.8rem;font-family:"Noto Kufi Arabic",sans-serif;text-align:center;padding:60px 20px;}
 `;
 function injectStyles() {
-    if (document.getElementById('fin-styles-live2')) return;
-    const el = document.createElement('style'); el.id = 'fin-styles-live2'; el.textContent = CSS;
+    if (document.getElementById('fin-styles-v4')) return;
+    const el = document.createElement('style'); el.id = 'fin-styles-v4'; el.textContent = CSS;
     document.head.appendChild(el);
 }
 
+// ── Tooltips ──
 const CustomTooltip = ({ active, payload, label, suffix = 'EGP' }) => {
     if (!active || !payload?.length) return null;
     return (
-        <div style={{ background: T.white, border: `1.5px solid ${T.gray300}`, borderRadius: 6, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', fontFamily: T.font, direction: 'rtl', minWidth: 140 }}>
-            <div style={{ fontWeight: 900, fontSize: '.78rem', color: T.black, marginBottom: 6 }}>{label}</div>
+        <div style={{ background: '#fff', border: '1.5px solid #d0d3d8', borderRadius: 6, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', fontFamily: '"Noto Kufi Arabic",sans-serif', direction: 'rtl', minWidth: 140 }}>
+            <div style={{ fontWeight: 900, fontSize: '.78rem', color: '#0a0a0a', marginBottom: 6 }}>{label}</div>
             {payload.map((p, i) => (
                 <div key={i} style={{ fontSize: '.74rem', color: p.color, fontWeight: 700, display: 'flex', gap: 6, alignItems: 'center' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: p.color, display: 'inline-block' }} />{fmtMoney(p.value)} {suffix}
@@ -210,19 +184,19 @@ const CustomTooltip = ({ active, payload, label, suffix = 'EGP' }) => {
         </div>
     );
 };
-
 const CustomPieTooltip = ({ active, payload }) => {
     if (!active || !payload?.length) return null;
     const d = payload[0];
     return (
-        <div style={{ background: T.white, border: `1.5px solid ${T.gray300}`, borderRadius: 6, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', fontFamily: T.font, direction: 'rtl' }}>
-            <div style={{ fontWeight: 900, fontSize: '.76rem', color: T.black, marginBottom: 4 }}>{d.name}</div>
+        <div style={{ background: '#fff', border: '1.5px solid #d0d3d8', borderRadius: 6, padding: '10px 14px', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', fontFamily: '"Noto Kufi Arabic",sans-serif', direction: 'rtl' }}>
+            <div style={{ fontWeight: 900, fontSize: '.76rem', color: '#0a0a0a', marginBottom: 4 }}>{d.name}</div>
             <div style={{ fontSize: '.74rem', color: d.payload.fill, fontWeight: 700 }}>{fmtMoney(d.value)} EGP</div>
-            <div style={{ fontSize: '.65rem', color: T.gray500 }}>{d.payload.percent}% من الإجمالي</div>
+            <div style={{ fontSize: '.65rem', color: '#6b7280' }}>{d.payload.percent}% من الإجمالي</div>
         </div>
     );
 };
 
+// ── Pagination ──
 const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => {
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     if (totalPages <= 1) return null;
@@ -233,17 +207,17 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => 
     for (const p of pages) { if (prev !== null && p - prev > 1) result.push('...'); result.push(p); prev = p; }
     const btn = (label, onClick, isActive, isDisabled) => (
         <button key={label + Math.random()} onClick={onClick} disabled={isDisabled}
-            style={{ minWidth: 34, height: 34, padding: '0 8px', borderRadius: 4, border: isActive ? `2px solid ${T.blue}` : `1.5px solid ${T.gray300}`, background: isActive ? T.blue : isDisabled ? T.gray100 : T.white, color: isActive ? T.white : isDisabled ? T.gray300 : T.gray700, fontFamily: T.font, fontSize: '.78rem', fontWeight: 700, cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.5 : 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ minWidth: 34, height: 34, padding: '0 8px', borderRadius: 4, border: isActive ? '2px solid #0865a8' : '1.5px solid #d0d3d8', background: isActive ? '#0865a8' : isDisabled ? '#f0f1f2' : '#fff', color: isActive ? '#fff' : isDisabled ? '#d0d3d8' : '#374151', fontFamily: '"Noto Kufi Arabic",sans-serif', fontSize: '.78rem', fontWeight: 700, cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.5 : 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
             {label}
         </button>
     );
     return (
         <div className="fin-pg">
-            <span className="fin-pg-info">عرض <strong>{start}</strong>–<strong>{end}</strong> من <strong style={{ color: T.blue }}>{totalItems}</strong></span>
+            <span className="fin-pg-info">عرض <strong>{start}</strong>–<strong>{end}</strong> من <strong style={{ color: '#0865a8' }}>{totalItems}</strong></span>
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                 {btn('«', () => onPageChange(1), false, currentPage === 1)}
                 {btn('‹', () => onPageChange(currentPage - 1), false, currentPage === 1)}
-                {result.map((p, i) => p === '...' ? <span key={`el-${i}`} style={{ padding: '0 4px', color: T.gray300 }}>…</span> : btn(p, () => onPageChange(p), p === currentPage, false))}
+                {result.map((p, i) => p === '...' ? <span key={'el' + i} style={{ padding: '0 4px', color: '#d0d3d8' }}>…</span> : btn(p, () => onPageChange(p), p === currentPage, false))}
                 {btn('›', () => onPageChange(currentPage + 1), false, currentPage === totalPages)}
                 {btn('»', () => onPageChange(totalPages), false, currentPage === totalPages)}
             </div>
@@ -251,8 +225,12 @@ const Pagination = ({ currentPage, totalItems, itemsPerPage, onPageChange }) => 
     );
 };
 
+// ════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ════════════════════════════════════════════════════════════════════════════
 export default function FinancialTab() {
     injectStyles();
+
     const [loading, setLoading] = useState(true);
     const [errors, setErrors] = useState([]);
     const [usersData, setUsersData] = useState([]);
@@ -269,7 +247,6 @@ export default function FinancialTab() {
     const exportRef = useRef(null);
 
     useEffect(() => {
-        injectStyles();
         const h = e => { if (exportRef.current && !exportRef.current.contains(e.target)) setExportMenu(false); };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
@@ -280,54 +257,43 @@ export default function FinancialTab() {
         Promise.allSettled([
             apiFetch('/api/Admin/users'),
             apiFetch('/api/Admin/planworks'),
-            // try both refund endpoints
-            apiFetch('/api/Refund/admin/all').catch(() => apiFetch('/api/admin/Refund/all')).catch(() => apiFetch('/api/refund/admin/all')),
+            apiFetch('/api/Refund/admin/all'),
             apiFetch('/api/Admin/stats'),
         ]).then(([u, p, r, s]) => {
             if (u.status === 'fulfilled' && Array.isArray(u.value)) setUsersData(u.value);
-            else errs.push('فشل تحميل بيانات المستخدمين: ' + u.reason?.message);
-
+            else errs.push('فشل تحميل بيانات المستخدمين');
             if (p.status === 'fulfilled' && Array.isArray(p.value)) setPlanworks(p.value);
-            else errs.push('فشل تحميل بيانات الدورات: ' + p.reason?.message);
-
+            else errs.push('فشل تحميل بيانات الدورات');
             if (r.status === 'fulfilled') {
-                const val = Array.isArray(r.value) ? r.value : (r.value?.data ?? []);
-                setRefunds(val);
-            } else errs.push('فشل تحميل المرتجعات: ' + r.reason?.message);
-
+                setRefunds(Array.isArray(r.value) ? r.value : (r.value?.data ?? []));
+            } else errs.push('فشل تحميل المرتجعات');
             if (s.status === 'fulfilled' && s.value) setStats(s.value);
-            else errs.push('فشل تحميل الإحصاءات: ' + s.reason?.message);
-
             setErrors(errs);
             setLoading(false);
         });
     }, []);
 
-    // ── Build rows ──
+    // ── Rows ──
     const allRows = useMemo(() =>
-        usersData.filter(u => u.courses && u.courses.length > 0).map(u => ({
+        usersData.filter(u => u.courses?.length > 0).map(u => ({
             id: u.id, username: u.username || '', email: u.email || '',
             courses: u.courses.map(c => ({
-                enrollmentId: c.enrollmentId,
-                title: c.title || '—',
-                price: Number(c.coursePrice || 0),
-                date: formatDateAr(c.enrolledAt),
-                rawDate: c.enrolledAt,
-                attended: c.attended,
+                title: c.title || '—', price: Number(c.coursePrice || 0),
+                date: formatDateAr(c.enrolledAt), rawDate: c.enrolledAt, attended: c.attended,
             })),
             totalPaid: u.courses.reduce((s, c) => s + Number(c.coursePrice || 0), 0),
         }))
         , [usersData]);
 
     // ── KPIs ──
-    const grandTotal = stats?.totalRevenue ?? allRows.reduce((s, r) => s + r.totalPaid, 0);
-    const totalRefunds = stats?.totalRefunds ?? refunds.filter(r => r.status === 'Approved' || r.status === 'Sent').reduce((s, r) => s + (r.amount || 0), 0);
-    const netRevenue = stats?.netRevenue ?? (grandTotal - totalRefunds);
+    const grandTotal = allRows.reduce((s, r) => s + r.totalPaid, 0);
+    const totalRefunds = refunds.filter(r => r.status === 'Approved' || r.status === 'Sent').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const netRevenue = grandTotal - totalRefunds;
     const totalEnrollments = stats?.enrollmentsCount ?? allRows.reduce((s, r) => s + r.courses.length, 0);
     const avgPerUser = allRows.length > 0 ? Math.round(grandTotal / allRows.length) : 0;
     const maxPayer = allRows.length > 0 ? allRows.reduce((a, b) => a.totalPaid > b.totalPaid ? a : b) : null;
 
-    // ── Course revenue from planworks ──
+    // ── Course revenue ──
     const courseRevenue = useMemo(() =>
         [...planworks].sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0))
             .map(p => ({ title: p.serviceTitle || '—', total: Number(p.totalRevenue || 0), count: Number(p.usersCount || 0) }))
@@ -337,26 +303,26 @@ export default function FinancialTab() {
     // ── Pie ──
     const pieData = useMemo(() => {
         const top5 = courseRevenue.slice(0, 5);
-        const otherTotal = courseRevenue.slice(5).reduce((s, c) => s + c.total, 0);
-        const all = otherTotal > 0 ? [...top5, { title: 'أخرى', total: otherTotal, count: 0 }] : top5;
+        const oth = courseRevenue.slice(5).reduce((s, c) => s + c.total, 0);
+        const all = oth > 0 ? [...top5, { title: 'أخرى', total: oth, count: 0 }] : top5;
         return all.map((c, i) => ({ name: c.title, value: c.total, fill: CHART_COLORS[i % CHART_COLORS.length], percent: grandTotal > 0 ? Math.round(c.total / grandTotal * 100) : 0 }));
     }, [courseRevenue, grandTotal]);
 
     // ── Monthly ──
     const monthlyData = useMemo(() => {
-        const MONTHS = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        const MN = ['يناير', 'فبراير', 'مارس', 'إبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
         const map = {};
         allRows.forEach(r => r.courses.forEach(c => {
             if (!c.rawDate) return;
             const d = new Date(c.rawDate); if (isNaN(d.getTime())) return;
-            const key = MONTHS[d.getMonth()];
-            if (!map[key]) map[key] = { month: key, revenue: 0, enrollments: 0, order: d.getMonth() };
-            map[key].revenue += c.price; map[key].enrollments += 1;
+            const k = MN[d.getMonth()];
+            if (!map[k]) map[k] = { month: k, revenue: 0, enrollments: 0, order: d.getMonth() };
+            map[k].revenue += c.price; map[k].enrollments += 1;
         }));
         return Object.values(map).sort((a, b) => a.order - b.order);
     }, [allRows]);
 
-    // ── Filter/sort/paginate ──
+    // ── Filter / sort / paginate ──
     const q = search.toLowerCase();
     const filtered = allRows.filter(r => `${r.username} ${r.email}`.toLowerCase().includes(q) || r.courses.some(c => c.title.toLowerCase().includes(q)));
     const sorted = [...filtered].sort((a, b) => {
@@ -367,26 +333,34 @@ export default function FinancialTab() {
     });
     const paginated = sorted.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+    // ── Exports ──
     const doExport = fn => async () => {
         setExporting(true); setExportMenu(false); setExportError(null);
-        try { await fn(); } catch (e) { setExportError('فشل التصدير: ' + (e?.message || 'خطأ')); }
+        try { await fn(); }
+        catch (e) { setExportError('فشل التصدير: ' + (e?.message || 'خطأ')); }
         finally { setExporting(false); }
     };
+    const rows4export = () => buildExportRows(sorted, grandTotal);
+    const handleExcel = () => exportExcel('التقرير-المالي.xlsx', REPORT_TITLE, FIN_HEADERS, rows4export(), LOGO_SRC);
+    const handlePDF = () => {
+        const { headers, rows } = rtlExport(FIN_HEADERS, rows4export());
+        return exportPDF('التقرير-المالي.pdf', REPORT_TITLE, headers, rows, '', LOGO_SRC);
+    };
+    const handleWord = () => exportWord('التقرير-المالي.docx', REPORT_TITLE, '', FIN_HEADERS, rows4export(), LOGO_SRC);
 
     const kpis = [
-        { icon: '💰', val: `${fmtMoney(grandTotal)} EGP`, lbl: 'إجمالي الإيرادات', sub: 'قبل المرتجعات', cls: 'orange', color: T.orange },
-        { icon: '🔻', val: `${fmtMoney(totalRefunds)} EGP`, lbl: 'إجمالي المرتجعات', sub: `${refunds.length} طلب مرتجع`, cls: 'red', color: T.red },
-        { icon: '✅', val: `${fmtMoney(netRevenue)} EGP`, lbl: 'صافي الإيرادات', sub: 'بعد خصم المرتجعات', cls: 'green', color: T.green },
-        { icon: '📚', val: totalEnrollments, lbl: 'إجمالي الاشتراكات', sub: `عبر ${courseRevenue.length} دورة`, cls: 'blue', color: T.blue },
-        { icon: '👥', val: allRows.length, lbl: 'العملاء الدافعون', sub: `متوسط ${fmtMoney(avgPerUser)} EGP`, cls: 'purple', color: T.purple },
+        { icon: '💰', val: `${fmtMoney(grandTotal)} EGP`, lbl: 'إجمالي الإيرادات', sub: 'قبل المرتجعات', cls: 'orange', color: '#f57c00' },
+        { icon: '🔻', val: `${fmtMoney(totalRefunds)} EGP`, lbl: 'إجمالي المرتجعات', sub: `${refunds.length} طلب مرتجع`, cls: 'red', color: '#dc2626' },
+        { icon: '✅', val: `${fmtMoney(netRevenue)} EGP`, lbl: 'صافي الإيرادات', sub: 'بعد خصم المرتجعات', cls: 'green', color: '#16a34a' },
+        { icon: '📚', val: totalEnrollments, lbl: 'إجمالي الاشتراكات', sub: `عبر ${courseRevenue.length} دورة`, cls: 'blue', color: '#0865a8' },
+        { icon: '👥', val: allRows.length, lbl: 'العملاء الدافعون', sub: `متوسط ${fmtMoney(avgPerUser)} EGP`, cls: 'purple', color: '#7c3aed' },
     ];
 
-    if (loading) return (
-        <div className="fin-wrap"><div className="fin-ld"><div className="fin-sp" /><p>جاري تحميل البيانات المالية...</p></div></div>
-    );
+    if (loading) return <div className="fin-wrap"><div className="fin-ld"><div className="fin-sp" /><p>جاري تحميل البيانات المالية...</p></div></div>;
 
     return (
         <div className="fin-wrap">
+            {/* Header */}
             <div className="fin-section-hdr">
                 <div>
                     <div className="fin-section-tag">التقارير المالية</div>
@@ -442,11 +416,11 @@ export default function FinancialTab() {
                         <div className="fin-chart-body">
                             <ResponsiveContainer width="100%" height={240}>
                                 <LineChart data={monthlyData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke={T.gray100} />
-                                    <XAxis dataKey="month" tick={{ fontFamily: T.font, fontSize: 11, fill: T.gray500 }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fontFamily: 'Cairo', fontSize: 10, fill: T.gray500 }} axisLine={false} tickLine={false} tickFormatter={v => fmtMoney(v)} width={65} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f1f2" />
+                                    <XAxis dataKey="month" tick={{ fontFamily: '"Noto Kufi Arabic",sans-serif', fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={v => fmtMoney(v)} width={65} />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Line type="monotone" dataKey="revenue" stroke={T.blue} strokeWidth={2.5} dot={{ fill: T.blue, r: 4, strokeWidth: 2, stroke: T.white }} activeDot={{ r: 6, fill: T.orange }} />
+                                    <Line type="monotone" dataKey="revenue" stroke="#0865a8" strokeWidth={2.5} dot={{ fill: '#0865a8', r: 4, strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, fill: '#f57c00' }} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
@@ -467,7 +441,7 @@ export default function FinancialTab() {
                             </ResponsiveContainer>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', padding: '0 10px 10px' }}>
                                 {pieData.map(d => (
-                                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '.62rem', fontFamily: T.font, color: T.gray700 }}>
+                                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '.62rem', fontFamily: '"Noto Kufi Arabic",sans-serif', color: '#374151' }}>
                                         <span style={{ width: 10, height: 10, borderRadius: 2, background: d.fill, display: 'inline-block', flexShrink: 0 }} />
                                         {d.name.slice(0, 18)}{d.name.length > 18 ? '…' : ''} ({d.percent}%)
                                     </div>
@@ -489,11 +463,11 @@ export default function FinancialTab() {
                         <div className="fin-chart-body">
                             <ResponsiveContainer width="100%" height={200}>
                                 <BarChart data={monthlyData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke={T.gray100} />
-                                    <XAxis dataKey="month" tick={{ fontFamily: T.font, fontSize: 11, fill: T.gray500 }} axisLine={false} tickLine={false} />
-                                    <YAxis tick={{ fontFamily: 'Cairo', fontSize: 10, fill: T.gray500 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f1f2" />
+                                    <XAxis dataKey="month" tick={{ fontFamily: '"Noto Kufi Arabic",sans-serif', fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                                    <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} allowDecimals={false} />
                                     <Tooltip content={<CustomTooltip suffix="تسجيل" />} />
-                                    <Bar dataKey="enrollments" fill={T.orange} radius={[4, 4, 0, 0]} />
+                                    <Bar dataKey="enrollments" fill="#f57c00" radius={[4, 4, 0, 0]} />
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
@@ -506,13 +480,13 @@ export default function FinancialTab() {
                     </div>
                     <div className="fin-chart-body">
                         <ResponsiveContainer width="100%" height={200}>
-                            <BarChart data={[{ name: 'الإيرادات الكلية', value: grandTotal }, { name: 'المرتجعات', value: totalRefunds }, { name: 'الصافي', value: netRevenue }]} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" stroke={T.gray100} />
-                                <XAxis dataKey="name" tick={{ fontFamily: T.font, fontSize: 10, fill: T.gray500 }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fontFamily: 'Cairo', fontSize: 10, fill: T.gray500 }} axisLine={false} tickLine={false} tickFormatter={v => fmtMoney(v)} width={65} />
+                            <BarChart data={[{ name: 'الإيرادات', value: grandTotal }, { name: 'المرتجعات', value: totalRefunds }, { name: 'الصافي', value: netRevenue }]} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f1f2" />
+                                <XAxis dataKey="name" tick={{ fontFamily: '"Noto Kufi Arabic",sans-serif', fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} axisLine={false} tickLine={false} tickFormatter={v => fmtMoney(v)} width={65} />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                                    <Cell fill={T.blue} /><Cell fill={T.red} /><Cell fill={T.green} />
+                                    <Cell fill="#0865a8" /><Cell fill="#dc2626" /><Cell fill="#16a34a" />
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
@@ -523,9 +497,9 @@ export default function FinancialTab() {
             {/* Course bars */}
             {courseRevenue.length > 0 && (
                 <div className="fin-card" style={{ marginBottom: 22 }}>
-                    <div style={{ padding: '16px 20px 4px', borderBottom: `1.5px solid ${T.gray100}` }}>
-                        <span style={{ fontWeight: 900, fontSize: '.9rem', color: T.black, fontFamily: T.font }}>📊 إيرادات الدورات</span>
-                        <span style={{ fontSize: '.68rem', color: T.gray500, marginRight: 10, fontFamily: T.font }}>أعلى {Math.min(courseRevenue.length, 8)} دورات</span>
+                    <div style={{ padding: '16px 20px 4px', borderBottom: '1.5px solid #f0f1f2' }}>
+                        <span style={{ fontWeight: 900, fontSize: '.9rem', color: '#0a0a0a', fontFamily: '"Noto Kufi Arabic",sans-serif' }}>📊 إيرادات الدورات</span>
+                        <span style={{ fontSize: '.68rem', color: '#6b7280', marginRight: 10, fontFamily: '"Noto Kufi Arabic",sans-serif' }}>أعلى {Math.min(courseRevenue.length, 8)} دورات</span>
                     </div>
                     <div style={{ padding: '16px 20px' }}>
                         {courseRevenue.slice(0, 8).map((c, i) => (
@@ -543,7 +517,7 @@ export default function FinancialTab() {
             {/* Toolbar */}
             <div className="fin-toolbar">
                 <input className="fin-search-input" type="text" placeholder="ابحث باسم المستخدم أو الدورة..." value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
-                {search && <button style={{ padding: '7px 12px', borderRadius: 4, border: `1.5px solid ${T.gray300}`, background: T.gray100, cursor: 'pointer', color: T.gray500, fontFamily: T.font, fontSize: '.72rem', fontWeight: 700 }} onClick={() => { setSearch(''); setPage(1); }}>✕ مسح</button>}
+                {search && <button style={{ padding: '7px 12px', borderRadius: 4, border: '1.5px solid #d0d3d8', background: '#f0f1f2', cursor: 'pointer', color: '#6b7280', fontFamily: '"Noto Kufi Arabic",sans-serif', fontSize: '.72rem', fontWeight: 700 }} onClick={() => { setSearch(''); setPage(1); }}>✕ مسح</button>}
                 <select className="fin-sort-sel" value={sortBy} onChange={e => { setSortBy(e.target.value); setPage(1); }}>
                     <option value="total_desc">الأعلى دفعًا</option>
                     <option value="total_asc">الأقل دفعًا</option>
@@ -556,9 +530,9 @@ export default function FinancialTab() {
                     </button>
                     {exportMenu && (
                         <div className="fin-expmenu">
-                            <button className="fin-expitem" onClick={doExport(() => exportExcel(sorted, grandTotal))}>
-                                📊 Excel (.xlsx) — كل المستخدمين
-                            </button>
+                            <button className="fin-expitem" onClick={doExport(handleExcel)}>📊 Excel (.xlsx)</button>
+                            <button className="fin-expitem" onClick={doExport(handlePDF)}>📄 PDF (.pdf)</button>
+                            <button className="fin-expitem" onClick={doExport(handleWord)}>📝 Word (.docx)</button>
                         </div>
                     )}
                 </div>
@@ -568,10 +542,9 @@ export default function FinancialTab() {
 
             {/* Table */}
             <div className="fin-card">
-                {sorted.length === 0 ? (
-                    <div className="fin-empty"><p>لا توجد نتائج مطابقة</p></div>
-                ) : (
-                    <>
+                {sorted.length === 0
+                    ? <div className="fin-empty"><p>لا توجد نتائج مطابقة</p></div>
+                    : <>
                         <div className="fin-table-wrap">
                             <table className="fin-tbl">
                                 <thead>
@@ -591,7 +564,7 @@ export default function FinancialTab() {
                                         return (
                                             <React.Fragment key={r.id}>
                                                 <tr style={{ background: isOpen ? 'rgba(8,101,168,0.05)' : undefined }}>
-                                                    <td style={{ color: T.gray500, fontSize: '.68rem', textAlign: 'center' }}>{rowNum}</td>
+                                                    <td style={{ color: '#6b7280', fontSize: '.68rem', textAlign: 'center' }}>{rowNum}</td>
                                                     <td>
                                                         <div className="fin-uc">
                                                             <div className="fin-av">{(r.username || '?')[0].toUpperCase()}</div>
@@ -600,7 +573,7 @@ export default function FinancialTab() {
                                                     </td>
                                                     <td><span className="fin-email">{r.email}</span></td>
                                                     <td className="c">
-                                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 28, borderRadius: 4, background: 'rgba(8,101,168,0.08)', border: `1.5px solid rgba(8,101,168,0.25)`, color: T.blue, fontSize: '.76rem', fontWeight: 900, padding: '0 6px' }}>{r.courses.length}</span>
+                                                        <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 28, borderRadius: 4, background: 'rgba(8,101,168,0.08)', border: '1.5px solid rgba(8,101,168,0.25)', color: '#0865a8', fontSize: '.76rem', fontWeight: 900, padding: '0 6px' }}>{r.courses.length}</span>
                                                     </td>
                                                     <td className="c"><span className="fin-user-total">{fmtMoney(r.totalPaid)} EGP</span></td>
                                                     <td className="c">
@@ -613,18 +586,18 @@ export default function FinancialTab() {
                                                     <tr className="fin-xrow">
                                                         <td colSpan={6}>
                                                             <div className="fin-xin">
-                                                                <div style={{ marginBottom: 10, fontSize: '.72rem', fontWeight: 900, color: T.blue, fontFamily: T.font }}>
+                                                                <div style={{ marginBottom: 10, fontSize: '.72rem', fontWeight: 900, color: '#0865a8', fontFamily: '"Noto Kufi Arabic",sans-serif' }}>
                                                                     📚 دورات {r.username} ({r.courses.length} دورة)
                                                                 </div>
                                                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                                                     {r.courses.map((c, ci) => (
                                                                         <div className="fin-course-chip" key={ci}>
                                                                             <span className="fin-course-chip-name">📖 {c.title}</span>
-                                                                            <span style={{ width: 1, height: 14, background: T.gray300, display: 'inline-block', margin: '0 4px' }} />
+                                                                            <span style={{ width: 1, height: 14, background: '#d0d3d8', display: 'inline-block', margin: '0 4px' }} />
                                                                             <span className="fin-course-chip-price">{fmtMoney(c.price)} EGP</span>
-                                                                            {c.date && <span style={{ fontSize: '.62rem', color: T.gray500, fontFamily: T.font }}>📅 {c.date}</span>}
+                                                                            {c.date && <span style={{ fontSize: '.62rem', color: '#6b7280' }}>📅 {c.date}</span>}
                                                                             {c.attended != null && (
-                                                                                <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 7px', borderRadius: 3, background: c.attended ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.08)', color: c.attended ? T.green : T.red, border: `1px solid ${c.attended ? T.greenBorder : 'rgba(220,38,38,0.3)'}` }}>
+                                                                                <span style={{ fontSize: '.6rem', fontWeight: 700, padding: '2px 7px', borderRadius: 3, background: c.attended ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.08)', color: c.attended ? '#16a34a' : '#dc2626', border: `1px solid ${c.attended ? '#86efac' : 'rgba(220,38,38,0.3)'}` }}>
                                                                                     {c.attended ? '✓ حضر' : '✗ غائب'}
                                                                                 </span>
                                                                             )}
@@ -632,7 +605,7 @@ export default function FinancialTab() {
                                                                     ))}
                                                                 </div>
                                                                 <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                                    <span style={{ fontSize: '.74rem', fontWeight: 700, color: T.gray700, fontFamily: T.font }}>المجموع:</span>
+                                                                    <span style={{ fontSize: '.74rem', fontWeight: 700, color: '#374151', fontFamily: '"Noto Kufi Arabic",sans-serif' }}>المجموع:</span>
                                                                     <span className="fin-user-total">{fmtMoney(r.totalPaid)} EGP</span>
                                                                 </div>
                                                             </div>
@@ -644,12 +617,12 @@ export default function FinancialTab() {
                                     })}
                                 </tbody>
                                 <tfoot>
-                                    <tr style={{ background: T.blueDark }}>
-                                        <td colSpan={4} style={{ padding: '12px 16px', fontWeight: 900, color: T.white, fontSize: '.82rem', fontFamily: T.font }}>
+                                    <tr style={{ background: '#044478' }}>
+                                        <td colSpan={4} style={{ padding: '12px 16px', fontWeight: 900, color: '#fff', fontSize: '.82rem', fontFamily: '"Noto Kufi Arabic",sans-serif' }}>
                                             💰 الإجمالي الكلي لإيرادات المعهد
                                         </td>
                                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                            <span style={{ fontWeight: 900, fontSize: '1rem', color: T.orangeLight }}>{fmtMoney(grandTotal)} EGP</span>
+                                            <span style={{ fontWeight: 900, fontSize: '1rem', color: '#ff9a3c' }}>{fmtMoney(grandTotal)} EGP</span>
                                         </td>
                                         <td />
                                     </tr>
@@ -658,7 +631,7 @@ export default function FinancialTab() {
                         </div>
                         <Pagination currentPage={page} totalItems={sorted.length} itemsPerPage={ITEMS_PER_PAGE} onPageChange={p => { setPage(p); setExpanded(null); }} />
                     </>
-                )}
+                }
             </div>
         </div>
     );
