@@ -2281,23 +2281,24 @@ import { T } from "../../components/admin/constants";
 
 // ── API base ──────────────────────────────────────────────────────────────────
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api/admin/AdminLecturer';
+const IMAGE_BASE_URL = 'https://www.arabcont.com/icemt/assets/images/';
 
 // ── Map API response → internal form shape ────────────────────────────────────
 function apiToForm(apiLec) {
     return {
         id:           apiLec.id,
         name:         apiLec.name        || '',
-        specialty:    apiLec.specialty   || '',          // not in API yet – keep locally
+        specialty:    apiLec.specialty   || '',
         email:        apiLec.email       || '',
         phone:        apiLec.telephone   || '',
-        courses:      apiLec.course      || '',          // API: course
-        level:        apiLec.mainEdu     || '',          // API: mainEdu
-        certificates: apiLec.edu         || '',          // API: edu
+        courses:      apiLec.course      || '',
+        level:        apiLec.mainEdu     || '',
+        certificates: apiLec.edu         || '',
         details:      apiLec.details     || '',
-        photo:        apiLec.pic         // may be a filename or base64 or null
-            ? (apiLec.pic.startsWith('data:') || apiLec.pic.startsWith('http') || apiLec.pic.startsWith('/')
+        photo:        apiLec.pic
+            ? (apiLec.pic.startsWith('data:') || apiLec.pic.startsWith('http')
                 ? apiLec.pic
-                : `/images/lecturers/${apiLec.pic}`)
+                : `${IMAGE_BASE_URL}${apiLec.pic}`)
             : null,
     };
 }
@@ -2312,8 +2313,6 @@ function formToApi(form) {
         courses:  form.courses,
         level:    form.level,
         details:  form.details,
-        // Note: edu / certificates is NOT in the PUT/POST body per API spec –
-        // send it anyway; server will ignore unknown fields gracefully.
         edu:      form.certificates,
         course:   form.courses,
         mainEdu:  form.level,
@@ -2476,7 +2475,7 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
     const handleFontSize = (e) => {
         const px = Number(e.target.value);
         setFontSize(px);
-        restoreSelection();          // restore BEFORE focus so range is in the right doc position
+        restoreSelection();
         editorRef.current?.focus();
         wrapSelectionWithStyle('fontSize', `${px}px`);
         emitChange();
@@ -2558,7 +2557,6 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
             <div
                 className="lec-rte-toolbar"
                 onMouseDown={e => {
-                    // Let <select> dropdowns open normally; prevent focus-steal for buttons
                     if (e.target.tagName === 'SELECT') return;
                     e.preventDefault();
                 }}
@@ -2631,20 +2629,17 @@ const LecturersTab = () => {
     const [notification, setNotification] = useState(null);
     const [dragOver, setDragOver]         = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
-    const [loading, setLoading]           = useState(false);   // global busy flag
-    const [listLoading, setListLoading]   = useState(true);    // initial list fetch
+    const [loading, setLoading]           = useState(false);
+    const [listLoading, setListLoading]   = useState(true);
     const fileRef = useRef();
 
-    // ── Pending photo file (held until save) ──────────────────────────────────
     const pendingPhotoRef = useRef(null);
 
-    // ── Toast ─────────────────────────────────────────────────────────────────
     const toast = (msg, type = 'success') => {
         setNotification({ msg, type });
         setTimeout(() => setNotification(null), 3500);
     };
 
-    // ── Fetch all lecturers on mount ──────────────────────────────────────────
     useEffect(() => {
         fetchAll();
     }, []);
@@ -2668,13 +2663,11 @@ const LecturersTab = () => {
         }
     };
 
-    // ── Filter ────────────────────────────────────────────────────────────────
     const filtered = lecturers.filter(l =>
         l.name.toLowerCase().includes(search.toLowerCase()) ||
         l.specialty.toLowerCase().includes(search.toLowerCase())
     );
 
-    // ── Pick a lecturer from the list ─────────────────────────────────────────
     const pick = (lec) => {
         setSelected(lec);
         setForm({ ...lec });
@@ -2685,7 +2678,6 @@ const LecturersTab = () => {
 
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-    // ── Photo – store file ref + preview ─────────────────────────────────────
     const applyPhoto = useCallback((file) => {
         if (!file || !file.type.startsWith('image/')) return;
         pendingPhotoRef.current = file;
@@ -2694,17 +2686,14 @@ const LecturersTab = () => {
         reader.readAsDataURL(file);
     }, []);
 
-    // ── Upload photo via dedicated endpoint ───────────────────────────────────
     const uploadPhoto = async (id, file) => {
         const fd = new FormData();
         fd.append('file', file);
         const res = await fetch(`${API_BASE}/${id}/photo`, { method: 'POST', body: fd });
         if (!res.ok) throw new Error(`فشل رفع الصورة: HTTP ${res.status}`);
-        // Return updated pic path if server responds with it
         try { return await res.json(); } catch { return null; }
     };
 
-    // ── Save (create or update) ───────────────────────────────────────────────
     const handleSave = async () => {
         if (!form.name.trim()) { toast('الاسم مطلوب', 'error'); return; }
         setLoading(true);
@@ -2712,7 +2701,6 @@ const LecturersTab = () => {
             const body = formToApi(form);
 
             if (isNew) {
-                // POST – create
                 const res = await fetch(API_BASE, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2722,11 +2710,9 @@ const LecturersTab = () => {
                 const created = await res.json();
                 const newForm = apiToForm(created);
 
-                // Upload photo if one was chosen
                 if (pendingPhotoRef.current) {
                     await uploadPhoto(created.id, pendingPhotoRef.current);
                     pendingPhotoRef.current = null;
-                    // Refresh from server to get the real pic URL
                     const refreshed = await fetch(`${API_BASE}/${created.id}`);
                     if (refreshed.ok) {
                         const refreshedData = await refreshed.json();
@@ -2741,7 +2727,6 @@ const LecturersTab = () => {
                 toast('تم إضافة المحاضر بنجاح');
 
             } else {
-                // PUT – update
                 const res = await fetch(`${API_BASE}/${form.id}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
@@ -2751,11 +2736,9 @@ const LecturersTab = () => {
 
                 let updatedForm = { ...form };
 
-                // Upload photo if a new one was chosen
                 if (pendingPhotoRef.current) {
                     await uploadPhoto(form.id, pendingPhotoRef.current);
                     pendingPhotoRef.current = null;
-                    // Refresh to get real pic URL
                     const refreshed = await fetch(`${API_BASE}/${form.id}`);
                     if (refreshed.ok) {
                         const refreshedData = await refreshed.json();
@@ -2775,7 +2758,6 @@ const LecturersTab = () => {
         }
     };
 
-    // ── New lecturer ──────────────────────────────────────────────────────────
     const handleNew = () => {
         setForm({ ...BLANK });
         setSelected(null);
@@ -2784,7 +2766,6 @@ const LecturersTab = () => {
         pendingPhotoRef.current = null;
     };
 
-    // ── Delete ────────────────────────────────────────────────────────────────
     const handleDelete = async () => {
         if (!deleteConfirm) { setDeleteConfirm(true); return; }
         setLoading(true);
@@ -2803,7 +2784,6 @@ const LecturersTab = () => {
         }
     };
 
-    // ── Reset / cancel ────────────────────────────────────────────────────────
     const handleReset = () => {
         if (isNew) setForm({ ...BLANK }); else setForm({ ...selected });
         setDeleteConfirm(false);
@@ -2811,7 +2791,6 @@ const LecturersTab = () => {
         toast('تم إلغاء التغييرات', 'info');
     };
 
-    // ── Render ────────────────────────────────────────────────────────────────
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
@@ -2824,7 +2803,6 @@ const LecturersTab = () => {
                 </div>
             )}
 
-            {/* Loading overlay */}
             {loading && (
                 <div style={{
                     position: 'fixed', inset: 0, background: 'rgba(0,0,0,.25)',
