@@ -27,12 +27,210 @@ function resolveImg(url) {
     if (url.startsWith('http')) return url;
     return `${BASE}/${url.replace(/^\//, '')}`;
 }
-
 function previewSnippet(text, len = 55) {
     if (!text) return '—';
     return text.length > len ? text.slice(0, len) + '…' : text;
 }
 
+// ── Rich Text Helpers ──────────────────────────────────────────────────────────
+const FONT_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64, 72];
+
+function textToHtml(text = '') {
+    if (!text) return '';
+    if (/<[a-z][\s\S]*>/i.test(text)) return text;
+    return text
+        .split('\n')
+        .map(line => line
+            ? `<div>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`
+            : '<div><br></div>'
+        )
+        .join('');
+}
+
+function wrapSelectionWithStyle(property, value) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    const range = sel.getRangeAt(0);
+    const span = document.createElement('span');
+    span.style[property] = value;
+    try { range.surroundContents(span); }
+    catch { const f = range.extractContents(); span.appendChild(f); range.insertNode(span); }
+    sel.removeAllRanges();
+    const nr = document.createRange();
+    nr.selectNodeContents(span);
+    sel.addRange(nr);
+}
+
+function getComputedAtCursor(editorEl, cssProp) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    let node = sel.anchorNode;
+    while (node && node !== editorEl) {
+        if (node.nodeType === 1) {
+            const val = window.getComputedStyle(node)[cssProp];
+            if (val) return val;
+        }
+        node = node.parentNode;
+    }
+    return null;
+}
+
+// ── RichTextEditor ─────────────────────────────────────────────────────────────
+function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, minHeight = 180 }) {
+    const editorRef = useRef(null);
+    const savedSelRef = useRef(null);
+    const lastValueRef = useRef(null);
+    const urlInputRef = useRef(null);
+
+    const [fontColor, setFontColor] = useState('#0a0a0a');
+    const [fontSize, setFontSize] = useState(14);
+    const [urlOpen, setUrlOpen] = useState(false);
+    const [urlValue, setUrlValue] = useState('');
+
+    useEffect(() => {
+        if (!editorRef.current || value === lastValueRef.current) return;
+        editorRef.current.innerHTML = textToHtml(value);
+        lastValueRef.current = value;
+    }, [value]);
+
+    useEffect(() => {
+        if (urlOpen && urlInputRef.current) urlInputRef.current.focus();
+    }, [urlOpen]);
+
+    useEffect(() => {
+        if (!urlOpen) return;
+        const h = e => { if (!e.target.closest('.news-rte-url-wrap')) setUrlOpen(false); };
+        document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
+    }, [urlOpen]);
+
+    const saveSelection = () => {
+        const s = window.getSelection();
+        if (s?.rangeCount > 0) savedSelRef.current = s.getRangeAt(0).cloneRange();
+    };
+    const restoreSelection = () => {
+        const s = window.getSelection();
+        if (s && savedSelRef.current) { s.removeAllRanges(); s.addRange(savedSelRef.current); }
+    };
+    const emitChange = () => {
+        if (!editorRef.current) return;
+        const h = editorRef.current.innerHTML;
+        lastValueRef.current = h;
+        onChange({ target: { name, value: h } });
+    };
+    const exec = (cmd, val = null) => {
+        editorRef.current?.focus();
+        document.execCommand(cmd, false, val);
+        emitChange();
+    };
+
+    const detectFontSize = () => {
+        const fsVal = getComputedAtCursor(editorRef.current, 'fontSize');
+        if (fsVal) {
+            const px = Math.round(parseFloat(fsVal));
+            const closest = FONT_SIZES.reduce((p, c) => Math.abs(c - px) < Math.abs(p - px) ? c : p);
+            setFontSize(closest);
+        }
+    };
+
+    const handleFontSize = e => {
+        const px = Number(e.target.value);
+        setFontSize(px);
+        restoreSelection();
+        editorRef.current?.focus();
+        wrapSelectionWithStyle('fontSize', `${px}px`);
+        emitChange();
+    };
+
+    const confirmUrl = () => {
+        restoreSelection();
+        const url = urlValue.trim();
+        if (url && url !== 'https://') {
+            exec('createLink', url);
+            const sel = window.getSelection();
+            if (sel?.anchorNode) {
+                let node = sel.anchorNode;
+                while (node && node !== editorRef.current) {
+                    if (node.nodeName === 'A') { node.target = '_blank'; node.rel = 'noopener noreferrer'; break; }
+                    node = node.parentNode;
+                }
+            }
+        }
+        setUrlOpen(false);
+        emitChange();
+    };
+
+    return (
+        <div className="news-rte-block">
+            <div className="news-rte-hdr">
+                <span className="news-rte-icon">{icon}</span>
+                <div style={{ flex: 1 }}>
+                    <div className="news-rte-label">{label}</div>
+                    {sub && <div className="news-rte-sub">{sub}</div>}
+                </div>
+            </div>
+
+            <div className="news-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
+                <button className="news-tb-btn bold" title="عريض (Ctrl+B)" onClick={() => exec('bold')}>B</button>
+                <button className="news-tb-btn italic" title="مائل (Ctrl+I)" onClick={() => exec('italic')}>I</button>
+                <button className="news-tb-btn under" title="تحته خط (Ctrl+U)" onClick={() => exec('underline')}>U</button>
+                <div className="news-rte-sep" />
+                <div className="news-tb-size-wrap" title="حجم الخط (بالبكسل)">
+                    <select className="news-tb-select news-tb-size-select" value={fontSize} onChange={handleFontSize} onMouseDown={saveSelection}>
+                        {FONT_SIZES.map(px => <option key={px} value={px}>{px}</option>)}
+                    </select>
+                    <span className="news-tb-size-unit">px</span>
+                </div>
+                <div className="news-rte-sep" />
+                <div className="news-tb-color-wrap" title="لون الخط">
+                    <button className="news-tb-color-btn" onMouseDown={saveSelection}>
+                        <span className="news-color-letter" style={{ color: fontColor }}>A</span>
+                        <span className="news-color-bar" style={{ background: fontColor }} />
+                        <input type="color" className="news-tb-color-input" value={fontColor}
+                            onChange={e => { const c = e.target.value; setFontColor(c); restoreSelection(); exec('foreColor', c); }} />
+                    </button>
+                </div>
+                <div className="news-rte-sep" />
+                <div className="news-rte-url-wrap">
+                    <button className={`news-tb-btn${urlOpen ? ' active' : ''}`} title="إضافة رابط"
+                        onClick={() => { saveSelection(); setUrlValue('https://'); setUrlOpen(true); }}
+                        onMouseDown={saveSelection}>🔗</button>
+                    {urlOpen && (
+                        <div className="news-url-popover">
+                            <input ref={urlInputRef} type="url" placeholder="https://example.com" value={urlValue}
+                                onChange={e => setUrlValue(e.target.value)}
+                                onKeyDown={e => { if (e.key === 'Enter') confirmUrl(); if (e.key === 'Escape') { setUrlOpen(false); restoreSelection(); } }} />
+                            <button className="news-url-ok" onClick={confirmUrl}>إدراج</button>
+                            <button className="news-url-cancel" onClick={() => { setUrlOpen(false); restoreSelection(); }}>إلغاء</button>
+                        </div>
+                    )}
+                </div>
+                <button className="news-tb-btn" title="إزالة الرابط" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
+            </div>
+
+            <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                className="news-rte-editor"
+                data-placeholder={placeholder}
+                style={{ minHeight }}
+                onInput={emitChange}
+                onKeyDown={e => {
+                    if (e.ctrlKey || e.metaKey) {
+                        if (e.key === 'b') { e.preventDefault(); exec('bold'); }
+                        if (e.key === 'i') { e.preventDefault(); exec('italic'); }
+                        if (e.key === 'u') { e.preventDefault(); exec('underline'); }
+                    }
+                }}
+                onMouseUp={() => { saveSelection(); detectFontSize(); }}
+                onKeyUp={() => { saveSelection(); detectFontSize(); }}
+            />
+        </div>
+    );
+}
+
+// ── CSS ────────────────────────────────────────────────────────────────────────
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
 .news-root{display:flex;height:100vh;direction:rtl;font-family:"Noto Kufi Arabic",sans-serif;background:${T.gray100};overflow:hidden;}
@@ -92,88 +290,57 @@ const CSS = `
 .news-inp:disabled{background:${T.gray100};color:${T.gray500};cursor:not-allowed;}
 .news-divider{height:1px;background:${T.gray100};margin:4px 0 20px;}
 
-/* ── IMAGE ZONE — full image, no crop, auto height ── */
-.news-img-zone{
-    width:100%;
-    border-radius:6px;
-    border:2px dashed ${T.gray300};
-    background:${T.gray50};
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    position:relative;
-    transition:border-color .18s,background .18s;
-    min-height:60px;
-    overflow:visible; /* let image define height */
-}
+/* ── IMAGE ZONE ── */
+.news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;min-height:60px;overflow:visible;}
 .news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.03);}
-
-.news-img-zone.has-image{
-    border-style:solid;
-    border-color:${T.gray300};
-    border-radius:8px;
-    overflow:hidden;  /* clip rounded corners */
-    background:#000;
-}
-.news-img-zone.has-image:hover{ border-color:${T.orange}; }
-
-/* ── Full image — 100% wide, height follows natural aspect ratio, NO crop ── */
-.news-img-preview{
-    width:100%;
-    height:auto;          /* natural height — no fixed px, no crop */
-    display:block;
-    object-fit:fill;      /* fill = stretch to box, but since height:auto the box = image */
-}
-
-/* dim overlay on hover */
-.news-img-overlay{
-    position:absolute;inset:0;
-    background:rgba(0,0,0,.42);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    opacity:0;transition:opacity .2s;
-}
+.news-img-zone.has-image{border-style:solid;border-color:${T.gray300};border-radius:8px;overflow:hidden;background:#000;}
+.news-img-zone.has-image:hover{border-color:${T.orange};}
+.news-img-preview{width:100%;height:auto;display:block;object-fit:fill;}
+.news-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.42);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
 .news-img-zone.has-image:hover .news-img-overlay{opacity:1;}
 .news-img-overlay-txt{color:#fff;font-size:.78rem;font-weight:700;margin-top:6px;}
-
 .news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:24px 12px;}
 .news-img-icon{font-size:2rem;}
 .news-img-hint{color:${T.gray500};font-size:.68rem;font-weight:600;text-align:center;line-height:1.6;}
 .news-img-types{color:${T.gray300};font-size:.62rem;background:${T.gray100};padding:2px 10px;border-radius:2px;}
-
-/* meta bar — always visible below image (not hover-only) */
-.news-img-meta{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:6px 12px;
-    background:rgba(0,0,0,.6);
-    width:100%;
-    box-sizing:border-box;
-    pointer-events:none;
-    position:absolute;
-    bottom:0;left:0;right:0;
-}
+.news-img-meta{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(0,0,0,.6);width:100%;box-sizing:border-box;pointer-events:none;position:absolute;bottom:0;left:0;right:0;}
 .news-img-meta-txt{color:rgba(255,255,255,.75);font-size:.62rem;font-family:'Courier New',monospace;}
-
-.news-remove-img{
-    background:#fef2f2;color:#dc2626;
-    border:1.5px solid rgba(220,38,38,.3);
-    border-radius:3px;padding:7px;
-    font-size:.72rem;font-weight:700;
-    cursor:pointer;width:100%;
-    font-family:inherit;margin-top:8px;
-    transition:background .14s;
-}
+.news-remove-img{background:#fef2f2;color:#dc2626;border:1.5px solid rgba(220,38,38,.3);border-radius:3px;padding:7px;font-size:.72rem;font-weight:700;cursor:pointer;width:100%;font-family:inherit;margin-top:8px;transition:background .14s;}
 .news-remove-img:hover{background:#fee2e2;}
 
-.news-ta-block{border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.news-ta-hdr{background:${T.gray50};padding:10px 16px;border-bottom:1.5px solid ${T.gray100};display:flex;align-items:center;gap:9px;}
-.news-ta-icon{font-size:1.1rem;}
-.news-ta-label{font-weight:800;font-size:.8rem;color:${T.black};flex:1;}
-.news-ta-count{background:${T.gray100};border-radius:2px;padding:2px 10px;font-size:.66rem;color:${T.gray700};font-weight:700;}
-.news-ta{width:100%;border:none;outline:none;resize:vertical;padding:13px 16px;font-size:.8rem;color:${T.black};font-family:inherit;line-height:1.9;direction:rtl;background:#fff;display:block;transition:background .14s;box-sizing:border-box;}
-.news-ta:focus{background:#fffdf9;}
-.news-ta::placeholder{color:${T.gray500};}
+/* ── RichTextEditor ── */
+.news-rte-block{border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+.news-rte-hdr{background:${T.gray50};padding:10px 16px;border-bottom:1.5px solid ${T.gray100};display:flex;align-items:center;gap:9px;}
+.news-rte-icon{font-size:1.1rem;}
+.news-rte-label{font-weight:800;font-size:.8rem;color:${T.black};}
+.news-rte-sub{font-size:.65rem;color:${T.gray500};margin-top:2px;}
+.news-rte-toolbar{display:flex;align-items:center;gap:4px;padding:7px 12px;background:#fff;border-bottom:1.5px solid ${T.gray100};flex-wrap:wrap;}
+.news-rte-sep{width:1px;height:20px;background:#e5e7eb;margin:0 2px;flex-shrink:0;}
+.news-tb-btn{min-width:30px;height:28px;padding:0 7px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};color:${T.gray700};font-size:.78rem;font-weight:700;cursor:pointer;transition:all .14s;font-family:inherit;}
+.news-tb-btn:hover,.news-tb-btn.active{background:${T.orange};color:#fff;border-color:${T.orange};}
+.news-tb-btn.bold{font-weight:900;}
+.news-tb-btn.italic{font-style:italic;}
+.news-tb-btn.under{text-decoration:underline;}
+.news-tb-size-wrap{display:flex;align-items:center;gap:3px;}
+.news-tb-select{padding:4px 6px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};color:${T.gray700};font-family:inherit;font-size:.74rem;cursor:pointer;outline:none;}
+.news-tb-select:focus{border-color:${T.orange};}
+.news-tb-size-unit{font-size:.65rem;color:${T.gray500};font-weight:700;}
+.news-tb-color-wrap{position:relative;}
+.news-tb-color-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 6px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};cursor:pointer;position:relative;}
+.news-color-letter{font-size:.9rem;font-weight:900;line-height:1;}
+.news-color-bar{width:14px;height:3px;border-radius:2px;}
+.news-tb-color-input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;}
+.news-rte-url-wrap{position:relative;}
+.news-url-popover{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1.5px solid ${T.gray300};border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:10px;z-index:500;display:flex;gap:6px;min-width:320px;border-top:3px solid ${T.orange};}
+.news-url-popover input{flex:1;padding:7px 10px;border:1.5px solid ${T.gray300};border-radius:4px;font-family:inherit;font-size:.76rem;direction:ltr;outline:none;}
+.news-url-popover input:focus{border-color:${T.orange};}
+.news-url-ok{padding:7px 14px;background:${T.orange};color:#fff;border:none;border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
+.news-url-cancel{padding:7px 10px;background:${T.gray100};color:${T.gray700};border:1.5px solid ${T.gray300};border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
+.news-rte-editor{padding:12px 16px;outline:none;font-family:"Noto Kufi Arabic",sans-serif;font-size:.82rem;color:#0a0a0a;line-height:1.9;direction:rtl;background:#fff;}
+.news-rte-editor:empty::before{content:attr(data-placeholder);color:#9ca3af;pointer-events:none;}
+.news-rte-editor a{color:#0865a8;text-decoration:underline;}
+
+/* ── Actions ── */
 .news-actions{display:flex;gap:9px;margin-top:24px;padding-top:18px;border-top:2px solid ${T.gray100};flex-wrap:wrap;align-items:center;}
 .news-act-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:3px;font-family:inherit;font-size:.8rem;font-weight:800;cursor:pointer;border:none;transition:all .2s cubic-bezier(.4,0,.2,1);white-space:nowrap;}
 .news-act-btn:hover{transform:translateY(-2px);}
@@ -207,7 +374,7 @@ function injectStyles() {
     document.head.appendChild(el);
 }
 
-// ── API helpers ──
+// ── API helpers ──────────────────────────────────────────────────────────────
 async function apiFetch(path, opts = {}) {
     const res = await fetch(`${BASE}${path}`, opts);
     if (!res.ok) {
@@ -242,6 +409,9 @@ function buildFormData(form, imageFile, isNew) {
     return fd;
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// NewsTab
+// ════════════════════════════════════════════════════════════════════════════
 export default function NewsTab() {
     injectStyles();
 
@@ -259,7 +429,7 @@ export default function NewsTab() {
     const [saving, setSaving] = useState(false);
     const [imageFile, setImageFile] = useState(null);
     const [previewSrc, setPreviewSrc] = useState(null);
-    const [imgNaturalSize, setImgNaturalSize] = useState(null); // { w, h }
+    const [imgNaturalSize, setImgNaturalSize] = useState(null);
     const fileRef = useRef();
 
     const toast = (msg, type = 'success') => {
@@ -337,8 +507,9 @@ export default function NewsTab() {
     const handleSave = async () => {
         if (!form.title.trim()) { toast('عنوان الخبر مطلوب', 'error'); return; }
         if (!form.date) { toast('التاريخ مطلوب', 'error'); return; }
-        if (!form.details.trim()) { toast('تفاصيل الخبر مطلوبة', 'error'); return; }
-
+        if (!form.details || !form.details.trim() || form.details === '<div><br></div>') {
+            toast('تفاصيل الخبر مطلوبة', 'error'); return;
+        }
         setSaving(true);
         try {
             const fd = buildFormData(form, imageFile, isNew);
@@ -403,7 +574,6 @@ export default function NewsTab() {
         formatDateAr(n.publishedAt).includes(search)
     );
 
-    const wordCount = form.details ? form.details.trim().split(/\s+/).filter(Boolean).length : 0;
     const hasImage = !!previewSrc;
 
     return (
@@ -511,21 +681,12 @@ export default function NewsTab() {
                                 </div>
                             </div>
 
-                            {/* ── Image upload — full size, contain ── */}
+                            {/* ── Image upload ── */}
                             <div className="news-field" style={{ marginBottom: 20 }}>
                                 <label className="news-label" style={{ marginBottom: 6 }}>
                                     صورة الخبر (اختياري)
                                     {imgNaturalSize && (
-                                        <span style={{
-                                            marginRight: 8,
-                                            background: T.gray100,
-                                            color: T.gray500,
-                                            fontSize: '.6rem',
-                                            fontWeight: 700,
-                                            padding: '1px 8px',
-                                            borderRadius: 2,
-                                            fontFamily: "'Courier New', monospace",
-                                        }}>
+                                        <span style={{ marginRight: 8, background: T.gray100, color: T.gray500, fontSize: '.6rem', fontWeight: 700, padding: '1px 8px', borderRadius: 2, fontFamily: "'Courier New', monospace" }}>
                                             {imgNaturalSize.w} × {imgNaturalSize.h}
                                         </span>
                                     )}
@@ -540,29 +701,15 @@ export default function NewsTab() {
                                 >
                                     {hasImage ? (
                                         <>
-                                            {/* Full image — auto height, contain */}
-                                            <img
-                                                src={previewSrc}
-                                                alt="معاينة الخبر"
-                                                className="news-img-preview"
-                                                onLoad={handleImgLoad}
-                                            />
-                                            {/* Hover overlay */}
+                                            <img src={previewSrc} alt="معاينة الخبر" className="news-img-preview" onLoad={handleImgLoad} />
                                             <div className="news-img-overlay">
                                                 <span style={{ fontSize: '1.8rem' }}>🖼️</span>
                                                 <span className="news-img-overlay-txt">اضغط لتغيير الصورة</span>
                                             </div>
-                                            {/* Dimensions bar */}
                                             {imgNaturalSize && (
                                                 <div className="news-img-meta">
-                                                    <span className="news-img-meta-txt">
-                                                        {imgNaturalSize.w} × {imgNaturalSize.h} px
-                                                    </span>
-                                                    <span className="news-img-meta-txt">
-                                                        {imageFile
-                                                            ? `${(imageFile.size / 1024).toFixed(0)} KB`
-                                                            : 'مُحمَّلة من الخادم'}
-                                                    </span>
+                                                    <span className="news-img-meta-txt">{imgNaturalSize.w} × {imgNaturalSize.h} px</span>
+                                                    <span className="news-img-meta-txt">{imageFile ? `${(imageFile.size / 1024).toFixed(0)} KB` : 'مُحمَّلة من الخادم'}</span>
                                                 </div>
                                             )}
                                         </>
@@ -575,24 +722,13 @@ export default function NewsTab() {
                                     )}
                                 </div>
 
-                                <input
-                                    ref={fileRef}
-                                    type="file"
-                                    accept="image/*"
-                                    style={{ display: 'none' }}
-                                    onChange={e => applyImage(e.target.files[0])}
-                                />
+                                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => applyImage(e.target.files[0])} />
 
                                 {hasImage && (
-                                    <button
-                                        className="news-remove-img"
-                                        onClick={() => {
-                                            setPreviewSrc(null);
-                                            setImageFile(null);
-                                            setImgNaturalSize(null);
-                                            setForm(f => ({ ...f, imageUrl: null }));
-                                        }}
-                                    >
+                                    <button className="news-remove-img" onClick={() => {
+                                        setPreviewSrc(null); setImageFile(null); setImgNaturalSize(null);
+                                        setForm(f => ({ ...f, imageUrl: null }));
+                                    }}>
                                         ✕ حذف الصورة
                                     </button>
                                 )}
@@ -600,21 +736,17 @@ export default function NewsTab() {
 
                             <div className="news-divider" />
 
-                            <div className="news-ta-block">
-                                <div className="news-ta-hdr">
-                                    <span className="news-ta-icon">📝</span>
-                                    <div className="news-ta-label">تفاصيل الخبر *</div>
-                                    <span className="news-ta-count">{wordCount} كلمة</span>
-                                </div>
-                                <textarea
-                                    className="news-ta"
-                                    name="details"
-                                    rows={9}
-                                    value={form.details}
-                                    onChange={handleChange}
-                                    placeholder={"أدخل تفاصيل الخبر هنا...\n\nيمكنك كتابة الخبر بشكل كامل بما يشمل المقدمة، والتفاصيل، والخاتمة."}
-                                />
-                            </div>
+                            {/* ── RichTextEditor replaces textarea ── */}
+                            <RichTextEditor
+                                icon="📝"
+                                label="تفاصيل الخبر *"
+                                sub="حدد النص أولاً ثم اختر التنسيق من شريط الأدوات — يمكن إضافة روابط للمقالات"
+                                name="details"
+                                value={form.details}
+                                onChange={handleChange}
+                                placeholder="أدخل تفاصيل الخبر هنا...&#10;&#10;يمكنك كتابة الخبر بشكل كامل بما يشمل المقدمة، والتفاصيل، والخاتمة."
+                                minHeight={200}
+                            />
 
                             <div className="news-actions">
                                 <button className="news-act-btn save" onClick={handleSave} disabled={saving}>

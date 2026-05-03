@@ -70,68 +70,155 @@ const FILE_BLANK = { id: 0, name: '', order: '', title: '', file: null };
 function textToHtml(text = '') {
     if (!text) return '';
     if (/<[a-z][\s\S]*>/i.test(text)) return text;
-    return text.split('\n').map(l => l ? `<div>${l.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : '<div><br></div>').join('');
+    return text.split('\n').map(l => l
+        ? `<div>${l.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`
+        : '<div><br></div>'
+    ).join('');
 }
+
 function wrapSelectionWithStyle(prop, val) {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
     const range = sel.getRangeAt(0), span = document.createElement('span');
     span.style[prop] = val;
-    try { range.surroundContents(span); } catch { const f = range.extractContents(); span.appendChild(f); range.insertNode(span); }
-    sel.removeAllRanges(); const nr = document.createRange(); nr.selectNodeContents(span); sel.addRange(nr);
+    try { range.surroundContents(span); }
+    catch { const f = range.extractContents(); span.appendChild(f); range.insertNode(span); }
+    sel.removeAllRanges();
+    const nr = document.createRange();
+    nr.selectNodeContents(span);
+    sel.addRange(nr);
 }
+
+function getComputedAtCursor(editorEl, cssProp) {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    let node = sel.anchorNode;
+    while (node && node !== editorEl) {
+        if (node.nodeType === 1) {
+            const v = window.getComputedStyle(node)[cssProp];
+            if (v) return v;
+        }
+        node = node.parentNode;
+    }
+    return null;
+}
+
 function toSlug(str) {
     return str.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^\w\u0600-\u06FF-]/g, '').replace(/-+/g, '-').slice(0, 60);
 }
-const FONT_FAMILIES = [
-    { label: 'افتراضي', value: 'inherit' }, { label: 'Cairo', value: "'Cairo', sans-serif" },
-    { label: 'Tajawal', value: "'Tajawal', sans-serif" }, { label: 'Amiri', value: "'Amiri', serif" },
-    { label: 'Noto Kufi', value: "'Noto Kufi Arabic', sans-serif" }, { label: 'Arial', value: 'Arial, sans-serif' },
-    { label: 'Times New Roman', value: "'Times New Roman', serif" }, { label: 'Tahoma', value: 'Tahoma, sans-serif' },
-];
+
+const FONT_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64, 72];
 
 // ══════════════════════════════════════════════════════════════════════════════
-// RichTextEditor
+// RichTextEditor — font size + color + bold/italic/underline + link/unlink
 // ══════════════════════════════════════════════════════════════════════════════
 function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, minHeight = 120 }) {
-    const editorRef = useRef(null), savedSelRef = useRef(null), lastValueRef = useRef(null), urlInputRef = useRef(null);
-    const [fontColor, setFontColor] = useState('#0a0a0a'), [fontFamily, setFontFamily] = useState('inherit');
-    const [urlOpen, setUrlOpen] = useState(false), [urlValue, setUrlValue] = useState('');
+    const editorRef = useRef(null);
+    const savedSelRef = useRef(null);
+    const lastValueRef = useRef(null);
+    const urlInputRef = useRef(null);
+
+    const [fontColor, setFontColor] = useState('#0a0a0a');
+    const [fontSize, setFontSize] = useState(14);
+    const [urlOpen, setUrlOpen] = useState(false);
+    const [urlValue, setUrlValue] = useState('');
 
     useEffect(() => {
         if (!editorRef.current || value === lastValueRef.current) return;
-        editorRef.current.innerHTML = textToHtml(value); lastValueRef.current = value;
+        editorRef.current.innerHTML = textToHtml(value);
+        lastValueRef.current = value;
     }, [value]);
-    useEffect(() => { if (urlOpen && urlInputRef.current) urlInputRef.current.focus(); }, [urlOpen]);
+
+    useEffect(() => {
+        if (urlOpen && urlInputRef.current) urlInputRef.current.focus();
+    }, [urlOpen]);
+
     useEffect(() => {
         if (!urlOpen) return;
         const h = e => { if (!e.target.closest('.lec-tb-url-wrap')) setUrlOpen(false); };
-        document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
+        document.addEventListener('mousedown', h);
+        return () => document.removeEventListener('mousedown', h);
     }, [urlOpen]);
 
-    const saveSelection = () => { const s = window.getSelection(); if (s?.rangeCount > 0) savedSelRef.current = s.getRangeAt(0).cloneRange(); };
-    const restoreSelection = () => { const s = window.getSelection(); if (s && savedSelRef.current) { s.removeAllRanges(); s.addRange(savedSelRef.current); } };
-    const emitChange = () => { if (!editorRef.current) return; const h = editorRef.current.innerHTML; lastValueRef.current = h; onChange({ target: { name, value: h } }); };
-    const exec = (cmd, val = null) => { editorRef.current?.focus(); document.execCommand(cmd, false, val); emitChange(); };
+    const saveSelection = () => {
+        const s = window.getSelection();
+        if (s?.rangeCount > 0) savedSelRef.current = s.getRangeAt(0).cloneRange();
+    };
+    const restoreSelection = () => {
+        const s = window.getSelection();
+        if (s && savedSelRef.current) { s.removeAllRanges(); s.addRange(savedSelRef.current); }
+    };
+    const emitChange = () => {
+        if (!editorRef.current) return;
+        const h = editorRef.current.innerHTML;
+        lastValueRef.current = h;
+        onChange({ target: { name, value: h } });
+    };
+    const exec = (cmd, val = null) => {
+        editorRef.current?.focus();
+        document.execCommand(cmd, false, val);
+        emitChange();
+    };
+
+    const detectFontSize = () => {
+        const fsVal = getComputedAtCursor(editorRef.current, 'fontSize');
+        if (fsVal) {
+            const px = Math.round(parseFloat(fsVal));
+            const closest = FONT_SIZES.reduce((p, c) => Math.abs(c - px) < Math.abs(p - px) ? c : p);
+            setFontSize(closest);
+        }
+    };
+
+    const handleFontSize = e => {
+        const px = Number(e.target.value);
+        setFontSize(px);
+        restoreSelection();
+        editorRef.current?.focus();
+        wrapSelectionWithStyle('fontSize', `${px}px`);
+        emitChange();
+    };
+
+    const confirmUrl = () => {
+        restoreSelection();
+        const url = urlValue.trim();
+        if (url && url !== 'https://') {
+            exec('createLink', url);
+            const sel = window.getSelection();
+            if (sel?.anchorNode) {
+                let node = sel.anchorNode;
+                while (node && node !== editorRef.current) {
+                    if (node.nodeName === 'A') { node.target = '_blank'; node.rel = 'noopener noreferrer'; break; }
+                    node = node.parentNode;
+                }
+            }
+        }
+        setUrlOpen(false);
+        emitChange();
+    };
 
     return (
         <div className="lec-rte-block">
             <div className="lec-rte-hdr">
                 <span className="lec-rte-icon">{icon}</span>
-                <div style={{ flex: 1 }}><div className="lec-rte-label">{label}</div>{sub && <div className="lec-rte-sub">{sub}</div>}</div>
+                <div style={{ flex: 1 }}>
+                    <div className="lec-rte-label">{label}</div>
+                    {sub && <div className="lec-rte-sub">{sub}</div>}
+                </div>
             </div>
-            <div className="lec-rte-toolbar" onMouseDown={e => e.preventDefault()}>
-                <button className="lec-tb-btn bold" onClick={() => exec('bold')}>B</button>
-                <button className="lec-tb-btn italic" onClick={() => exec('italic')}>I</button>
-                <button className="lec-tb-btn under" onClick={() => exec('underline')}>U</button>
+
+            <div className="lec-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
+                <button className="lec-tb-btn bold" title="عريض (Ctrl+B)" onClick={() => exec('bold')}>B</button>
+                <button className="lec-tb-btn italic" title="مائل (Ctrl+I)" onClick={() => exec('italic')}>I</button>
+                <button className="lec-tb-btn under" title="تحته خط (Ctrl+U)" onClick={() => exec('underline')}>U</button>
                 <div className="lec-rte-sep" />
-                <select className="lec-tb-font-select" value={fontFamily}
-                    onChange={e => { const ff = e.target.value; setFontFamily(ff); restoreSelection(); editorRef.current?.focus(); wrapSelectionWithStyle('fontFamily', ff); emitChange(); }}
-                    onMouseDown={saveSelection}>
-                    {FONT_FAMILIES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
-                </select>
+                <div className="lec-tb-size-wrap" title="حجم الخط (بالبكسل)">
+                    <select className="lec-tb-select lec-tb-size-select" value={fontSize} onChange={handleFontSize} onMouseDown={saveSelection}>
+                        {FONT_SIZES.map(px => <option key={px} value={px}>{px}</option>)}
+                    </select>
+                    <span className="lec-tb-size-unit">px</span>
+                </div>
                 <div className="lec-rte-sep" />
-                <div className="lec-tb-color-wrap">
+                <div className="lec-tb-color-wrap" title="لون الخط">
                     <button className="lec-tb-color-btn" onMouseDown={saveSelection}>
                         <span className="color-letter" style={{ color: fontColor }}>A</span>
                         <span className="color-bar" style={{ background: fontColor }} />
@@ -141,32 +228,49 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                 </div>
                 <div className="lec-rte-sep" />
                 <div className="lec-tb-url-wrap">
-                    <button className={`lec-tb-btn${urlOpen ? ' active' : ''}`}
+                    <button className={`lec-tb-btn${urlOpen ? ' active' : ''}`} title="إضافة رابط"
                         onClick={() => { saveSelection(); setUrlValue('https://'); setUrlOpen(true); }}
                         onMouseDown={saveSelection}>🔗</button>
                     {urlOpen && (
                         <div className="lec-url-popover">
                             <input ref={urlInputRef} type="url" placeholder="https://example.com" value={urlValue}
                                 onChange={e => setUrlValue(e.target.value)}
-                                onKeyDown={e => { if (e.key === 'Enter') { restoreSelection(); exec('createLink', urlValue.trim()); setUrlOpen(false); emitChange(); } if (e.key === 'Escape') { setUrlOpen(false); restoreSelection(); } }} />
-                            <button className="lec-url-popover-ok" onClick={() => { restoreSelection(); exec('createLink', urlValue.trim()); setUrlOpen(false); emitChange(); }}>إدراج</button>
+                                onKeyDown={e => {
+                                    if (e.key === 'Enter') confirmUrl();
+                                    if (e.key === 'Escape') { setUrlOpen(false); restoreSelection(); }
+                                }} />
+                            <button className="lec-url-popover-ok" onClick={confirmUrl}>إدراج</button>
                             <button className="lec-url-popover-cancel" onClick={() => { setUrlOpen(false); restoreSelection(); }}>إلغاء</button>
                         </div>
                     )}
                 </div>
-                <button className="lec-tb-btn" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
+                <button className="lec-tb-btn" title="إزالة الرابط" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
             </div>
-            <div ref={editorRef} contentEditable suppressContentEditableWarning className="lec-rte-editor"
-                data-placeholder={placeholder} style={{ minHeight }}
+
+            <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                className="lec-rte-editor"
+                data-placeholder={placeholder}
+                style={{ minHeight }}
                 onInput={emitChange}
-                onKeyDown={e => { if (e.ctrlKey || e.metaKey) { if (e.key === 'b') { e.preventDefault(); exec('bold'); } if (e.key === 'i') { e.preventDefault(); exec('italic'); } if (e.key === 'u') { e.preventDefault(); exec('underline'); } } }}
-                onMouseUp={saveSelection} onKeyUp={saveSelection} />
+                onKeyDown={e => {
+                    if (e.ctrlKey || e.metaKey) {
+                        if (e.key === 'b') { e.preventDefault(); exec('bold'); }
+                        if (e.key === 'i') { e.preventDefault(); exec('italic'); }
+                        if (e.key === 'u') { e.preventDefault(); exec('underline'); }
+                    }
+                }}
+                onMouseUp={() => { saveSelection(); detectFontSize(); }}
+                onKeyUp={() => { saveSelection(); detectFontSize(); }}
+            />
         </div>
     );
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// TreeNode — only the tree, no records list on right panel
+// TreeNode
 // ══════════════════════════════════════════════════════════════════════════════
 function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
     const [open, setOpen] = useState(node.expanded ?? false);
@@ -174,15 +278,19 @@ function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
     const depthClass = ['pw-tree-d0', 'pw-tree-d1', 'pw-tree-d2', 'pw-tree-d3'][Math.min(depth, 3)];
     return (
         <div>
-            <div className={`pw-tree-row ${depthClass}${selectedId === node.id ? ' active' : ''}`}
+            <div
+                className={`pw-tree-row ${depthClass}${selectedId === node.id ? ' active' : ''}`}
                 style={{ paddingRight: 10 + depth * 14 }}
-                onClick={e => { e.stopPropagation(); onSelect(node); if (hasChildren) setOpen(o => !o); }}>
+                onClick={e => { e.stopPropagation(); onSelect(node); if (hasChildren) setOpen(o => !o); }}
+            >
                 <span className="pw-tree-toggle">{hasChildren ? (open ? '⊟' : '⊞') : ''}</span>
                 <span className="pw-tree-label">{node.label}</span>
             </div>
             {hasChildren && open && (
                 <div className={`pw-tree-children pw-children-d${Math.min(depth, 2)}`}>
-                    {node.children.map(child => <TreeNode key={child.id} node={child} selectedId={selectedId} onSelect={onSelect} depth={depth + 1} />)}
+                    {node.children.map(child => (
+                        <TreeNode key={child.id} node={child} selectedId={selectedId} onSelect={onSelect} depth={depth + 1} />
+                    ))}
                 </div>
             )}
         </div>
@@ -190,7 +298,7 @@ function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// FilesSection — auto-generates next file id based on planwork
+// FilesSection
 // ══════════════════════════════════════════════════════════════════════════════
 function FilesSection({ planworkId, planworkName }) {
     const [files, setFiles] = useState(() => INITIAL_FILES[planworkId] ? [...INITIAL_FILES[planworkId]] : []);
@@ -200,19 +308,23 @@ function FilesSection({ planworkId, planworkName }) {
     const [fileNotif, setFileNotif] = useState(null);
     const [fileDelConfirm, setFileDelConfirm] = useState(false);
     const fileInputRef = useRef(null);
-    // auto id: planworkId * 1000 + sequence
     const nextFileId = useRef(planworkId * 1000 + (INITIAL_FILES[planworkId]?.length || 0) + 1);
 
     useEffect(() => {
         setFiles(INITIAL_FILES[planworkId] ? [...INITIAL_FILES[planworkId]] : []);
-        setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); setFileDelConfirm(false);
+        setFileForm({ ...FILE_BLANK });
+        setSelectedFile(null);
+        setIsNewFile(true);
+        setFileDelConfirm(false);
         nextFileId.current = planworkId * 1000 + (INITIAL_FILES[planworkId]?.length || 0) + 1;
     }, [planworkId]);
 
-    const fileToast = (msg, type = 'success') => { setFileNotif({ msg, type }); setTimeout(() => setFileNotif(null), 3000); };
+    const fileToast = (msg, type = 'success') => {
+        setFileNotif({ msg, type });
+        setTimeout(() => setFileNotif(null), 3000);
+    };
     const pickFile = rec => { setSelectedFile(rec); setFileForm({ ...rec }); setIsNewFile(false); setFileDelConfirm(false); };
 
-    // auto-generate name from file + auto order
     const handleFileInput = e => {
         const f = e.target.files[0];
         if (!f) return;
@@ -224,18 +336,30 @@ function FilesSection({ planworkId, planworkName }) {
         if (!fileForm.name.trim()) { fileToast('اسم الملف مطلوب', 'error'); return; }
         if (isNewFile) {
             const id = nextFileId.current++;
-            // auto order if empty
             const order = fileForm.order || String(files.length + 1);
             const newFile = { ...fileForm, id, order };
-            setFiles(prev => [...prev, newFile]); setSelectedFile(newFile); setFileForm({ ...newFile }); setIsNewFile(false); fileToast('تم الإضافة');
+            setFiles(prev => [...prev, newFile]);
+            setSelectedFile(newFile);
+            setFileForm({ ...newFile });
+            setIsNewFile(false);
+            fileToast('تم الإضافة');
         } else {
-            const updated = { ...fileForm }; setFiles(prev => prev.map(f => f.id === updated.id ? updated : f)); setSelectedFile(updated); fileToast('تم الحفظ');
+            const updated = { ...fileForm };
+            setFiles(prev => prev.map(f => f.id === updated.id ? updated : f));
+            setSelectedFile(updated);
+            fileToast('تم الحفظ');
         }
     };
+
     const handleFileDelete = () => {
         if (!fileDelConfirm) { setFileDelConfirm(true); return; }
-        const rest = files.filter(f => f.id !== selectedFile.id); setFiles(rest); setFileDelConfirm(false);
-        setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); fileToast('تم الحذف', 'error');
+        const rest = files.filter(f => f.id !== selectedFile.id);
+        setFiles(rest);
+        setFileDelConfirm(false);
+        setFileForm({ ...FILE_BLANK });
+        setSelectedFile(null);
+        setIsNewFile(true);
+        fileToast('تم الحذف', 'error');
     };
 
     return (
@@ -250,46 +374,64 @@ function FilesSection({ planworkId, planworkName }) {
             </div>
             {fileNotif && (
                 <div className={`lec-notif lec-notif-${fileNotif.type}`} style={{ margin: '10px 14px 0' }}>
-                    <span>{fileNotif.type === 'success' ? '✅' : fileNotif.type === 'error' ? '❌' : 'ℹ️'}</span>{fileNotif.msg}
+                    <span>{fileNotif.type === 'success' ? '✅' : fileNotif.type === 'error' ? '❌' : 'ℹ️'}</span>
+                    {fileNotif.msg}
                 </div>
             )}
             <div className="pw-files-body">
                 <div className="pw-files-form">
                     <div className="lec-field">
                         <label className="lec-label">الرقم</label>
-                        <input className="lec-inp" value={isNewFile ? `${planworkId * 1000 + files.length + 1} (تلقائي)` : fileForm.id} disabled style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
+                        <input className="lec-inp" value={isNewFile ? `${planworkId * 1000 + files.length + 1} (تلقائي)` : fileForm.id} disabled
+                            style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
                     </div>
                     <div className="lec-field">
                         <label className="lec-label">اسم الملف</label>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <input className="lec-inp" name="name" value={fileForm.name} onChange={e => setFileForm(f => ({ ...f, name: e.target.value }))} placeholder="اسم الملف..." style={{ flex: 1 }} />
+                            <input className="lec-inp" name="name" value={fileForm.name}
+                                onChange={e => setFileForm(f => ({ ...f, name: e.target.value }))}
+                                placeholder="اسم الملف..." style={{ flex: 1 }} />
                             <button className="pw-select-file-btn" onClick={() => fileInputRef.current.click()}>📂 Select File</button>
                             <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileInput} />
                         </div>
                     </div>
                     <div className="lec-field">
                         <label className="lec-label">الترتيب</label>
-                        <input className="lec-inp" name="order" type="number" min="1" value={fileForm.order} onChange={e => setFileForm(f => ({ ...f, order: e.target.value }))} placeholder={`${files.length + 1} (تلقائي)`} />
+                        <input className="lec-inp" name="order" type="number" min="1" value={fileForm.order}
+                            onChange={e => setFileForm(f => ({ ...f, order: e.target.value }))}
+                            placeholder={`${files.length + 1} (تلقائي)`} />
                     </div>
                     <div className="lec-field">
                         <label className="lec-label">عنوان الملف</label>
-                        <input className="lec-inp" name="title" value={fileForm.title} onChange={e => setFileForm(f => ({ ...f, title: e.target.value }))} placeholder="عنوان الملف..." />
+                        <input className="lec-inp" name="title" value={fileForm.title}
+                            onChange={e => setFileForm(f => ({ ...f, title: e.target.value }))}
+                            placeholder="عنوان الملف..." />
                     </div>
                     <div className="pw-files-actions">
                         <button className="lec-act-btn save" onClick={handleFileSave} style={{ padding: '7px 16px', fontSize: '.76rem' }}>💾 حفظ</button>
-                        <button className="lec-act-btn new" onClick={() => { setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); setFileDelConfirm(false); }} style={{ padding: '7px 16px', fontSize: '.76rem' }}>➕ جديد</button>
-                        {!isNewFile && (fileDelConfirm
-                            ? <><button className="lec-act-btn delete" onClick={handleFileDelete} style={{ padding: '7px 14px', fontSize: '.74rem' }}>تأكيد</button><button className="adm-fclear" onClick={() => setFileDelConfirm(false)}>إلغاء</button></>
-                            : <button className="lec-act-btn delete" onClick={handleFileDelete} style={{ padding: '7px 16px', fontSize: '.76rem' }}>🗑 حذف</button>
+                        <button className="lec-act-btn new" onClick={() => { setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); setFileDelConfirm(false); }}
+                            style={{ padding: '7px 16px', fontSize: '.76rem' }}>➕ جديد</button>
+                        {!isNewFile && (
+                            fileDelConfirm
+                                ? <>
+                                    <button className="lec-act-btn delete" onClick={handleFileDelete} style={{ padding: '7px 14px', fontSize: '.74rem' }}>تأكيد</button>
+                                    <button className="adm-fclear" onClick={() => setFileDelConfirm(false)}>إلغاء</button>
+                                </>
+                                : <button className="lec-act-btn delete" onClick={handleFileDelete} style={{ padding: '7px 16px', fontSize: '.76rem' }}>🗑 حذف</button>
                         )}
                     </div>
                 </div>
                 <div className="pw-files-table-wrap">
                     {files.length === 0 ? (
-                        <div className="adm-empty" style={{ padding: '28px 12px' }}><div className="adm-emi">📂</div><p>لا توجد ملفات</p></div>
+                        <div className="adm-empty" style={{ padding: '28px 12px' }}>
+                            <div className="adm-emi">📂</div>
+                            <p>لا توجد ملفات</p>
+                        </div>
                     ) : (
                         <table className="pw-files-tbl">
-                            <thead><tr><th>الرقم</th><th>الأسم</th></tr></thead>
+                            <thead>
+                                <tr><th>الرقم</th><th>الأسم</th></tr>
+                            </thead>
                             <tbody>
                                 {[...files].sort((a, b) => Number(a.order) - Number(b.order)).map(f => (
                                     <tr key={f.id} className={selectedFile?.id === f.id ? 'active' : ''} onClick={() => pickFile(f)}>
@@ -317,13 +459,15 @@ function ParentSelector({ parentId, onChange, records }) {
     return (
         <div className="pw-parent-wrap">
             <div style={{ flex: '0 0 80px' }}>
-                <select className="lec-inp pw-parent-id-sel" value={parentId ?? ''} onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}>
+                <select className="lec-inp pw-parent-id-sel" value={parentId ?? ''}
+                    onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}>
                     <option value="">—</option>
                     {merged.map(m => <option key={m.id} value={m.id}>{m.id}</option>)}
                 </select>
             </div>
             <div style={{ flex: 1 }}>
-                <select className="lec-inp" value={parentId ?? ''} onChange={e => { const found = merged.find(m => m.id === Number(e.target.value)); onChange(found ? found.id : null); }}>
+                <select className="lec-inp" value={parentId ?? ''}
+                    onChange={e => { const found = merged.find(m => m.id === Number(e.target.value)); onChange(found ? found.id : null); }}>
                     <option value="">— بدون أب (رئيسي) —</option>
                     {merged.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                 </select>
@@ -355,20 +499,24 @@ const PlanworkTab = () => {
         (r.place || '').toLowerCase().includes(search.toLowerCase())
     );
 
-    const toast = (msg, type = 'success') => { setNotification({ msg, type }); setTimeout(() => setNotification(null), 3500); };
+    const toast = (msg, type = 'success') => {
+        setNotification({ msg, type });
+        setTimeout(() => setNotification(null), 3500);
+    };
     const pick = rec => { setSelected(rec); setForm({ ...rec }); setIsNew(false); setDeleteConfirm(false); };
 
     const handleTreeSelect = node => {
         setTreeSelected(node);
         const match = records.find(r => r.name === node.label || r.id === node.id);
         if (match) pick(match);
-        // if no match, just store selection for "+ جديد"
     };
 
     const handleNew = () => {
         const parentId = treeSelected ? treeSelected.id : null;
         setForm({ ...BLANK, parentId });
-        setSelected(null); setIsNew(true); setDeleteConfirm(false);
+        setSelected(null);
+        setIsNew(true);
+        setDeleteConfirm(false);
     };
 
     const handleChange = e => {
@@ -386,15 +534,31 @@ const PlanworkTab = () => {
         const clean = { ...form }; delete clean._slugManual;
         if (isNew) {
             const id = nextId.current++, newRec = { ...clean, id };
-            setRecords(prev => [...prev, newRec]); setSelected(newRec); setForm({ ...newRec }); setIsNew(false); toast('تم الإضافة');
+            setRecords(prev => [...prev, newRec]);
+            setSelected(newRec);
+            setForm({ ...newRec });
+            setIsNew(false);
+            toast('تم الإضافة');
         } else {
-            setRecords(prev => prev.map(r => r.id === clean.id ? clean : r)); setSelected(clean); setForm({ ...clean }); toast('تم الحفظ');
+            setRecords(prev => prev.map(r => r.id === clean.id ? clean : r));
+            setSelected(clean);
+            setForm({ ...clean });
+            toast('تم الحفظ');
         }
     };
-    const handleReset = () => { if (isNew) setForm({ ...BLANK }); else setForm({ ...selected }); setDeleteConfirm(false); toast('تم الإلغاء', 'info'); };
+
+    const handleReset = () => {
+        if (isNew) setForm({ ...BLANK });
+        else setForm({ ...selected });
+        setDeleteConfirm(false);
+        toast('تم الإلغاء', 'info');
+    };
+
     const handleDelete = () => {
         if (!deleteConfirm) { setDeleteConfirm(true); return; }
-        const rest = records.filter(r => r.id !== selected.id); setRecords(rest); setDeleteConfirm(false);
+        const rest = records.filter(r => r.id !== selected.id);
+        setRecords(rest);
+        setDeleteConfirm(false);
         if (rest.length) pick(rest[0]); else handleNew();
         toast('تم الحذف', 'error');
     };
@@ -421,7 +585,7 @@ const PlanworkTab = () => {
 
             <div className="lec-layout">
 
-                {/* ══ LEFT PANEL — only tree, no records list ══ */}
+                {/* ══ LEFT PANEL ══ */}
                 <div className="lec-panel pw-left-panel">
                     <div className="lec-panel-hdr">
                         <span className="lec-count-badge">{filtered.length}</span>
@@ -429,16 +593,19 @@ const PlanworkTab = () => {
                         <button className="lec-new-btn" onClick={handleNew}>+ جديد</button>
                     </div>
 
-                    {/* Tree only — full height */}
                     <div className="pw-tree-panel" style={{ borderTop: 'none', flex: 1 }}>
                         <div className="pw-tree-header">
                             خطه المعهد
                             {treeSelected && (
-                                <span className="pw-tree-selected-badge">← {treeSelected.label.slice(0, 22)}{treeSelected.label.length > 22 ? '…' : ''}</span>
+                                <span className="pw-tree-selected-badge">
+                                    ← {treeSelected.label.slice(0, 22)}{treeSelected.label.length > 22 ? '…' : ''}
+                                </span>
                             )}
                         </div>
                         <div className="pw-tree-scroll" style={{ maxHeight: 'calc(100vh - 140px)' }}>
-                            {STATIC_TREE.map(node => <TreeNode key={node.id} node={node} selectedId={treeSelected?.id} onSelect={handleTreeSelect} />)}
+                            {STATIC_TREE.map(node => (
+                                <TreeNode key={node.id} node={node} selectedId={treeSelected?.id} onSelect={handleTreeSelect} />
+                            ))}
                         </div>
                         {treeSelected && (
                             <div className="pw-tree-footer">
@@ -457,7 +624,9 @@ const PlanworkTab = () => {
                             <div>
                                 <div className="adm-hero-tag" style={{ marginBottom: 6, position: 'relative', zIndex: 1 }}>
                                     {isNew ? 'سجل جديد' : `ID: #${selected?.id}`}
-                                    {form.parentId != null && <span style={{ marginRight: 8, fontSize: '.72rem', opacity: .8 }}>↳ {parentName}</span>}
+                                    {form.parentId != null && (
+                                        <span style={{ marginRight: 8, fontSize: '.72rem', opacity: .8 }}>↳ {parentName}</span>
+                                    )}
                                 </div>
                                 <h2 className="lec-form-title">{isNew ? '➕ إضافة سجل جديد' : '✏️ تعديل بيانات خطة العمل'}</h2>
                                 {!isNew && selected && <p className="lec-form-sub">{selected.name}</p>}
@@ -469,7 +638,8 @@ const PlanworkTab = () => {
                             <div className="lec-fields-grid" style={{ marginBottom: 20 }}>
 
                                 <Field label="الرقم">
-                                    <input className="lec-inp" value={isNew ? 'تلقائي' : form.id} disabled style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed' }} />
+                                    <input className="lec-inp" value={isNew ? 'تلقائي' : form.id} disabled
+                                        style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed' }} />
                                 </Field>
 
                                 <div className="lec-field pw-parent-field">
@@ -487,10 +657,14 @@ const PlanworkTab = () => {
                                     <input className="lec-inp" name="name" value={form.name} onChange={handleChange} placeholder="الأسم..." />
                                 </Field>
                                 <Field label="Slug" full>
-                                    <input className="lec-inp" name="slug" value={form.slug || ''} onChange={handleChange} placeholder="auto-generated-slug" style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
+                                    <input className="lec-inp" name="slug" value={form.slug || ''} onChange={handleChange}
+                                        placeholder="auto-generated-slug"
+                                        style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
                                 </Field>
                                 <Field label="SKU">
-                                    <input className="lec-inp" name="sku" value={form.sku || ''} onChange={handleChange} placeholder="SKU-001" style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
+                                    <input className="lec-inp" name="sku" value={form.sku || ''} onChange={handleChange}
+                                        placeholder="SKU-001"
+                                        style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
                                 </Field>
                                 <Field label="السعر">
                                     <input className="lec-inp" name="price" value={form.price} onChange={handleChange} placeholder="السعر..." />
@@ -499,7 +673,8 @@ const PlanworkTab = () => {
                                     <input className="lec-inp" name="place" value={form.place} onChange={handleChange} placeholder="المكان..." />
                                 </Field>
                                 <Field label="التاريخ">
-                                    <input className="lec-inp" name="date" type="date" value={form.date} onChange={handleChange} style={{ direction: 'ltr', textAlign: 'right' }} />
+                                    <input className="lec-inp" name="date" type="date" value={form.date} onChange={handleChange}
+                                        style={{ direction: 'ltr', textAlign: 'right' }} />
                                 </Field>
                                 <Field label="الوصف" full>
                                     <input className="lec-inp" name="description" value={form.description} onChange={handleChange} placeholder="الوصف..." />
@@ -510,7 +685,8 @@ const PlanworkTab = () => {
                                     <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', padding: '10px 12px', border: '1.5px solid #d0d3d8', borderRadius: 3, background: '#fff' }}>
                                         {[{ name: 'show', label: 'عرض' }, { name: 'hasDetails', label: 'له تفاصيل' }, { name: 'showOnHome', label: 'عرض على الصفحه الرئيسيه' }].map(cb => (
                                             <label key={cb.name} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700, color: '#374151' }}>
-                                                <input type="checkbox" name={cb.name} checked={!!form[cb.name]} onChange={handleChange} style={{ width: 16, height: 16, accentColor: T.orange, cursor: 'pointer' }} />
+                                                <input type="checkbox" name={cb.name} checked={!!form[cb.name]} onChange={handleChange}
+                                                    style={{ width: 16, height: 16, accentColor: T.orange, cursor: 'pointer' }} />
                                                 {cb.label}
                                             </label>
                                         ))}
@@ -520,18 +696,31 @@ const PlanworkTab = () => {
 
                             <div className="lec-divider" />
 
-                            <RichTextEditor icon="📄" label="تفاصيل الكورس" sub="حدد النص ثم اختر الخط أو اللون"
-                                name="details" value={form.details} onChange={handleChange}
-                                placeholder="أدخل تفاصيل الكورس هنا..." minHeight={150} />
+                            {/* ── Updated RichTextEditor with font size ── */}
+                            <RichTextEditor
+                                icon="📄"
+                                label="تفاصيل الكورس"
+                                sub="حدد النص أولاً ثم اختر الحجم أو اللون من شريط الأدوات — يمكن إضافة روابط للمشاريع"
+                                name="details"
+                                value={form.details}
+                                onChange={handleChange}
+                                placeholder="أدخل تفاصيل الكورس هنا..."
+                                minHeight={150}
+                            />
 
                             <div className="lec-actions">
                                 <button className="lec-act-btn save" onClick={handleSave}>💾 حفظ</button>
                                 <button className="lec-act-btn new" onClick={handleNew}>➕ سجل جديد</button>
                                 <button className="lec-act-btn reset" onClick={handleReset}>↩ إلغاء</button>
                                 <div style={{ flex: 1 }} />
-                                {!isNew && (deleteConfirm
-                                    ? <div className="lec-delete-confirm"><span className="lec-delete-warn">⚠️ هل أنت متأكد؟</span><button className="lec-act-btn delete" onClick={handleDelete}>تأكيد الحذف</button><button className="adm-fclear" onClick={() => setDeleteConfirm(false)}>إلغاء</button></div>
-                                    : <button className="lec-act-btn delete" onClick={handleDelete}>🗑 حذف السجل</button>
+                                {!isNew && (
+                                    deleteConfirm
+                                        ? <div className="lec-delete-confirm">
+                                            <span className="lec-delete-warn">⚠️ هل أنت متأكد؟</span>
+                                            <button className="lec-act-btn delete" onClick={handleDelete}>تأكيد الحذف</button>
+                                            <button className="adm-fclear" onClick={() => setDeleteConfirm(false)}>إلغاء</button>
+                                        </div>
+                                        : <button className="lec-act-btn delete" onClick={handleDelete}>🗑 حذف السجل</button>
                                 )}
                             </div>
 
