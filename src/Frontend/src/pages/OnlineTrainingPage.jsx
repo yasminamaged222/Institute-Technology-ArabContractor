@@ -5,10 +5,15 @@ import {
     FaFileContract,
     FaLightbulb,
     FaShieldAlt,
+    FaVideo,
+    FaComments,
+    FaMapMarkerAlt,
+    FaBook,
+    FaHeadset,
+    FaCheckCircle,
 } from 'react-icons/fa';
 
 const css = `
-/* ── page root ── */
 .ot-page-root {
     min-height: 100vh;
     background: #fff;
@@ -65,10 +70,7 @@ const css = `
     margin: 0 0 20px;
     color: #fff;
 }
-.ot-hero-title em {
-    font-style: normal;
-    color: #f9c56a;
-}
+.ot-hero-title em { font-style: normal; color: #f9c56a; }
 .ot-hero-body {
     font-size: clamp(14px,1.6vw,17px);
     line-height: 2;
@@ -77,124 +79,195 @@ const css = `
     max-width: 680px;
 }
 
-/* ── SHARED SECTIONS ── */
+/* ── SHARED ── */
 .ot-section-white { background: #fff; padding: clamp(40px,6vw,80px) 0; text-align: right; }
 .ot-section-gray  { background: #f8fafc; padding: clamp(40px,6vw,80px) 0; text-align: right; }
-.ot-section-inner {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 clamp(20px,4vw,60px);
-}
-.ot-section-heading {
-    font-size: clamp(20px,2.5vw,28px);
-    font-weight: 900;
-    color: #1e293b;
-    margin: 0 0 10px;
-}
+.ot-section-inner { max-width: 1200px; margin: 0 auto; padding: 0 clamp(20px,4vw,60px); }
+.ot-section-heading { font-size: clamp(20px,2.5vw,28px); font-weight: 900; color: #1e293b; margin: 0 0 10px; }
 .ot-section-heading span { color: #0865a8; }
-.ot-heading-bar {
-    width: 60px;
-    height: 4px;
-    background: #f57c00;
-    border-radius: 2px;
-    margin: 0 0 36px auto;
-}
+.ot-heading-bar { width: 60px; height: 4px; background: #f57c00; border-radius: 2px; margin: 0 0 36px auto; }
+.ot-body-p { font-size: clamp(14px,1.4vw,16px); line-height: 2.1; color: #374151; margin: 0 0 16px; }
 
-/* ── INTRO GRID ── */
-.ot-intro-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(30px,4vw,60px);
-    align-items: center;
-}
-@media (max-width: 768px) {
-    .ot-intro-grid { grid-template-columns: 1fr; }
-}
-.ot-intro-text { display: flex; flex-direction: column; gap: 16px; }
-.ot-intro-p {
-    font-size: clamp(14px,1.4vw,16px);
-    line-height: 2;
-    color: #374151;
-    margin: 0;
-}
-.ot-intro-image img {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.12);
-    display: block;
-}
+/* ── BULLET LIST ── */
+.ot-bullet-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.ot-bullet-list li { display: flex; align-items: flex-start; gap: 10px; font-size: clamp(14px,1.4vw,15px); line-height: 1.8; color: #374151; }
+.ot-bullet-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: #f57c00; margin-top: 8px; }
 
-/* ── PROGRAMS LIST ── */
+/* ── WHY CARDS ── */
+.ot-why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; }
+.ot-why-card {
+    background: #fff; border-radius: 14px; padding: 22px 18px;
+    border: 1px solid #e2e8f0; box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s; text-align: right;
+}
+.ot-why-card:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(8,101,168,0.12); }
+.ot-why-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(135deg, #0865a8, #1a7abf);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px; margin-right: auto; margin-left: 0;
+}
+.ot-why-label { font-size: 14px; font-weight: 900; color: #1e293b; margin: 0; line-height: 1.5; }
+
+/* ── INTEGRATED BOX ── */
+.ot-integrated-box {
+    background: linear-gradient(135deg, #0a3d6b 0%, #0865a8 100%);
+    border-radius: 20px; padding: clamp(28px,4vw,48px); color: #fff;
+}
+.ot-integrated-title { font-size: clamp(18px,2vw,22px); font-weight: 900; color: #f9c56a; margin: 0 0 14px; }
+.ot-integrated-p { font-size: clamp(14px,1.4vw,15px); line-height: 2; color: rgba(255,255,255,0.88); margin: 0 0 16px; }
+.ot-integrated-bullets { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.ot-integrated-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: clamp(13px,1.3vw,15px); line-height: 1.8; color: rgba(255,255,255,0.88); }
+.ot-int-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: #f9c56a; margin-top: 8px; }
+
+/* ── GOALS ── */
+.ot-goals-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+.ot-goal-card {
+    background: #fff; border-radius: 14px; padding: 22px;
+    border-right: 4px solid #0865a8; box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+    display: flex; align-items: flex-start; gap: 14px;
+}
+.ot-goal-check { flex-shrink: 0; color: #0865a8; margin-top: 2px; }
+.ot-goal-text { font-size: 15px; line-height: 1.8; color: #374151; margin: 0; }
+
+/* ── PLATFORM ── */
+.ot-platform-box {
+    background: #fff; border-radius: 20px; padding: clamp(24px,3vw,40px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: start;
+}
+@media (max-width: 600px) { .ot-platform-box { grid-template-columns: 1fr; } }
+.ot-platform-logo {
+    width: 90px; height: 90px; border-radius: 20px;
+    background: linear-gradient(135deg, #0865a8, #1a7abf);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 42px; font-weight: 900; color: #fff;
+    box-shadow: 0 8px 24px rgba(8,101,168,0.3); flex-shrink: 0;
+}
+.ot-platform-name { font-size: clamp(18px,2vw,22px); font-weight: 900; color: #0865a8; margin: 0 0 16px; }
+.ot-platform-bullets { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.ot-platform-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #374151; line-height: 1.7; }
+.ot-platform-bullets li::before { content: ''; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: #f57c00; margin-top: 7px; }
+
+/* ── INFOGRAPHIC ── */
+.ot-infographic-wrapper { border-radius: 16px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.14); }
+.ot-infographic-wrapper img { width: 100%; height: auto; display: block; }
+
+/* ── FEATURES ── */
+.ot-features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.ot-feature-card {
+    background: #fff; border-radius: 14px; padding: 20px;
+    border: 1px solid #e2e8f0; box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+    display: flex; align-items: flex-start; gap: 12px; text-align: right; transition: transform 0.2s;
+}
+.ot-feature-card:hover { transform: translateY(-3px); }
+.ot-feature-icon {
+    flex-shrink: 0; width: 42px; height: 42px; border-radius: 10px;
+    background: linear-gradient(135deg, #0865a8, #1a7abf);
+    display: flex; align-items: center; justify-content: center;
+}
+.ot-feature-label { font-size: 14px; font-weight: 900; color: #1e293b; line-height: 1.6; margin: 0; }
+
+/* ── PROGRAMS ── */
 .ot-programs-list { display: flex; flex-direction: column; }
 .ot-program-card {
-    display: flex;
-    gap: clamp(16px,2vw,24px);
-    align-items: flex-start;
-    padding: clamp(20px,2.5vw,28px) 0;
-    border-bottom: 1px solid #e2e8f0;
+    display: flex; gap: clamp(16px,2vw,24px); align-items: flex-start;
+    padding: clamp(20px,2.5vw,28px) 0; border-bottom: 1px solid #e2e8f0;
 }
 .ot-program-card:last-child { border-bottom: none; }
 .ot-icon {
     flex-shrink: 0;
-    width: clamp(48px,5vw,58px);
-    height: clamp(48px,5vw,58px);
-    border-radius: 50%;
+    width: clamp(48px,5vw,58px); height: clamp(48px,5vw,58px); border-radius: 50%;
     background: linear-gradient(135deg, #0865a8, #1a7abf);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 14px rgba(8,101,168,0.25);
-    margin-top: 4px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(8,101,168,0.25); margin-top: 4px;
 }
 .ot-program-content { flex: 1; }
-.ot-program-title {
-    font-size: clamp(15px,1.6vw,18px);
-    font-weight: 900;
-    margin: 0 0 10px;
-    line-height: 1.5;
-}
+.ot-program-title { font-size: clamp(15px,1.6vw,18px); font-weight: 900; margin: 0 0 10px; line-height: 1.5; }
 .ot-program-title a { color: #0865a8; text-decoration: none; transition: color 0.2s; }
 .ot-program-title a:hover { color: #f57c00; }
-.ot-program-desc {
-    font-size: clamp(13px,1.3vw,15px);
-    line-height: 2;
-    color: #374151;
-    margin: 0;
+.ot-program-desc { font-size: clamp(13px,1.3vw,15px); line-height: 2; color: #374151; margin: 0; }
+
+/* ── CTA ── */
+.ot-cta-banner {
+    background: linear-gradient(135deg, #0a3d6b, #0865a8);
+    border-radius: 16px; padding: 32px; text-align: center; margin-top: 40px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center;
 }
+.ot-cta-icon { color: #f9c56a; flex-shrink: 0; }
+.ot-cta-text { font-size: clamp(14px,1.5vw,17px); font-weight: 700; color: #fff; margin: 0; }
 `;
 
 export default function OnlineTrainingPage() {
+
+    const whyItems = [
+        { icon: <FaVideo size={20} color="white" />, label: 'تقديم التدريب بشكل مباشر (Live) عبر Microsoft Teams' },
+        { icon: <FaComments size={20} color="white" />, label: 'بيئة تعليمية تفاعلية' },
+        { icon: <FaMapMarkerAlt size={20} color="white" />, label: 'إمكانية الحضور من أي مكان داخل أو خارج مصر' },
+        { icon: <FaBook size={20} color="white" />, label: 'محتوى تدريبي محدث وفق احتياجات سوق العمل' },
+        { icon: <FaHeadset size={20} color="white" />, label: 'دعم فني وتواصل مستمر مع المتدربين' },
+    ];
+
+    const integratedBullets = [
+        'إرسال روابط الحضور والتعليمات بشكل واضح ومنظم',
+        'متابعة مستمرة لضمان الالتزام والاستفادة',
+        'توفير تسجيلات أو مواد مساعدة (عند الحاجة)',
+        'تقييم الأداء لضمان تحقيق أهداف التدريب',
+    ];
+
+    const goals = [
+        'تأهيل كوادر قادرة على مواكبة التطور التكنولوجي',
+        'دعم الطلاب والخريجين بمهارات عملية حقيقية',
+        'ربط التدريب بمتطلبات سوق العمل محليًا ودوليًا',
+    ];
+
+    const mechanismBullets = [
+        'عقد اجتماعات مباشرة بالصوت والصورة',
+        'مشاركة المحتوى والعروض التقديمية',
+        'التفاعل من خلال الدردشة والأسئلة المباشرة',
+        'تسجيل المحاضرات للرجوع إليها لاحقًا',
+    ];
+
+    const platformFeatures = [
+        'الفصول الافتراضية المباشرة',
+        'مشاركة الملفات والمواد التدريبية',
+        'تنظيم الجداول التدريبية وإرسال الدعوات',
+        'إدارة التفاعل بين المدرب والمتدربين بكفاءة',
+    ];
+
+    const features = [
+        { icon: <FaVideo size={18} color="white" />, label: 'تدريب مباشر (Live) وليس مسجل' },
+        { icon: <FaComments size={18} color="white" />, label: 'تفاعل فوري مع المدربين' },
+        { icon: <FaMapMarkerAlt size={18} color="white" />, label: 'مرونة في الحضور من أي مكان' },
+        { icon: <FaBook size={18} color="white" />, label: 'محتوى تدريبي محدث وفق متطلبات سوق العمل' },
+        { icon: <FaHeadset size={18} color="white" />, label: 'دعم فني مستمر طوال فترة التدريب' },
+    ];
+
     const programs = [
         {
             icon: <FaProjectDiagram size={28} color="white" />,
             title: 'برنامج Project Management Professional (PMP)',
-            description:
-                'وهو برنامج إدارة المشاريع الإحترافية (PMP) الذي اصبح الآن متوفر أون لاين تحت اشراف طقم ادارى متخصص (تدريب عن بعد) مما يتيح تنفيذ العملية اون لاين، بحيث تتمكن من الإستفسار عن أي نقطة أو تساؤل أثناء مشاهدة المادة وحضور البرنامج وايضا الاستفادة بالحصول على مقاطع فيديو متعددة تشرح مادة إدارة المشاريع الإحترافية (PMP) مبنيةً على آخر إصدار من كتاب و منهجية إدارة المشاريع الإحترافية PMBOK وايضا امثلة من الاختبارات للمساعدة في تأكيد المعلومات الواردة في كل وحدة وفور اكتمال حضور المتدرب ثلاثة اسابيع بواقع 45 ساعة تدريبية واجتيازه تقييم كل اسبوع من الاسابيع الثلاثة بنجاح يحصل على شهادة من المعهد كجهة معتمدة من معهد ادارة المشروعات الامريكى PMI.',
+            description: 'وهو برنامج إدارة المشاريع الإحترافية (PMP) الذي اصبح الآن متوفر أون لاين تحت اشراف طقم ادارى متخصص (تدريب عن بعد) مما يتيح تنفيذ العملية اون لاين، بحيث تتمكن من الإستفسار عن أي نقطة أو تساؤل أثناء مشاهدة المادة وحضور البرنامج وايضا الاستفادة بالحصول على مقاطع فيديو متعددة تشرح مادة إدارة المشاريع الإحترافية (PMP) مبنيةً على آخر إصدار من كتاب و منهجية إدارة المشاريع الإحترافية PMBOK وايضا امثلة من الاختبارات للمساعدة في تأكيد المعلومات الواردة في كل وحدة وفور اكتمال حضور المتدرب ثلاثة اسابيع بواقع 45 ساعة تدريبية واجتيازه تقييم كل اسبوع من الاسابيع الثلاثة بنجاح يحصل على شهادة من المعهد كجهة معتمدة من معهد ادارة المشروعات الامريكى PMI.',
         },
         {
             icon: <FaUserTie size={28} color="white" />,
             title: 'القيادة التنفيذية',
-            description:
-                'وهى ندوة اليوم الواحد حيث تم تنظيمها باستخدام تكنولوجيا الاتصالات عن بعد حيث يتم حضور المتدربين الندوة عن بعد والاستفادة من المادة العلمية التى يلقيها المحاضر وتشمل (الانماط المختلفة للقيادة - اساليب القيادة الفعالة)',
+            description: 'وهى ندوة اليوم الواحد حيث تم تنظيمها باستخدام تكنولوجيا الاتصالات عن بعد حيث يتم حضور المتدربين الندوة عن بعد والاستفادة من المادة العلمية التى يلقيها المحاضر وتشمل (الانماط المختلفة للقيادة - اساليب القيادة الفعالة)',
         },
         {
             icon: <FaFileContract size={28} color="white" />,
             title: 'عقود الفيديك',
-            description:
-                'وهى ندوة تعقد لمدة يومين للمهتمين بتفاصيل العقود الخاصة بالمشروعات أو مدير مشروع أو مسئول التعاقدات حيث تحتوى الندوة على فكرة عامة عن عقود الفيديك وشروطه والبنود المتعلقة بالوقت به والبنود المتعلقة بالتغيرات والمطالبات والبنود المتعلقة بدفع المستحقات وايضا تسوية النزاعات فى عقود الفيديك ويتم تنفيذها ايضا عن بعد',
+            description: 'وهى ندوة تعقد لمدة يومين للمهتمين بتفاصيل العقود الخاصة بالمشروعات أو مدير مشروع أو مسئول التعاقدات حيث تحتوى الندوة على فكرة عامة عن عقود الفيديك وشروطه والبنود المتعلقة بالوقت به والبنود المتعلقة بالتغيرات والمطالبات والبنود المتعلقة بدفع المستحقات وايضا تسوية النزاعات فى عقود الفيديك ويتم تنفيذها ايضا عن بعد',
         },
         {
             icon: <FaLightbulb size={28} color="white" />,
             title: 'اساليب تحليل المشكلات واتخاذ القرارات',
-            description:
-                'وهى ندوة لمدة يومين تتيح للمتدرب حل المشكلات واتخاذ القرارات والتى تنظم طريقة تفكير المتدرب عند مواجهة المشكلات فى جميع نواحي الحياة العملية ومن خلالها يستطيع المتدرب التعرف على الطرق العلمية المنظمة لحل المشكلات واتخاذ القرارات بداية من الاسلوب الادارى فى تحليل وحل المشكلات ثم معرفة انماط المديرين فى حل المشكلات الى ان يتم الإتفاق على افضل القرارات لتطبيقها ووضع ورقة عمل لتنفيذها ومتابعتها وتقييم فاعليته ويتم تنفيذها ايضا عن بعد',
+            description: 'وهى ندوة لمدة يومين تتيح للمتدرب حل المشكلات واتخاذ القرارات والتى تنظم طريقة تفكير المتدرب عند مواجهة المشكلات فى جميع نواحي الحياة العملية ومن خلالها يستطيع المتدرب التعرف على الطرق العلمية المنظمة لحل المشكلات واتخاذ القرارات بداية من الاسلوب الادارى فى تحليل وحل المشكلات ثم معرفة انماط المديرين فى حل المشكلات الى ان يتم الإتفاق على افضل القرارات لتطبيقها ووضع ورقة عمل لتنفيذها ومتابعتها وتقييم فاعليته ويتم تنفيذها ايضا عن بعد',
         },
         {
             icon: <FaShieldAlt size={28} color="white" />,
             title: 'برنامجى السلامة والجودة للمهندسين المرشحين للترقى',
-            description:
-                'وفى اطار حرص الشركة لتزويد العاملين بها بالمعرفة الكاملة بأسس السلامة والصحة المهنية ومتطلبات الجودة بالشركة فقد حرصت على ضرورة حضور المهندسين المرشحين للترقى لبرنامجى السلامة والجودة مما يتيح للمهندسين الحاضرين لتلك البرامج التعامل مع متطلبات السلامة من حيث (مهمات الحماية الشخصية – دليل و خطة السلامة والصحة المهنية للمشروعات - خطة الاستجابة للطوارئ والحريق - تصاريح الاعمال الخطرة - تحليل مؤشرات الحوادث والاصابات والامراض المهنية - تقييم المخاطر - ترتيب ونظافة مواقع العمل) وايضا لتحقيق اعلى جودة من حيث (التعريفات الهامة والتطور التاريخى للجودة - المواصفات الدولية الأيزو) ويتم تنفيذها ايضا عن بعد',
+            description: 'وفى اطار حرص الشركة لتزويد العاملين بها بالمعرفة الكاملة بأسس السلامة والصحة المهنية ومتطلبات الجودة بالشركة فقد حرصت على ضرورة حضور المهندسين المرشحين للترقى لبرنامجى السلامة والجودة مما يتيح للمهندسين الحاضرين لتلك البرامج التعامل مع متطلبات السلامة من حيث (مهمات الحماية الشخصية – دليل و خطة السلامة والصحة المهنية للمشروعات - خطة الاستجابة للطوارئ والحريق - تصاريح الاعمال الخطرة - تحليل مؤشرات الحوادث والاصابات والامراض المهنية - تقييم المخاطر - ترتيب ونظافة مواقع العمل) وايضا لتحقيق اعلى جودة من حيث (التعريفات الهامة والتطور التاريخى للجودة - المواصفات الدولية الأيزو) ويتم تنفيذها ايضا عن بعد',
         },
     ];
 
@@ -205,7 +278,6 @@ export default function OnlineTrainingPage() {
     return (
         <>
             <style>{css}</style>
-
             <div className="ot-page-root" dir="rtl">
 
                 {/* ── BREADCRUMB ── */}
@@ -214,12 +286,9 @@ export default function OnlineTrainingPage() {
                     borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px'
                 }}>
                     <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
-                        <a
-                            href="/"
-                            style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
+                        <a href="/" style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
                             onMouseEnter={e => e.target.style.color = '#f57c00'}
-                            onMouseLeave={e => e.target.style.color = '#0865a8'}
-                        >
+                            onMouseLeave={e => e.target.style.color = '#0865a8'}>
                             الصفحة الرئيسية
                         </a>
                         <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
@@ -232,45 +301,138 @@ export default function OnlineTrainingPage() {
                     <div className="ot-hero-accent-bar" />
                     <div className="ot-hero-content">
                         <span className="ot-hero-eyebrow">تعلم بلا حدود جغرافية</span>
-                        <h1 className="ot-hero-title">
-                            التدريب عن بعد<br />
-                            <em>( أونلاين )</em>
-                        </h1>
+                        <h1 className="ot-hero-title">التدريب عن بعد<br /><em>( أونلاين )</em></h1>
                         <p className="ot-hero-body">
-                            فى ظل حرص الشركة على رفع كفاءة العاملين وتزويدهم بالمعارف الجديدة، وفى ظل الظروف التى
-                            يمر بها العالم، اتجه المعهد إلى تنفيذ عملية التدريب عن بعد معتمدًا على تكنولوجيا المعلومات
-                            وآليات الاتصال الحديثة لكسر الحدود الجغرافية والزمنية.
+                            في إطار توجه المعهد التكنولوجي لهندسة التشييد والإدارة نحو التحول الرقمي وتطوير منظومة التدريب،
+                            يقدم المعهد برامج تدريبية متكاملة بنظام التدريب عن بعد المباشر (Live Training)، والتي تتيح
+                            للمتدربين الحصول على تجربة تعليمية تفاعلية عالية الجودة دون التقيد بالموقع الجغرافي.
+                        </p>
+                        <p className="ot-hero-body" style={{ marginTop: 14 }}>
+                            يعتمد هذا النظام على تقديم محتوى تدريبي احترافي يتم تنفيذه بواسطة نخبة من المدربين المتخصصين،
+                            من خلال جلسات مباشرة تُمكّن المتدربين من التفاعل الفوري، طرح الأسئلة، والمشاركة في المناقشات
+                            والتطبيقات العملية، بما يضمن تحقيق أقصى استفادة ممكنة.
                         </p>
                     </div>
                 </section>
 
-                {/* ── INTRO WITH IMAGE ── */}
+                {/* ── 💡 لماذا التدريب الأونلاين ── */}
                 <section className="ot-section-white">
                     <div className="ot-section-inner">
-                        <h2 className="ot-section-heading">
-                            ما هو <span>التدريب عن بعد</span>
-                        </h2>
+                        <h2 className="ot-section-heading">💡 لماذا <span>التدريب الأونلاين بالمعهد؟</span></h2>
                         <div className="ot-heading-bar" />
+                        <p className="ot-body-p">يتميز التدريب الأونلاين لدينا بعدة عناصر تجعله أكثر مرونة وفعالية:</p>
+                        <div className="ot-why-grid">
+                            {whyItems.map((item, i) => (
+                                <div className="ot-why-card" key={i}>
+                                    <div className="ot-why-icon">{item.icon}</div>
+                                    <p className="ot-why-label">{item.label}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
 
-                        <div className="ot-intro-grid">
-                            <div className="ot-intro-text">
-                                <p className="ot-intro-p">
-                                    هي عملية تدريبية تعتمد على تحديد الاحتياجات التدريبية وتصميم البرامج وتخطيط وادارة
-                                    العملية التدريبية، إلا أنها تعتمد على تكنولوجيا المعلومات باستخدام آليات الاتصال الحديثة
-                                    من حاسب وشبكاته ووسائطه المتعددة من صوت وصورة في التواصل بين المدرب والمتدربين
-                                    والطاقم الإداري.
-                                </p>
-                                <p className="ot-intro-p">
-                                    الهدف هو كسر الحدود الجغرافية والزمنية التي تعيق عمليات التدريب، واستخدام التقنية
-                                    الإلكترونية بجميع أنواعها في إيصال المعلومة للمتعلم بأقصر وقت وأقل جهد وأكبر فائدة.
-                                </p>
+                {/* ── 🚀 تجربة تدريب متكاملة ── */}
+                <section className="ot-section-gray">
+                    <div className="ot-section-inner">
+                        <div className="ot-integrated-box">
+                            <p className="ot-integrated-title">🚀 تجربة تدريب متكاملة</p>
+                            <p className="ot-integrated-p">
+                                لا يقتصر التدريب الأونلاين على مجرد حضور محاضرات، بل هو منظومة تدريبية متكاملة تبدأ من لحظة
+                                التسجيل، مرورًا بالتواصل المستمر عبر البريد الإلكتروني وواتساب، وحتى انتهاء البرنامج
+                                والحصول على شهادة معتمدة.
+                            </p>
+                            <p className="ot-integrated-p">ويحرص المعهد على توفير تجربة سلسة للمتدرب من خلال:</p>
+                            <ul className="ot-integrated-bullets">
+                                {integratedBullets.map((b, i) => (
+                                    <li key={i}><span className="ot-int-dot" />{b}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ── 🎯 هدفنا ── */}
+                <section className="ot-section-white">
+                    <div className="ot-section-inner">
+                        <h2 className="ot-section-heading">🎯 <span>هدفنا</span></h2>
+                        <div className="ot-heading-bar" />
+                        <p className="ot-body-p">نهدف من خلال منظومة التدريب عن بعد إلى:</p>
+                        <div className="ot-goals-grid">
+                            {goals.map((g, i) => (
+                                <div className="ot-goal-card" key={i}>
+                                    <FaCheckCircle size={22} className="ot-goal-check" />
+                                    <p className="ot-goal-text">{g}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* ── 💻 آلية تنفيذ التدريب ── */}
+                <section className="ot-section-gray">
+                    <div className="ot-section-inner">
+                        <h2 className="ot-section-heading">💻 <span>آلية تنفيذ التدريب</span></h2>
+                        <div className="ot-heading-bar" />
+                        <p className="ot-body-p">
+                            يتم تنفيذ البرامج التدريبية الأونلاين من خلال جلسات مباشرة (Live Sessions) يقودها مدربون
+                            متخصصون، حيث يتم التفاعل مع المتدربين بشكل فوري من خلال الشرح، المناقشات، وورش العمل التطبيقية.
+                        </p>
+                        <p className="ot-body-p">ويعتمد التدريب على منصة Microsoft Teams، والتي تُعد من أبرز منصات التواصل والتعلم الرقمي، حيث تتيح:</p>
+                        <ul className="ot-bullet-list" style={{ marginBottom: 16 }}>
+                            {mechanismBullets.map((b, i) => (
+                                <li key={i}><span className="ot-bullet-dot" />{b}</li>
+                            ))}
+                        </ul>
+                        <p className="ot-body-p">وتُستخدم هذه المنصة على نطاق واسع لدعم التدريب والتعاون عن بُعد في بيئات العمل الحديثة.</p>
+                    </div>
+                </section>
+
+                {/* ── ⚙️ البرنامج المستخدم ── */}
+                <section className="ot-section-white">
+                    <div className="ot-section-inner">
+                        <h2 className="ot-section-heading">⚙️ البرنامج المستخدم <span>في التدريب</span></h2>
+                        <div className="ot-heading-bar" />
+                        <p className="ot-body-p">يعتمد المعهد على برنامج Microsoft Teams وذلك لما يوفره من بيئة تعليمية متكاملة تشمل:</p>
+                        <div className="ot-platform-box">
+                            <div className="ot-platform-logo">T</div>
+                            <div>
+                                <p className="ot-platform-name">Microsoft Teams</p>
+                                <ul className="ot-platform-bullets">
+                                    {platformFeatures.map((f, i) => <li key={i}>{f}</li>)}
+                                </ul>
                             </div>
-                            <div className="ot-intro-image">
-                                <img
-                                    src="https://www.arabcont.com/icemt/assets/images/online-training.jpg"
-                                    alt="التدريب عن بعد"
-                                />
-                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* ── 🪜 خطوات الالتحاق (Infographic) ── */}
+                <section className="ot-section-gray">
+                    <div className="ot-section-inner">
+                        <h2 className="ot-section-heading">🪜 خطوات <span>الالتحاق والتدريب</span></h2>
+                        <div className="ot-heading-bar" />
+                        <p className="ot-body-p">تمر عملية التدريب الأونلاين بعدة مراحل منظمة لضمان تجربة تعليمية سلسة:</p>
+                        <div className="ot-infographic-wrapper">
+                            <img
+                                src="/images/Teams.png"
+                                alt="خطوات الالتحاق والتدريب عبر Microsoft Teams"
+                            />
+                        </div>
+                    </div>
+                </section>
+
+                {/* ── 📌 مميزات التدريب الأونلاين ── */}
+                <section className="ot-section-white">
+                    <div className="ot-section-inner">
+                        <h2 className="ot-section-heading">📌 مميزات <span>التدريب الأونلاين بالمعهد</span></h2>
+                        <div className="ot-heading-bar" />
+                        <div className="ot-features-grid">
+                            {features.map((f, i) => (
+                                <div className="ot-feature-card" key={i}>
+                                    <div className="ot-feature-icon">{f.icon}</div>
+                                    <p className="ot-feature-label">{f.label}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </section>
@@ -278,23 +440,30 @@ export default function OnlineTrainingPage() {
                 {/* ── PROGRAMS ── */}
                 <section className="ot-section-gray">
                     <div className="ot-section-inner">
-                        <h2 className="ot-section-heading">
-                            أمثلة فعلية على <span>البرامج التدريبية عن بعد</span>
-                        </h2>
+                        <h2 className="ot-section-heading">أمثلة فعلية على <span>البرامج التدريبية عن بعد</span></h2>
                         <div className="ot-heading-bar" />
-
                         <div className="ot-programs-list">
                             {programs.map((program, index) => (
                                 <div className="ot-program-card" key={index}>
                                     <div className="ot-icon">{program.icon}</div>
                                     <div className="ot-program-content">
-                                        <h3 className="ot-program-title">
-                                            <a href="#">{program.title}</a>
-                                        </h3>
+                                        <h3 className="ot-program-title"><a href="#">{program.title}</a></h3>
                                         <p className="ot-program-desc">{program.description}</p>
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* ── CTA ── */}
+                <section className="ot-section-white">
+                    <div className="ot-section-inner">
+                        <div className="ot-cta-banner">
+                            <FaShieldAlt size={28} className="ot-cta-icon" />
+                            <p className="ot-cta-text">
+                                نلتزم بتقديم تجربة تدريبية احترافية تفاعلية تدعم تطوير مهاراتك وتحقيق أهدافك المهنية
+                            </p>
                         </div>
                     </div>
                 </section>

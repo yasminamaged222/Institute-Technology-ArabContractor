@@ -4,6 +4,7 @@ import FacebookIcon from '@mui/icons-material/Facebook';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import GoogleIcon from '@mui/icons-material/Google';
 import PhoneIcon from '@mui/icons-material/Phone';
+import WhatsappIcon from '@mui/icons-material/WhatsApp';
 
 const FloatingSocialBar = () => {
   return (
@@ -43,7 +44,7 @@ const FloatingSocialBar = () => {
       <Tooltip title="تابعنا على يوتيوب" placement="right">
         <IconButton
           component="a"
-                  href="https://www.youtube.com/user/arabcontCompany" // غيري بالرابط الرسمي
+                  href="https://youtube.com/@ac-icemt?si=dS7CixRAX08votqw" // غيري بالرابط الرسمي
           target="_blank"
           sx={{
             bgcolor: 'white',
@@ -82,25 +83,27 @@ const FloatingSocialBar = () => {
         </IconButton>
       </Tooltip>
 
-          <Tooltip title="اتصل بنا: +20 11 09754459  " placement="right">
-        <IconButton
-          component="a"
-                  href="tel:+201109754459"
-          sx={{
-            bgcolor: 'white',
-            color: '#25D366',
-            boxShadow: 3,
-            width: 50,
-            height: 50,
-            '&:hover': {
-              bgcolor: '#25D366',
-              color: 'white',
-            },
-          }}
-        >
-          <PhoneIcon fontSize="large" />
-        </IconButton>
-      </Tooltip>
+          <Tooltip title="تواصل معنا على واتساب" placement="right">
+              <IconButton
+                  component="a"
+                  href="https://wa.me/201109754459"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                      bgcolor: 'white',
+                      color: '#25D366',
+                      boxShadow: 3,
+                      width: 50,
+                      height: 50,
+                      '&:hover': {
+                          bgcolor: '#25D366',
+                          color: 'white',
+                      },
+                  }}
+              >
+                  <WhatsappIcon fontSize="large" />
+              </IconButton>
+          </Tooltip>
     </Box>
   );
 };
