@@ -2,66 +2,69 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { T } from "../../components/admin/constants";
 
-// ── Static tree data ──────────────────────────────────────────────────────────
-const STATIC_TREE = [
-    {
-        id: 1, label: 'الخطة التدريبية', expanded: true, children: [
-            {
-                id: 2, label: 'برامج موجهة للمهندسين', expanded: false, children: [
-                    {
-                        id: 21, label: 'برامج تأهيلية', expanded: false, children: [
-                            { id: 211, label: 'برنامج إعداد وتأهيل مهندس حديث مدني وعمارة', children: [] },
-                            { id: 212, label: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الأولى ( أعمال الهيكل الخرساني)', children: [] },
-                            { id: 213, label: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الثانيه ( أعمال التشطيبات الأساسية)', children: [] },
-                            { id: 214, label: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الثالثة (إدارة المشروعات والمالية)', children: [] },
-                            { id: 215, label: 'برنامج إعداد وتأهيل مهندس حديث ميكانيكا وكهرباء', children: [] },
-                            { id: 216, label: 'الدورة المتقدمة مهندس حديث', children: [] },
-                        ]
-                    },
-                    { id: 22, label: 'برامج عامة', children: [] },
-                ]
-            },
-            { id: 3, label: 'برامج تأهيلية للمهندسين', expanded: false, children: [{ id: 31, label: 'تأهيل مهندس مدني متقدم', children: [] }, { id: 32, label: 'تأهيل مهندس كهرباء متقدم', children: [] }] },
-            { id: 4, label: 'برامج موجهة للماليين', expanded: false, children: [{ id: 41, label: 'محاسبة مالية متقدمة', children: [] }, { id: 42, label: 'تحليل مالي وإعداد الميزانيات', children: [] }] },
-            { id: 5, label: 'برامج موجهة للأمن', expanded: false, children: [{ id: 51, label: 'أمن المنشآت', children: [] }, { id: 52, label: 'السلامة والصحة المهنية', children: [] }] },
-            { id: 6, label: 'برامج مركز جسر السويس', expanded: false, children: [{ id: 61, label: 'برامج الهندسة الإقليمية', children: [] }] },
-            { id: 7, label: 'برامج مركز شبرا', expanded: false, children: [{ id: 71, label: 'دورات هندسية شبرا', children: [] }] },
-            { id: 8, label: 'برامج مالية موجهه لغير الماليين', expanded: false, children: [{ id: 81, label: 'أساسيات المحاسبة للمهندسين', children: [] }] },
-            { id: 9, label: 'برامج تأهيلية لأعضاء المجلس التنفيذى لشباب قادة المستقبل', expanded: false, children: [{ id: 91, label: 'القيادة وصنع القرار', children: [] }] },
-            { id: 10, label: 'برامج القطاع القانوني والعقارى', expanded: false, children: [{ id: 101, label: 'قانون العقود', children: [] }] },
-            { id: 11, label: 'برامج الإدارة الطبية', expanded: false, children: [{ id: 111, label: 'إدارة المستشفيات', children: [] }] },
-            { id: 12, label: 'دورات مستحدثة', children: [] },
-            { id: 13, label: 'تدريب الطلاب الصيفى', children: [] },
-        ]
-    }
-];
+const BASE_URL = 'https://acwebsite-icmet-test.azurewebsites.net';
 
+// ── Auth token (Clerk) ────────────────────────────────────────────────────────
+async function getToken() {
+    try {
+        if (window.Clerk?.session) return await window.Clerk.session.getToken();
+    } catch (_) { }
+    return null;
+}
+async function authHeaders(isFormData = false) {
+    const token = await getToken();
+    const headers = { ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+    if (!isFormData) headers['Content-Type'] = 'application/json';
+    return headers;
+}
+
+// ── Field mapping: API ↔ Form ─────────────────────────────────────────────────
+function apiToForm(item) {
+    return {
+        id: item.childId ?? item.id ?? 0,
+        parentId: item.parentId ?? null,
+        priority: item.priority ?? '',
+        days: item.courseDays ?? '',
+        name: item.serviceTitle ?? '',
+        slug: item.slug ?? '',
+        sku: item.sku ?? '',
+        show: item.mainFlag ?? false,
+        hasDetails: item.detailsFlag ?? false,
+        showOnHome: item.specialFlag ?? false,
+        price: item.planCost ?? '',
+        description: item.courseDesc ?? '',
+        place: item.coursePlace ?? '',
+        date: item.courseDate ?? '',
+        details: item.courseContent ?? '',
+    };
+}
+function formToApi(form) {
+    return {
+        parentId: form.parentId ?? null,
+        serviceTitle: form.name,
+        priority: Number(form.priority) || 0,
+        mainFlag: !!form.show,
+        detailsFlag: !!form.hasDetails,
+        specialFlag: !!form.showOnHome,
+        courseDesc: form.description || null,
+        coursePlace: form.place || null,
+        courseDate: form.date || null,
+        courseDays: form.days !== '' && form.days != null ? String(form.days) : null,
+        courseContent: form.details || null,
+        planCost: Number(form.price) || 0,
+        slug: form.slug || null,
+        sku: form.sku || null,
+    };
+}
+
+// ── Flatten tree ──────────────────────────────────────────────────────────────
 function flattenTree(nodes, acc = []) {
-    nodes.forEach(n => { acc.push({ id: n.id, label: n.label }); if (n.children?.length) flattenTree(n.children, acc); });
+    nodes.forEach(n => {
+        acc.push({ id: n.id, label: n.title || n.label || '' });
+        if (n.children?.length) flattenTree(n.children, acc);
+    });
     return acc;
 }
-const ALL_TREE_NODES = flattenTree(STATIC_TREE);
-
-// ── Initial records ───────────────────────────────────────────────────────────
-const INITIAL_RECORDS = [
-    { id: 1, parentId: null, priority: 1, days: 5, name: 'الخطة التدريبية', slug: 'training-plan', sku: 'TP-001', show: true, hasDetails: true, showOnHome: true, price: '1500', description: 'الخطة التدريبية الرئيسية للمعهد', place: 'القاهرة', date: '2025-01-15', details: '' },
-    { id: 2, parentId: 1, priority: 2, days: 3, name: 'برامج موجهة للمهندسين', slug: 'engineers-programs', sku: 'EP-001', show: true, hasDetails: true, showOnHome: false, price: '2000', description: 'برامج تدريبية متخصصة للمهندسين', place: 'الجيزة', date: '2025-02-10', details: '' },
-    { id: 3, parentId: 1, priority: 3, days: 7, name: 'برامج تأهيلية للمهندسين', slug: 'engineers-qualify', sku: 'EQ-001', show: true, hasDetails: false, showOnHome: false, price: '2500', description: 'برامج تأهيل وتطوير مهني', place: 'الإسكندرية', date: '2025-03-05', details: '' },
-    { id: 4, parentId: 1, priority: 4, days: 4, name: 'برامج موجهة للماليين', slug: 'finance-programs', sku: 'FP-001', show: false, hasDetails: true, showOnHome: false, price: '1800', description: 'برامج مالية ومحاسبية متقدمة', place: 'القاهرة', date: '2025-04-20', details: '' },
-    { id: 5, parentId: 1, priority: 5, days: 2, name: 'برامج موجهة للأمن', slug: 'security-programs', sku: 'SP-001', show: true, hasDetails: false, showOnHome: true, price: '1200', description: 'برامج أمنية وسلامة مهنية', place: 'مركز جسر السويس', date: '2025-05-12', details: '' },
-    { id: 6, parentId: 1, priority: 6, days: 6, name: 'برامج مركز جسر السويس', slug: 'suez-bridge-center', sku: 'SB-001', show: true, hasDetails: true, showOnHome: true, price: '3000', description: 'برامج مركز التدريب الإقليمي', place: 'جسر السويس', date: '2025-06-01', details: '' },
-    { id: 7, parentId: 1, priority: 7, days: 3, name: 'برامج مركز شبرا', slug: 'shubra-center', sku: 'SC-001', show: true, hasDetails: false, showOnHome: false, price: '1400', description: 'برامج فرع شبرا التدريبي', place: 'شبرا', date: '2025-06-15', details: '' },
-    { id: 21, parentId: 2, priority: 1, days: 3, name: 'برامج تأهيلية', slug: 'qualify-sub', sku: 'QS-001', show: true, hasDetails: true, showOnHome: false, price: '2200', description: 'برامج تأهيل المهندسين الجدد', place: 'القاهرة', date: '2025-03-01', details: '' },
-    { id: 211, parentId: 21, priority: 1, days: 5, name: 'برنامج إعداد وتأهيل مهندس حديث مدني وعمارة', slug: 'civil-eng-program', sku: 'CE-001', show: true, hasDetails: true, showOnHome: true, price: '2800', description: 'برنامج شامل لتأهيل مهندس مدني حديث', place: 'القاهرة', date: '2025-04-01', details: '' },
-    { id: 212, parentId: 21, priority: 2, days: 4, name: 'إعداد وتأهيل مهندس حديث مدني وعمارة - المرحلة الأولى ( أعمال الهيكل الخرساني)', slug: 'civil-phase-1', sku: 'CE-002', show: true, hasDetails: true, showOnHome: false, price: '1800', description: 'المرحلة الأولى - أعمال الهيكل الخرساني', place: 'القاهرة', date: '2025-04-10', details: '' },
-];
-
-// ── Static files ──────────────────────────────────────────────────────────────
-const INITIAL_FILES = {
-    1: [{ id: 1, name: 'pdf.11263', order: 1, title: 'الخطة التدريبية الرئيسية', file: null }, { id: 2, name: 'pdf.130175', order: 2, title: 'ملحق الخطة', file: null }, { id: 3, name: 'pdf.130192', order: 3, title: 'جداول الخطة', file: null }],
-    211: [{ id: 4, name: 'pdf.44001', order: 1, title: 'خطة البرنامج الأول', file: null }],
-    6: [{ id: 5, name: 'pdf.55002', order: 1, title: 'خطة مركز جسر السويس', file: null }],
-};
 
 const BLANK = { id: 0, parentId: null, priority: '', days: '', name: '', slug: '', sku: '', show: false, hasDetails: false, showOnHome: false, price: '', description: '', place: '', date: '', details: '' };
 const FILE_BLANK = { id: 0, name: '', order: '', title: '', file: null };
@@ -110,7 +113,7 @@ function toSlug(str) {
 const FONT_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64, 72];
 
 // ══════════════════════════════════════════════════════════════════════════════
-// RichTextEditor — font size + color + bold/italic/underline + link/unlink
+// RichTextEditor
 // ══════════════════════════════════════════════════════════════════════════════
 function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, minHeight = 120 }) {
     const editorRef = useRef(null);
@@ -205,7 +208,6 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                     {sub && <div className="lec-rte-sub">{sub}</div>}
                 </div>
             </div>
-
             <div className="lec-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
                 <button className="lec-tb-btn bold" title="عريض (Ctrl+B)" onClick={() => exec('bold')}>B</button>
                 <button className="lec-tb-btn italic" title="مائل (Ctrl+I)" onClick={() => exec('italic')}>I</button>
@@ -246,7 +248,6 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                 </div>
                 <button className="lec-tb-btn" title="إزالة الرابط" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
             </div>
-
             <div
                 ref={editorRef}
                 contentEditable
@@ -273,8 +274,9 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
 // TreeNode
 // ══════════════════════════════════════════════════════════════════════════════
 function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
-    const [open, setOpen] = useState(node.expanded ?? false);
+    const [open, setOpen] = useState(depth === 0);
     const hasChildren = node.children && node.children.length > 0;
+    const label = node.title || node.label || '';
     const depthClass = ['pw-tree-d0', 'pw-tree-d1', 'pw-tree-d2', 'pw-tree-d3'][Math.min(depth, 3)];
     return (
         <div>
@@ -284,7 +286,7 @@ function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
                 onClick={e => { e.stopPropagation(); onSelect(node); if (hasChildren) setOpen(o => !o); }}
             >
                 <span className="pw-tree-toggle">{hasChildren ? (open ? '⊟' : '⊞') : ''}</span>
-                <span className="pw-tree-label">{node.label}</span>
+                <span className="pw-tree-label">{label}</span>
             </div>
             {hasChildren && open && (
                 <div className={`pw-tree-children pw-children-d${Math.min(depth, 2)}`}>
@@ -298,68 +300,213 @@ function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// FilesSection
+// FilesSection — with API upload/delete + local fallback
 // ══════════════════════════════════════════════════════════════════════════════
 function FilesSection({ planworkId, planworkName }) {
-    const [files, setFiles] = useState(() => INITIAL_FILES[planworkId] ? [...INITIAL_FILES[planworkId]] : []);
+    const [files, setFiles] = useState([]);
     const [fileForm, setFileForm] = useState({ ...FILE_BLANK });
     const [selectedFile, setSelectedFile] = useState(null);
     const [isNewFile, setIsNewFile] = useState(true);
     const [fileNotif, setFileNotif] = useState(null);
     const [fileDelConfirm, setFileDelConfirm] = useState(false);
+    const [loadingFiles, setLoadingFiles] = useState(false);
+    const [savingFile, setSavingFile] = useState(false);
+    const [deletingFile, setDeletingFile] = useState(false);
     const fileInputRef = useRef(null);
-    const nextFileId = useRef(planworkId * 1000 + (INITIAL_FILES[planworkId]?.length || 0) + 1);
+    const nextFileId = useRef(planworkId * 1000 + 1);
+
+    // ── Load files from API ───────────────────────────────────────────────────
+    const loadFiles = async () => {
+        setLoadingFiles(true);
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files`, {
+                headers: await authHeaders()
+            });
+            if (res.ok) {
+                const data = await res.json();
+                // Normalize API response: expect array of { id, fileName/name, order, title/fileTitle }
+                const normalized = data.map(f => ({
+                    id: f.id ?? f.fileId,
+                    name: f.fileName ?? f.name ?? '',
+                    order: f.order ?? f.fileOrder ?? 1,
+                    title: f.fileTitle ?? f.title ?? '',
+                    file: null,
+                    url: f.fileUrl ?? f.url ?? null,
+                }));
+                setFiles(normalized);
+                nextFileId.current = planworkId * 1000 + normalized.length + 1;
+            } else if (res.status === 404) {
+                // No files endpoint yet — silently start empty
+                setFiles([]);
+            }
+        } catch (_) {
+            // API not available — start with empty list
+            setFiles([]);
+        } finally {
+            setLoadingFiles(false);
+        }
+    };
 
     useEffect(() => {
-        setFiles(INITIAL_FILES[planworkId] ? [...INITIAL_FILES[planworkId]] : []);
         setFileForm({ ...FILE_BLANK });
         setSelectedFile(null);
         setIsNewFile(true);
         setFileDelConfirm(false);
-        nextFileId.current = planworkId * 1000 + (INITIAL_FILES[planworkId]?.length || 0) + 1;
+        loadFiles();
     }, [planworkId]);
 
     const fileToast = (msg, type = 'success') => {
         setFileNotif({ msg, type });
         setTimeout(() => setFileNotif(null), 3000);
     };
-    const pickFile = rec => { setSelectedFile(rec); setFileForm({ ...rec }); setIsNewFile(false); setFileDelConfirm(false); };
+
+    const pickFile = rec => {
+        setSelectedFile(rec);
+        setFileForm({ ...rec });
+        setIsNewFile(false);
+        setFileDelConfirm(false);
+    };
 
     const handleFileInput = e => {
         const f = e.target.files[0];
         if (!f) return;
-        const autoOrder = files.length + 1;
-        setFileForm(prev => ({ ...prev, name: f.name, file: f, order: prev.order || String(autoOrder) }));
+        setFileForm(prev => ({
+            ...prev,
+            name: f.name,
+            file: f,
+            order: prev.order || String(files.length + 1),
+        }));
     };
 
-    const handleFileSave = () => {
-        if (!fileForm.name.trim()) { fileToast('اسم الملف مطلوب', 'error'); return; }
-        if (isNewFile) {
-            const id = nextFileId.current++;
-            const order = fileForm.order || String(files.length + 1);
-            const newFile = { ...fileForm, id, order };
-            setFiles(prev => [...prev, newFile]);
-            setSelectedFile(newFile);
-            setFileForm({ ...newFile });
-            setIsNewFile(false);
-            fileToast('تم الإضافة');
-        } else {
-            const updated = { ...fileForm };
-            setFiles(prev => prev.map(f => f.id === updated.id ? updated : f));
-            setSelectedFile(updated);
-            fileToast('تم الحفظ');
+    // ── Save file (POST multipart or PUT) ─────────────────────────────────────
+    const handleFileSave = async () => {
+        if (!fileForm.name.trim() && !fileForm.file) {
+            fileToast('اسم الملف مطلوب', 'error');
+            return;
+        }
+        setSavingFile(true);
+        try {
+            if (isNewFile) {
+                // Build multipart form data
+                const fd = new FormData();
+                if (fileForm.file) fd.append('file', fileForm.file);
+                fd.append('fileName', fileForm.name || fileForm.file?.name || '');
+                fd.append('fileTitle', fileForm.title || '');
+                fd.append('order', fileForm.order || String(files.length + 1));
+                fd.append('planworkId', planworkId);
+
+                let newFile;
+                try {
+                    const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files`, {
+                        method: 'POST',
+                        headers: await authHeaders(true), // no Content-Type — browser sets multipart boundary
+                        body: fd,
+                    });
+                    if (res.ok) {
+                        const created = await res.json().catch(() => ({}));
+                        newFile = {
+                            id: created.id ?? created.fileId ?? nextFileId.current++,
+                            name: created.fileName ?? fileForm.name,
+                            order: created.order ?? fileForm.order ?? files.length + 1,
+                            title: created.fileTitle ?? fileForm.title,
+                            file: null,
+                            url: created.fileUrl ?? created.url ?? null,
+                        };
+                    } else {
+                        throw new Error(`HTTP ${res.status}`);
+                    }
+                } catch (apiErr) {
+                    // API unavailable — add locally
+                    newFile = {
+                        id: nextFileId.current++,
+                        name: fileForm.name || fileForm.file?.name || '',
+                        order: fileForm.order || String(files.length + 1),
+                        title: fileForm.title,
+                        file: fileForm.file,
+                        url: null,
+                    };
+                    fileToast('تم الإضافة (محليًا — API غير متاح)', 'info');
+                    setFiles(prev => [...prev, newFile]);
+                    setSelectedFile(newFile);
+                    setFileForm({ ...newFile });
+                    setIsNewFile(false);
+                    setSavingFile(false);
+                    return;
+                }
+
+                setFiles(prev => [...prev, newFile]);
+                setSelectedFile(newFile);
+                setFileForm({ ...newFile });
+                setIsNewFile(false);
+                fileToast('تم الإضافة');
+            } else {
+                // Edit existing file
+                const fd = new FormData();
+                if (fileForm.file) fd.append('file', fileForm.file);
+                fd.append('fileName', fileForm.name || '');
+                fd.append('fileTitle', fileForm.title || '');
+                fd.append('order', fileForm.order || '1');
+
+                try {
+                    const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files/${fileForm.id}`, {
+                        method: 'PUT',
+                        headers: await authHeaders(true),
+                        body: fd,
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const updated = await res.json().catch(() => fileForm);
+                    const rec = {
+                        id: updated.id ?? fileForm.id,
+                        name: updated.fileName ?? fileForm.name,
+                        order: updated.order ?? fileForm.order,
+                        title: updated.fileTitle ?? fileForm.title,
+                        file: null,
+                        url: updated.fileUrl ?? fileForm.url ?? null,
+                    };
+                    setFiles(prev => prev.map(f => f.id === rec.id ? rec : f));
+                    setSelectedFile(rec);
+                    setFileForm({ ...rec });
+                } catch (_) {
+                    // Fallback: update locally
+                    const rec = { ...fileForm };
+                    setFiles(prev => prev.map(f => f.id === rec.id ? rec : f));
+                    setSelectedFile(rec);
+                    fileToast('تم الحفظ (محليًا)', 'info');
+                    setSavingFile(false);
+                    return;
+                }
+                fileToast('تم الحفظ');
+            }
+        } catch (e) {
+            fileToast('فشل الحفظ: ' + e.message, 'error');
+        } finally {
+            setSavingFile(false);
         }
     };
 
-    const handleFileDelete = () => {
+    // ── Delete file ───────────────────────────────────────────────────────────
+    const handleFileDelete = async () => {
         if (!fileDelConfirm) { setFileDelConfirm(true); return; }
-        const rest = files.filter(f => f.id !== selectedFile.id);
-        setFiles(rest);
-        setFileDelConfirm(false);
-        setFileForm({ ...FILE_BLANK });
-        setSelectedFile(null);
-        setIsNewFile(true);
-        fileToast('تم الحذف', 'error');
+        setDeletingFile(true);
+        try {
+            try {
+                const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files/${selectedFile.id}`, {
+                    method: 'DELETE',
+                    headers: await authHeaders(),
+                });
+                if (res.status !== 200 && res.status !== 204) throw new Error(`HTTP ${res.status}`);
+            } catch (_) {
+                // Remove locally if API fails
+            }
+            setFiles(prev => prev.filter(f => f.id !== selectedFile.id));
+            setFileDelConfirm(false);
+            setFileForm({ ...FILE_BLANK });
+            setSelectedFile(null);
+            setIsNewFile(true);
+            fileToast('تم الحذف', 'error');
+        } finally {
+            setDeletingFile(false);
+        }
     };
 
     return (
@@ -370,59 +517,111 @@ function FilesSection({ planworkId, planworkName }) {
                     <div className="pw-files-title">ملفات الخطه التدريبيه</div>
                     <div className="pw-files-sub">{planworkName}</div>
                 </div>
+                <button onClick={loadFiles} disabled={loadingFiles} title="تحديث الملفات"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '.8rem', opacity: .6, marginLeft: 6 }}>
+                    {loadingFiles ? '⏳' : '🔄'}
+                </button>
                 <span className="lec-count-badge" style={{ position: 'relative', zIndex: 1 }}>{files.length}</span>
             </div>
+
             {fileNotif && (
                 <div className={`lec-notif lec-notif-${fileNotif.type}`} style={{ margin: '10px 14px 0' }}>
                     <span>{fileNotif.type === 'success' ? '✅' : fileNotif.type === 'error' ? '❌' : 'ℹ️'}</span>
                     {fileNotif.msg}
                 </div>
             )}
+
             <div className="pw-files-body">
+                {/* ── File Form ── */}
                 <div className="pw-files-form">
                     <div className="lec-field">
                         <label className="lec-label">الرقم</label>
-                        <input className="lec-inp" value={isNewFile ? `${planworkId * 1000 + files.length + 1} (تلقائي)` : fileForm.id} disabled
+                        <input className="lec-inp"
+                            value={isNewFile ? `${planworkId * 1000 + files.length + 1} (تلقائي)` : fileForm.id}
+                            disabled
                             style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
                     </div>
+
                     <div className="lec-field">
                         <label className="lec-label">اسم الملف</label>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                             <input className="lec-inp" name="name" value={fileForm.name}
                                 onChange={e => setFileForm(f => ({ ...f, name: e.target.value }))}
                                 placeholder="اسم الملف..." style={{ flex: 1 }} />
-                            <button className="pw-select-file-btn" onClick={() => fileInputRef.current.click()}>📂 Select File</button>
+                            <button className="pw-select-file-btn" onClick={() => fileInputRef.current.click()}>
+                                📂 اختر ملف
+                            </button>
                             <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileInput} />
                         </div>
+                        {/* Show selected local file name */}
+                        {fileForm.file && (
+                            <div style={{ marginTop: 4, fontSize: '.72rem', color: '#2563eb', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span>📄</span>
+                                <span style={{ fontWeight: 600 }}>{fileForm.file.name}</span>
+                                <span style={{ color: '#6b7280' }}>({(fileForm.file.size / 1024).toFixed(1)} KB)</span>
+                                <button onClick={() => setFileForm(f => ({ ...f, file: null }))}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '.8rem' }}>✕</button>
+                            </div>
+                        )}
+                        {/* Show existing file URL link */}
+                        {!fileForm.file && fileForm.url && (
+                            <div style={{ marginTop: 4, fontSize: '.72rem', color: '#059669' }}>
+                                <a href={fileForm.url} target="_blank" rel="noopener noreferrer">🔗 عرض الملف الحالي</a>
+                            </div>
+                        )}
                     </div>
+
                     <div className="lec-field">
                         <label className="lec-label">الترتيب</label>
                         <input className="lec-inp" name="order" type="number" min="1" value={fileForm.order}
                             onChange={e => setFileForm(f => ({ ...f, order: e.target.value }))}
                             placeholder={`${files.length + 1} (تلقائي)`} />
                     </div>
+
                     <div className="lec-field">
                         <label className="lec-label">عنوان الملف</label>
                         <input className="lec-inp" name="title" value={fileForm.title}
                             onChange={e => setFileForm(f => ({ ...f, title: e.target.value }))}
                             placeholder="عنوان الملف..." />
                     </div>
+
                     <div className="pw-files-actions">
-                        <button className="lec-act-btn save" onClick={handleFileSave} style={{ padding: '7px 16px', fontSize: '.76rem' }}>💾 حفظ</button>
-                        <button className="lec-act-btn new" onClick={() => { setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); setFileDelConfirm(false); }}
-                            style={{ padding: '7px 16px', fontSize: '.76rem' }}>➕ جديد</button>
+                        <button className="lec-act-btn save" onClick={handleFileSave}
+                            disabled={savingFile}
+                            style={{ padding: '7px 16px', fontSize: '.76rem' }}>
+                            {savingFile ? '⏳...' : '💾 حفظ'}
+                        </button>
+                        <button className="lec-act-btn new"
+                            onClick={() => { setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); setFileDelConfirm(false); }}
+                            style={{ padding: '7px 16px', fontSize: '.76rem' }}>
+                            ➕ جديد
+                        </button>
                         {!isNewFile && (
                             fileDelConfirm
                                 ? <>
-                                    <button className="lec-act-btn delete" onClick={handleFileDelete} style={{ padding: '7px 14px', fontSize: '.74rem' }}>تأكيد</button>
+                                    <button className="lec-act-btn delete" onClick={handleFileDelete}
+                                        disabled={deletingFile}
+                                        style={{ padding: '7px 14px', fontSize: '.74rem' }}>
+                                        {deletingFile ? '⏳...' : 'تأكيد'}
+                                    </button>
                                     <button className="adm-fclear" onClick={() => setFileDelConfirm(false)}>إلغاء</button>
                                 </>
-                                : <button className="lec-act-btn delete" onClick={handleFileDelete} style={{ padding: '7px 16px', fontSize: '.76rem' }}>🗑 حذف</button>
+                                : <button className="lec-act-btn delete" onClick={handleFileDelete}
+                                    style={{ padding: '7px 16px', fontSize: '.76rem' }}>
+                                    🗑 حذف
+                                </button>
                         )}
                     </div>
                 </div>
+
+                {/* ── Files Table ── */}
                 <div className="pw-files-table-wrap">
-                    {files.length === 0 ? (
+                    {loadingFiles ? (
+                        <div className="adm-empty" style={{ padding: '28px 12px' }}>
+                            <div className="adm-emi">⏳</div>
+                            <p>جاري تحميل الملفات...</p>
+                        </div>
+                    ) : files.length === 0 ? (
                         <div className="adm-empty" style={{ padding: '28px 12px' }}>
                             <div className="adm-emi">📂</div>
                             <p>لا توجد ملفات</p>
@@ -430,13 +629,19 @@ function FilesSection({ planworkId, planworkName }) {
                     ) : (
                         <table className="pw-files-tbl">
                             <thead>
-                                <tr><th>الرقم</th><th>الأسم</th></tr>
+                                <tr><th>الرقم</th><th>العنوان</th><th>الأسم</th></tr>
                             </thead>
                             <tbody>
                                 {[...files].sort((a, b) => Number(a.order) - Number(b.order)).map(f => (
                                     <tr key={f.id} className={selectedFile?.id === f.id ? 'active' : ''} onClick={() => pickFile(f)}>
                                         <td style={{ fontFamily: "'Courier New',monospace", fontWeight: 900, color: T.blue }}>{f.id}</td>
-                                        <td>{f.name}</td>
+                                        <td>{f.title || '—'}</td>
+                                        <td>{f.url
+                                            ? <a href={f.url} target="_blank" rel="noopener noreferrer"
+                                                onClick={e => e.stopPropagation()}
+                                                style={{ color: T.blue, textDecoration: 'underline' }}>{f.name}</a>
+                                            : f.name}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -451,25 +656,21 @@ function FilesSection({ planworkId, planworkName }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // ParentSelector
 // ══════════════════════════════════════════════════════════════════════════════
-function ParentSelector({ parentId, onChange, records }) {
-    const recOptions = records.filter(r => r.id !== 0).map(r => ({ id: r.id, label: r.name }));
-    const merged = [...ALL_TREE_NODES];
-    recOptions.forEach(ro => { if (!merged.find(m => m.id === ro.id)) merged.push(ro); });
-    merged.sort((a, b) => a.id - b.id);
+function ParentSelector({ parentId, onChange, allTreeNodes }) {
     return (
         <div className="pw-parent-wrap">
             <div style={{ flex: '0 0 80px' }}>
                 <select className="lec-inp pw-parent-id-sel" value={parentId ?? ''}
                     onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))}>
                     <option value="">—</option>
-                    {merged.map(m => <option key={m.id} value={m.id}>{m.id}</option>)}
+                    {allTreeNodes.map(m => <option key={m.id} value={m.id}>{m.id}</option>)}
                 </select>
             </div>
             <div style={{ flex: 1 }}>
                 <select className="lec-inp" value={parentId ?? ''}
-                    onChange={e => { const found = merged.find(m => m.id === Number(e.target.value)); onChange(found ? found.id : null); }}>
+                    onChange={e => { const found = allTreeNodes.find(m => m.id === Number(e.target.value)); onChange(found ? found.id : null); }}>
                     <option value="">— بدون أب (رئيسي) —</option>
-                    {merged.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
+                    {allTreeNodes.map(m => <option key={m.id} value={m.id}>{m.label}</option>)}
                 </select>
             </div>
             {parentId != null && (
@@ -483,15 +684,39 @@ function ParentSelector({ parentId, onChange, records }) {
 // PlanworkTab
 // ══════════════════════════════════════════════════════════════════════════════
 const PlanworkTab = () => {
-    const [records, setRecords] = useState(INITIAL_RECORDS);
-    const [selected, setSelected] = useState(INITIAL_RECORDS[0]);
-    const [form, setForm] = useState({ ...INITIAL_RECORDS[0] });
-    const [isNew, setIsNew] = useState(false);
+    const [tree, setTree] = useState([]);
+    const [allTreeNodes, setAllTreeNodes] = useState([]);
+    const [records, setRecords] = useState([]);
+    const [loadingTree, setLoadingTree] = useState(true);
+    const [treeError, setTreeError] = useState(null);
+
+    const [selected, setSelected] = useState(null);
+    const [form, setForm] = useState({ ...BLANK });
+    const [isNew, setIsNew] = useState(true);
     const [search, setSearch] = useState('');
     const [notification, setNotification] = useState(null);
     const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [treeSelected, setTreeSelected] = useState(null);
-    const nextId = useRef(300);
+    const [loadingRecord, setLoadingRecord] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+
+    // ── Load tree on mount ────────────────────────────────────────────────────
+    const loadTree = async () => {
+        setLoadingTree(true); setTreeError(null);
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/tree`, { headers: await authHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            setTree(data);
+            setAllTreeNodes(flattenTree(data));
+        } catch (e) {
+            setTreeError('فشل تحميل الشجرة: ' + e.message);
+        } finally {
+            setLoadingTree(false);
+        }
+    };
+    useEffect(() => { loadTree(); }, []);
 
     const filtered = records.filter(r =>
         (r.name || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -505,10 +730,24 @@ const PlanworkTab = () => {
     };
     const pick = rec => { setSelected(rec); setForm({ ...rec }); setIsNew(false); setDeleteConfirm(false); };
 
-    const handleTreeSelect = node => {
+    // ── Click tree node → fetch record ───────────────────────────────────────
+    const handleTreeSelect = async (node) => {
         setTreeSelected(node);
-        const match = records.find(r => r.name === node.label || r.id === node.id);
-        if (match) pick(match);
+        const cached = records.find(r => r.id === node.id);
+        if (cached) { pick(cached); return; }
+        setLoadingRecord(true);
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${node.id}`, { headers: await authHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            const rec = apiToForm(data);
+            setRecords(prev => [...prev, rec]);
+            pick(rec);
+        } catch (e) {
+            toast('فشل تحميل البيانات: ' + e.message, 'error');
+        } finally {
+            setLoadingRecord(false);
+        }
     };
 
     const handleNew = () => {
@@ -529,21 +768,52 @@ const PlanworkTab = () => {
         });
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!form.name.trim()) { toast('الأسم مطلوب', 'error'); return; }
         const clean = { ...form }; delete clean._slugManual;
-        if (isNew) {
-            const id = nextId.current++, newRec = { ...clean, id };
-            setRecords(prev => [...prev, newRec]);
-            setSelected(newRec);
-            setForm({ ...newRec });
-            setIsNew(false);
-            toast('تم الإضافة');
-        } else {
-            setRecords(prev => prev.map(r => r.id === clean.id ? clean : r));
-            setSelected(clean);
-            setForm({ ...clean });
-            toast('تم الحفظ');
+        setSaving(true);
+        try {
+            if (isNew) {
+                const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork`, {
+                    method: 'POST',
+                    headers: await authHeaders(),
+                    body: JSON.stringify(formToApi(clean)),
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const created = await res.json().catch(() => ({}));
+                const newId = typeof created === 'number'
+                    ? created
+                    : (created?.childId ?? created?.id ?? created?.Id ?? null);
+                let newRec;
+                if (newId) {
+                    const fresh = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${newId}`, { headers: await authHeaders() });
+                    newRec = apiToForm(await fresh.json());
+                } else {
+                    newRec = apiToForm({ ...formToApi(clean), ...created });
+                }
+                setRecords(prev => [...prev, newRec]);
+                pick(newRec);
+                setTreeSelected({ id: newRec.id, title: newRec.name });
+                toast('تم الإضافة');
+                await loadTree();
+            } else {
+                const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${clean.id}`, {
+                    method: 'PUT',
+                    headers: await authHeaders(),
+                    body: JSON.stringify(formToApi(clean)),
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const fresh = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${clean.id}`, { headers: await authHeaders() });
+                const rec = apiToForm(await fresh.json());
+                setRecords(prev => prev.map(r => r.id === rec.id ? rec : r));
+                pick(rec);
+                toast('تم الحفظ');
+                await loadTree();
+            }
+        } catch (e) {
+            toast('فشل الحفظ: ' + e.message, 'error');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -554,17 +824,31 @@ const PlanworkTab = () => {
         toast('تم الإلغاء', 'info');
     };
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!deleteConfirm) { setDeleteConfirm(true); return; }
-        const rest = records.filter(r => r.id !== selected.id);
-        setRecords(rest);
-        setDeleteConfirm(false);
-        if (rest.length) pick(rest[0]); else handleNew();
-        toast('تم الحذف', 'error');
+        setDeleting(true);
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${selected.id}`, {
+                method: 'DELETE',
+                headers: await authHeaders(),
+            });
+            if (res.status !== 200 && res.status !== 204) throw new Error(`HTTP ${res.status}`);
+            const rest = records.filter(r => r.id !== selected.id);
+            setRecords(rest);
+            setDeleteConfirm(false);
+            setSelected(null); setForm({ ...BLANK }); setIsNew(true); setTreeSelected(null);
+            toast('تم الحذف', 'error');
+            await loadTree();
+        } catch (e) {
+            toast('فشل الحذف: ' + e.message, 'error');
+            setDeleteConfirm(false);
+        } finally {
+            setDeleting(false);
+        }
     };
 
     const parentName = form.parentId != null
-        ? (records.find(r => r.id === form.parentId)?.name || ALL_TREE_NODES.find(n => n.id === form.parentId)?.label || `#${form.parentId}`)
+        ? (allTreeNodes.find(n => n.id === form.parentId)?.label || `#${form.parentId}`)
         : null;
 
     const Field = ({ label, children, full }) => (
@@ -583,42 +867,83 @@ const PlanworkTab = () => {
                 </div>
             )}
 
-            <div className="lec-layout">
+            {/*
+             * KEY LAYOUT CHANGE:
+             * The outer lec-layout is now a fixed-height flex row.
+             * Both the left panel and the form wrap get:
+             *   height: calc(100vh - <offset>)   ← adjust offset to fit your shell
+             *   overflow-y: auto
+             * This lets each side scroll independently.
+             */}
+            <div className="lec-layout" style={{ alignItems: 'stretch' }}>
 
-                {/* ══ LEFT PANEL ══ */}
-                <div className="lec-panel pw-left-panel">
-                    <div className="lec-panel-hdr">
+                {/* ══ LEFT PANEL — scrollable ══ */}
+                <div
+                    className="lec-panel pw-left-panel"
+                    style={{
+                        height: 'calc(100vh - 120px)',
+                        overflowY: 'auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                    }}
+                >
+                    <div className="lec-panel-hdr" style={{ flexShrink: 0 }}>
                         <span className="lec-count-badge">{filtered.length}</span>
                         <span style={{ fontWeight: 800, fontSize: '.8rem', color: '#0a0a0a', flex: 1, textAlign: 'center' }}>خطة العمل</span>
                         <button className="lec-new-btn" onClick={handleNew}>+ جديد</button>
                     </div>
 
-                    <div className="pw-tree-panel" style={{ borderTop: 'none', flex: 1 }}>
-                        <div className="pw-tree-header">
+                    <div className="pw-tree-panel" style={{ borderTop: 'none', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <div className="pw-tree-header" style={{ flexShrink: 0 }}>
                             خطه المعهد
                             {treeSelected && (
                                 <span className="pw-tree-selected-badge">
-                                    ← {treeSelected.label.slice(0, 22)}{treeSelected.label.length > 22 ? '…' : ''}
+                                    ← {(treeSelected.title || treeSelected.label || '').slice(0, 22)}
+                                    {(treeSelected.title || treeSelected.label || '').length > 22 ? '…' : ''}
                                 </span>
                             )}
+                            <button onClick={loadTree} disabled={loadingTree} title="تحديث"
+                                style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', fontSize: '.8rem', opacity: .6 }}>
+                                {loadingTree ? '⏳' : '🔄'}
+                            </button>
                         </div>
-                        <div className="pw-tree-scroll" style={{ maxHeight: 'calc(100vh - 140px)' }}>
-                            {STATIC_TREE.map(node => (
+
+                        {treeError && (
+                            <div style={{ padding: '10px 14px', color: '#dc2626', fontSize: '.76rem', flexShrink: 0 }}>
+                                {treeError}
+                                <button onClick={loadTree} style={{ marginRight: 8, color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', fontSize: '.76rem' }}>
+                                    إعادة المحاولة
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Tree scroll area fills remaining height */}
+                        <div className="pw-tree-scroll" style={{ flex: 1, overflowY: 'auto' }}>
+                            {loadingTree ? (
+                                <div style={{ padding: 24, textAlign: 'center', color: '#6b7280', fontSize: '.8rem' }}>⏳ جاري التحميل...</div>
+                            ) : tree.map(node => (
                                 <TreeNode key={node.id} node={node} selectedId={treeSelected?.id} onSelect={handleTreeSelect} />
                             ))}
                         </div>
+
                         {treeSelected && (
-                            <div className="pw-tree-footer">
+                            <div className="pw-tree-footer" style={{ flexShrink: 0 }}>
                                 <span style={{ fontSize: '.7rem', color: '#6b7280' }}>الأب المحدد:</span>
-                                <span className="pw-tree-footer-name">{treeSelected.label}</span>
+                                <span className="pw-tree-footer-name">{treeSelected.title || treeSelected.label || ''}</span>
                                 <button className="pw-tree-footer-clear" onClick={() => setTreeSelected(null)}>✕ إلغاء</button>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* ══ FORM AREA ══ */}
-                <div className="lec-form-wrap">
+                {/* ══ FORM AREA — scrollable ══ */}
+                <div
+                    className="lec-form-wrap"
+                    style={{
+                        height: 'calc(100vh - 120px)',
+                        overflowY: 'auto',
+                    }}
+                >
                     <div className="adm-card lec-form-card">
                         <div className="lec-form-hdr">
                             <div>
@@ -634,99 +959,106 @@ const PlanworkTab = () => {
                             <div className="lec-stat-pill">📋 {records.length} سجل</div>
                         </div>
 
-                        <div className="lec-form-body">
-                            <div className="lec-fields-grid" style={{ marginBottom: 20 }}>
-
-                                <Field label="الرقم">
-                                    <input className="lec-inp" value={isNew ? 'تلقائي' : form.id} disabled
-                                        style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed' }} />
-                                </Field>
-
-                                <div className="lec-field pw-parent-field">
-                                    <label className="lec-label">أساسى (الأب)</label>
-                                    <ParentSelector parentId={form.parentId} onChange={v => setForm(f => ({ ...f, parentId: v }))} records={records} />
-                                </div>
-
-                                <Field label="الأولويه">
-                                    <input className="lec-inp" name="priority" type="number" min="1" value={form.priority} onChange={handleChange} placeholder="الأولويه..." />
-                                </Field>
-                                <Field label="عدد الأيام">
-                                    <input className="lec-inp" name="days" type="number" min="1" value={form.days} onChange={handleChange} placeholder="عدد الأيام..." />
-                                </Field>
-                                <Field label="الأسم" full>
-                                    <input className="lec-inp" name="name" value={form.name} onChange={handleChange} placeholder="الأسم..." />
-                                </Field>
-                                <Field label="Slug" full>
-                                    <input className="lec-inp" name="slug" value={form.slug || ''} onChange={handleChange}
-                                        placeholder="auto-generated-slug"
-                                        style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
-                                </Field>
-                                <Field label="SKU">
-                                    <input className="lec-inp" name="sku" value={form.sku || ''} onChange={handleChange}
-                                        placeholder="SKU-001"
-                                        style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
-                                </Field>
-                                <Field label="السعر">
-                                    <input className="lec-inp" name="price" value={form.price} onChange={handleChange} placeholder="السعر..." />
-                                </Field>
-                                <Field label="المكان">
-                                    <input className="lec-inp" name="place" value={form.place} onChange={handleChange} placeholder="المكان..." />
-                                </Field>
-                                <Field label="التاريخ">
-                                    <input className="lec-inp" name="date" type="date" value={form.date} onChange={handleChange}
-                                        style={{ direction: 'ltr', textAlign: 'right' }} />
-                                </Field>
-                                <Field label="الوصف" full>
-                                    <input className="lec-inp" name="description" value={form.description} onChange={handleChange} placeholder="الوصف..." />
-                                </Field>
-
-                                <div className="lec-field" style={{ gridColumn: '1/-1' }}>
-                                    <label className="lec-label">الخيارات</label>
-                                    <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', padding: '10px 12px', border: '1.5px solid #d0d3d8', borderRadius: 3, background: '#fff' }}>
-                                        {[{ name: 'show', label: 'عرض' }, { name: 'hasDetails', label: 'له تفاصيل' }, { name: 'showOnHome', label: 'عرض على الصفحه الرئيسيه' }].map(cb => (
-                                            <label key={cb.name} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700, color: '#374151' }}>
-                                                <input type="checkbox" name={cb.name} checked={!!form[cb.name]} onChange={handleChange}
-                                                    style={{ width: 16, height: 16, accentColor: T.orange, cursor: 'pointer' }} />
-                                                {cb.label}
-                                            </label>
-                                        ))}
+                        {loadingRecord ? (
+                            <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ جاري تحميل البيانات...</div>
+                        ) : (
+                            <div className="lec-form-body">
+                                <div className="lec-fields-grid" style={{ marginBottom: 20 }}>
+                                    <Field label="الرقم">
+                                        <input className="lec-inp" value={isNew ? 'تلقائي' : form.id} disabled
+                                            style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed' }} />
+                                    </Field>
+                                    <div className="lec-field pw-parent-field">
+                                        <label className="lec-label">أساسى (الأب)</label>
+                                        <ParentSelector parentId={form.parentId} onChange={v => setForm(f => ({ ...f, parentId: v }))} allTreeNodes={allTreeNodes} />
+                                    </div>
+                                    <Field label="الأولويه">
+                                        <input className="lec-inp" name="priority" type="number" min="1" value={form.priority} onChange={handleChange} placeholder="الأولويه..." />
+                                    </Field>
+                                    <Field label="عدد الأيام">
+                                        <input className="lec-inp" name="days" type="number" min="1" value={form.days} onChange={handleChange} placeholder="عدد الأيام..." />
+                                    </Field>
+                                    <Field label="الأسم" full>
+                                        <input className="lec-inp" name="name" value={form.name} onChange={handleChange} placeholder="الأسم..." />
+                                    </Field>
+                                    <Field label="Slug" full>
+                                        <input className="lec-inp" name="slug" value={form.slug || ''} onChange={handleChange}
+                                            placeholder="auto-generated-slug"
+                                            style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
+                                    </Field>
+                                    <Field label="SKU">
+                                        <input className="lec-inp" name="sku" value={form.sku || ''} onChange={handleChange}
+                                            placeholder="SKU-001"
+                                            style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
+                                    </Field>
+                                    <Field label="السعر">
+                                        <input className="lec-inp" name="price" value={form.price} onChange={handleChange} placeholder="السعر..." />
+                                    </Field>
+                                    <Field label="المكان">
+                                        <input className="lec-inp" name="place" value={form.place} onChange={handleChange} placeholder="المكان..." />
+                                    </Field>
+                                    <Field label="التاريخ">
+                                        <input className="lec-inp" name="date" type="date" value={form.date} onChange={handleChange}
+                                            style={{ direction: 'ltr', textAlign: 'right' }} />
+                                    </Field>
+                                    <Field label="الوصف" full>
+                                        <input className="lec-inp" name="description" value={form.description} onChange={handleChange} placeholder="الوصف..." />
+                                    </Field>
+                                    <div className="lec-field" style={{ gridColumn: '1/-1' }}>
+                                        <label className="lec-label">الخيارات</label>
+                                        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', padding: '10px 12px', border: '1.5px solid #d0d3d8', borderRadius: 3, background: '#fff' }}>
+                                            {[{ name: 'show', label: 'عرض' }, { name: 'hasDetails', label: 'له تفاصيل' }, { name: 'showOnHome', label: 'عرض على الصفحه الرئيسيه' }].map(cb => (
+                                                <label key={cb.name} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer', fontSize: '.8rem', fontWeight: 700, color: '#374151' }}>
+                                                    <input type="checkbox" name={cb.name} checked={!!form[cb.name]} onChange={handleChange}
+                                                        style={{ width: 16, height: 16, accentColor: T.orange, cursor: 'pointer' }} />
+                                                    {cb.label}
+                                                </label>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div className="lec-divider" />
+                                <div className="lec-divider" />
 
-                            {/* ── Updated RichTextEditor with font size ── */}
-                            <RichTextEditor
-                                icon="📄"
-                                label="تفاصيل الكورس"
-                                sub="حدد النص أولاً ثم اختر الحجم أو اللون من شريط الأدوات — يمكن إضافة روابط للمشاريع"
-                                name="details"
-                                value={form.details}
-                                onChange={handleChange}
-                                placeholder="أدخل تفاصيل الكورس هنا..."
-                                minHeight={150}
-                            />
+                                <RichTextEditor
+                                    icon="📄"
+                                    label="تفاصيل الكورس"
+                                    sub="حدد النص أولاً ثم اختر الحجم أو اللون من شريط الأدوات — يمكن إضافة روابط للمشاريع"
+                                    name="details"
+                                    value={form.details}
+                                    onChange={handleChange}
+                                    placeholder="أدخل تفاصيل الكورس هنا..."
+                                    minHeight={150}
+                                />
 
-                            <div className="lec-actions">
-                                <button className="lec-act-btn save" onClick={handleSave}>💾 حفظ</button>
-                                <button className="lec-act-btn new" onClick={handleNew}>➕ سجل جديد</button>
-                                <button className="lec-act-btn reset" onClick={handleReset}>↩ إلغاء</button>
-                                <div style={{ flex: 1 }} />
-                                {!isNew && (
-                                    deleteConfirm
-                                        ? <div className="lec-delete-confirm">
-                                            <span className="lec-delete-warn">⚠️ هل أنت متأكد؟</span>
-                                            <button className="lec-act-btn delete" onClick={handleDelete}>تأكيد الحذف</button>
-                                            <button className="adm-fclear" onClick={() => setDeleteConfirm(false)}>إلغاء</button>
-                                        </div>
-                                        : <button className="lec-act-btn delete" onClick={handleDelete}>🗑 حذف السجل</button>
+                                <div className="lec-actions">
+                                    <button className="lec-act-btn save" onClick={handleSave} disabled={saving || deleting}>
+                                        {saving ? '⏳ جاري الحفظ...' : '💾 حفظ'}
+                                    </button>
+                                    <button className="lec-act-btn new" onClick={handleNew}>➕ سجل جديد</button>
+                                    <button className="lec-act-btn reset" onClick={handleReset}>↩ إلغاء</button>
+                                    <div style={{ flex: 1 }} />
+                                    {!isNew && (
+                                        deleteConfirm
+                                            ? <div className="lec-delete-confirm">
+                                                <span className="lec-delete-warn">⚠️ هل أنت متأكد؟</span>
+                                                <button className="lec-act-btn delete" onClick={handleDelete} disabled={deleting}>
+                                                    {deleting ? '⏳...' : 'تأكيد الحذف'}
+                                                </button>
+                                                <button className="adm-fclear" onClick={() => setDeleteConfirm(false)}>إلغاء</button>
+                                            </div>
+                                            : <button className="lec-act-btn delete" onClick={handleDelete}>🗑 حذف السجل</button>
+                                    )}
+                                </div>
+
+                                <div className="lec-divider" style={{ marginTop: 8 }} />
+
+                                {/* FilesSection renders here — fully visible when scrolling down */}
+                                {!isNew && selected && (
+                                    <FilesSection planworkId={selected.id} planworkName={selected.name} />
                                 )}
                             </div>
-
-                            <div className="lec-divider" style={{ marginTop: 8 }} />
-                            {!isNew && selected && <FilesSection planworkId={selected.id} planworkName={selected.name} />}
-                        </div>
+                        )}
                     </div>
                 </div>
 
