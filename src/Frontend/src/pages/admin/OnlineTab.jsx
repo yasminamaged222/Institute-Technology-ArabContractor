@@ -171,16 +171,16 @@ const OnlineTab = () => {
             <div className="adm-card" style={{ overflow: 'visible' }}>
                 {/* Header */}
                 <div style={{
-                    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #3730a3 100%)',
+                    background: 'linear-gradient(135deg, #1e1b4b 0%, #044478 55%, #044478 100%)',
                     padding: 'clamp(16px,2.5vw,22px) clamp(18px,3vw,28px)',
                     display: 'flex', alignItems: 'flex-start',
                     justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
                     position: 'relative', overflow: 'hidden', borderRadius: '3px 3px 0 0',
                 }}>
                     <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(124,58,237,0.08) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,0.08) 1px,transparent 1px)', backgroundSize: '36px 36px', pointerEvents: 'none' }} />
-                    <div style={{ position: 'absolute', top: 0, right: 0, width: 5, height: '100%', background: 'linear-gradient(to bottom,#7c3aed,#a78bfa)' }} />
+                    <div style={{ position: 'absolute', top: 0, right: 0, width: 5, height: '100%', background: 'linear-gradient(to bottom,#044478,#044478)' }} />
                     <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div className="adm-hero-tag" style={{ background: '#7c3aed', marginBottom: 6 }}>
+                        <div className="adm-hero-tag" style={{ background: '#044478', marginBottom: 6 }}>
                             ID: #{selected.id}
                         </div>
                         <h2 style={{ fontSize: 'clamp(15px,2vw,19px)', fontWeight: 900, color: '#fff', margin: 0, fontFamily: T.font }}>
@@ -190,7 +190,7 @@ const OnlineTab = () => {
                             {selected.title}
                         </p>
                     </div>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 2, background: hasLink ? 'rgba(22,163,74,0.18)' : 'rgba(255,255,255,0.08)', border: `1.5px solid ${hasLink ? 'rgba(22,163,74,0.5)' : 'rgba(255,255,255,0.15)'}`, color: hasLink ? '#4ade80' : 'rgba(255,255,255,.75)', fontSize: '.72rem', fontWeight: 700, position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 14px', borderRadius: 2, background: hasLink ? 'rgba(22,163,74,0.18)' : 'rgba(255,255,255,0.08)', border: `1.5px solid ${hasLink ? 'rgba(22,163,74,0.5)' : 'rgba(255,255,255,0.15)'}`, color: hasLink ? '#044478' : 'rgba(255,255,255,.75)', fontSize: '.72rem', fontWeight: 700, position: 'relative', zIndex: 1 }}>
                         {hasLink ? '🔗 يوجد رابط' : '⚠️ لا يوجد رابط'}
                     </div>
                 </div>
@@ -198,19 +198,19 @@ const OnlineTab = () => {
                 <div style={{ padding: 'clamp(14px,2.5vw,24px)' }}>
 
                     {/* Course info strip */}
-                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20, padding: '10px 14px', background: '#f8f9fa', borderRadius: 3, border: '1.5px solid #e2e8f0', direction: 'rtl' }}>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 20, padding: '10px 14px', background: '#044478', borderRadius: 3, border: '1.5px solid #e2e8f0', direction: 'rtl' }}>
                         {selected.date && (
-                            <span style={{ fontSize: '.74rem', color: '#374151', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <span style={{ fontSize: '.74rem', color: '#044478', display: 'flex', alignItems: 'center', gap: 5 }}>
                                 📅 <strong>{selected.date}</strong>
                             </span>
                         )}
                         {selected.place && (
-                            <span style={{ fontSize: '.74rem', color: '#374151', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <span style={{ fontSize: '.74rem', color: '#044478', display: 'flex', alignItems: 'center', gap: 5 }}>
                                 📍 {selected.place}
                             </span>
                         )}
                         {selected.price > 0 && (
-                            <span style={{ fontSize: '.74rem', color: '#374151', display: 'flex', alignItems: 'center', gap: 5 }}>
+                            <span style={{ fontSize: '.74rem', color: '#044478', display: 'flex', alignItems: 'center', gap: 5 }}>
                                 💰 {(selected.price).toLocaleString('ar-EG')} جنيه
                             </span>
                         )}
@@ -229,14 +229,14 @@ const OnlineTab = () => {
                             style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem', color: '#1d4ed8' }}
                         />
                         {entry.link && !isValidUrl(entry.link) && (
-                            <p style={{ fontSize: '.68rem', color: '#dc2626', marginTop: 4, fontFamily: T.font }}>
+                            <p style={{ fontSize: '.68rem', color: '#044478', marginTop: 4, fontFamily: T.font }}>
                                 ⚠️ الرابط يبدو غير صحيح — تأكد من البدء بـ https://
                             </p>
                         )}
                         {entry.link && isValidUrl(entry.link) && (
                             <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 10 }}>
                                 <a href={entry.link} target="_blank" rel="noopener noreferrer"
-                                    style={{ fontSize: '.72rem', color: '#2563eb', textDecoration: 'underline' }}>
+                                    style={{ fontSize: '.72rem', color: '#044478', textDecoration: 'underline' }}>
                                     🔗 اختبار الرابط
                                 </a>
                             </div>
@@ -244,13 +244,13 @@ const OnlineTab = () => {
                     </div>
 
                     {/* Visibility toggle */}
-                    <div style={{ padding: '14px 16px', borderRadius: 3, border: `1.5px solid ${entry.visible ? 'rgba(22,163,74,0.35)' : '#e2e8f0'}`, background: entry.visible ? 'rgba(22,163,74,0.05)' : '#f8f9fa', marginBottom: 20, transition: 'all .2s' }}>
+                    <div style={{ padding: '14px 16px', borderRadius: 3, border: `1.5px solid ${entry.visible ? 'rgba(22,163,74,0.35)' : '#044478'}`, background: entry.visible ? 'rgba(22,163,74,0.05)' : '#f8f9fa', marginBottom: 20, transition: 'all .2s' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', direction: 'rtl' }}>
                             <div
                                 onClick={() => setLink(id, 'visible', !entry.visible)}
                                 style={{
                                     width: 48, height: 26, borderRadius: 13,
-                                    background: entry.visible ? '#16a34a' : '#d0d3d8',
+                                    background: entry.visible ? '#16a34a' : '#044478',
                                     position: 'relative', cursor: 'pointer', transition: 'background .2s', flexShrink: 0,
                                 }}>
                                 <div style={{
@@ -262,7 +262,7 @@ const OnlineTab = () => {
                                 }} />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontSize: '.8rem', fontWeight: 800, color: entry.visible ? '#15803d' : '#374151', fontFamily: T.font }}>
+                                <div style={{ fontSize: '.8rem', fontWeight: 800, color: entry.visible ? '#15803d' : '#044478', fontFamily: T.font }}>
                                     {entry.visible ? '✅ الرابط مرئي للمسجلين الآن' : '🔒 الرابط مخفي (غير مرئي)'}
                                 </div>
                                 <div style={{ fontSize: '.68rem', color: '#6b7280', marginTop: 2, fontFamily: T.font }}>
@@ -279,7 +279,7 @@ const OnlineTab = () => {
                         <div style={{ marginBottom: 16 }}>
                             <button
                                 onClick={() => setLink(id, 'link', '')}
-                                style={{ padding: '6px 14px', borderRadius: 3, border: '1.5px solid rgba(220,38,38,.3)', background: '#fef2f2', color: '#dc2626', fontSize: '.72rem', fontWeight: 700, cursor: 'pointer', fontFamily: T.font }}>
+                                style={{ padding: '6px 14px', borderRadius: 3, border: '1.5px solid rgba(220,38,38,.3)', background: '#044478', color: '#dc2626', fontSize: '.72rem', fontWeight: 700, cursor: 'pointer', fontFamily: T.font }}>
                                 🗑 مسح الرابط
                             </button>
                         </div>
@@ -332,7 +332,7 @@ const OnlineTab = () => {
             )}
 
             {/* Summary bar */}
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16, padding: '12px 16px', background: 'linear-gradient(135deg,#1e1b4b,#3730a3)', borderRadius: 3, direction: 'rtl', boxShadow: '0 4px 16px rgba(55,48,163,0.25)' }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16, padding: '12px 16px', background: 'linear-gradient(135deg,#044478,#044478)', borderRadius: 3, direction: 'rtl', boxShadow: '0 4px 16px rgba(55,48,163,0.25)' }}>
                 <span style={{ fontSize: '.8rem', fontWeight: 700, color: 'rgba(255,255,255,.85)', fontFamily: T.font }}>
                     📊 إجمالي الدورات: <strong style={{ color: '#c4b5fd' }}>{planworks.length}</strong>
                 </span>
@@ -365,7 +365,7 @@ const OnlineTab = () => {
                             value={search}
                             onChange={e => setSearch(e.target.value)}
                             placeholder="بحث في الدورات..."
-                            style={{ width: '100%', padding: '8px 12px', borderRadius: 3, border: '1.5px solid #d0d3d8', background: '#f0f1f2', color: '#0a0a0a', fontFamily: T.font, fontSize: '.74rem', outline: 'none', direction: 'rtl' }}
+                            style={{ width: '100%', padding: '8px 12px', borderRadius: 3, border: '1.5px solid #d0d3d8', background: '#f0f1f2', color: '#044478', fontFamily: T.font, fontSize: '.74rem', outline: 'none', direction: 'rtl' }}
                         />
                         {search && (
                             <button className="lec-search-clear" onClick={() => setSearch('')}>✕</button>
@@ -386,7 +386,7 @@ const OnlineTab = () => {
                                     cursor: 'pointer', fontFamily: T.font,
                                     border: `1.5px solid ${filter === f.key ? 'rgba(124,58,237,0.4)' : 'rgba(0,0,0,0.1)'}`,
                                     background: filter === f.key ? 'rgba(124,58,237,0.1)' : 'transparent',
-                                    color: filter === f.key ? '#7c3aed' : '#6b7280',
+                                    color: filter === f.key ? '#7c3aed' : '#044478',
                                     transition: 'all .15s',
                                 }}>
                                 {f.label}
@@ -409,7 +409,7 @@ const OnlineTab = () => {
                                 <div key={p.id}
                                     className={`lec-row${selected?.id === p.id ? ' active' : ''}`}
                                     onClick={() => setSelected(p)}>
-                                    <div className="lec-avatar" style={{ background: hasLink ? 'linear-gradient(135deg,#16a34a,#22c55e)' : 'linear-gradient(135deg,#374151,#6b7280)' }}>
+                                    <div className="lec-avatar" style={{ background: hasLink ? 'linear-gradient(135deg,#16a34a,#22c55e)' : 'linear-gradient(135deg,#044478,#044478)' }}>
                                         <span>{hasLink ? '🔗' : '⚠️'}</span>
                                     </div>
                                     <div className="lec-row-info">
