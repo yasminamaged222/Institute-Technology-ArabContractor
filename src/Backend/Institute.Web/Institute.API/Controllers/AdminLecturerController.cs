@@ -1,5 +1,4 @@
-﻿                                                                                                                       
-using Institute.Application.DTOs;
+﻿using Institute.Application.DTOs;
 using Institute.Application.Interfaces.IService;
 using Institute.Application.Security;
 using Institute.Infrastructure.DTOs;
@@ -11,14 +10,16 @@ using Microsoft.AspNetCore.Mvc;
 public class AdminLecturerController : ControllerBase
 {
     private readonly ILecturerService _service;
+    private readonly IWebHostEnvironment _env;
 
-    public AdminLecturerController(ILecturerService service)
+    public AdminLecturerController(ILecturerService service, IWebHostEnvironment env)
     {
         _service = service;
+        _env = env;
     }
 
     // ── GET ALL ───────────────────────────────────────────────────────────────
-    /// <summary>GET /api/lecturer — يجيب كل المحاضرين (عام، بدون Auth)</summary>
+    /// <summary>GET /api/admin/adminlecturer — يجيب كل المحاضرين</summary>
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -27,7 +28,7 @@ public class AdminLecturerController : ControllerBase
     }
 
     // ── GET BY ID ─────────────────────────────────────────────────────────────
-    /// <summary>GET /api/lecturer/{id}</summary>
+    /// <summary>GET /api/admin/adminlecturer/{id}</summary>
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {
@@ -37,12 +38,11 @@ public class AdminLecturerController : ControllerBase
 
     // ── CREATE ────────────────────────────────────────────────────────────────
     /// <summary>
-    /// POST /api/lecturer
+    /// POST /api/admin/adminlecturer
     /// Body: { name, specialty, email, phone, courses, level, details }
-    /// يحتاج permission "Lecturers"
     /// </summary>
     [HttpPost]
-  //  [HasPermission("Lecturers")]
+    // [HasPermission("Lecturers")]
     public async Task<IActionResult> Create([FromBody] LecturerCreateUpdateDto dto)
     {
         if (!ModelState.IsValid)
@@ -54,12 +54,10 @@ public class AdminLecturerController : ControllerBase
 
     // ── UPDATE ────────────────────────────────────────────────────────────────
     /// <summary>
-    /// PUT /api/lecturer/{id}
+    /// PUT /api/admin/adminlecturer/{id}
     /// Body: { name, specialty, email, phone, courses, level, details }
-    /// يحتاج permission "Lecturers"
     /// </summary>
     [HttpPut("{id}")]
-     
     public async Task<IActionResult> Update(int id, [FromBody] LecturerCreateUpdateDto dto)
     {
         if (!ModelState.IsValid)
@@ -73,12 +71,8 @@ public class AdminLecturerController : ControllerBase
     }
 
     // ── DELETE ────────────────────────────────────────────────────────────────
-    /// <summary>
-    /// DELETE /api/lecturer/{id}
-    /// يحتاج permission "Lecturers"
-    /// </summary>
+    /// <summary>DELETE /api/admin/adminlecturer/{id}</summary>
     [HttpDelete("{id}")]
-    
     public async Task<IActionResult> Delete(int id)
     {
         var result = await _service.DeleteAsync(id);
@@ -90,18 +84,21 @@ public class AdminLecturerController : ControllerBase
 
     // ── UPLOAD PHOTO ──────────────────────────────────────────────────────────
     /// <summary>
-    /// POST /api/lecturer/{id}/photo
+    /// POST /api/admin/adminlecturer/{id}/photo
     /// Form: file (IFormFile)
-    /// يحتاج permission "Lecturers"
     /// </summary>
     [HttpPost("{id}/photo")]
-     
     public async Task<IActionResult> UploadPhoto(int id, IFormFile file)
     {
         if (file == null || file.Length == 0)
             return BadRequest(new { message = "الملف مطلوب." });
 
-        var uploadsFolder = "D:\\home\\site\\userfiles\\lecturers";
+        // Local development → wwwroot/images/lecturers
+        // Production (Azure) → D:\home\site\userfiles\icemt\assets\images
+        var uploadsFolder = _env.IsDevelopment()
+            ? Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "images", "lecturers")
+            : "D:\\home\\site\\userfiles\\icemt\\assets\\images";
+
         var imageUrl = await _service.UploadPhotoAsync(id, file, uploadsFolder);
 
         if (imageUrl == null)
