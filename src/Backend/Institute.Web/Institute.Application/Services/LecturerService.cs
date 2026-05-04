@@ -1,5 +1,4 @@
-﻿ 
-using Institute.Application.DTOs;
+﻿using Institute.Application.DTOs;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
@@ -93,7 +92,7 @@ namespace Institute.Application.Services
             if (!string.IsNullOrEmpty(entity.LecturerPic))
             {
                 var filePath = Path.Combine(
-                    "D:\\home\\site\\userfiles\\lecturers",
+                    "D:\\home\\site\\userfiles\\icemt\\assets\\images",
                     Path.GetFileName(entity.LecturerPic)
                 );
                 if (File.Exists(filePath)) File.Delete(filePath);
@@ -120,16 +119,19 @@ namespace Institute.Application.Services
                 if (File.Exists(oldPath)) File.Delete(oldPath);
             }
 
+            // احفظ اسم الملف بس (بدون path) زي باقي الصور في الـ DB
             var fileName = Guid.NewGuid() + Path.GetExtension(photo.FileName);
             var filePath = Path.Combine(uploadsFolder, fileName);
 
             using var stream = new FileStream(filePath, FileMode.Create);
             await photo.CopyToAsync(stream);
 
-            entity.LecturerPic = "/images/lecturers/" + fileName;
+            // ✅ اسم الملف بس — مش /images/lecturers/...
+            entity.LecturerPic = fileName;
             _repo.Update(entity);
             await _repo.SaveChangesAsync();
-            return entity.LecturerPic;
+
+            return fileName;
         }
     }
 }
