@@ -107,6 +107,7 @@ builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IBooksTypeService, BooksTypeService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IPlanworkService, PlanworkService>();
 //builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();

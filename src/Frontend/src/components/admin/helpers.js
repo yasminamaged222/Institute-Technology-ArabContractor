@@ -35,10 +35,9 @@ export function resolveCertUrl(url) {
 export function rtlExport(headers, rows) {
     return {
         headers: [...headers].reverse(),
-        rows: rows.map(r => [...r].reverse()),
+        rows: rows.map(r => [...r].reverse()),  // ← fixed
     };
 }
-
 export function triggerDownload(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
