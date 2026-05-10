@@ -9,8 +9,8 @@ namespace Institute.Application.Interfaces.IService
 {
     public interface INewsService
     {
-        Task<NewsCreateUpdateDto> CreateAsync(NewsCreateUpdateDto dto, string uploadsFolder);
-        Task<NewsCreateUpdateDto?> UpdateAsync(int id, NewsCreateUpdateDto dto, string uploadsFolder);
-        Task<bool> DeleteAsync(int id, string uploadsFolder);
+        Task<NewsCreateUpdateDto> CreateAsync(NewsCreateUpdateDto dto);
+        Task<NewsCreateUpdateDto?> UpdateAsync(int id, NewsCreateUpdateDto dto);
+        Task<bool> DeleteAsync(int id);
     }
 }

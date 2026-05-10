@@ -9,11 +9,13 @@ namespace Institute.Application.DTOs
 {
     public class NewsCreateUpdateDto
     {
-        public int Id { get; set; }
-        public string Title { get; set; } = null!;      // → ATitel
-        public string Details { get; set; } = null!;    // → ADetails
-        public DateTime Date { get; set; }              // → NewsDate
-        public IFormFile? Image { get; set; }           // صورة اختيارية → NewsPic
+        public int? Id { get; set; }
+
+        public string Title { get; set; }
+        public string Details { get; set; }
+        public DateTime Date { get; set; }
+
+        public IFormFile? Image { get; set; }  // 👈 فقط ده من العميل
         public string ImageUrl { get; set; }
     }
 }
