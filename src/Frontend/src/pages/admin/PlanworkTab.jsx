@@ -31,7 +31,8 @@ function apiToForm(item) {
         show: item.mainFlag ?? false,
         hasDetails: item.detailsFlag ?? false,
         showOnHome: item.specialFlag ?? false,
-        price: item.planCost ?? '',
+        priceOnsite: item.planCostOnsite ?? item.planCost ?? '',
+        priceOnline: item.planCostOnline ?? '',
         description: item.courseDesc ?? '',
         place: item.coursePlace ?? '',
         date: item.courseDate ?? '',
@@ -51,7 +52,8 @@ function formToApi(form) {
         courseDate: form.date || null,
         courseDays: form.days !== '' && form.days != null ? String(form.days) : null,
         courseContent: form.details || null,
-        planCost: Number(form.price) || 0,
+        planCostOnsite: Number(form.priceOnsite) || 0,
+        planCostOnline: Number(form.priceOnline) || 0,
         slug: form.slug || null,
         sku: form.sku || null,
     };
@@ -66,7 +68,13 @@ function flattenTree(nodes, acc = []) {
     return acc;
 }
 
-const BLANK = { id: 0, parentId: null, priority: '', days: '', name: '', slug: '', sku: '', show: false, hasDetails: false, showOnHome: false, price: '', description: '', place: '', date: '', details: '' };
+const BLANK = {
+    id: 0, parentId: null, priority: '', days: '', name: '', slug: '', sku: '',
+    show: false, hasDetails: false, showOnHome: false,
+    priceOnsite: '',
+    priceOnline: '',
+    description: '', place: '', date: '', details: ''
+};
 const FILE_BLANK = { id: 0, name: '', order: '', title: '', file: null };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -315,7 +323,6 @@ function FilesSection({ planworkId, planworkName }) {
     const fileInputRef = useRef(null);
     const nextFileId = useRef(planworkId * 1000 + 1);
 
-    // ── Load files from API ───────────────────────────────────────────────────
     const loadFiles = async () => {
         setLoadingFiles(true);
         try {
@@ -324,7 +331,6 @@ function FilesSection({ planworkId, planworkName }) {
             });
             if (res.ok) {
                 const data = await res.json();
-                // Normalize API response: expect array of { id, fileName/name, order, title/fileTitle }
                 const normalized = data.map(f => ({
                     id: f.id ?? f.fileId,
                     name: f.fileName ?? f.name ?? '',
@@ -336,11 +342,9 @@ function FilesSection({ planworkId, planworkName }) {
                 setFiles(normalized);
                 nextFileId.current = planworkId * 1000 + normalized.length + 1;
             } else if (res.status === 404) {
-                // No files endpoint yet — silently start empty
                 setFiles([]);
             }
         } catch (_) {
-            // API not available — start with empty list
             setFiles([]);
         } finally {
             setLoadingFiles(false);
@@ -378,7 +382,6 @@ function FilesSection({ planworkId, planworkName }) {
         }));
     };
 
-    // ── Save file (POST multipart or PUT) ─────────────────────────────────────
     const handleFileSave = async () => {
         if (!fileForm.name.trim() && !fileForm.file) {
             fileToast('اسم الملف مطلوب', 'error');
@@ -387,7 +390,6 @@ function FilesSection({ planworkId, planworkName }) {
         setSavingFile(true);
         try {
             if (isNewFile) {
-                // Build multipart form data
                 const fd = new FormData();
                 if (fileForm.file) fd.append('file', fileForm.file);
                 fd.append('fileName', fileForm.name || fileForm.file?.name || '');
@@ -399,7 +401,7 @@ function FilesSection({ planworkId, planworkName }) {
                 try {
                     const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files`, {
                         method: 'POST',
-                        headers: await authHeaders(true), // no Content-Type — browser sets multipart boundary
+                        headers: await authHeaders(true),
                         body: fd,
                     });
                     if (res.ok) {
@@ -416,7 +418,6 @@ function FilesSection({ planworkId, planworkName }) {
                         throw new Error(`HTTP ${res.status}`);
                     }
                 } catch (apiErr) {
-                    // API unavailable — add locally
                     newFile = {
                         id: nextFileId.current++,
                         name: fileForm.name || fileForm.file?.name || '',
@@ -440,7 +441,6 @@ function FilesSection({ planworkId, planworkName }) {
                 setIsNewFile(false);
                 fileToast('تم الإضافة');
             } else {
-                // Edit existing file
                 const fd = new FormData();
                 if (fileForm.file) fd.append('file', fileForm.file);
                 fd.append('fileName', fileForm.name || '');
@@ -467,7 +467,6 @@ function FilesSection({ planworkId, planworkName }) {
                     setSelectedFile(rec);
                     setFileForm({ ...rec });
                 } catch (_) {
-                    // Fallback: update locally
                     const rec = { ...fileForm };
                     setFiles(prev => prev.map(f => f.id === rec.id ? rec : f));
                     setSelectedFile(rec);
@@ -484,7 +483,6 @@ function FilesSection({ planworkId, planworkName }) {
         }
     };
 
-    // ── Delete file ───────────────────────────────────────────────────────────
     const handleFileDelete = async () => {
         if (!fileDelConfirm) { setFileDelConfirm(true); return; }
         setDeletingFile(true);
@@ -495,9 +493,7 @@ function FilesSection({ planworkId, planworkName }) {
                     headers: await authHeaders(),
                 });
                 if (res.status !== 200 && res.status !== 204) throw new Error(`HTTP ${res.status}`);
-            } catch (_) {
-                // Remove locally if API fails
-            }
+            } catch (_) { }
             setFiles(prev => prev.filter(f => f.id !== selectedFile.id));
             setFileDelConfirm(false);
             setFileForm({ ...FILE_BLANK });
@@ -553,7 +549,6 @@ function FilesSection({ planworkId, planworkName }) {
                             </button>
                             <input ref={fileInputRef} type="file" style={{ display: 'none' }} onChange={handleFileInput} />
                         </div>
-                        {/* Show selected local file name */}
                         {fileForm.file && (
                             <div style={{ marginTop: 4, fontSize: '.72rem', color: '#2563eb', display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <span>📄</span>
@@ -563,7 +558,6 @@ function FilesSection({ planworkId, planworkName }) {
                                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '.8rem' }}>✕</button>
                             </div>
                         )}
-                        {/* Show existing file URL link */}
                         {!fileForm.file && fileForm.url && (
                             <div style={{ marginTop: 4, fontSize: '.72rem', color: '#059669' }}>
                                 <a href={fileForm.url} target="_blank" rel="noopener noreferrer">🔗 عرض الملف الحالي</a>
@@ -701,7 +695,6 @@ const PlanworkTab = () => {
     const [saving, setSaving] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
-    // ── Load tree on mount ────────────────────────────────────────────────────
     const loadTree = async () => {
         setLoadingTree(true); setTreeError(null);
         try {
@@ -730,7 +723,6 @@ const PlanworkTab = () => {
     };
     const pick = rec => { setSelected(rec); setForm({ ...rec }); setIsNew(false); setDeleteConfirm(false); };
 
-    // ── Click tree node → fetch record ───────────────────────────────────────
     const handleTreeSelect = async (node) => {
         setTreeSelected(node);
         const cached = records.find(r => r.id === node.id);
@@ -867,14 +859,6 @@ const PlanworkTab = () => {
                 </div>
             )}
 
-            {/*
-             * KEY LAYOUT CHANGE:
-             * The outer lec-layout is now a fixed-height flex row.
-             * Both the left panel and the form wrap get:
-             *   height: calc(100vh - <offset>)   ← adjust offset to fit your shell
-             *   overflow-y: auto
-             * This lets each side scroll independently.
-             */}
             <div className="lec-layout" style={{ alignItems: 'stretch' }}>
 
                 {/* ══ LEFT PANEL — scrollable ══ */}
@@ -917,7 +901,6 @@ const PlanworkTab = () => {
                             </div>
                         )}
 
-                        {/* Tree scroll area fills remaining height */}
                         <div className="pw-tree-scroll" style={{ flex: 1, overflowY: 'auto' }}>
                             {loadingTree ? (
                                 <div style={{ padding: 24, textAlign: 'center', color: '#6b7280', fontSize: '.8rem' }}>⏳ جاري التحميل...</div>
@@ -991,9 +974,31 @@ const PlanworkTab = () => {
                                             placeholder="SKU-001"
                                             style={{ direction: 'ltr', textAlign: 'right', fontFamily: "'Courier New',monospace", fontSize: '.76rem' }} />
                                     </Field>
-                                    <Field label="السعر">
-                                        <input className="lec-inp" name="price" value={form.price} onChange={handleChange} placeholder="السعر..." />
+
+                                    {/* ── Dual price fields ── */}
+                                    <Field label="السعر (حضوري)">
+                                        <input
+                                            className="lec-inp"
+                                            name="priceOnsite"
+                                            type="number"
+                                            min="0"
+                                            value={form.priceOnsite}
+                                            onChange={handleChange}
+                                            placeholder="السعر الحضوري..."
+                                        />
                                     </Field>
+                                    <Field label="السعر (أونلاين)">
+                                        <input
+                                            className="lec-inp"
+                                            name="priceOnline"
+                                            type="number"
+                                            min="0"
+                                            value={form.priceOnline}
+                                            onChange={handleChange}
+                                            placeholder="السعر الأونلاين..."
+                                        />
+                                    </Field>
+
                                     <Field label="المكان">
                                         <input className="lec-inp" name="place" value={form.place} onChange={handleChange} placeholder="المكان..." />
                                     </Field>
@@ -1053,7 +1058,6 @@ const PlanworkTab = () => {
 
                                 <div className="lec-divider" style={{ marginTop: 8 }} />
 
-                                {/* FilesSection renders here — fully visible when scrolling down */}
                                 {!isNew && selected && (
                                     <FilesSection planworkId={selected.id} planworkName={selected.name} />
                                 )}

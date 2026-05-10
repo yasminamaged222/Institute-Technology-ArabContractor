@@ -102,12 +102,42 @@ const craftItems = [
     { Icon: AssignmentTurnedInIcon, title: 'الاختبارات والتقييم', text: 'اختبارات سيكومترية وتقييمات تخصصية في اللغة والحاسب والهندسة.', link: '/tests' },
 ];
 
-const stats = [
-    { n: '45+', l: 'عامًا من الخبرة' },
-    { n: '12,000+', l: 'متدرب سنويًا' },
-    { n: '200+', l: 'برنامج تدريبي' },
-    { n: '1978', l: 'سنة التأسيس' },
-];
+// ─── STATS: computed dynamically — years from 1978, rest from API ─────────────
+const FOUNDING_YEAR = 1978;
+function buildStats(apiStats) {
+    const currentYear = new Date().getFullYear();
+    const yearsExp = currentYear - FOUNDING_YEAR;
+    // Pull live values from the same API the admin uses; fall back to reasonable defaults
+    const gs = (fields, fb) => { if (!apiStats) return fb; for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; } return fb; };
+    const traineesPerYear = gs(['enrollmentsCount', 'usersCount'], 12000);
+    const programs = gs(['planworksCount', 'coursesCount'], 200);
+    return [
+        {
+            raw: yearsExp,
+            suffix: '+',
+            sub: `${FOUNDING_YEAR}–${currentYear}`,
+            l: 'عامًا من الخبرة',
+        },
+        {
+            raw: traineesPerYear,
+            suffix: '+',
+            sub: null,
+            l: 'متدرب سنويًا',
+        },
+        {
+            raw: programs,
+            suffix: '+',
+            sub: null,
+            l: 'برنامج تدريبي',
+        },
+        {
+            raw: FOUNDING_YEAR,
+            suffix: '',
+            sub: null,
+            l: 'سنة التأسيس',
+        },
+    ];
+}
 
 const trainingPrograms = [
     { Icon: BuildCircleIcon, label: 'برامج للتدريب التحويلى' },
@@ -115,20 +145,6 @@ const trainingPrograms = [
     { Icon: MenuBookIcon, label: 'الحلول التدريبية المتكاملة' },
     { Icon: HardwareIcon, label: 'التدريب فى موقع العمل' },
 ];
-
-// ─── INTERSECTION OBSERVER ────────────────────────────────────────────────────
-function useReveal(threshold = 0.08) {
-    const ref = useRef(null);
-    const [vis, setVis] = useState(false);
-    useEffect(() => {
-        const io = new IntersectionObserver(([e]) => {
-            if (e.isIntersecting) setVis(true);
-        }, { threshold });
-        if (ref.current) io.observe(ref.current);
-        return () => io.disconnect();
-    }, []);
-    return [ref, vis];
-}
 
 const F = '"Droid Arabic Kufi","Noto Kufi Arabic",serif';
 const C = {
@@ -148,8 +164,8 @@ const Eyebrow = ({ children, light, center }) => (
     </div>
 );
 
-const SplitTitle = ({ children, light, size = 'lg', center }) => (
-    <h2 style={{
+const SplitTitle = ({ children, light, size = 'lg', center, gsapRef }) => (
+    <h2 ref={gsapRef} style={{
         fontFamily: F, fontWeight: 900, margin: 0,
         fontSize: size === 'lg' ? 'clamp(1.8rem,4vw,3.2rem)' : 'clamp(1.4rem,2.8vw,2.2rem)',
         lineHeight: 1.4, letterSpacing: '-0.02em',
@@ -192,22 +208,43 @@ const SolidBtn = ({ to, href, children, orange, small }) => {
 export default function Home() {
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
+    const [gsapReady, setGsapReady] = useState(false);
+    const [apiStats, setApiStats] = useState(null);
 
-    const [statsRef, statsVis] = useReveal(0.05);
-    const [featRef, featVis] = useReveal(0.08);
-    const [aboutRef, aboutVis] = useReveal(0.06);
-    const [visionRef, visionVis] = useReveal(0.06);
-    const [dlRef, dlVis] = useReveal(0.08);
-    const [certRef, certVis] = useReveal(0.06);
-    const [protoRef, protoVis] = useReveal(0.06);
-    const [craftRef, craftVis] = useReveal(0.06);
-    const [libRef, libVis] = useReveal(0.05);
-    const [newsRef, newsVis] = useReveal(0.06);
-    const [coursesRef, coursesVis] = useReveal(0.06);
-    const [techRef, techVis] = useReveal(0.06);
-    const [schoolsRef, schoolsVis] = useReveal(0.05);
+    // ── Fetch public stats (same endpoint as admin) ───────────────────────
+    useEffect(() => {
+        fetch('https://acwebsite-icmet-test.azurewebsites.net/api/Admin/stats')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(d => setApiStats(d))
+            .catch(() => setApiStats(null));
+    }, []);
+
+    // ── Refs for GSAP targets ──────────────────────────────────────────────
+    const heroRef = useRef(null);
+    const heroInnerRef = useRef(null);
+    const progressRef = useRef(null);
+    const statsRef = useRef(null);
+    const statEls = useRef([]);
+    const featRef = useRef(null);
+    const featCards = useRef([]);
+    const aboutRef = useRef(null);
+    const aboutImgRef = useRef(null);
+    const aboutTxtRef = useRef(null);
+    const visionRef = useRef(null);
+    const visionCards = useRef([]);
+    const dlRef = useRef(null);
+    const certRef = useRef(null);
+    const techRef = useRef(null);
+    const schoolsRef = useRef(null);
+    const protoRef = useRef(null);
+    const protoCards = useRef([]);
+    const newsRef = useRef(null);
+    const craftRef = useRef(null);
+    const craftCards = useRef([]);
+    const libRef = useRef(null);
 
     useEffect(() => { document.title = 'المعهد التكنولوجي — ICMET'; }, []);
+
     useEffect(() => {
         fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews')
             .then(r => r.ok ? r.json() : Promise.reject())
@@ -218,24 +255,327 @@ export default function Home() {
             .catch(() => setNewsLoading(false));
     }, []);
 
+    // ── Load GSAP + ScrollTrigger from CDN, then wire everything ──────────
+    useEffect(() => {
+        // Dynamically load GSAP + ScrollTrigger so no npm install needed
+        const loadScript = (src) => new Promise((res, rej) => {
+            if (document.querySelector(`script[src="${src}"]`)) return res();
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = res;
+            s.onerror = rej;
+            document.head.appendChild(s);
+        });
+
+        Promise.all([
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'),
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js'),
+        ]).then(() => {
+            const { gsap } = window;
+            const { ScrollTrigger } = window;
+            gsap.registerPlugin(ScrollTrigger);
+            setGsapReady(true);
+
+            // ─────────────────────────────────────────────────────────────
+            // 1. SCROLL PROGRESS BAR
+            // ─────────────────────────────────────────────────────────────
+            gsap.to(progressRef.current, {
+                scaleX: 1,
+                ease: 'none',
+                scrollTrigger: {
+                    trigger: document.body,
+                    start: 'top top',
+                    end: 'bottom bottom',
+                    scrub: true,
+                },
+            });
+
+            // ─────────────────────────────────────────────────────────────
+            // 2. HERO PARALLAX — bg images scroll at 40% speed
+            // ─────────────────────────────────────────────────────────────
+            if (heroRef.current) {
+                gsap.to(heroRef.current.querySelectorAll('.hero-bg-layer'), {
+                    yPercent: 30,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: heroRef.current,
+                        start: 'top top',
+                        end: 'bottom top',
+                        scrub: true,
+                    },
+                });
+                // Hero content fades + drifts up while scrolling away
+                gsap.to(heroInnerRef.current, {
+                    yPercent: -20,
+                    opacity: 0,
+                    ease: 'none',
+                    scrollTrigger: {
+                        trigger: heroRef.current,
+                        start: 'center top',
+                        end: 'bottom top',
+                        scrub: true,
+                    },
+                });
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 3. STATS COUNTER ANIMATION
+            // ─────────────────────────────────────────────────────────────
+            if (statsRef.current) {
+                const counters = statsRef.current.querySelectorAll('[data-count]');
+                counters.forEach((el) => {
+                    const target = +el.getAttribute('data-count');
+                    const suffix = el.getAttribute('data-suffix') || '';
+                    // Year fields (no suffix, > 1000) count from near the target
+                    // Large numbers (trainees) count from a lower starting point
+                    const isYear = target > 1000 && suffix === '';
+                    const isLarge = target >= 1000 && !isYear;
+                    const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
+                    ScrollTrigger.create({
+                        trigger: el,
+                        start: 'top 88%',
+                        once: true,
+                        onEnter: () => {
+                            const obj = { val: startVal };
+                            gsap.to(obj, {
+                                val: target,
+                                duration: isYear ? 1.4 : isLarge ? 2.2 : 1.8,
+                                ease: 'power2.out',
+                                onUpdate: () => {
+                                    const v = Math.round(obj.val);
+                                    el.textContent = v.toLocaleString('ar-EG') + suffix;
+                                },
+                            });
+                        },
+                    });
+                });
+
+                // Stat cells slide up
+                const cells = statsRef.current.querySelectorAll('.stat-cell');
+                gsap.fromTo(cells,
+                    { opacity: 0, y: 40 },
+                    {
+                        opacity: 1, y: 0,
+                        duration: 0.8,
+                        ease: 'power3.out',
+                        stagger: 0.12,
+                        scrollTrigger: { trigger: statsRef.current, start: 'top 85%', once: true },
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 4. FEATURE CARDS — stagger slide-up
+            // ─────────────────────────────────────────────────────────────
+            if (featCards.current.length) {
+                gsap.fromTo(featCards.current,
+                    { opacity: 0, y: 60, scale: 0.96 },
+                    {
+                        opacity: 1, y: 0, scale: 1,
+                        duration: 0.9,
+                        ease: 'power3.out',
+                        stagger: 0.14,
+                        scrollTrigger: { trigger: featRef.current, start: 'top 78%', once: true },
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 5. ABOUT SECTION — image scale-in + text slide
+            // ─────────────────────────────────────────────────────────────
+            if (aboutImgRef.current) {
+                gsap.fromTo(aboutImgRef.current,
+                    { opacity: 0, scale: 0.92, x: 40 },
+                    {
+                        opacity: 1, scale: 1, x: 0, duration: 1.1, ease: 'power3.out',
+                        scrollTrigger: { trigger: aboutRef.current, start: 'top 78%', once: true }
+                    }
+                );
+            }
+            if (aboutTxtRef.current) {
+                const kids = aboutTxtRef.current.children;
+                gsap.fromTo(kids,
+                    { opacity: 0, y: 36 },
+                    {
+                        opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1,
+                        scrollTrigger: { trigger: aboutRef.current, start: 'top 75%', once: true }
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 6. VISION CARDS — stagger + slight scale
+            // ─────────────────────────────────────────────────────────────
+            if (visionCards.current.length) {
+                gsap.fromTo(visionCards.current,
+                    { opacity: 0, y: 50, scale: 0.95 },
+                    {
+                        opacity: 1, y: 0, scale: 1,
+                        duration: 0.85,
+                        ease: 'power3.out',
+                        stagger: 0.13,
+                        scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true },
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 7. DOWNLOADS BAR — wipe in from side
+            // ─────────────────────────────────────────────────────────────
+            if (dlRef.current) {
+                gsap.fromTo(dlRef.current.querySelectorAll('.dl-item'),
+                    { opacity: 0, x: -40 },
+                    {
+                        opacity: 1, x: 0,
+                        duration: 0.7,
+                        ease: 'power2.out',
+                        stagger: 0.12,
+                        scrollTrigger: { trigger: dlRef.current, start: 'top 85%', once: true },
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 8. CERTS SECTION — fade + left slide
+            // ─────────────────────────────────────────────────────────────
+            if (certRef.current) {
+                gsap.fromTo(certRef.current,
+                    { opacity: 0, y: 40 },
+                    {
+                        opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+                        scrollTrigger: { trigger: certRef.current, start: 'top 80%', once: true }
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 9. SCHOOLS — featured card + grid cascade
+            // ─────────────────────────────────────────────────────────────
+            if (schoolsRef.current) {
+                const featured = schoolsRef.current.querySelector('.school-featured');
+                const cards = schoolsRef.current.querySelectorAll('.school-card');
+                if (featured) {
+                    gsap.fromTo(featured,
+                        { opacity: 0, x: 40 },
+                        {
+                            opacity: 1, x: 0, duration: 0.9, ease: 'power3.out',
+                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 80%', once: true }
+                        }
+                    );
+                }
+                if (cards.length) {
+                    gsap.fromTo(cards,
+                        { opacity: 0, y: 40 },
+                        {
+                            opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.12, delay: 0.15,
+                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 78%', once: true }
+                        }
+                    );
+                }
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 10. PROTOCOL CARDS — stagger
+            // ─────────────────────────────────────────────────────────────
+            if (protoCards.current.length) {
+                gsap.fromTo(protoCards.current,
+                    { opacity: 0, y: 44, scale: 0.96 },
+                    {
+                        opacity: 1, y: 0, scale: 1,
+                        duration: 0.8,
+                        ease: 'power3.out',
+                        stagger: 0.1,
+                        scrollTrigger: { trigger: protoRef.current, start: 'top 80%', once: true },
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 11. NEWS SECTION
+            // ─────────────────────────────────────────────────────────────
+            if (newsRef.current) {
+                gsap.fromTo(newsRef.current,
+                    { opacity: 0, y: 30 },
+                    {
+                        opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                        scrollTrigger: { trigger: newsRef.current, start: 'top 82%', once: true }
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 12. CRAFT CARDS
+            // ─────────────────────────────────────────────────────────────
+            if (craftCards.current.length) {
+                gsap.fromTo(craftCards.current,
+                    { opacity: 0, y: 50 },
+                    {
+                        opacity: 1, y: 0,
+                        duration: 0.85,
+                        ease: 'power3.out',
+                        stagger: 0.14,
+                        scrollTrigger: { trigger: craftRef.current, start: 'top 80%', once: true },
+                    }
+                );
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 13. LIBRARY SECTION — split reveal
+            // ─────────────────────────────────────────────────────────────
+            if (libRef.current) {
+                const [visual, content] = libRef.current.querySelectorAll('.lib-visual, .lib-content');
+                gsap.fromTo(visual, { opacity: 0, x: 60 }, {
+                    opacity: 1, x: 0, duration: 1, ease: 'power3.out',
+                    scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
+                });
+                gsap.fromTo(content, { opacity: 0, x: -60 }, {
+                    opacity: 1, x: 0, duration: 1, ease: 'power3.out', delay: 0.15,
+                    scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
+                });
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // 14. TECH/SCHOOLS HEADER
+            // ─────────────────────────────────────────────────────────────
+            if (techRef.current) {
+                gsap.fromTo(techRef.current.querySelector('.tech-header'),
+                    { opacity: 0, y: 30 },
+                    {
+                        opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                        scrollTrigger: { trigger: techRef.current, start: 'top 82%', once: true }
+                    }
+                );
+            }
+
+            return () => ScrollTrigger.getAll().forEach(t => t.kill());
+        }).catch(err => console.warn('GSAP load failed:', err));
+    }, []);
+
     return (
         <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w }}>
+
+            {/* ── SCROLL PROGRESS BAR ─────────────────────────────────────── */}
+            <div style={{
+                position: 'fixed', top: 0, left: 0, right: 0, height: 3,
+                zIndex: 9999, background: C.g3,
+            }}>
+                <div ref={progressRef} style={{
+                    height: '100%',
+                    background: `linear-gradient(90deg, ${C.o}, ${C.b})`,
+                    transformOrigin: 'left center',
+                    transform: 'scaleX(0)',
+                }} />
+            </div>
+
             <style>{`
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-
-        .rv      {opacity:0;transform:translateY(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
-        .rv-left {opacity:0;transform:translateX(40px);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
-        .rv-scale{opacity:0;transform:scale(.94);transition:opacity .8s cubic-bezier(.22,1,.36,1),transform .8s cubic-bezier(.22,1,.36,1);}
-        .rv.on,.rv-left.on,.rv-scale.on{opacity:1;transform:none;}
-        .d1{transition-delay:.06s;}.d2{transition-delay:.14s;}.d3{transition-delay:.22s;}
-        .d4{transition-delay:.30s;}.d5{transition-delay:.38s;}.d6{transition-delay:.46s;}
-
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
         /* ── Hero ── */
         .hero-swiper{width:100%;height:clamp(300px,100vh,710px);}
-        .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;}
+        .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+        .hero-bg-layer{position:absolute;inset:-20% 0;will-change:transform;}
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
           width:50px;height:50px;border-radius:50%;
           background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);
@@ -253,7 +593,7 @@ export default function Home() {
         /* ── Stats ── */
         .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);}
         @media(max-width:760px){.stats-bar{grid-template-columns:repeat(2,1fr);}}
-        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;}
+        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;opacity:0;}
         .stat-cell:last-child{border-left:none;}
 
         /* ── Feature cards ── */
@@ -267,6 +607,7 @@ export default function Home() {
           position:relative;overflow:hidden;
           transition:background .3s,box-shadow .3s,transform .3s,border-color .3s;
           display:flex;flex-direction:column;align-items:center;text-align:center;
+          opacity:0;
         }
         .feat-card:hover{background:${C.w};border-color:${C.o};box-shadow:0 8px 32px rgba(245,124,0,.18);transform:translateY(-6px);}
         .feat-card::before{content:'';position:absolute;bottom:0;right:0;width:100%;height:4px;background:linear-gradient(90deg,${C.o},${C.od});transform:scaleX(0);transform-origin:center;transition:transform .35s cubic-bezier(.22,1,.36,1);}
@@ -277,7 +618,7 @@ export default function Home() {
         /* ── Vision grid ── */
         .vision-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,20px);}
         @media(max-width:500px){.vision-grid{grid-template-columns:1fr;}}
-        .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;}
+        .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;opacity:0;}
         .vis-item:hover{border-color:${C.o};box-shadow:0 4px 24px rgba(245,124,0,.10);}
 
         /* ── Downloads grid ── */
@@ -292,45 +633,24 @@ export default function Home() {
         .proto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
         @media(max-width:900px){.proto-grid{grid-template-columns:repeat(2,1fr);}}
         @media(max-width:560px){.proto-grid{grid-template-columns:1fr;}}
-        .proto-card{position:relative;overflow:hidden;border-radius:8px;background:${C.w};border:1px solid ${C.g3};padding:24px 20px;display:flex;flex-direction:column;gap:12px;transition:border-color .25s,transform .25s,box-shadow .25s;}
+        .proto-card{position:relative;overflow:hidden;border-radius:8px;background:${C.w};border:1px solid ${C.g3};padding:24px 20px;display:flex;flex-direction:column;gap:12px;transition:border-color .25s,transform .25s,box-shadow .25s;opacity:0;}
         .proto-card:hover{border-color:${C.b};transform:translateY(-4px);box-shadow:0 8px 28px rgba(8,101,168,.12);}
         .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:linear-gradient(180deg,${C.o},${C.b});transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
         .proto-card:hover::after{transform:scaleY(1);}
 
-        /* ══ SCHOOLS layout ══
-           featured card (right) is narrower: minmax(0,280px)
-           other-grid (left) fills the rest
-        */
-        .schools-layout{
-          display:grid;
-          grid-template-columns:minmax(0,280px) 1fr;
-          gap:20px;
-          align-items:stretch;
-        }
+        /* ── Schools ── */
+        .schools-layout{display:grid;grid-template-columns:minmax(0,280px) 1fr;gap:20px;align-items:stretch;}
         @media(max-width:960px){.schools-layout{grid-template-columns:1fr;}}
-
-        .school-featured{
-          border-radius:12px;
-          border:2px solid ${C.b};
-          background:linear-gradient(160deg,${C.b} 0%,${C.bd} 100%);
-          display:flex;flex-direction:column;overflow:hidden;
-          transition:transform .3s,box-shadow .3s;
-        }
+        .school-featured{border-radius:12px;border:2px solid ${C.b};background:linear-gradient(160deg,${C.b} 0%,${C.bd} 100%);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s,box-shadow .3s;opacity:0;}
         .school-featured:hover{transform:translateY(-6px);box-shadow:0 20px 48px rgba(8,101,168,.25);}
-
-        .schools-other-grid{
-          display:grid;
-          grid-template-columns:repeat(2,1fr);
-          gap:16px;
-        }
+        .schools-other-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;}
         @media(max-width:600px){.schools-other-grid{grid-template-columns:1fr;}}
-
-        .school-card{border-radius:10px;border:1px solid ${C.g3};background:${C.w};display:flex;flex-direction:column;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;}
+        .school-card{border-radius:10px;border:1px solid ${C.g3};background:${C.w};display:flex;flex-direction:column;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s;opacity:0;}
         .school-card:hover{border-color:${C.b};transform:translateY(-5px);box-shadow:0 12px 32px rgba(8,101,168,.12);}
         .sc-meta{font-family:${F};font-size:.68rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
 
         /* ── Craft ── */
-        .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;}
+        .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;opacity:0;}
         .craft-card:hover{border-color:${C.o};transform:translateY(-4px);}
 
         /* ── News ── */
@@ -364,27 +684,39 @@ export default function Home() {
         /* ── Library ── */
         .lib-split{display:grid;grid-template-columns:1fr 1fr;min-height:clamp(260px,36vw,480px);}
         @media(max-width:680px){.lib-split{grid-template-columns:1fr;min-height:unset;}}
-        .lib-visual{background:${C.o};display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);position:relative;overflow:hidden;}
-        .lib-content{padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);display:flex;flex-direction:column;justify-content:center;}
+        .lib-visual{background:${C.o};display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);position:relative;overflow:hidden;opacity:0;}
+        .lib-content{padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);display:flex;flex-direction:column;justify-content:center;opacity:0;}
         .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
         .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
+
+        /* ── dl-item initial state ── */
+        .dl-item{opacity:0;}
 
         @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
         .scroll-ind{animation:bounce 2s ease-in-out infinite;}
         @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
+
+        /* ── about img opacity reset for GSAP ── */
+        .about-img-wrap{opacity:0;}
+        .about-txt-wrap>*{opacity:0;}
       `}</style>
 
             {/* 1 ─ HERO ──────────────────────────────────────────────────────── */}
-            <section style={{ position: 'relative' }}>
+            <section ref={heroRef} style={{ position: 'relative' }}>
                 <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
                     autoplay={{ delay: 7000, disableOnInteraction: false }}
                     navigation pagination={{ clickable: true }} loop speed={800}>
                     {slides.map((sl, i) => (
                         <SwiperSlide key={i}>
-                            <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${sl.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                            {/* Parallax bg layer — GSAP moves this */}
+                            <div className="hero-bg-layer" style={{
+                                backgroundImage: `url(${sl.image})`,
+                                backgroundSize: 'cover',
+                                backgroundPosition: 'center',
+                            }} />
                             <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(4,20,40,.82) 0%, rgba(4,20,40,.58) 60%, rgba(4,20,40,.28) 100%)' }} />
                             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
-                            <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
+                            <div ref={i === 0 ? heroInnerRef : null} style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: F, fontSize: '.68rem', fontWeight: 700, letterSpacing: 2.5, textTransform: 'uppercase', color: C.o, marginBottom: 14 }}>
                                     <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
                                 </div>
@@ -410,9 +742,20 @@ export default function Home() {
             <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}` }}>
                 <div className="W">
                     <div className="stats-bar">
-                        {stats.map((s, i) => (
-                            <div key={i} className={`stat-cell rv${statsVis ? ' on' : ''} d${i + 1}`}>
-                                <div style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>{s.n}</div>
+                        {buildStats(apiStats).map((s, i) => (
+                            <div key={i} className="stat-cell">
+                                <div
+                                    data-count={s.raw}
+                                    data-suffix={s.suffix}
+                                    style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}
+                                >
+                                    {s.raw.toLocaleString('ar-EG')}{s.suffix}
+                                </div>
+                                {s.sub && (
+                                    <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>
+                                        {s.sub}
+                                    </div>
+                                )}
                                 <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
                             </div>
                         ))}
@@ -423,7 +766,7 @@ export default function Home() {
             {/* 3 ─ FEATURES ──────────────────────────────────────────────────── */}
             <section style={{ background: C.w }} ref={featRef}>
                 <div className="W" style={{ paddingTop: 'clamp(48px,6vw,80px)' }}>
-                    <div className={`rv${featVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 36 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 36 }}>
                         <Eyebrow center>ما يميزنا</Eyebrow>
                         <SplitTitle center>لماذا المعهد؟</SplitTitle>
                         <div style={{ width: 56, height: 3, background: C.o, margin: '16px auto 24px', borderRadius: 2 }} />
@@ -434,7 +777,7 @@ export default function Home() {
                 </div>
                 <div className="W feat-grid" style={{ paddingBottom: 'clamp(48px,6vw,80px)' }}>
                     {features.map((f, i) => (
-                        <div key={i} className={`feat-card rv${featVis ? ' on' : ''} d${i + 1}`}>
+                        <div key={i} className="feat-card" ref={el => featCards.current[i] = el}>
                             <div className="feat-num">{f.num}</div>
                             <div style={{ marginBottom: 16 }}><img src={f.icon} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} /></div>
                             <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.4, marginBottom: 10 }}>{f.title}</h3>
@@ -453,8 +796,8 @@ export default function Home() {
             {/* 4 ─ ABOUT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={aboutRef}>
                 <div className="W">
-                    <div className={`ab-split rv${aboutVis ? ' on' : ''}`}>
-                        <div className={`rv-scale${aboutVis ? ' on' : ''} d1`} style={{ position: 'relative' }}>
+                    <div className="ab-split">
+                        <div className="about-img-wrap" ref={aboutImgRef} style={{ position: 'relative' }}>
                             <div style={{ position: 'absolute', top: -12, right: -12, width: 52, height: 52, background: C.o, zIndex: 0 }} />
                             <img src={logo} alt="المعهد" style={{ width: '100%', display: 'block', borderRadius: 8, aspectRatio: '4/3', objectFit: 'cover', position: 'relative', zIndex: 1 }} />
                             <div style={{ position: 'absolute', bottom: 20, left: 0, background: C.k, padding: '12px 18px', zIndex: 2, borderRadius: '0 8px 8px 0' }}>
@@ -462,7 +805,7 @@ export default function Home() {
                                 <div style={{ fontFamily: F, fontSize: '.68rem', color: 'rgba(255,255,255,.5)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 3 }}>تأسيس المعهد</div>
                             </div>
                         </div>
-                        <div className={`rv${aboutVis ? ' on' : ''} d2`}>
+                        <div className="about-txt-wrap" ref={aboutTxtRef}>
                             <Eyebrow>نبذة عامة</Eyebrow>
                             <SplitTitle>رائد في التدريب<br />الهندسي والإداري والحرفي</SplitTitle>
                             <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
@@ -492,8 +835,7 @@ export default function Home() {
             <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={visionRef}>
                 <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'linear-gradient(270deg,rgba(8,101,168,.12) 0%,transparent 100%)', pointerEvents: 'none' }} />
                 <div className="W">
-                    {/* Full-width header */}
-                    <div className={`rv${visionVis ? ' on' : ''} d1`} style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,48px)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,48px)' }}>
                         <Eyebrow center light>استراتيجيتنا</Eyebrow>
                         <SplitTitle light center>الرؤية والأهداف</SplitTitle>
                         <div style={{ width: 44, height: 3, background: C.o, margin: '20px auto 20px', borderRadius: 2 }} />
@@ -502,10 +844,9 @@ export default function Home() {
                         </p>
                         <SolidBtn to="/mission" orange>عرض الرؤية كاملاً</SolidBtn>
                     </div>
-                    {/* 2×2 cards */}
                     <div className="vision-grid">
                         {visionItems.map((v, i) => (
-                            <div key={i} className={`vis-item rv${visionVis ? ' on' : ''} d${i + 2}`}>
+                            <div key={i} className="vis-item" ref={el => visionCards.current[i] = el}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                                     <CheckCircleOutlineIcon sx={{ color: C.o, fontSize: 18 }} />
                                     <h4 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.3vw,1.05rem)', fontWeight: 800, color: C.k, lineHeight: 1.5 }}>{v.title}</h4>
@@ -519,46 +860,42 @@ export default function Home() {
 
             {/* 6 ─ DOWNLOADS ─────────────────────────────────────────────────── */}
             <div ref={dlRef} style={{ background: C.b }}>
-                <div className={`rv${dlVis ? ' on' : ''}`}>
-                    <div className="W" style={{ padding: 'clamp(28px,4vw,48px) clamp(16px,4vw,56px)' }}>
-                        {/* Full-width header */}
-                        <div style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)' }}>
-                            <Eyebrow center light>وثائق</Eyebrow>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.5 }}>تحميل الملفات والتقارير</h3>
-                        </div>
-                        {/* 3 cards side by side */}
-                        <div className="dl-grid">
-                            {downloadItems.map((item, i) => (
-                                <a key={i} href={item.pdfUrl} target="_blank" rel="noopener noreferrer"
-                                    style={{
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-                                        padding: 'clamp(16px,2.5vw,24px) clamp(12px,2vw,20px)',
-                                        background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)',
-                                        borderRadius: 8, textDecoration: 'none', color: C.w, textAlign: 'center',
-                                        transition: 'background .2s,transform .2s',
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.13)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.transform = ''; }}
-                                >
-                                    <div style={{ width: 52, height: 52, borderRadius: 8, background: 'rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <item.Icon sx={{ color: C.o, fontSize: '1.6rem' }} />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.9rem)', fontWeight: 700, color: C.w, lineHeight: 1.6, marginBottom: 4 }}>{item.title}</div>
-                                        <div style={{ fontFamily: F, fontSize: 'clamp(.66rem,.9vw,.72rem)', color: 'rgba(255,255,255,.45)', lineHeight: 1.6 }}>{item.desc}</div>
-                                    </div>
-                                    <NorthEastIcon sx={{ color: 'rgba(255,255,255,.4)', fontSize: 16, marginTop: 'auto' }} />
-                                </a>
-                            ))}
-                        </div>
+                <div className="W" style={{ padding: 'clamp(28px,4vw,48px) clamp(16px,4vw,56px)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)' }}>
+                        <Eyebrow center light>وثائق</Eyebrow>
+                        <h3 style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.5 }}>تحميل الملفات والتقارير</h3>
+                    </div>
+                    <div className="dl-grid">
+                        {downloadItems.map((item, i) => (
+                            <a key={i} className="dl-item" href={item.pdfUrl} target="_blank" rel="noopener noreferrer"
+                                style={{
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+                                    padding: 'clamp(16px,2.5vw,24px) clamp(12px,2vw,20px)',
+                                    background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)',
+                                    borderRadius: 8, textDecoration: 'none', color: C.w, textAlign: 'center',
+                                    transition: 'background .2s,transform .2s',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.13)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.transform = ''; }}
+                            >
+                                <div style={{ width: 52, height: 52, borderRadius: 8, background: 'rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <item.Icon sx={{ color: C.o, fontSize: '1.6rem' }} />
+                                </div>
+                                <div>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.9rem)', fontWeight: 700, color: C.w, lineHeight: 1.6, marginBottom: 4 }}>{item.title}</div>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.66rem,.9vw,.72rem)', color: 'rgba(255,255,255,.45)', lineHeight: 1.6 }}>{item.desc}</div>
+                                </div>
+                                <NorthEastIcon sx={{ color: 'rgba(255,255,255,.4)', fontSize: 16, marginTop: 'auto' }} />
+                            </a>
+                        ))}
                     </div>
                 </div>
             </div>
 
             {/* 7 ─ COURSES ───────────────────────────────────────────────────── */}
-            <section style={{ background: C.w, paddingBottom: 24 }} ref={coursesRef}>
+            <section style={{ background: C.w, paddingBottom: 24 }}>
                 <div className="W" style={{ paddingTop: 'clamp(48px,7vw,80px)' }}>
-                    <div className={`rv${coursesVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 40 }}>
+                    <div style={{ textAlign: 'center', marginBottom: 40 }}>
                         <Eyebrow center>دوراتنا</Eyebrow>
                         <SplitTitle center>أحدث الدورات التدريبية</SplitTitle>
                         <div style={{ width: 56, height: 3, background: C.o, margin: '16px auto 0', borderRadius: 2 }} />
@@ -572,36 +909,34 @@ export default function Home() {
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
                 <div className="W">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
-                        <div className={`rv${certVis ? ' on' : ''} d1`}>
+                        <div>
                             <Eyebrow light>اعتماداتنا</Eyebrow>
                             <SplitTitle light>الشهادات والاعتمادات</SplitTitle>
                         </div>
-                        <div className={`rv${certVis ? ' on' : ''} d2`}><ArrowBtn to="/certifications" inv>عرض الكل</ArrowBtn></div>
+                        <ArrowBtn to="/certifications" inv>عرض الكل</ArrowBtn>
                     </div>
-                    <div className={`rv${certVis ? ' on' : ''} d3`}>
-                        <Swiper modules={[Autoplay, Pagination]} autoplay={{ delay: 4500, disableOnInteraction: false }}
-                            pagination={{ clickable: true }} loop spaceBetween={16}
-                            breakpoints={{ 0: { slidesPerView: 1 }, 560: { slidesPerView: 2 }, 900: { slidesPerView: 3 } }}
-                            style={{ paddingBottom: 44 }}>
-                            {certificates.map((c, i) => (
-                                <SwiperSlide key={i} style={{ height: 'auto' }}>
-                                    <div className="cert-card">
-                                        <div style={{ display: 'flex', gap: 3 }}>{[...Array(5)].map((_, j) => <StarIcon key={j} sx={{ color: C.o, fontSize: 13 }} />)}</div>
-                                        <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.06rem)', fontWeight: 800, color: C.w, margin: 0, lineHeight: 1.5 }}>{c.title}</h3>
-                                        <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', lineHeight: 1.9, color: 'rgba(255,255,255,.65)', flex: 1, margin: 0 }}>{c.text}</p>
-                                        <img src={c.image} alt={c.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 100, background: C.w, padding: 8, borderRadius: 6 }} />
-                                    </div>
-                                </SwiperSlide>
-                            ))}
-                        </Swiper>
-                    </div>
+                    <Swiper modules={[Autoplay, Pagination]} autoplay={{ delay: 4500, disableOnInteraction: false }}
+                        pagination={{ clickable: true }} loop spaceBetween={16}
+                        breakpoints={{ 0: { slidesPerView: 1 }, 560: { slidesPerView: 2 }, 900: { slidesPerView: 3 } }}
+                        style={{ paddingBottom: 44 }}>
+                        {certificates.map((c, i) => (
+                            <SwiperSlide key={i} style={{ height: 'auto' }}>
+                                <div className="cert-card">
+                                    <div style={{ display: 'flex', gap: 3 }}>{[...Array(5)].map((_, j) => <StarIcon key={j} sx={{ color: C.o, fontSize: 13 }} />)}</div>
+                                    <h3 style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.4vw,1.06rem)', fontWeight: 800, color: C.w, margin: 0, lineHeight: 1.5 }}>{c.title}</h3>
+                                    <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.87rem)', lineHeight: 1.9, color: 'rgba(255,255,255,.65)', flex: 1, margin: 0 }}>{c.text}</p>
+                                    <img src={c.image} alt={c.title} style={{ width: '100%', objectFit: 'contain', maxHeight: 100, background: C.w, padding: 8, borderRadius: 6 }} />
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
                 </div>
             </section>
 
             {/* 9 ─ SCHOOLS ────────────────────────────────────────────────────── */}
             <section style={{ background: C.g1 }} ref={techRef}>
                 <div className="W" style={{ paddingTop: 'clamp(48px,7vw,80px)' }}>
-                    <div className={`rv${techVis ? ' on' : ''}`} style={{ textAlign: 'center', marginBottom: 20 }}>
+                    <div className="tech-header" style={{ textAlign: 'center', marginBottom: 20 }}>
                         <Eyebrow center>برامجنا</Eyebrow>
                         <SplitTitle center>المدارس المشاركة في البروتوكول التدريبي</SplitTitle>
                         <div style={{ width: 56, height: 3, background: C.o, margin: '14px auto 16px', borderRadius: 2 }} />
@@ -612,9 +947,7 @@ export default function Home() {
                 </div>
 
                 <div className="W" style={{ paddingTop: 'clamp(36px,5vw,56px)', paddingBottom: 'clamp(48px,7vw,80px)' }} ref={schoolsRef}>
-                    <div className={`schools-layout rv${schoolsVis ? ' on' : ''}`}>
-
-                        {/* ── Featured card — narrow rectangle ── */}
+                    <div className="schools-layout">
                         <div className="school-featured">
                             <div style={{ padding: '24px 20px 18px', borderBottom: '1px solid rgba(255,255,255,.15)' }}>
                                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 16 }}>
@@ -650,10 +983,9 @@ export default function Home() {
                             </div>
                         </div>
 
-                        {/* ── Other 4 schools — 2×2 grid ── */}
                         <div className="schools-other-grid">
                             {otherSchools.map((sc, i) => (
-                                <div key={i} className={`school-card rv${schoolsVis ? ' on' : ''} d${i + 2}`}>
+                                <div key={i} className="school-card">
                                     <div style={{ padding: '16px 16px 12px', borderBottom: `1px solid ${C.g3}`, background: C.w }}>
                                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 10 }}>
                                             <div style={{ width: 44, height: 44, borderRadius: 8, flexShrink: 0, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -691,21 +1023,19 @@ export default function Home() {
                 <div style={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(245,124,0,.1)', pointerEvents: 'none' }} />
                 <div className="W" style={{ position: 'relative', zIndex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 12 }}>
-                        <div className={`rv${protoVis ? ' on' : ''} d1`}>
+                        <div>
                             <Eyebrow light>شراكاتنا</Eyebrow>
                             <SplitTitle light size="sm">البروتوكولات والاتفاقيات</SplitTitle>
                             <div style={{ width: 44, height: 3, background: C.o, marginTop: 16 }} />
                         </div>
-                        <div className={`rv${protoVis ? ' on' : ''} d2`}>
-                            <SolidBtn to="/protocols" orange>عرض الكل <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
-                        </div>
+                        <SolidBtn to="/protocols" orange>عرض الكل <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
                     </div>
-                    <p className={`rv${protoVis ? ' on' : ''} d2`} style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: 'rgba(255,255,255,.5)', lineHeight: 1.9, marginBottom: 36, maxWidth: 560 }}>
+                    <p style={{ fontFamily: F, fontSize: 'clamp(.82rem,1.2vw,.95rem)', color: 'rgba(255,255,255,.5)', lineHeight: 1.9, marginBottom: 36, maxWidth: 560 }}>
                         بروتوكولات تعاون استراتيجية مع مؤسسات وهيئات دولية معتمدة لتعزيز جودة التدريب والاعتماد المهني.
                     </p>
                     <div className="proto-grid">
                         {protocols.map((p, i) => (
-                            <div key={i} className={`proto-card rv${protoVis ? ' on' : ''} d${Math.min(i + 1, 6)}`}>
+                            <div key={i} className="proto-card" ref={el => protoCards.current[i] = el}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                     <div style={{ width: 42, height: 42, borderRadius: 8, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <HandshakeIcon sx={{ color: C.b, fontSize: 22 }} />
@@ -726,7 +1056,7 @@ export default function Home() {
             {/* 11 ─ NEWS ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={newsRef}>
                 <div className="W">
-                    <div className={`rv${newsVis ? ' on' : ''}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
                         <div>
                             <Eyebrow>أخبار</Eyebrow>
                             <SplitTitle size="sm">أحدث الأخبار</SplitTitle>
@@ -734,32 +1064,30 @@ export default function Home() {
                         <ArrowBtn to="/news">عرض الكل</ArrowBtn>
                     </div>
                     {!newsLoading && newsItems.length > 0 && (
-                        <div className={`rv${newsVis ? ' on' : ''} d2`}>
-                            <Swiper className="news-swiper" modules={[Autoplay, Navigation, Pagination]}
-                                autoplay={{ delay: 5000, disableOnInteraction: false }}
-                                navigation pagination={{ clickable: true }} loop spaceBetween={16}
-                                breakpoints={{ 0: { slidesPerView: 1 }, 560: { slidesPerView: 2 }, 900: { slidesPerView: 3 } }}
-                                style={{ paddingBottom: 44 }}>
-                                {newsItems.map(n => (
-                                    <SwiperSlide key={n.id} style={{ height: 'auto' }}>
-                                        <div className="news-card">
-                                            <div style={{ position: 'relative', paddingTop: '58%' }}>
-                                                <img src={n.imageUrl} alt={n.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                <div style={{ position: 'absolute', top: 0, left: 0, background: C.b, color: C.w, padding: '5px 14px', fontFamily: F, fontSize: '.66rem', fontWeight: 700, letterSpacing: 1, borderRadius: '0 0 6px 0' }}>
-                                                    {new Date(n.publishedAt).toLocaleDateString('ar-EG', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                </div>
-                                            </div>
-                                            <div style={{ padding: '16px' }}>
-                                                <p style={{ margin: '0 0 14px', fontWeight: 700, fontFamily: F, lineHeight: 1.6, fontSize: 'clamp(.84rem,1.2vw,.96rem)', color: C.k, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 52 }}>{n.title}</p>
-                                                <Link to={`/news/${n.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 1 }}>
-                                                    اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} />
-                                                </Link>
+                        <Swiper className="news-swiper" modules={[Autoplay, Navigation, Pagination]}
+                            autoplay={{ delay: 5000, disableOnInteraction: false }}
+                            navigation pagination={{ clickable: true }} loop spaceBetween={16}
+                            breakpoints={{ 0: { slidesPerView: 1 }, 560: { slidesPerView: 2 }, 900: { slidesPerView: 3 } }}
+                            style={{ paddingBottom: 44 }}>
+                            {newsItems.map(n => (
+                                <SwiperSlide key={n.id} style={{ height: 'auto' }}>
+                                    <div className="news-card">
+                                        <div style={{ position: 'relative', paddingTop: '58%' }}>
+                                            <img src={n.imageUrl} alt={n.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <div style={{ position: 'absolute', top: 0, left: 0, background: C.b, color: C.w, padding: '5px 14px', fontFamily: F, fontSize: '.66rem', fontWeight: 700, letterSpacing: 1, borderRadius: '0 0 6px 0' }}>
+                                                {new Date(n.publishedAt).toLocaleDateString('ar-EG', { day: '2-digit', month: 'short', year: 'numeric' })}
                                             </div>
                                         </div>
-                                    </SwiperSlide>
-                                ))}
-                            </Swiper>
-                        </div>
+                                        <div style={{ padding: '16px' }}>
+                                            <p style={{ margin: '0 0 14px', fontWeight: 700, fontFamily: F, lineHeight: 1.6, fontSize: 'clamp(.84rem,1.2vw,.96rem)', color: C.k, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: 52 }}>{n.title}</p>
+                                            <Link to={`/news/${n.id}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 1 }}>
+                                                اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
                     )}
                 </div>
             </section>
@@ -767,14 +1095,14 @@ export default function Home() {
             {/* 12 ─ CRAFT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.w, borderTop: `1px solid ${C.g3}` }} ref={craftRef}>
                 <div className="W">
-                    <div className={`rv${craftVis ? ' on' : ''} d1`} style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
                         <Eyebrow center>خدمات متخصصة</Eyebrow>
                         <SplitTitle center size="sm">التدريب الحرفي والفني والتقييم</SplitTitle>
                         <div style={{ width: 48, height: 3, background: C.o, margin: '16px auto 0', borderRadius: 2 }} />
                     </div>
                     <div className="g3">
                         {craftItems.map((c, i) => (
-                            <div key={i} className={`craft-card rv${craftVis ? ' on' : ''} d${i + 2}`}>
+                            <div key={i} className="craft-card" ref={el => craftCards.current[i] = el}>
                                 <div style={{ width: 56, height: 56, borderRadius: 8, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18 }}>
                                     <c.Icon sx={{ fontSize: 28, color: C.b }} />
                                 </div>
@@ -790,31 +1118,29 @@ export default function Home() {
 
             {/* 13 ─ LIBRARY ──────────────────────────────────────────────────── */}
             <section style={{ background: C.k }} ref={libRef}>
-                <div className={`rv${libVis ? ' on' : ''}`}>
-                    <div className="lib-split">
-                        <div className="lib-visual">
-                            <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, right: -110, pointerEvents: 'none' }} />
-                            <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
-                                <LibraryBooksIcon sx={{ fontSize: 'clamp(36px,5.5vw,64px)', color: C.w, marginBottom: 10 }} />
-                                <div style={{ fontFamily: F, fontSize: 'clamp(.95rem,2vw,1.7rem)', fontWeight: 900, color: C.w, lineHeight: 1.3, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
-                                <div style={{ width: 32, height: 2, background: 'rgba(255,255,255,.5)', margin: '0 auto 14px' }} />
-                                <div className="lib-tags">
-                                    {['5,000+ كتاب', '200+ دورية', 'رقمية'].map((t, i) => (
-                                        <span key={i} className="lib-tag"><AutoStoriesIcon sx={{ fontSize: 11 }} /> {t}</span>
-                                    ))}
-                                </div>
+                <div className="lib-split">
+                    <div className="lib-visual">
+                        <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, right: -110, pointerEvents: 'none' }} />
+                        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
+                            <LibraryBooksIcon sx={{ fontSize: 'clamp(36px,5.5vw,64px)', color: C.w, marginBottom: 10 }} />
+                            <div style={{ fontFamily: F, fontSize: 'clamp(.95rem,2vw,1.7rem)', fontWeight: 900, color: C.w, lineHeight: 1.3, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
+                            <div style={{ width: 32, height: 2, background: 'rgba(255,255,255,.5)', margin: '0 auto 14px' }} />
+                            <div className="lib-tags">
+                                {['5,000+ كتاب', '200+ دورية', 'رقمية'].map((t, i) => (
+                                    <span key={i} className="lib-tag"><AutoStoriesIcon sx={{ fontSize: 11 }} /> {t}</span>
+                                ))}
                             </div>
                         </div>
-                        <div className="lib-content">
-                            <Eyebrow light>المكتبة</Eyebrow>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 14 }}>
-                                مرجعك العلمي الأشمل في علوم التشييد والإدارة
-                            </h3>
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 28 }}>
-                                مفتوحة لجميع المتدربين والباحثين. تضم آلاف المراجع الهندسية والمالية والإدارية مع قواعد بيانات رقمية متكاملة.
-                            </p>
-                            <div><SolidBtn to="/library" orange>زيارة المكتبة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn></div>
-                        </div>
+                    </div>
+                    <div className="lib-content">
+                        <Eyebrow light>المكتبة</Eyebrow>
+                        <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 14 }}>
+                            مرجعك العلمي الأشمل في علوم التشييد والإدارة
+                        </h3>
+                        <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 28 }}>
+                            مفتوحة لجميع المتدربين والباحثين. تضم آلاف المراجع الهندسية والمالية والإدارية مع قواعد بيانات رقمية متكاملة.
+                        </p>
+                        <div><SolidBtn to="/library" orange>زيارة المكتبة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn></div>
                     </div>
                 </div>
             </section>
