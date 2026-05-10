@@ -465,7 +465,12 @@ public partial class AppDbContext : DbContext
 
             entity.Property(e => e.ChildId).HasColumnName("ChildID");
             entity.Property(e => e.ParentId).HasColumnName("ParentID");
-
+            entity.Property(e => e.IsOnline)
+                    .HasDefaultValue(false);
+            entity.Property(e => e.OnlineLink)
+                  .HasMaxLength(500);
+            entity.Property(e => e.OnlineCost)
+                  .HasColumnType("decimal(18,2)");
             entity.Property(e => e.CourseContent).HasColumnName("course_content");
             entity.Property(e => e.CourseDate).HasColumnName("course_date");
             entity.Property(e => e.CourseDays).HasColumnName("course_days");
