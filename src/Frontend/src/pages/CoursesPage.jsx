@@ -31,7 +31,6 @@ const styles = {
     discountBadge: { position: 'absolute', right: '12px', top: '12px', borderRadius: '10px', backgroundColor: '#f57c00', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold', color: '#ffffff', boxShadow: '0 2px 8px rgba(245,124,0,0.4)', fontFamily: '"Droid Arabic Kufi", serif', zIndex: 3 },
     freeBadge: { position: 'absolute', right: '12px', top: '12px', borderRadius: '10px', backgroundColor: '#ffffff', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold', color: '#1a7a3c', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontFamily: '"Droid Arabic Kufi", serif', zIndex: 3 },
     ownedBadge: { position: 'absolute', right: '12px', top: '12px', borderRadius: '10px', backgroundColor: '#ffffff', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold', color: '#4a4a8a', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontFamily: '"Droid Arabic Kufi", serif', zIndex: 3 },
-    // ✅ cert ribbon — bottom-left of card image, clickable to open preview
     certCardRibbon: { position: 'absolute', left: '12px', bottom: '12px', backgroundColor: 'rgba(124,58,237,0.88)', backdropFilter: 'blur(6px)', borderRadius: '8px', padding: '4px 10px', fontSize: '14px', boxShadow: '0 2px 8px rgba(124,58,237,0.4)', border: '1.5px solid rgba(255,255,255,0.3)', zIndex: 3, fontFamily: '"Droid Arabic Kufi", serif', color: '#fff', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' },
     certRibbonSpinner: { display: 'inline-block', width: '13px', height: '13px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' },
     cardBody: { display: 'flex', flexDirection: 'column', padding: '20px', backgroundColor: '#ffffff' },
@@ -48,8 +47,6 @@ const styles = {
     freePriceLabel: { fontSize: '24px', fontWeight: 'bold', color: '#1a7a3c', fontFamily: '"Droid Arabic Kufi", serif' },
     priceLabel: { fontSize: '12px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif', opacity: 0.6, marginTop: '2px' },
     buttonsContainer: { display: 'flex', gap: '10px', flexDirection: 'column' },
-
-    // ✅ Certificate section inside card body
     certSection: { borderRadius: '12px', border: '1.5px solid #e8d8ff', backgroundColor: '#faf5ff', padding: '14px 14px 12px', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '4px' },
     certSectionHeader: { display: 'flex', alignItems: 'center', gap: '8px', color: '#7c3aed' },
     certSectionTitle: { fontSize: '13px', fontWeight: 'bold', color: '#7c3aed', fontFamily: '"Droid Arabic Kufi", serif' },
@@ -58,7 +55,6 @@ const styles = {
     certDownloadBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 12px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', textDecoration: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(124,58,237,0.3)', transition: 'all 0.2s ease' },
     certLoadingRow: { borderRadius: '12px', overflow: 'hidden', height: '70px', backgroundColor: '#f3f4f6', marginBottom: '4px' },
     certLoadingPulse: { width: '100%', height: '100%', background: 'linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.4s infinite' },
-
     addToCartBtn: { width: '100%', borderRadius: '10px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', padding: '12px 20px', fontWeight: 'bold', color: '#ffffff', border: 'none', boxShadow: '0 3px 10px rgba(8,101,168,0.25)', transition: 'all 0.3s ease', cursor: 'pointer', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif' },
     enrollBtn: { width: '100%', borderRadius: '10px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', padding: '12px 20px', fontWeight: 'bold', color: '#ffffff', border: 'none', boxShadow: '0 3px 10px rgba(26,122,60,0.25)', transition: 'all 0.3s ease', cursor: 'pointer', fontSize: '15px', fontFamily: '"Droid Arabic Kufi", serif' },
     addToCartBtnHover: { transform: 'translateY(-2px)', boxShadow: '0 6px 16px rgba(8,101,168,0.35)' },
@@ -76,7 +72,6 @@ const styles = {
     toastWarning: { borderRight: '4px solid #ff9800' },
     toastIcon: { width: '24px', height: '24px', flexShrink: 0 },
     toastMessage: { fontSize: '14px', color: '#000000', flex: 1 },
-    // Refund modal styles
     modalOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backdropFilter: 'blur(4px)' },
     modalCard: { backgroundColor: '#ffffff', borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.22)', width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto', fontFamily: '"Droid Arabic Kufi", serif' },
     modalHeader: { background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#ffffff' },
@@ -104,8 +99,6 @@ const styles = {
     statusBadge: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
     policyBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi", serif' },
     enrollMsgBox: { padding: '10px 14px', borderRadius: '8px', fontSize: '13px', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.6', marginBottom: '8px', display: 'flex', alignItems: 'flex-start', gap: '8px' },
-
-    // ✅ Certificate Preview Modal styles
     certModalOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' },
     certModalBox: { backgroundColor: '#fff', borderRadius: '20px', width: '100%', maxWidth: '780px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 60px rgba(0,0,0,0.3)', overflow: 'hidden' },
     certModalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1.5px solid #f0e6ff', background: 'linear-gradient(135deg, #faf5ff 0%, #fff 100%)' },
@@ -152,6 +145,12 @@ const REFUND_STATUS_MAP = {
     Sent: { label: 'تم التحويل', bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
 };
 
+// ── FIXED Refund Policy ───────────────────────────────────────────────────────
+// Policy (from checkout page):
+//   • 7+ working days before start  → full refund
+//   • 2–6 days before start         → 25% deducted, 75% refunded
+//   • Less than 2 days before start → blocked (too close)
+//   • Course already started        → blocked (started)
 function getRefundPolicy(courseDateStr, coursePrice) {
     if (!courseDateStr) return { type: 'unknown' };
     const raw = courseDateStr.split(' - ')[0].trim();
@@ -166,9 +165,47 @@ function getRefundPolicy(courseDateStr, coursePrice) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
     const daysLeft = Math.round((startDate - today) / (1000 * 60 * 60 * 24));
-    if (daysLeft < 2) return { type: 'blocked', daysLeft };
-    if (daysLeft <= 7) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
+
+    // Course already started (today is on or after start date)
+    if (daysLeft <= 0) return { type: 'blocked', reason: 'started' };
+    // Less than 2 working days before start
+    if (daysLeft < 2) return { type: 'blocked', reason: 'tooClose', daysLeft };
+    // 2–6 days: partial refund (25% deducted)
+    if (daysLeft <= 6) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
+    // 7+ days: full refund
     return { type: 'full', daysLeft };
+}
+
+// ── Helper: render refund policy box ─────────────────────────────────────────
+function renderPolicyBox(policy, stylesRef) {
+    if (policy.type === 'blocked') {
+        const msg = policy.reason === 'started'
+            ? 'عذراً، لا يمكن طلب الاسترداد بعد بدء الكورس.'
+            : 'عذراً، لا يمكن طلب الاسترداد. تبقى أقل من يومي عمل على بدء الكورس.';
+        return (
+            <div style={{ ...stylesRef.policyBox, backgroundColor: '#ffebee', border: '1px solid #ef9a9a', color: '#c62828' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>🚫</span>
+                <span>{msg}</span>
+            </div>
+        );
+    }
+    if (policy.type === 'partial') {
+        return (
+            <div style={{ ...stylesRef.policyBox, backgroundColor: '#fff8e1', border: '1px solid #ffe082', color: '#795548' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
+                <span>تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس — سيُخصم 25% وستسترد <strong>{policy.refundAmount} جنيه</strong> فقط.</span>
+            </div>
+        );
+    }
+    if (policy.type === 'full') {
+        return (
+            <div style={{ ...stylesRef.policyBox, backgroundColor: '#f0fff4', border: '1px solid #a7f3d0', color: '#1a7a3c' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>✅</span>
+                <span>مؤهل لاسترداد كامل — تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس.</span>
+            </div>
+        );
+    }
+    return null;
 }
 
 async function parseServerError(res) {
@@ -296,6 +333,9 @@ const RefundModal = ({ course, onClose, getToken }) => {
         })();
     }, [course.id, safeToken]);
 
+    const policy = getRefundPolicy(course.date, course.cost || 0);
+    const isBlocked = policy.type === 'blocked';
+
     const handleSubmit = async () => {
         if (!refundReason.trim()) { setError('الرجاء كتابة سبب طلب الاسترداد'); return; }
         setSubmitting(true); setError(null);
@@ -367,17 +407,13 @@ const RefundModal = ({ course, onClose, getToken }) => {
                         </div>
                     ) : (
                         <>
-                            {(() => {
-                                const policy = getRefundPolicy(course.date, course.cost || 0);
-                                if (policy.type === 'blocked') return (<div style={{ ...styles.policyBox, backgroundColor: '#ffebee', border: '1px solid #ef9a9a', color: '#c62828' }}><span style={{ fontSize: '18px', flexShrink: 0 }}>🚫</span><span>عذراً، لا يمكن طلب الاسترداد. تبقى أقل من يومين على بدء الكورس ({policy.daysLeft} يوم).</span></div>);
-                                if (policy.type === 'partial') return (<div style={{ ...styles.policyBox, backgroundColor: '#fff8e1', border: '1px solid #ffe082', color: '#795548' }}><span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span><span>تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس — سيُخصم 25% وستسترد <strong>{policy.refundAmount} جنيه</strong> فقط.</span></div>);
-                                if (policy.type === 'full') return (<div style={{ ...styles.policyBox, backgroundColor: '#f0fff4', border: '1px solid #a7f3d0', color: '#1a7a3c' }}><span style={{ fontSize: '18px', flexShrink: 0 }}>✅</span><span>مؤهل لاسترداد كامل — تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس.</span></div>);
-                                return null;
-                            })()}
+                            {renderPolicyBox(policy, styles)}
+
                             <div style={styles.refundInfoBox}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <p style={styles.refundInfoText}>سيتم مراجعة طلبك من قِبل الإدارة خلال 3-5 أيام عمل.</p>
                             </div>
+
                             <label style={styles.formLabel}>سبب طلب الاسترداد <span style={{ color: '#e53935' }}>*</span></label>
                             <textarea style={styles.refundTextarea} placeholder="يرجى توضيح سبب رغبتك في استرداد المبلغ..." value={refundReason} onChange={e => { setRefundReason(e.target.value); setError(null); }} rows={3} maxLength={500} />
                             <div style={styles.charCount}>{refundReason.length} / 500</div>
@@ -391,8 +427,15 @@ const RefundModal = ({ course, onClose, getToken }) => {
                             {error && (<div style={styles.errorBox}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e53935" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>{error}</span></div>)}
                             <div style={styles.modalActions}>
                                 <button style={styles.btnCancelRefund} onClick={onClose}>إلغاء</button>
-                                <button style={{ ...styles.btnSubmitRefund, ...((submitting || getRefundPolicy(course.date, course.cost || 0).type === 'blocked') ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }} onClick={handleSubmit} disabled={submitting || getRefundPolicy(course.date, course.cost || 0).type === 'blocked'}>
-                                    {submitting ? (<><svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>جاري الإرسال...</>) : 'إرسال الطلب'}
+                                <button
+                                    style={{ ...styles.btnSubmitRefund, ...((submitting || isBlocked) ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }}
+                                    onClick={handleSubmit}
+                                    disabled={submitting || isBlocked}
+                                >
+                                    {submitting
+                                        ? (<><svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>جاري الإرسال...</>)
+                                        : 'إرسال الطلب'
+                                    }
                                 </button>
                             </div>
                         </>
@@ -424,7 +467,6 @@ const CoursesPage = () => {
     const [refundCourse, setRefundCourse] = useState(null);
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
 
-    // ✅ per-course cert state
     const [certificates, setCertificates] = useState({});
     const [certsLoading, setCertsLoading] = useState({});
     const [previewCert, setPreviewCert] = useState(null);
@@ -447,7 +489,6 @@ const CoursesPage = () => {
         } catch { setOwnedCourseIds(new Set()); }
     }, [isSignedIn, safeGetToken]);
 
-    // ✅ fetch cert for a single course via /Admin/certificates/{userId}/{planworkId}
     const fetchCertForCourse = useCallback(async (planworkId) => {
         if (!isSignedIn || !userId) return;
         setCertsLoading(prev => ({ ...prev, [planworkId]: true }));
@@ -470,19 +511,15 @@ const CoursesPage = () => {
         }
     }, [isSignedIn, safeGetToken, userId]);
 
-    // ✅ fetch certs only for owned courses
     const fetchCertsForOwned = useCallback(async (ownedIds) => {
         if (!ownedIds?.size) return;
         await Promise.allSettled([...ownedIds].map(id => fetchCertForCourse(id)));
     }, [fetchCertForCourse]);
 
     useEffect(() => {
-        fetchOwnedCourses().then(() => {
-            // ownedCourseIds updated asynchronously; certs fetched via the effect below
-        });
+        fetchOwnedCourses();
     }, [fetchOwnedCourses]);
 
-    // Fetch certs whenever owned courses change
     useEffect(() => {
         if (ownedCourseIds.size > 0) {
             fetchCertsForOwned(ownedCourseIds);
@@ -613,7 +650,6 @@ const CoursesPage = () => {
                     <RefundModal course={refundCourse} getToken={safeGetToken} onClose={() => setRefundCourse(null)} />
                 )}
 
-                {/* ✅ Certificate Preview Modal */}
                 {previewCert && (
                     <CertPreviewModal cert={previewCert} onClose={() => setPreviewCert(null)} />
                 )}
@@ -646,7 +682,6 @@ const CoursesPage = () => {
                                 const isEnrolling = enrollingId === course.id;
                                 const enrollMsg = enrollMsgs[course.id] || null;
                                 const currentPrice = course.cost;
-                                const originalPrice = course.cost ? course.cost / 0.6 : null;
                                 const cert = certificates[course.id] || null;
                                 const certLoading = certsLoading[course.id] || false;
 
@@ -669,13 +704,11 @@ const CoursesPage = () => {
                                                 </svg>
                                             </div>
 
-                                            {/* Ownership / price badge — top right */}
                                             {isOwned
                                                 ? <div style={styles.ownedBadge}>✅ مسجل</div>
                                                 : isFree && <div style={styles.freeBadge}>مجاناً</div>
                                             }
 
-                                            {/* ✅ Cert ribbon — bottom left, clickable */}
                                             {isOwned && certLoading && (
                                                 <div style={styles.certCardRibbon} title="جاري التحقق من الشهادة...">
                                                     <span style={styles.certRibbonSpinner} />
@@ -728,7 +761,6 @@ const CoursesPage = () => {
                                             <div style={styles.buttonsContainer}>
                                                 {isOwned ? (
                                                     <>
-                                                        {/* ✅ Cert section: loading shimmer → preview + download */}
                                                         {certLoading && (
                                                             <div style={styles.certLoadingRow}>
                                                                 <div style={styles.certLoadingPulse} />

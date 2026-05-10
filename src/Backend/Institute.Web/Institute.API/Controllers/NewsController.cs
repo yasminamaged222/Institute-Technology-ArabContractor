@@ -1,100 +1,66 @@
 ﻿using AutoMapper;
 using Institute.API.DTOs;
 using Institute.API.Helpers;
+using Institute.Application.DTOs;
 using Institute.Application.Interfaces;
+using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
-using Institute.Domain.specifications;
-using Institute.Domain.specifications.BookSpec;
 using Institute.Domain.specifications.NewsSpec;
-using Institute.Infrastructure.Repositories;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Institute.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class NewsController : ControllerBase
+    public class  NewsController : ControllerBase
     {
-        // In your controller
-
-        private readonly IReadOnlyService<Dailynews> _bookService;
+        private readonly IReadOnlyService<Dailynews> _newsService;
         private readonly IMapper _mapper;
         private readonly IRepository<Dailynews> _repo;
+        private readonly INewsService _newsWriteService;
 
-        public NewsController(IReadOnlyService<Dailynews> bookService, IMapper mapper,IRepository<Dailynews>  Repo )
+        public NewsController(
+            IReadOnlyService<Dailynews> newsService,
+            IMapper mapper,
+            IRepository<Dailynews> repo,
+            INewsService newsWriteService)
         {
-            _bookService = bookService;
-
+            _newsService = newsService;
             _mapper = mapper;
-            _repo = Repo;
+            _repo = repo;
+            _newsWriteService = newsWriteService;
         }
 
-
-
-
-
-        //[HttpGet("getAllNews")]
-        //public async Task<IActionResult> GetAllNews()
-        //{
-        //    var spec = new NewsWithMainPicSpec();
-
-        //    var news = await _bookService.GetAllWithSpec(spec);
-
-        //    var result = _mapper.Map<IReadOnlyList<NewsListDto>>(news);
-
-        //    return Ok(result);
-        //}
-
+        // ── GET ALL (موجود) ───────────────────────────────────────────────────
+        /// <summary>GET /api/news/getAllNews?pageIndex=1&amp;pageSize=10</summary>
         [HttpGet("getAllNews")]
         public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews(
-     [FromQuery] NewsSpecParams newsParams)
+            [FromQuery] NewsSpecParams newsParams)
         {
-            // 1️⃣ Spec للبيانات
             var spec = new NewsWithMainPicSpec(newsParams);
-
-            // 2️⃣ جلب البيانات
             var news = await _repo.GetAllWithSpecAsync(spec);
-
-            // 3️⃣ Mapping
             var data = _mapper.Map<IReadOnlyList<Dailynews>, IReadOnlyList<NewsListDto>>(news);
-
-            // 4️⃣ Count
             var countSpec = new NewsWithFiltersForCountSpec(newsParams);
             var count = await _repo.GetCountAsync(countSpec);
 
-            // 5️⃣ Pagination (final shape)
             return Ok(new Pagination<NewsListDto>(
-                newsParams.PageIndex,
-                newsParams.PageSize,
-                count,
-                data
-            ));
+                newsParams.PageIndex, newsParams.PageSize, count, data));
         }
 
-
-
+        // ── GET BY ID (موجود) ─────────────────────────────────────────────────
+        /// <summary>GET /api/news/{id}</summary>
         [HttpGet("{id}")]
         public async Task<IActionResult> GetNewsById(int id)
         {
-            if (id <= 0)
-                return BadRequest("Invalid news id");
+            if (id <= 0) return BadRequest("Invalid news id");
 
             var spec = new NewsWithDetailsSpec(id);
+            var news = await _newsService.GetEntityWithSpec(spec);
+            if (news == null) return NotFound();
 
-            var news = await _bookService.GetEntityWithSpec(spec);
-
-            if (news == null)
-                return NotFound();
-
-            var newsDto = _mapper.Map<NewsDetailsDto>(news);
-
-            return Ok(newsDto);
+            return Ok(_mapper.Map<NewsDetailsDto>(news));
         }
 
-
-
-
+         
     }
 }

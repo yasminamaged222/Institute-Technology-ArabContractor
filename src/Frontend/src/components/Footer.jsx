@@ -118,7 +118,7 @@ const Footer = () => {
                                 sx={{ color: '#f57c00', fontSize: '1.1rem' }}
                             />
                             <MuiLink
-                                href="mailto:icemt@arabcont.com"
+                                href="mailto:icemt.mark@arabcont.com"
                                 color="inherit"
                                 underline="hover"
                                 sx={{
@@ -463,47 +463,11 @@ const Footer = () => {
                                     boxShadow: '0 4px 12px rgba(24, 119, 242, 0.4)'
                                 }
                             }}
-                            href="https://ar-ar.facebook.com/arabcont2017/"
+                            href="https://www.facebook.com/arabcont.icemt"
                             target="_blank"
                             rel="noopener noreferrer"
                         >
                             <FacebookIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                            size="small"
-                            sx={{
-                                color: 'white',
-                                bgcolor: 'rgba(255,255,255,0.1)',
-                                transition: 'all 0.3s ease',
-                                '&:hover': {
-                                    color: 'white',
-                                    bgcolor: '#E4405F',
-                                    transform: 'translateY(-3px)',
-                                    boxShadow: '0 4px 12px rgba(228, 64, 95, 0.4)'
-                                }
-                            }}
-                            href="#"
-                        >
-                            <InstagramIcon fontSize="small" />
-                        </IconButton>
-                        <IconButton
-                            size="small"
-                            sx={{
-                                color: 'white',
-                                bgcolor: 'rgba(255,255,255,0.1)',
-                                transition: 'all 0.3s ease',
-                                '&:hover': {
-                                    color: 'white',
-                                    bgcolor: '#1DA1F2',
-                                    transform: 'translateY(-3px)',
-                                    boxShadow: '0 4px 12px rgba(29, 161, 242, 0.4)'
-                                }
-                            }}
-                            href="https://x.com/arabcont?lang=en"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            <TwitterIcon fontSize="small" />
                         </IconButton>
                     </Box>
 

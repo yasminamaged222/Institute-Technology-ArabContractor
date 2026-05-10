@@ -1,32 +1,40 @@
-﻿using Institute.Application.Interfaces.IService;
+﻿using Institute.Application.DTOs;
+using Institute.Application.Interfaces.IService;
 using Microsoft.AspNetCore.Mvc;
 
-[ApiController]
-[Route("api/[controller]")]
-public class LecturerController : ControllerBase
+namespace Institute.API.Controllers
 {
-    private readonly ILecturerService _service;
-
-    public LecturerController(ILecturerService service)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class  LecturerController : ControllerBase
     {
-        _service = service;
-    }
+        private readonly ILecturerService _service;
 
-    [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var result = await _service.GetAllAsync();
-        return Ok(result);
-    }
+        public LecturerController(ILecturerService service)
+        {
+            _service = service;
+        }
 
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
-    {
-        var result = await _service.GetByIdAsync(id);
+        // ── GET ALL ───────────────────────────────────────────────────────────────
+        /// <summary>GET /api/lecturer — يجيب كل المحاضرين (عام، بدون Auth)</summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var result = await _service.GetAllAsync();
+            return Ok(result);
+        }
 
-        if (result == null)
-            return NotFound();
+        // ── GET BY ID ─────────────────────────────────────────────────────────────
+        /// <summary>GET /api/lecturer/{id}</summary>
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var result = await _service.GetByIdAsync(id);
+            return result == null ? NotFound() : Ok(result);
+        }
 
-        return Ok(result);
+        
+
+        
     }
 }

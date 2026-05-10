@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2, Home, BookOpen, Sparkles, RefreshCw } from "lucide-react";
 
-const API_BASE = "https://localhost:7177";
+const API_BASE = "https://acwebsite-icmet-test.azurewebsites.net";
 
 export default function PaymentResultPage() {
     const [searchParams] = useSearchParams();

@@ -28,7 +28,7 @@ const T = {
 // ════════════════════════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════════════════════════
-const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com', 'amrshamy91@gmail.com', 'abdelmawla1642@gmail.com'];
+const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com', 'amrshamy91@gmail.com', 'abdelmawla1642@gmail.com','mostafa.awaad@gmail.com'];
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 const API_HOST = 'https://acwebsite-icmet-test.azurewebsites.net';
 const NAVBAR_H = 70;

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 import { Container, Box, Typography, Card, CardContent, CardActions, Button, Tooltip } from '@mui/material';
@@ -65,10 +65,57 @@ const getCourseIcon = (index) => {
     return icons[index % icons.length];
 };
 
+// ── Custom Nav Arrow ──────────────────────────────────────────────────────────
+const NavArrow = ({ direction, swiperRef }) => {
+    const [disabled, setDisabled] = useState(false);
+
+    const handleClick = () => {
+        if (!swiperRef.current) return;
+        const swiper = swiperRef.current;
+        if (direction === 'prev') swiper.slidePrev();
+        else swiper.slideNext();
+    };
+
+    return (
+        <Box
+            onClick={handleClick}
+            sx={{
+                position: 'absolute',
+                [direction === 'prev' ? 'right' : 'left']: { xs: -8, sm: -16, md: -22 },
+                top: '50%',
+                zIndex: 10,
+                cursor: 'pointer',
+                bgcolor: '#0865a8',
+                color: '#fff',
+                borderRadius: '50%',
+                width: { xs: 34, sm: 38, md: 42 },
+                height: { xs: 34, sm: 38, md: 42 },
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transform: 'translateY(-50%)',
+                fontSize: { xs: '18px', sm: '20px', md: '22px' },
+                userSelect: 'none',
+                boxShadow: '0 2px 10px rgba(8,101,168,0.35)',
+                transition: 'background 0.2s, transform 0.2s',
+                '&:hover': {
+                    bgcolor: '#f57c00',
+                    transform: 'translateY(-50%) scale(1.08)',
+                },
+                flexShrink: 0,
+            }}
+        >
+            {direction === 'prev' ? '› '  : '‹'}
+
+        </Box>
+    );
+};
+
 // ── Main Component ────────────────────────────────────────────────────────────
 const DynamicCoursesSection = () => {
     const navigate = useNavigate();
     const { getToken, isSignedIn, userId } = useAuth();
+    const swiperRef = useRef(null);
 
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -260,43 +307,31 @@ const DynamicCoursesSection = () => {
                 />
             )}
 
-            {/* Section heading */}
-            <Box sx={{ mb: 5, textAlign: 'center' }}>
-                <Typography
-                    variant="h3"
-                    sx={{
-                        fontWeight: 700,
-                        fontFamily: '"Droid Arabic Kufi", serif',
-                        fontSize: { xs: '1.75rem', md: '3rem' },
-                        mb: 1,
-                        position: 'relative',
-                        display: 'inline-block',
-                        '&::after': {
-                            content: '""', position: 'absolute', bottom: -8, left: '50%',
-                            transform: 'translateX(-50%)', width: '80px', height: '4px',
-                            background: 'linear-gradient(90deg, #f57c00 0%, #0865a8 100%)',
-                            borderRadius: '2px',
-                        },
-                    }}
-                >
-                    أحدث الدورات التدريبية
-                </Typography>
-            </Box>
-
-            {/* Swiper */}
-            <Box sx={{ position: 'relative', px: { lg: 5 } }}>
+            {/* Swiper wrapper — extra horizontal padding to make room for arrows */}
+            <Box sx={{
+                position: 'relative',
+                px: { xs: '28px', sm: '32px', md: '36px', lg: '48px' },
+            }}>
                 <Swiper
                     modules={[Navigation]}
-                    spaceBetween={20}
+                    spaceBetween={16}
                     slidesPerView={1}
                     loop={false}
                     allowTouchMove={true}
-                    navigation={{ prevEl: '.custom-prev', nextEl: '.custom-next' }}
+                    onSwiper={(swiper) => { swiperRef.current = swiper; }}
                     breakpoints={{
-                        480: { slidesPerView: 1.5 },
-                        640: { slidesPerView: 2 },
-                        900: { slidesPerView: 3 },
-                        1200: { slidesPerView: 4 },
+                        // 0–479: 1 card
+                        0: { slidesPerView: 1, spaceBetween: 14 },
+                        // 480–579: 1 card (same as 400)
+                        480: { slidesPerView: 1, spaceBetween: 14 },
+                        // 580–767: 2 cards  ← NEW
+                        580: { slidesPerView: 2, spaceBetween: 16 },
+                        // 768–899: 2 cards
+                        768: { slidesPerView: 2, spaceBetween: 18 },
+                        // 900–1199: 3 cards
+                        900: { slidesPerView: 3, spaceBetween: 20 },
+                        // 1200+: 4 cards
+                        1200: { slidesPerView: 4, spaceBetween: 22 },
                     }}
                 >
                     {courses.map((course, index) => {
@@ -490,7 +525,7 @@ const DynamicCoursesSection = () => {
                                     {/* ── Action buttons ── */}
                                     <CardActions sx={{ p: '0 14px 14px', flexShrink: 0, flexDirection: 'column', gap: '8px' }}>
 
-                                        {/* Certificate download button — only if cert exists and owned */}
+                                        {/* Certificate download button */}
                                         {isOwned && cert && (
                                             <Box
                                                 component="a"
@@ -588,26 +623,9 @@ const DynamicCoursesSection = () => {
                     })}
                 </Swiper>
 
-                {/* Nav arrows */}
-                <Box className="custom-prev" sx={{
-                    position: 'absolute', left: -20, top: '50%', zIndex: 10, cursor: 'pointer',
-                    bgcolor: '#0865a8', color: '#fff', borderRadius: '50%',
-                    width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transform: 'translateY(-50%)', fontSize: '22px', userSelect: 'none',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                    '&:hover': { bgcolor: '#f57c00' },
-                    transition: 'background 0.2s',
-                }}>‹</Box>
-
-                <Box className="custom-next" sx={{
-                    position: 'absolute', right: -20, top: '50%', zIndex: 10, cursor: 'pointer',
-                    bgcolor: '#0865a8', color: '#fff', borderRadius: '50%',
-                    width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transform: 'translateY(-50%)', fontSize: '22px', userSelect: 'none',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                    '&:hover': { bgcolor: '#f57c00' },
-                    transition: 'background 0.2s',
-                }}>›</Box>
+                {/* ── Custom nav arrows — use swiperRef so they always work ── */}
+                <NavArrow direction="prev" swiperRef={swiperRef} />
+                <NavArrow direction="next" swiperRef={swiperRef} />
             </Box>
         </Container>
     );

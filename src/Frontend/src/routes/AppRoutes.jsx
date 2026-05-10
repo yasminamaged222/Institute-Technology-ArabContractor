@@ -32,9 +32,13 @@ import CEAProgram from '../pages/CEAProgram';
 import ScrollToTop from '../components/ScrollToTop'
 import SearchPage from '../pages/Searchpage';
 import Mycourses from '../pages/Mycourses';
-import AdminDashboard from '../pages/AdminDashboard';   // أو المسار الصحيح
+import AdminDashboard from '../pages/admin/Admin';
 import PaymentResultPage from '../pages/Paymentresultpage.jsx';
-
+import Mohadren from '../pages/admin/mohadren';
+import NewsTab from '../pages/admin/NewsTab';
+import BooksTab from '../pages/admin/BooksTab';
+import PlanworkTab from '../pages/admin/PlanworkTab';
+import OnlineTab from '../pages/admin/OnlineTab';
 
 
    
@@ -46,11 +50,11 @@ const AppRoutes = () => {
     <Routes>
 
       {/* <Route element={<PublicLayout />}> */}
-            <Route index element={<Home />} />
+                <Route index element={<Home />} />
             <Route path="/vocational-training" element={<VocationalTraining />} />
                 <Route path="gesr-el-suez" element={<GesrElSuezPage />} />
                 <Route path="shobra" element={<ShobraTrainingPage />} />
-        <Route path="/overview" element={<Overview />} />
+                <Route path="/overview" element={<Overview />} />
         <Route path="/mission" element={<Vision_goals />} />
         <Route path="/news" element={<News />} />
             <Route path="/courses/:slug" element={<CoursesPage />} />
@@ -76,16 +80,22 @@ const AppRoutes = () => {
             <Route path="/onsite-training" element={<OnsiteTraining />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/my-courses" element={<Mycourses />} />    
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/payment/result" element={<PaymentResultPage />} />
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/payment/result" element={<PaymentResultPage />} />
+                <Route path="/mohadren" element={<Mohadren />} />
+                <Route path="/admin/news" element={<NewsTab />} />
+                <Route path="/admin/books" element={<BooksTab />} />
+                <Route path="/admin/planwork" element={<PlanworkTab />} />
+                <Route path="/admin/online" element={<OnlineTab />} />
+
 
             
 
 
 
 
-
             
+
     </Routes>
     </>
   );

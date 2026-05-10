@@ -3,6 +3,7 @@ using Institute.Application.DTOs.AdminDtos;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
+using Institute.Domain.Enums;
 using Institute.Domain.specifications.AdminSpec;
 using Institute.Domain.specifications.AdminSpec.Certificates;
 using Institute.Domain.specifications.AdminSpec.Course;
@@ -22,22 +23,27 @@ namespace Institute.Application.Services
         private readonly IRepository<Planwork> _planworkRepository;
         private readonly IRepository<Certificate> _certificateRepository;
         private readonly IRepository<RefundRequest> _refundRepository;
+        private readonly IRepository<Order> _orderRepository; // ← جديد
 
-        public AdminService(IRepository<AppUser> userRepository,IRepository<Enrollment> enrollmentRepository, IRepository<Planwork> planworkRepository ,IRepository<Certificate> certificateRepository,IRepository<RefundRequest> refundRepository)
+        public AdminService(
+            IRepository<AppUser> userRepository,
+            IRepository<Enrollment> enrollmentRepository,
+            IRepository<Planwork> planworkRepository,
+            IRepository<Certificate> certificateRepository,
+            IRepository<RefundRequest> refundRepository,
+            IRepository<Order> orderRepository) // ← جديد
         {
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
             _planworkRepository = planworkRepository;
             _certificateRepository = certificateRepository;
             _refundRepository = refundRepository;
-
+            _orderRepository = orderRepository; // ← جديد
         }
+
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param)
         {
-            // Spec مع keyword + date filters
             var spec = new UserSearchSpec(param);
-
-            // جلب البيانات من الريبو
             var users = await _userRepository.GetAllWithSpecAsync(spec);
 
             return users.Select(u => new UserWithCoursesDto
@@ -55,8 +61,9 @@ namespace Institute.Application.Services
                         (!param.ToDate.HasValue || e.EnrolledAt <= param.ToDate.Value))
                     .Select(e => new UserCourseDto
                     {
-                        EnrollmentId = e.Id,           // ← أضف
+                        EnrollmentId = e.Id,
                         Title = e.Planwork.ServiceTitle,
+                        CoursePrice = e.Planwork.PlanCost,
                         EnrolledAt = e.EnrolledAt,
                         Attended = e.Attended
                     })
@@ -64,17 +71,13 @@ namespace Institute.Application.Services
             }).ToList();
         }
 
-
-      
         public async Task<IReadOnlyList<PlanworkWithUsersDto>> GetAllPlanworksAsync(PlanworkSpecParams param)
         {
             var spec = new PlanworkSearchSpec(param);
-
             var planworks = await _planworkRepository.GetAllWithSpecAsync(spec);
 
             return planworks.Select(p =>
             {
-                // فلترة الـ enrollments حسب التاريخ
                 var filteredEnrollments = p.Enrollments
                     .Where(e =>
                         (!param.FromDate.HasValue || e.EnrolledAt >= param.FromDate.Value) &&
@@ -86,6 +89,7 @@ namespace Institute.Application.Services
                     Id = p.ChildId,
                     ServiceTitle = p.ServiceTitle,
                     UsersCount = filteredEnrollments.Count,
+                    TotalRevenue = (p.PlanCost ?? 0) * filteredEnrollments.Count,
                     Users = filteredEnrollments.Select(e => new UserEnrollmentDto
                     {
                         Username = e.User.Username,
@@ -96,26 +100,68 @@ namespace Institute.Application.Services
             }).ToList();
         }
 
-
-
-        
         public async Task<AdminStatsDto> GetStatsAsync()
         {
             var coursesSpec = new PlanworkCount();
             var attendedSpec = new AttendedEnrollmentsSpec();
+
+            var planworksSpec = new PlanworksWithEnrollmentsSpec();
+            var planworks = await _planworkRepository.GetAllWithSpecAsync(planworksSpec);
+            var today = DateTime.UtcNow.Date; // ← ده الناقص
+
+            var totalRevenue = planworks
+                .Sum(p => (p.PlanCost ?? 0) *
+                    p.Enrollments.Count(e => e.EnrolledAt.Date >= today));
+
+            var allRefunds = await _refundRepository.GetAllAsync();
+
+            // ← فلتر المرتجعات من النهارده بس
+            var totalRefunds = allRefunds
+                .Where(r => (r.Status == "Approved" || r.Status == "Sent")
+                         &&  r.RequestedAt.Date >= today)
+                .Sum(r => r.Amount);
+
+
             return new AdminStatsDto
             {
                 UsersCount = await _userRepository.CountAsync(),
-                PlanworksCount = await _planworkRepository
-                                            .GetCountAsync(coursesSpec),
+                PlanworksCount = await _planworkRepository.GetCountAsync(coursesSpec),
                 EnrollmentsCount = await _enrollmentRepository.CountAsync(),
-                AttendanceCount = await _enrollmentRepository
-                                                .GetCountAsync(attendedSpec), 
+                AttendanceCount = await _enrollmentRepository.GetCountAsync(attendedSpec),
                 CertificatesCount = await _certificateRepository.CountAsync(),
-                RefundsCount = await _refundRepository.CountAsync()
+                RefundsCount = await _refundRepository.CountAsync(),
+                TotalRevenue = totalRevenue,
+                TotalRefunds = totalRefunds,
+                NetRevenue = totalRevenue - totalRefunds
             };
         }
 
+        // ── جديد ─────────────────────────────────────────────────────────────
+        public async Task<IReadOnlyList<PaidOrderDto>> GetPaidOrdersFromTodayAsync()
+        {
+            var today = DateTime.UtcNow.Date;
+            var allOrders = await _orderRepository.GetAllAsync();
+
+            return allOrders
+                .Where(o => o.Status == OrderStatus.Paid && o.CreatedAt.Date >= today)
+                .OrderByDescending(o => o.CreatedAt)
+                .Select(o => new PaidOrderDto
+                {
+                    Id = o.Id,
+                    OrderNumber = o.OrderNumber,
+                    UserId = o.UserId,
+                    UserName = o.User?.Username,
+                    UserEmail = o.User?.Email,
+                    TotalAmount = o.TotalAmount,
+                    CreatedAt = o.CreatedAt,
+                    CoursesTitles = o.Items
+                        .Select(i => i.Planwork?.ServiceTitle ?? "")
+                        .Where(t => !string.IsNullOrEmpty(t))
+                        .ToList()
+                }).ToList();
+        }
+
+        // ── باقي الميثودز كما هي ─────────────────────────────────────────────
         public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto, string uploadsFolder)
         {
             if (dto.File == null || dto.File.Length == 0)
@@ -142,7 +188,7 @@ namespace Institute.Application.Services
             {
                 UserId = dto.UserId,
                 PlanworkId = dto.PlanworkId,
-                FileUrl = "/api/Admin/certificates/download/" + fileName, // ✅ URL مش path
+                FileUrl = "/api/Admin/certificates/download/" + fileName,
                 FileName = dto.File.FileName,
                 FileSizeBytes = dto.File.Length,
                 UploadedAt = DateTime.UtcNow
@@ -156,7 +202,6 @@ namespace Institute.Application.Services
         public async Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId)
         {
             var spec = new CertificateWithUserAndPlanworkSpec(userId, planworkId);
-
             var certificate = await _certificateRepository.GetByIdWithSpecAsync(spec);
 
             if (certificate == null)
@@ -177,21 +222,18 @@ namespace Institute.Application.Services
 
         public async Task<CertificateDto?> GetCertificateByClerkIdAsync(string clerkId, int planworkId)
         {
-            // 1. get user from ClerkId
             var user = await _userRepository
                 .GetByIdWithSpecAsync(new UserByClerkIdSpec(clerkId));
 
             if (user == null)
                 return null;
 
-            // 2. get certificate using DB userId
             var spec = new CertificateWithUserAndPlanworkSpec(user.Id, planworkId);
             var certificate = await _certificateRepository.GetByIdWithSpecAsync(spec);
 
             if (certificate == null)
                 return null;
 
-            // 3. map to DTO
             return new CertificateDto
             {
                 Id = certificate.Id,
@@ -204,12 +246,12 @@ namespace Institute.Application.Services
                 UploadedAt = certificate.UploadedAt
             };
         }
+
         public async Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder)
         {
             var certificate = await _certificateRepository.GetByIdAsync(dto.CertificateId);
             if (certificate == null) return false;
 
-            // حذف الملف القديم
             if (!string.IsNullOrEmpty(certificate.FileUrl))
             {
                 var oldFileName = Path.GetFileName(certificate.FileUrl);
@@ -218,7 +260,6 @@ namespace Institute.Application.Services
                     File.Delete(oldPath);
             }
 
-            // حفظ الملف الجديد
             var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
             var filePath = Path.Combine(uploadsFolder, fileName);
 
@@ -227,7 +268,6 @@ namespace Institute.Application.Services
                 await dto.File.CopyToAsync(stream);
             }
 
-            // ✅ نفس الـ URL format بتاع الـ Upload
             certificate.FileUrl = "/api/Admin/certificates/download/" + fileName;
             certificate.FileName = dto.File.FileName;
             certificate.FileSizeBytes = dto.File.Length;
@@ -237,6 +277,7 @@ namespace Institute.Application.Services
             await _certificateRepository.SaveChangesAsync();
             return true;
         }
+
         public async Task<bool> DeleteCertificateAsync(int certificateId, string uploadsFolder)
         {
             var certificate = await _certificateRepository.GetByIdAsync(certificateId);
@@ -244,7 +285,6 @@ namespace Institute.Application.Services
             if (certificate == null)
                 return false;
 
-            // 🗑️ delete file from server
             if (!string.IsNullOrEmpty(certificate.FileUrl))
             {
                 var fileName = Path.GetFileName(certificate.FileUrl);
@@ -254,7 +294,6 @@ namespace Institute.Application.Services
                     File.Delete(filePath);
             }
 
-            // 🗑️ delete from DB
             _certificateRepository.Delete(certificate);
             await _certificateRepository.SaveChangesAsync();
 
@@ -263,22 +302,18 @@ namespace Institute.Application.Services
 
         public async Task<bool> UpdateAttendanceAsync(int enrollmentId, bool attended)
         {
-            // جلب الـ enrollment
             var enrollment = await _enrollmentRepository.GetByIdAsync(enrollmentId);
             if (enrollment == null)
                 return false;
 
-            // تحديث الحضور
             enrollment.Attended = attended;
-
-            // حفظ التغييرات
             await _enrollmentRepository.SaveChangesAsync();
             return true;
         }
+
         public async Task<IReadOnlyList<EnrollmentWithCertificateDto>> GetEnrollmentsWithCertificatesAsync()
         {
             var enrollments = await _enrollmentRepository.GetAllAsync();
-
             var result = new List<EnrollmentWithCertificateDto>();
 
             foreach (var e in enrollments)
@@ -300,22 +335,19 @@ namespace Institute.Application.Services
 
             return result;
         }
+
         public async Task<IReadOnlyList<CertificateDto>> GetAllCertificatesAsync()
         {
-            // 🔹 جيب كل الشهادات
             var certSpec = new AllCertificateWithUserAndPlanworkSpec();
             var certificates = await _certificateRepository.GetAllWithSpecAsync(certSpec);
 
-            // 🔹 حطهم في Dictionary علشان البحث السريع
             var certDict = certificates.ToDictionary(
                 c => (c.UserId, c.PlanworkId),
                 c => c);
 
-            // 🔹 جيب كل الـ enrollments مع user + planwork
             var enrollSpec = new EnrollmentWithUserAndPlanworkSpec();
             var enrollments = await _enrollmentRepository.GetAllWithSpecAsync(enrollSpec);
 
-            // 🔥 ارجع نتيجة لكل enrollment
             return enrollments.Select(e =>
             {
                 certDict.TryGetValue((e.UserId, e.PlanworkId), out var cert);
@@ -325,17 +357,13 @@ namespace Institute.Application.Services
                     Id = cert?.Id ?? 0,
                     UserId = e.UserId,
                     Username = e.User.Username,
-
                     PlanworkId = e.PlanworkId,
                     PlanworkTitle = e.Planwork.ServiceTitle,
-
                     FileUrl = cert?.FileUrl,
                     FileName = cert?.FileName,
-
                     UploadedAt = cert?.UploadedAt ?? DateTime.MinValue
                 };
             }).ToList();
         }
-
     }
 }

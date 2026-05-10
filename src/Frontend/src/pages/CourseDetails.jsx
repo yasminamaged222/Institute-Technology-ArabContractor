@@ -84,7 +84,6 @@ const S = {
     priceCard: { backgroundColor: '#fff', borderRadius: '12px', border: '2px solid #f0f0f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', overflow: 'hidden' },
     pricePreview: { width: '100%', height: '200px', overflow: 'hidden', position: 'relative' },
     previewImg: { width: '100%', height: '100%', objectFit: 'cover' },
-
     certPreviewRibbon: {
         position: 'absolute', bottom: '12px', left: '12px',
         backgroundColor: 'rgba(124,58,237,0.92)',
@@ -101,7 +100,6 @@ const S = {
         backgroundSize: '200% auto',
         animation: 'certShine 3s linear infinite',
     },
-
     priceContent: { padding: '24px' },
     priceSec: { marginBottom: '20px' },
     ownedLabel: { fontSize: '32px', fontWeight: 'bold', color: '#4a4a8a', display: 'block', lineHeight: 1.2 },
@@ -111,7 +109,6 @@ const S = {
     strikePrice: { fontSize: '16px', color: '#000', textDecoration: 'line-through', opacity: 0.5 },
     actionBtns: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
     btnViewMyCourses: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg,#4a4a8a 0%,#7b5ea7 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '17px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif', transition: 'all 0.3s', boxShadow: '0 4px 12px rgba(74,74,138,0.3)' },
-
     btnCertPreview: {
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
         width: '100%', padding: '13px 24px',
@@ -122,7 +119,6 @@ const S = {
         boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
         transition: 'all 0.25s ease',
     },
-
     btnRefund: { width: '100%', padding: '12px 24px', backgroundColor: '#fff', color: '#e53935', border: '2px solid #e53935', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.25s' },
     btnEnroll: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg,#1a7a3c 0%,#27ae60 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '17px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif', transition: 'all 0.3s', boxShadow: '0 4px 12px rgba(26,122,60,0.3)' },
     btnAddCart: { width: '100%', padding: '14px 24px', backgroundColor: '#fff', color: '#0865a8', border: '2px solid #0865a8', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif', transition: 'all 0.3s' },
@@ -141,7 +137,6 @@ const S = {
     notFoundWrap: { minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '100px' },
     notFoundCard: { backgroundColor: '#fff', padding: '48px', borderRadius: '12px', border: '2px solid #f0f0f0', textAlign: 'center', maxWidth: '500px' },
     btnPrimary: { display: 'inline-block', padding: '14px 32px', background: 'linear-gradient(135deg,#0865a8 0%,#f57c00 100%)', color: '#fff', textDecoration: 'none', borderRadius: '10px', marginTop: '24px', fontWeight: 'bold' },
-
     overlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backdropFilter: 'blur(4px)' },
     modalCard: { backgroundColor: '#fff', borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.22)', width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto', animation: 'modalSlideUp 0.3s ease-out' },
     modalHeader: { background: 'linear-gradient(135deg,#c62828 0%,#e53935 100%)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#fff', position: 'sticky', top: 0, zIndex: 1 },
@@ -169,7 +164,6 @@ const S = {
     statusBadge: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi",serif' },
     policyBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6', fontFamily: '"Droid Arabic Kufi",serif' },
     enrollMsgBox: { padding: '12px 16px', borderRadius: '10px', fontSize: '14px', fontFamily: '"Droid Arabic Kufi",serif', lineHeight: '1.6', marginBottom: '12px', display: 'flex', alignItems: 'flex-start', gap: '8px' },
-
     certOverlay: {
         position: 'fixed', inset: 0,
         backgroundColor: 'rgba(10,5,30,0.75)',
@@ -279,9 +273,42 @@ function getRefundPolicy(courseDateStr, coursePrice) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
     const daysLeft = Math.round((startDate - today) / (1000 * 60 * 60 * 24));
-    if (daysLeft < 2) return { type: 'blocked', daysLeft };
-    if (daysLeft <= 7) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
+
+    if (daysLeft <= 0) return { type: 'blocked', reason: 'started' };
+    if (daysLeft < 2) return { type: 'blocked', reason: 'tooClose', daysLeft };
+    if (daysLeft <= 6) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
     return { type: 'full', daysLeft };
+}
+
+function renderPolicyBox(policy) {
+    if (policy.type === 'blocked') {
+        const msg = policy.reason === 'started'
+            ? 'عذراً، لا يمكن طلب الاسترداد بعد بدء الكورس.'
+            : 'عذراً، لا يمكن طلب الاسترداد. تبقى أقل من يومي عمل على بدء الكورس.';
+        return (
+            <div style={{ ...S.policyBox, backgroundColor: '#ffebee', border: '1px solid #ef9a9a', color: '#c62828' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>🚫</span>
+                <span>{msg}</span>
+            </div>
+        );
+    }
+    if (policy.type === 'partial') {
+        return (
+            <div style={{ ...S.policyBox, backgroundColor: '#fff8e1', border: '1px solid #ffe082', color: '#795548' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
+                <span>تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس — سيُخصم 25% وستسترد <strong>{policy.refundAmount} جنيه</strong> فقط.</span>
+            </div>
+        );
+    }
+    if (policy.type === 'full') {
+        return (
+            <div style={{ ...S.policyBox, backgroundColor: '#f0fff4', border: '1px solid #a7f3d0', color: '#1a7a3c' }}>
+                <span style={{ fontSize: '18px', flexShrink: 0 }}>✅</span>
+                <span>مؤهل لاسترداد كامل — تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس.</span>
+            </div>
+        );
+    }
+    return null;
 }
 
 async function parseServerError(res) {
@@ -319,7 +346,6 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
     return (
         <div style={S.certOverlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
             <div style={S.certModalCard} className="cert-modal-card" dir="rtl">
-
                 <div style={S.certModalHeader}>
                     <div style={S.certModalHeaderIconWrap}>📜</div>
                     <div style={S.certModalTitleWrap}>
@@ -370,7 +396,6 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                         </svg>
                         <span>شهادتك معتمدة ✓</span>
                     </div>
-
                     <div style={S.certModalActions}>
                         <a href={certUrl} target="_blank" rel="noopener noreferrer" style={S.btnOpenNewTab} className="btnOpenNewTab">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -378,7 +403,6 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                             </svg>
                             فتح في تبويب جديد
                         </a>
-
                         <a href={certUrl} download={certName} style={S.btnCertDownloadModal} className="btnCertDownloadModal">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
@@ -398,7 +422,7 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
 const CourseDetails = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
-    const { getToken, isSignedIn } = useAuth();   // ← removed unused userId
+    const { getToken, isSignedIn } = useAuth();
 
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -407,7 +431,6 @@ const CourseDetails = () => {
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
     const [cert, setCert] = useState(null);
     const [certLoading, setCertLoading] = useState(false);
-
     const [showCertModal, setShowCertModal] = useState(false);
 
     const [enrolling, setEnrolling] = useState(false);
@@ -422,6 +445,11 @@ const CourseDetails = () => {
     const [refundError, setRefundError] = useState(null);
     const [existingRefund, setExistingRefund] = useState(null);
     const [loadingRefundCheck, setLoadingRefundCheck] = useState(false);
+
+    // ── PATCH 1: New state variables ──
+    const [mode, setMode] = useState('onsite'); // 'onsite' | 'online'
+    const [onlineSetting, setOnlineSetting] = useState(null); // { link, visible } | null
+    const [onlineLoading, setOnlineLoading] = useState(false);
 
     const safeGetToken = useCallback(async () => {
         try { return await getToken(); } catch (_) { return null; }
@@ -439,7 +467,6 @@ const CourseDetails = () => {
         } catch { setOwnedCourseIds(new Set()); }
     }, [isSignedIn, safeGetToken]);
 
-    // ── Certificate fetch: NEW endpoint /Admin/certificates/{planworkId} ──────
     const fetchCertForCourse = useCallback(async (courseId) => {
         if (!isSignedIn || !courseId) return;
         setCert(null);
@@ -447,28 +474,19 @@ const CourseDetails = () => {
         try {
             const token = await safeGetToken();
             if (!token) return;
-
-            // ✅ Updated to new endpoint — no userId needed
             const res = await fetch(`${API_BASE}/Admin/certificates/${courseId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
-            // 404 means cert not uploaded yet — silently ignore
             if (!res.ok) return;
-
             const data = await res.json();
             const raw = Array.isArray(data) ? data[0] : data;
             if (!raw) return;
-
-            // Resolve URL from whichever field the API uses
             const rawUrl =
                 raw.url || raw.fileUrl || raw.filePath || raw.path ||
                 raw.downloadUrl || raw.fileName || raw.filename || null;
-
             const url = rawUrl
                 ? (rawUrl.startsWith('http') ? rawUrl : `${API_BASE}/${rawUrl.replace(/^\//, '')}`)
                 : null;
-
             setCert({ ...raw, url });
         } catch {
             setCert(null);
@@ -581,7 +599,6 @@ const CourseDetails = () => {
 
     const isOwned = course ? ownedCourseIds.has(course.id) : false;
 
-    // Fetch cert whenever this course becomes owned
     useEffect(() => {
         if (course?.id && isOwned) {
             fetchCertForCourse(course.id);
@@ -590,25 +607,71 @@ const CourseDetails = () => {
         }
     }, [course?.id, isOwned, fetchCertForCourse]);
 
+    // ── PATCH 2: Fetch online setting when course is known ──
+    useEffect(() => {
+        if (!course?.id) { setOnlineSetting(null); return; }
+        setOnlineLoading(true);
+        (async () => {
+            try {
+                const token = await safeGetToken();
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                const res = await fetch(`${API_BASE}/Admin/online-settings/${course.id}`, { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    const item = Array.isArray(data) ? data[0] : data;
+                    if (item) {
+                        setOnlineSetting({
+                            link: item.meetingLink ?? item.MeetingLink ?? '',
+                            visible: !!(item.isVisible ?? item.IsVisible ?? false),
+                        });
+                    } else {
+                        setOnlineSetting(null);
+                    }
+                } else {
+                    setOnlineSetting(null);
+                }
+            } catch {
+                setOnlineSetting(null);
+            } finally {
+                setOnlineLoading(false);
+            }
+        })();
+    }, [course?.id, safeGetToken]);
+
     useEffect(() => {
         document.title = course?.title ? `${course.title} - المعهد التكنولوجي` : 'المعهد التكنولوجي';
     }, [course]);
 
-    const addToCart = async (buyNow = false) => {
+    // ── PATCH 6: Updated addToCart with mode support ──
+    const addToCart = async (buyNow = false, courseMode = 'onsite') => {
         if (!course) return;
+        const priceToUse = courseMode === 'online'
+            ? Math.round(course.price * 1.1)
+            : course.price;
         try {
             const token = await safeGetToken();
             if (token) {
                 await fetch(`${API_BASE}/cart/add/${course.id}`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseId: course.id, quantity: 1 }),
+                    body: JSON.stringify({ courseId: course.id, quantity: 1, mode: courseMode }),
                 });
             }
         } catch { }
         const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
         if (!cart.some(i => i.id === course.id)) {
-            cart.push({ id: course.id, slug: course.slug, title: course.title, instructor: course.place || 'غير محدد', image: course.image, currentPrice: course.price || 0, originalPrice: course.originalPrice || 0, quantity: 1 });
+            cart.push({
+                id: course.id,
+                slug: course.slug,
+                title: course.title,
+                instructor: course.place || 'غير محدد',
+                image: course.image,
+                currentPrice: priceToUse,
+                originalPrice: course.originalPrice || 0,
+                quantity: 1,
+                mode: courseMode,
+                modeLabel: courseMode === 'online' ? 'أونلاين' : 'حضوري',
+            });
             localStorage.setItem('cartItems', JSON.stringify(cart));
             window.dispatchEvent(new Event('cartUpdated'));
         }
@@ -690,8 +753,22 @@ const CourseDetails = () => {
 
     const font = '"Droid Arabic Kufi",serif';
     const statusInfo = existingRefund ? REFUND_STATUS_MAP[existingRefund.status] : null;
-
     const getCertUrl = (c) => c?.url || null;
+
+    const refundPolicy = course ? getRefundPolicy(course.date, course.price) : { type: 'unknown' };
+    const isRefundBlocked = refundPolicy.type === 'blocked';
+
+    // ── PATCH 3: Derive prices and mode tab styles ──
+    const onlinePrice = course ? Math.round(course.price * 1.1) : 0;
+    const activePrice = mode === 'online' ? onlinePrice : course?.price ?? 0;
+
+    const modeTabBase = {
+        flex: 1, padding: '9px 10px', border: 'none', borderRadius: '8px', fontSize: '14px',
+        fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif',
+        transition: 'all .2s',
+    };
+    const modeTabActive = { ...modeTabBase, background: 'linear-gradient(135deg,#0865a8,#1a84d4)', color: '#fff', boxShadow: '0 3px 10px rgba(8,101,168,0.3)' };
+    const modeTabInactive = { ...modeTabBase, background: '#f0f1f2', color: '#6b7280' };
 
     if (loading) return (
         <>
@@ -901,14 +978,38 @@ const CourseDetails = () => {
                                 </div>
 
                                 <div style={S.priceContent}>
+
+                                    {/* ── PATCH 4: Mode toggle + dynamic price display ── */}
+                                    {!isOwned && !course.isFree && (
+                                        <div style={{ display: 'flex', gap: 6, padding: '6px', background: '#f0f1f2', borderRadius: '10px', marginBottom: '16px' }}>
+                                            <button style={mode === 'onsite' ? modeTabActive : modeTabInactive} onClick={() => setMode('onsite')}>
+                                                🏢 حضوري
+                                            </button>
+                                            <button style={mode === 'online' ? modeTabActive : modeTabInactive} onClick={() => setMode('online')}>
+                                                🌐 أونلاين
+                                            </button>
+                                        </div>
+                                    )}
+
                                     <div style={S.priceSec}>
                                         {isOwned ? (
-                                            <><span style={S.ownedLabel}>✅ مسجل</span><span style={S.priceSub}>لديك هذه الدورة بالفعل</span></>
+                                            <>
+                                                <span style={S.ownedLabel}>✅ مسجل</span>
+                                                <span style={S.priceSub}>لديك هذه الدورة بالفعل</span>
+                                            </>
                                         ) : course.isFree ? (
-                                            <><span style={S.freeLabel}>مجاناً</span><span style={S.priceSub}>دورة مجانية بالكامل</span></>
+                                            <>
+                                                <span style={S.freeLabel}>مجاناً</span>
+                                                <span style={S.priceSub}>دورة مجانية بالكامل</span>
+                                            </>
                                         ) : (
                                             <>
-                                                <span style={S.paidPrice}>{course.price.toLocaleString('ar-EG')} {course.currency}</span>
+                                                <span style={S.paidPrice}>{activePrice.toLocaleString('ar-EG')} {course.currency}</span>
+                                                {mode === 'online' && (
+                                                    <span style={{ fontSize: '13px', color: '#7c3aed', fontWeight: 700, display: 'block', marginTop: '-6px', marginBottom: '4px' }}>
+                                                        🌐 سعر التدريب الإلكتروني
+                                                    </span>
+                                                )}
                                             </>
                                         )}
                                     </div>
@@ -939,6 +1040,41 @@ const CourseDetails = () => {
 
                                                 <button className="btnViewMyCourses" style={S.btnViewMyCourses} onClick={() => navigate('/my-courses')}>عرض في دوراتي</button>
 
+                                                {/* ── PATCH 5 Location B: Online meeting link for owned users ── */}
+                                                {onlineLoading ? (
+                                                    <div style={{ padding: '12px 0', textAlign: 'center', fontSize: '13px', color: '#7c3aed', fontFamily: '"Droid Arabic Kufi",serif' }}>
+                                                        <svg style={{ width: 16, height: 16, animation: 'spin 1s linear infinite', verticalAlign: 'middle', marginLeft: 6 }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                                        جاري تحميل رابط الاجتماع...
+                                                    </div>
+                                                ) : onlineSetting?.visible && onlineSetting?.link ? (
+                                                    <a
+                                                        href={onlineSetting.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                            width: '100%', padding: '13px 20px', boxSizing: 'border-box',
+                                                            background: 'linear-gradient(135deg,#5b21b6,#7c3aed)',
+                                                            color: '#fff', borderRadius: '10px', textDecoration: 'none',
+                                                            fontSize: '15px', fontWeight: 'bold',
+                                                            fontFamily: '"Droid Arabic Kufi",serif',
+                                                            boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
+                                                            transition: 'all .25s ease',
+                                                        }}
+                                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.5)'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,58,237,0.35)'; }}
+                                                    >
+                                                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                            <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                                                        </svg>
+                                                        🌐 انضم إلى الاجتماع الإلكتروني
+                                                    </a>
+                                                ) : onlineSetting && !onlineSetting.visible ? (
+                                                    <div style={{ padding: '12px 14px', borderRadius: '10px', background: '#f8f9fa', border: '1.5px solid #e2e8f0', fontSize: '13px', color: '#6b7280', fontFamily: '"Droid Arabic Kufi",serif', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                                        🕐 رابط الاجتماع سيُتاح قريبًا
+                                                    </div>
+                                                ) : null}
+
                                                 {!course.isFree && (
                                                     <button className="btnRefund" style={S.btnRefund} onClick={openRefund}>💸 طلب استرداد المبلغ</button>
                                                 )}
@@ -965,9 +1101,10 @@ const CourseDetails = () => {
                                                 </button>
                                             </>
                                         ) : (
+                                            // ── PATCH 5 Location A: Paid action buttons with mode ──
                                             <>
-                                                <button className="btnAddCart" style={S.btnAddCart} onClick={() => addToCart(false)}>إضافة إلى السلة</button>
-                                                <button className="btnBuyNow" style={S.btnBuyNow} onClick={() => addToCart(true)}>اشترِ الآن</button>
+                                                <button className="btnAddCart" style={S.btnAddCart} onClick={() => addToCart(false, mode)}>إضافة إلى السلة</button>
+                                                <button className="btnBuyNow" style={S.btnBuyNow} onClick={() => addToCart(true, mode)}>اشترِ الآن</button>
                                             </>
                                         )}
                                     </div>
@@ -1063,28 +1200,8 @@ const CourseDetails = () => {
                                 </div>
                             ) : (
                                 <>
-                                    {(() => {
-                                        const policy = getRefundPolicy(course.date, course.price);
-                                        if (policy.type === 'blocked') return (
-                                            <div style={{ ...S.policyBox, backgroundColor: '#ffebee', border: '1px solid #ef9a9a', color: '#c62828' }}>
-                                                <span style={{ fontSize: '18px', flexShrink: 0 }}>🚫</span>
-                                                <span>عذراً، لا يمكن طلب الاسترداد. تبقى أقل من يومين على بدء الكورس ({policy.daysLeft} يوم).</span>
-                                            </div>
-                                        );
-                                        if (policy.type === 'partial') return (
-                                            <div style={{ ...S.policyBox, backgroundColor: '#fff8e1', border: '1px solid #ffe082', color: '#795548' }}>
-                                                <span style={{ fontSize: '18px', flexShrink: 0 }}>⚠️</span>
-                                                <span>تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس — سيُخصم 25% وستسترد <strong>{policy.refundAmount} جنيه</strong> فقط.</span>
-                                            </div>
-                                        );
-                                        if (policy.type === 'full') return (
-                                            <div style={{ ...S.policyBox, backgroundColor: '#f0fff4', border: '1px solid #a7f3d0', color: '#1a7a3c' }}>
-                                                <span style={{ fontSize: '18px', flexShrink: 0 }}>✅</span>
-                                                <span>مؤهل لاسترداد كامل — تبقى <strong>{policy.daysLeft} أيام</strong> على بدء الكورس.</span>
-                                            </div>
-                                        );
-                                        return null;
-                                    })()}
+                                    {renderPolicyBox(refundPolicy)}
+
                                     <div style={S.infoBox}>
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <p style={S.infoBoxText}>سيتم مراجعة طلبك من قِبل الإدارة خلال 3-5 أيام عمل.</p>
@@ -1111,9 +1228,9 @@ const CourseDetails = () => {
                                     <div style={S.modalActions}>
                                         <button style={S.btnCancel} onClick={closeRefund}>إلغاء</button>
                                         <button
-                                            style={{ ...S.btnSubmit, ...((refundSending || getRefundPolicy(course.date, course.price).type === 'blocked') ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }}
+                                            style={{ ...S.btnSubmit, ...((refundSending || isRefundBlocked) ? { opacity: 0.5, cursor: 'not-allowed' } : {}) }}
                                             onClick={submitRefund}
-                                            disabled={refundSending || getRefundPolicy(course.date, course.price).type === 'blocked'}>
+                                            disabled={refundSending || isRefundBlocked}>
                                             {refundSending
                                                 ? <><svg style={{ width: '18px', height: '18px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>جاري الإرسال...</>
                                                 : 'إرسال الطلب'}
