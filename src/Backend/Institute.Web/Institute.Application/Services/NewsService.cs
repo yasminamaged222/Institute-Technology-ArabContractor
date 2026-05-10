@@ -1,13 +1,7 @@
-﻿// ══════════════════════════════════════════════════════════
-// المسار: Institute.Application/Services/NewsService.cs
-// ملف جديد — أضفه في نفس فولدر باقي الـ Services
-// ══════════════════════════════════════════════════════════
-using Institute.API.DTOs;
-using Institute.Application.DTOs;
+﻿using Institute.Application.DTOs;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace Institute.Application.Services
@@ -16,20 +10,26 @@ namespace Institute.Application.Services
     {
         private readonly IRepository<Dailynews> _newsRepo;
         private readonly IRepository<NewsPic> _picRepo;
+        private readonly IBlobStorage _blobStorage;
         private readonly IConfiguration _config;
+
+        private const string Container = "icemt";
+        private const string Folder = "news";
 
         public NewsService(
             IRepository<Dailynews> newsRepo,
             IRepository<NewsPic> picRepo,
+            IBlobStorage blobStorage,
             IConfiguration config)
         {
             _newsRepo = newsRepo;
             _picRepo = picRepo;
+            _blobStorage = blobStorage;
             _config = config;
         }
 
-        // ── CREATE ────────────────────────────────────────────────────────────
-        public async Task<NewsCreateUpdateDto> CreateAsync(NewsCreateUpdateDto dto, string uploadsFolder)
+        // ── CREATE ───────────────────────────────
+        public async Task<NewsCreateUpdateDto> CreateAsync(NewsCreateUpdateDto dto)
         {
             var entity = new Dailynews
             {
@@ -42,16 +42,31 @@ namespace Institute.Application.Services
             await _newsRepo.AddAsync(entity);
             await _newsRepo.SaveChangesAsync();
 
-            // رفع الصورة لو موجودة
-            string? imageUrl = null;
-            if (dto.Image != null)
-                imageUrl = await SaveImageAsync(entity.NewsId, dto.Image, uploadsFolder);
+            string? blobName = null;
 
-            return ToDto(entity, imageUrl);
+            if (dto.Image != null)
+            {
+                blobName = await _blobStorage.UploadFileAsync(
+                    dto.Image,
+                    Container,
+                    Folder);
+
+                await _picRepo.AddAsync(new NewsPic
+                {
+                    NewsId = entity.NewsId,
+                    ImageName = blobName,
+                    StartUpPic = true,
+                    PicPeriorty = 1
+                });
+
+                await _picRepo.SaveChangesAsync();
+            }
+
+            return ToDto(entity, blobName);
         }
 
-        // ── UPDATE ────────────────────────────────────────────────────────────
-        public async Task<NewsCreateUpdateDto?> UpdateAsync(int id, NewsCreateUpdateDto dto, string uploadsFolder)
+        // ── UPDATE ───────────────────────────────
+        public async Task<NewsCreateUpdateDto?> UpdateAsync(int id, NewsCreateUpdateDto dto)
         {
             var entity = await _newsRepo.GetByIdAsync(id);
             if (entity == null) return null;
@@ -63,99 +78,100 @@ namespace Institute.Application.Services
             _newsRepo.Update(entity);
             await _newsRepo.SaveChangesAsync();
 
-            // لو في صورة جديدة → احذف القديمة وارفع الجديدة
-            string? imageUrl = null;
+            string? blobName = null;
+
+            var pics = (await _picRepo.GetAllAsync())
+                .Where(p => p.NewsId == id)
+                .ToList();
+
+            foreach (var pic in pics)
+                _picRepo.Delete(pic);
+
+            if (pics.Any())
+                await _picRepo.SaveChangesAsync();
+
             if (dto.Image != null)
             {
-                await DeleteOldImageAsync(id, uploadsFolder);
-                imageUrl = await SaveImageAsync(id, dto.Image, uploadsFolder);
+                blobName = await _blobStorage.UploadFileAsync(
+                    dto.Image,
+                    Container,
+                    Folder);
+
+                await _picRepo.AddAsync(new NewsPic
+                {
+                    NewsId = entity.NewsId,
+                    ImageName = blobName,
+                    StartUpPic = true,
+                    PicPeriorty = 1
+                });
+
+                await _picRepo.SaveChangesAsync();
             }
             else
             {
-                // احتفظ بالصورة الموجودة
-                imageUrl = await GetExistingImageUrl(id);
+                blobName = await GetExistingBlobName(id);
             }
 
-            return ToDto(entity, imageUrl);
+            return ToDto(entity, blobName);
         }
 
-        // ── DELETE ────────────────────────────────────────────────────────────
-        public async Task<bool> DeleteAsync(int id, string uploadsFolder)
+        // ── DELETE ───────────────────────────────
+        public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _newsRepo.GetByIdAsync(id);
             if (entity == null) return false;
 
-            // امسح كل الصور المرتبطة بالخبر ده
-            await DeleteOldImageAsync(id, uploadsFolder);
+            var pics = (await _picRepo.GetAllAsync())
+                .Where(p => p.NewsId == id)
+                .ToList();
+
+            foreach (var pic in pics)
+                _picRepo.Delete(pic);
+
+            if (pics.Any())
+                await _picRepo.SaveChangesAsync();
 
             _newsRepo.Delete(entity);
             await _newsRepo.SaveChangesAsync();
+
             return true;
         }
 
-        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
-        private async Task<string?> SaveImageAsync(int newsId, IFormFile image, string uploadsFolder)
+        // ── GET BLOB NAME ─────────────────────────
+        private async Task<string?> GetExistingBlobName(int newsId)
         {
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var fileName = Guid.NewGuid() + Path.GetExtension(image.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await image.CopyToAsync(stream);
-
-            var pic = new NewsPic
-            {
-                NewsId = newsId,
-                ImageName = fileName,
-                StartUpPic = true,
-                PicPeriorty = 1
-            };
-            await _picRepo.AddAsync(pic);
-            await _picRepo.SaveChangesAsync();
-
-            return $"{_config["ApiUrl"]}/images/news/{fileName}";
-        }
-
-        private async Task DeleteOldImageAsync(int newsId, string uploadsFolder)
-        {
-            var allPics = await _picRepo.GetAllAsync();
-            var relatedPics = allPics.Where(p => p.NewsId == newsId).ToList();
-
-            foreach (var pic in relatedPics)
-            {
-                if (!string.IsNullOrEmpty(pic.ImageName))
-                {
-                    var filePath = Path.Combine(uploadsFolder, pic.ImageName);
-                    if (File.Exists(filePath)) File.Delete(filePath);
-                }
-                _picRepo.Delete(pic);
-            }
-
-            if (relatedPics.Any())
-                await _picRepo.SaveChangesAsync();
-        }
-
-         
-        private async Task<string?> GetExistingImageUrl(int newsId)
-        {
-            var allPics = await _picRepo.GetAllAsync();
-            var firstPic = allPics
+            var pic = (await _picRepo.GetAllAsync())
                 .Where(p => p.NewsId == newsId)
                 .OrderBy(p => p.PicPeriorty)
                 .FirstOrDefault();
 
-            if (firstPic?.ImageName == null) return null;
-            return $"{_config["ApiUrl"]}/images/news/{firstPic.ImageName}";
+            return pic?.ImageName;
         }
-        private static NewsCreateUpdateDto ToDto(Dailynews entity, string? imageUrl) => new()
+
+        // ── BUILD URL (SAFE) ─────────────────────────
+        private string? GetImageUrl(string? blobName)
         {
-            Id = entity.NewsId,
-            Title = entity.ATitel,
-            Details = entity.ADetails,
-            Date = entity.NewsDate ?? DateTime.UtcNow,
-            ImageUrl =  imageUrl  // الصورة ما بترجعش في الـ DTO ده، بس ممكن تضيف خاصية ImageUrl لو حبيت ترجعها
-        };
+            if (string.IsNullOrWhiteSpace(blobName))
+                return null;
+
+            var baseUrl = _config["AzureBlobStorage:BaseUrl"];
+
+            return $"{baseUrl?.TrimEnd('/')}/news/{blobName.TrimStart('/')}";
+        }
+
+        // ── DTO ───────────────────────────────
+        private NewsCreateUpdateDto ToDto(
+            Dailynews entity,
+            string? blobName)
+        {
+            return new NewsCreateUpdateDto
+            {
+                Id = entity.NewsId,
+                Title = entity.ATitel,
+                Details = entity.ADetails,
+                Date = entity.NewsDate ?? DateTime.UtcNow,
+                ImageUrl = GetImageUrl(blobName)
+            };
+        }
     }
 }

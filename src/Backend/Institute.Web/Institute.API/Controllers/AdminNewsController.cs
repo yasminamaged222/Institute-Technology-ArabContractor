@@ -36,93 +36,102 @@ namespace Institute.API.Controllers
             _newsWriteService = newsWriteService;
         }
 
-        // ── GET ALL (موجود) ───────────────────────────────────────────────────
-        /// <summary>GET /api/news/getAllNews?pageIndex=1&amp;pageSize=10</summary>
+        // ── GET ALL ─────────────────────────────
         [HttpGet("getAllNews")]
         public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews(
-            [FromQuery] NewsSpecParams newsParams)
+    [FromQuery] NewsSpecParams newsParams)
         {
             var spec = new NewsWithMainPicSpec(newsParams);
             var news = await _repo.GetAllWithSpecAsync(spec);
-            var data = _mapper.Map<IReadOnlyList<Dailynews>, IReadOnlyList<NewsListDto>>(news);
+
+            var data = news.Select(x => new NewsListDto
+            {
+                Id = x.NewsId,
+                Title = x.ATitel,
+                PublishedAt = x.NewsDate ?? DateTime.UtcNow,
+
+                ImageUrl = x.NewsPics?
+    .OrderBy(p => p.PicPeriorty)
+    .FirstOrDefault()?.ImageName != null
+        ? $"https://acwebappbackup.blob.core.windows.net/icemt/{x.NewsPics
+            .OrderBy(p => p.PicPeriorty)
+            .FirstOrDefault().ImageName}"
+        : null
+            }).ToList();
+
             var countSpec = new NewsWithFiltersForCountSpec(newsParams);
             var count = await _repo.GetCountAsync(countSpec);
 
             return Ok(new Pagination<NewsListDto>(
-                newsParams.PageIndex, newsParams.PageSize, count, data));
+                newsParams.PageIndex,
+                newsParams.PageSize,
+                count,
+                data));
         }
 
-        // ── GET BY ID (موجود) ─────────────────────────────────────────────────
-        /// <summary>GET /api/news/{id}</summary>
+        // ── GET BY ID ───────────────────────────
         [HttpGet("{id}")]
         public async Task<IActionResult> GetNewsById(int id)
         {
-            if (id <= 0) return BadRequest("Invalid news id");
+            if (id <= 0)
+                return BadRequest("Invalid news id");
 
             var spec = new NewsWithDetailsSpec(id);
             var news = await _newsService.GetEntityWithSpec(spec);
-            if (news == null) return NotFound();
 
-            return Ok(_mapper.Map<NewsDetailsDto>(news));
+            if (news == null)
+                return NotFound();
+
+            return Ok(new NewsDetailsDto
+            {
+                Id = news.NewsId,
+                Title = news.ATitel,
+                Details = news.ADetails,
+                PublishedAt = news.NewsDate ?? DateTime.UtcNow,
+                ImageUrl = news.NewsPics?
+    .OrderBy(p => p.PicPeriorty)
+    .FirstOrDefault()?.ImageName != null
+        ? $"https://acwebappbackup.blob.core.windows.net/icemt/{news.NewsPics
+            .OrderBy(p => p.PicPeriorty)
+            .FirstOrDefault().ImageName}"
+        : null
+            });
         }
 
-        // ── CREATE ────────────────────────────────────────────────────────────
-        /// <summary>
-        /// POST /api/news
-        /// Form: title, details, date, image? (IFormFile)
-        /// يحتاج permission "News"
-        /// </summary>
+        // ── CREATE ───────────────────────────────
         [HttpPost]
-         public async Task<IActionResult> Create([FromForm] NewsCreateUpdateDto dto)
+        public async Task<IActionResult> Create([FromForm] NewsCreateUpdateDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                return BadRequest(new { message = "عنوان الخبر مطلوب." });
+            var result = await _newsWriteService.CreateAsync(dto);
 
-            if (string.IsNullOrWhiteSpace(dto.Details))
-                return BadRequest(new { message = "تفاصيل الخبر مطلوبة." });
-
-            var uploadsFolder = "D:\\home\\site\\userfiles\\news";
-            var result = await _newsWriteService.CreateAsync(dto, uploadsFolder);
-
-            return CreatedAtAction(nameof(GetNewsById), new { id = result.Id }, result);
+            return CreatedAtAction(
+                nameof(GetNewsById),
+                new { id = result.Id },
+                result);
         }
 
-        // ── UPDATE ────────────────────────────────────────────────────────────
-        /// <summary>
-        /// PUT /api/news/{id}
-        /// Form: title, details, date, image? (IFormFile — اختياري، لو مش موجود تفتكر الصورة القديمة)
-        /// يحتاج permission "News"
-        /// </summary>
+        // ── UPDATE ───────────────────────────────
         [HttpPut("{id}")]
-         public async Task<IActionResult> Update(int id, [FromForm] NewsCreateUpdateDto dto)
+        public async Task<IActionResult> Update(int id, [FromForm] NewsCreateUpdateDto dto)
         {
-            if (string.IsNullOrWhiteSpace(dto.Title))
-                return BadRequest(new { message = "عنوان الخبر مطلوب." });
-
-            var uploadsFolder = "D:\\home\\site\\userfiles\\news";
-            var result = await _newsWriteService.UpdateAsync(id, dto, uploadsFolder);
+            var result = await _newsWriteService.UpdateAsync(id, dto);
 
             if (result == null)
-                return NotFound(new { message = "الخبر غير موجود." });
+                return NotFound();
 
             return Ok(result);
         }
 
-        // ── DELETE ────────────────────────────────────────────────────────────
-        /// <summary>
-        /// DELETE /api/news/{id}
-        /// يحتاج permission "News"
-        /// </summary>
+        // ── DELETE ───────────────────────────────
         [HttpDelete("{id}")]
-         public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var uploadsFolder = "D:\\home\\site\\userfiles\\news";
-            var result = await _newsWriteService.DeleteAsync(id, uploadsFolder);
+            var result = await _newsWriteService.DeleteAsync(id);
 
             if (!result)
-                return NotFound(new { message = "الخبر غير موجود." });
+                return NotFound();
 
-            return Ok(new { message = "تم حذف الخبر بنجاح." });
+            return Ok(new { message = "Deleted successfully" });
         }
     }
 }

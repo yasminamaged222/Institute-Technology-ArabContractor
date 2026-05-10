@@ -23,7 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ======= DbContext =======
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+builder.Configuration.AddEnvironmentVariables();
 // ======= Controllers & Swagger =======
 builder.Services.AddControllers();
 // rate limiting
@@ -122,7 +122,7 @@ builder.Services.AddScoped<IBooksTypeService, BooksTypeService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IPlanworkService, PlanworkService>();
 builder.Services.AddScoped<IPlanFileService, PlanFileService>();
-//builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
+builder.Services.AddSingleton<IBlobStorage, BlobStorage>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
