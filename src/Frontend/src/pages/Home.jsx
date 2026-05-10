@@ -102,13 +102,42 @@ const craftItems = [
     { Icon: AssignmentTurnedInIcon, title: 'الاختبارات والتقييم', text: 'اختبارات سيكومترية وتقييمات تخصصية في اللغة والحاسب والهندسة.', link: '/tests' },
 ];
 
-// ─── STATS: raw numbers for the counter animation ─────────────────────────────
-const stats = [
-    { n: '45+', raw: 45, suffix: '+', l: 'عامًا من الخبرة' },
-    { n: '12,000+', raw: 12000, suffix: '+', l: 'متدرب سنويًا' },
-    { n: '200+', raw: 200, suffix: '+', l: 'برنامج تدريبي' },
-    { n: '1978', raw: 1978, suffix: '', l: 'سنة التأسيس' },
-];
+// ─── STATS: computed dynamically — years from 1978, rest from API ─────────────
+const FOUNDING_YEAR = 1978;
+function buildStats(apiStats) {
+    const currentYear = new Date().getFullYear();
+    const yearsExp = currentYear - FOUNDING_YEAR;
+    // Pull live values from the same API the admin uses; fall back to reasonable defaults
+    const gs = (fields, fb) => { if (!apiStats) return fb; for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; } return fb; };
+    const traineesPerYear = gs(['enrollmentsCount', 'usersCount'], 12000);
+    const programs = gs(['planworksCount', 'coursesCount'], 200);
+    return [
+        {
+            raw: yearsExp,
+            suffix: '+',
+            sub: `${FOUNDING_YEAR}–${currentYear}`,
+            l: 'عامًا من الخبرة',
+        },
+        {
+            raw: traineesPerYear,
+            suffix: '+',
+            sub: null,
+            l: 'متدرب سنويًا',
+        },
+        {
+            raw: programs,
+            suffix: '+',
+            sub: null,
+            l: 'برنامج تدريبي',
+        },
+        {
+            raw: FOUNDING_YEAR,
+            suffix: '',
+            sub: null,
+            l: 'سنة التأسيس',
+        },
+    ];
+}
 
 const trainingPrograms = [
     { Icon: BuildCircleIcon, label: 'برامج للتدريب التحويلى' },
@@ -180,6 +209,15 @@ export default function Home() {
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
     const [gsapReady, setGsapReady] = useState(false);
+    const [apiStats, setApiStats] = useState(null);
+
+    // ── Fetch public stats (same endpoint as admin) ───────────────────────
+    useEffect(() => {
+        fetch('https://acwebsite-icmet-test.azurewebsites.net/api/Admin/stats')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(d => setApiStats(d))
+            .catch(() => setApiStats(null));
+    }, []);
 
     // ── Refs for GSAP targets ──────────────────────────────────────────────
     const heroRef = useRef(null);
@@ -288,16 +326,20 @@ export default function Home() {
                 counters.forEach((el) => {
                     const target = +el.getAttribute('data-count');
                     const suffix = el.getAttribute('data-suffix') || '';
+                    // Year fields (no suffix, > 1000) count from near the target
+                    // Large numbers (trainees) count from a lower starting point
                     const isYear = target > 1000 && suffix === '';
+                    const isLarge = target >= 1000 && !isYear;
+                    const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
                     ScrollTrigger.create({
                         trigger: el,
                         start: 'top 88%',
                         once: true,
                         onEnter: () => {
-                            const obj = { val: isYear ? target - 30 : 0 };
+                            const obj = { val: startVal };
                             gsap.to(obj, {
                                 val: target,
-                                duration: isYear ? 1.2 : 2,
+                                duration: isYear ? 1.4 : isLarge ? 2.2 : 1.8,
                                 ease: 'power2.out',
                                 onUpdate: () => {
                                     const v = Math.round(obj.val);
@@ -700,15 +742,20 @@ export default function Home() {
             <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}` }}>
                 <div className="W">
                     <div className="stats-bar">
-                        {stats.map((s, i) => (
+                        {buildStats(apiStats).map((s, i) => (
                             <div key={i} className="stat-cell">
                                 <div
                                     data-count={s.raw}
                                     data-suffix={s.suffix}
                                     style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}
                                 >
-                                    {s.n}
+                                    {s.raw.toLocaleString('ar-EG')}{s.suffix}
                                 </div>
+                                {s.sub && (
+                                    <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>
+                                        {s.sub}
+                                    </div>
+                                )}
                                 <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
                             </div>
                         ))}
