@@ -75,7 +75,12 @@ const BLANK = {
     priceOnline: '',
     description: '', place: '', date: '', details: ''
 };
-const FILE_BLANK = { id: 0, name: '', order: '', title: '', file: null };
+
+// FILE_BLANK aligned with API fields:
+// GET returns:  planId, fileId, fileTitle, fileName, filePriority, planworkName
+// POST accepts: PlanId, FileTitle, FilePriority, File  (multipart/form-data)
+// DELETE uses:  planId, fileId  (query params)
+const FILE_BLANK = { fileId: 0, fileName: '', filePriority: '', fileTitle: '', file: null, url: null };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function textToHtml(text = '') {
@@ -308,7 +313,17 @@ function TreeNode({ node, selectedId, onSelect, depth = 0 }) {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// FilesSection — with API upload/delete + local fallback
+// FilesSection — wired to real AdminPlanFiles API
+//
+// API contract (from Swagger screenshots):
+//   GET    /api/admin/AdminPlanFiles/{planId}
+//          Response array: { planId, fileId, fileTitle, fileName, filePriority, planworkName }
+//
+//   POST   /api/admin/AdminPlanFiles
+//          multipart/form-data: PlanId, FileTitle, FilePriority, File
+//
+//   DELETE /api/admin/AdminPlanFiles
+//          Query params: planId, fileId
 // ══════════════════════════════════════════════════════════════════════════════
 function FilesSection({ planworkId, planworkName }) {
     const [files, setFiles] = useState([]);
@@ -321,36 +336,41 @@ function FilesSection({ planworkId, planworkName }) {
     const [savingFile, setSavingFile] = useState(false);
     const [deletingFile, setDeletingFile] = useState(false);
     const fileInputRef = useRef(null);
-    const nextFileId = useRef(planworkId * 1000 + 1);
 
+    // ── Load files from GET /api/admin/AdminPlanFiles/{planId} ────────────────
     const loadFiles = async () => {
         setLoadingFiles(true);
         try {
-            const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files`, {
-                headers: await authHeaders()
-            });
+            const res = await fetch(
+                `${BASE_URL}/api/admin/AdminPlanFiles/${planworkId}`,
+                { headers: await authHeaders() }
+            );
             if (res.ok) {
                 const data = await res.json();
+                // Normalise to our local shape (keep API field names)
                 const normalized = data.map(f => ({
-                    id: f.id ?? f.fileId,
-                    name: f.fileName ?? f.name ?? '',
-                    order: f.order ?? f.fileOrder ?? 1,
-                    title: f.fileTitle ?? f.title ?? '',
+                    fileId: f.fileId,
+                    fileName: f.fileName ?? '',
+                    filePriority: f.filePriority ?? '',
+                    fileTitle: f.fileTitle ?? '',
                     file: null,
-                    url: f.fileUrl ?? f.url ?? null,
+                    url: null, // API doesn't return a download URL in list
                 }));
                 setFiles(normalized);
-                nextFileId.current = planworkId * 1000 + normalized.length + 1;
             } else if (res.status === 404) {
                 setFiles([]);
+            } else {
+                throw new Error(`HTTP ${res.status}`);
             }
-        } catch (_) {
+        } catch (e) {
+            fileToast('فشل تحميل الملفات: ' + e.message, 'error');
             setFiles([]);
         } finally {
             setLoadingFiles(false);
         }
     };
 
+    // Reset + reload whenever the selected planwork changes
     useEffect(() => {
         setFileForm({ ...FILE_BLANK });
         setSelectedFile(null);
@@ -361,7 +381,7 @@ function FilesSection({ planworkId, planworkName }) {
 
     const fileToast = (msg, type = 'success') => {
         setFileNotif({ msg, type });
-        setTimeout(() => setFileNotif(null), 3000);
+        setTimeout(() => setFileNotif(null), 3500);
     };
 
     const pickFile = rec => {
@@ -376,105 +396,86 @@ function FilesSection({ planworkId, planworkName }) {
         if (!f) return;
         setFileForm(prev => ({
             ...prev,
-            name: f.name,
+            fileName: f.name,
             file: f,
-            order: prev.order || String(files.length + 1),
+            filePriority: prev.filePriority || String(files.length + 1),
         }));
     };
 
+    // ── POST /api/admin/AdminPlanFiles ────────────────────────────────────────
     const handleFileSave = async () => {
-        if (!fileForm.name.trim() && !fileForm.file) {
+        if (isNewFile && !fileForm.file) {
+            fileToast('يجب اختيار ملف للرفع', 'error');
+            return;
+        }
+        if (!fileForm.fileName.trim() && !fileForm.file) {
             fileToast('اسم الملف مطلوب', 'error');
             return;
         }
+
         setSavingFile(true);
         try {
             if (isNewFile) {
+                // ── Create ────────────────────────────────────────────────────
                 const fd = new FormData();
-                if (fileForm.file) fd.append('file', fileForm.file);
-                fd.append('fileName', fileForm.name || fileForm.file?.name || '');
-                fd.append('fileTitle', fileForm.title || '');
-                fd.append('order', fileForm.order || String(files.length + 1));
-                fd.append('planworkId', planworkId);
+                fd.append('PlanId', planworkId);
+                fd.append('FileTitle', fileForm.fileTitle || '');
+                fd.append('FilePriority', fileForm.filePriority || String(files.length + 1));
+                if (fileForm.file) fd.append('File', fileForm.file);
 
-                let newFile;
-                try {
-                    const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files`, {
-                        method: 'POST',
-                        headers: await authHeaders(true),
-                        body: fd,
-                    });
-                    if (res.ok) {
-                        const created = await res.json().catch(() => ({}));
-                        newFile = {
-                            id: created.id ?? created.fileId ?? nextFileId.current++,
-                            name: created.fileName ?? fileForm.name,
-                            order: created.order ?? fileForm.order ?? files.length + 1,
-                            title: created.fileTitle ?? fileForm.title,
-                            file: null,
-                            url: created.fileUrl ?? created.url ?? null,
-                        };
-                    } else {
-                        throw new Error(`HTTP ${res.status}`);
-                    }
-                } catch (apiErr) {
-                    newFile = {
-                        id: nextFileId.current++,
-                        name: fileForm.name || fileForm.file?.name || '',
-                        order: fileForm.order || String(files.length + 1),
-                        title: fileForm.title,
-                        file: fileForm.file,
-                        url: null,
-                    };
-                    fileToast('تم الإضافة (محليًا — API غير متاح)', 'info');
-                    setFiles(prev => [...prev, newFile]);
-                    setSelectedFile(newFile);
-                    setFileForm({ ...newFile });
-                    setIsNewFile(false);
-                    setSavingFile(false);
-                    return;
-                }
+                const res = await fetch(`${BASE_URL}/api/admin/AdminPlanFiles`, {
+                    method: 'POST',
+                    headers: await authHeaders(true), // no Content-Type — let browser set multipart boundary
+                    body: fd,
+                });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                setFiles(prev => [...prev, newFile]);
-                setSelectedFile(newFile);
-                setFileForm({ ...newFile });
-                setIsNewFile(false);
-                fileToast('تم الإضافة');
+                fileToast('تم الرفع بنجاح');
+                // Reload to get the real fileId assigned by the server
+                await loadFiles();
+                setFileForm({ ...FILE_BLANK });
+                setSelectedFile(null);
+                setIsNewFile(true);
+
             } else {
-                const fd = new FormData();
-                if (fileForm.file) fd.append('file', fileForm.file);
-                fd.append('fileName', fileForm.name || '');
-                fd.append('fileTitle', fileForm.title || '');
-                fd.append('order', fileForm.order || '1');
+                // ── The API only exposes POST and DELETE — no PUT endpoint.
+                //    So "edit" = delete old + post new with same priority/title.
+                // Step 1: delete the old record
+                const delRes = await fetch(
+                    `${BASE_URL}/api/admin/AdminPlanFiles?planId=${planworkId}&fileId=${fileForm.fileId}`,
+                    { method: 'DELETE', headers: await authHeaders() }
+                );
+                if (!delRes.ok && delRes.status !== 204) throw new Error(`DELETE HTTP ${delRes.status}`);
 
-                try {
-                    const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files/${fileForm.id}`, {
-                        method: 'PUT',
-                        headers: await authHeaders(true),
-                        body: fd,
-                    });
-                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                    const updated = await res.json().catch(() => fileForm);
-                    const rec = {
-                        id: updated.id ?? fileForm.id,
-                        name: updated.fileName ?? fileForm.name,
-                        order: updated.order ?? fileForm.order,
-                        title: updated.fileTitle ?? fileForm.title,
-                        file: null,
-                        url: updated.fileUrl ?? fileForm.url ?? null,
-                    };
-                    setFiles(prev => prev.map(f => f.id === rec.id ? rec : f));
-                    setSelectedFile(rec);
-                    setFileForm({ ...rec });
-                } catch (_) {
-                    const rec = { ...fileForm };
-                    setFiles(prev => prev.map(f => f.id === rec.id ? rec : f));
-                    setSelectedFile(rec);
-                    fileToast('تم الحفظ (محليًا)', 'info');
+                // Step 2: re-upload with updated metadata
+                const fd = new FormData();
+                fd.append('PlanId', planworkId);
+                fd.append('FileTitle', fileForm.fileTitle || '');
+                fd.append('FilePriority', fileForm.filePriority || '1');
+                // Use new file if chosen, otherwise we can't re-upload without the original binary.
+                if (fileForm.file) {
+                    fd.append('File', fileForm.file);
+                } else {
+                    // Nothing to re-upload — just update metadata via delete+recreate isn't
+                    // possible without the file binary. Inform the user.
+                    fileToast('لتعديل بيانات الملف اختر الملف مجدداً', 'info');
                     setSavingFile(false);
+                    await loadFiles();
                     return;
                 }
-                fileToast('تم الحفظ');
+
+                const postRes = await fetch(`${BASE_URL}/api/admin/AdminPlanFiles`, {
+                    method: 'POST',
+                    headers: await authHeaders(true),
+                    body: fd,
+                });
+                if (!postRes.ok) throw new Error(`POST HTTP ${postRes.status}`);
+
+                fileToast('تم التعديل بنجاح');
+                await loadFiles();
+                setFileForm({ ...FILE_BLANK });
+                setSelectedFile(null);
+                setIsNewFile(true);
             }
         } catch (e) {
             fileToast('فشل الحفظ: ' + e.message, 'error');
@@ -483,23 +484,28 @@ function FilesSection({ planworkId, planworkName }) {
         }
     };
 
+    // ── DELETE /api/admin/AdminPlanFiles?planId=&fileId= ──────────────────────
     const handleFileDelete = async () => {
         if (!fileDelConfirm) { setFileDelConfirm(true); return; }
+        if (!selectedFile?.fileId) { fileToast('لم يتم تحديد ملف', 'error'); return; }
+
         setDeletingFile(true);
         try {
-            try {
-                const res = await fetch(`${BASE_URL}/api/admin/AdminPlanwork/${planworkId}/files/${selectedFile.id}`, {
-                    method: 'DELETE',
-                    headers: await authHeaders(),
-                });
-                if (res.status !== 200 && res.status !== 204) throw new Error(`HTTP ${res.status}`);
-            } catch (_) { }
-            setFiles(prev => prev.filter(f => f.id !== selectedFile.id));
+            const res = await fetch(
+                `${BASE_URL}/api/admin/AdminPlanFiles?planId=${planworkId}&fileId=${selectedFile.fileId}`,
+                { method: 'DELETE', headers: await authHeaders() }
+            );
+            if (res.status !== 200 && res.status !== 204) throw new Error(`HTTP ${res.status}`);
+
+            setFiles(prev => prev.filter(f => f.fileId !== selectedFile.fileId));
             setFileDelConfirm(false);
             setFileForm({ ...FILE_BLANK });
             setSelectedFile(null);
             setIsNewFile(true);
             fileToast('تم الحذف', 'error');
+        } catch (e) {
+            fileToast('فشل الحذف: ' + e.message, 'error');
+            setFileDelConfirm(false);
         } finally {
             setDeletingFile(false);
         }
@@ -510,7 +516,7 @@ function FilesSection({ planworkId, planworkName }) {
             <div className="pw-files-hdr">
                 <span className="pw-files-icon">📎</span>
                 <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-                    <div className="pw-files-title">ملفات الخطه التدريبيه</div>
+                    <div className="pw-files-title">ملفات الخطة التدريبية</div>
                     <div className="pw-files-sub">{planworkName}</div>
                 </div>
                 <button onClick={loadFiles} disabled={loadingFiles} title="تحديث الملفات"
@@ -530,20 +536,29 @@ function FilesSection({ planworkId, planworkName }) {
             <div className="pw-files-body">
                 {/* ── File Form ── */}
                 <div className="pw-files-form">
+
+                    {/* File ID (read-only) */}
                     <div className="lec-field">
-                        <label className="lec-label">الرقم</label>
-                        <input className="lec-inp"
-                            value={isNewFile ? `${planworkId * 1000 + files.length + 1} (تلقائي)` : fileForm.id}
+                        <label className="lec-label">رقم الملف (fileId)</label>
+                        <input
+                            className="lec-inp"
+                            value={isNewFile ? 'تلقائي' : fileForm.fileId}
                             disabled
-                            style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
+                            style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }}
+                        />
                     </div>
 
+                    {/* File picker + fileName display */}
                     <div className="lec-field">
-                        <label className="lec-label">اسم الملف</label>
+                        <label className="lec-label">الملف</label>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                            <input className="lec-inp" name="name" value={fileForm.name}
-                                onChange={e => setFileForm(f => ({ ...f, name: e.target.value }))}
-                                placeholder="اسم الملف..." style={{ flex: 1 }} />
+                            <input
+                                className="lec-inp"
+                                value={fileForm.fileName}
+                                onChange={e => setFileForm(f => ({ ...f, fileName: e.target.value }))}
+                                placeholder="اسم الملف..."
+                                style={{ flex: 1 }}
+                            />
                             <button className="pw-select-file-btn" onClick={() => fileInputRef.current.click()}>
                                 📂 اختر ملف
                             </button>
@@ -554,38 +569,55 @@ function FilesSection({ planworkId, planworkName }) {
                                 <span>📄</span>
                                 <span style={{ fontWeight: 600 }}>{fileForm.file.name}</span>
                                 <span style={{ color: '#6b7280' }}>({(fileForm.file.size / 1024).toFixed(1)} KB)</span>
-                                <button onClick={() => setFileForm(f => ({ ...f, file: null }))}
-                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '.8rem' }}>✕</button>
+                                <button
+                                    onClick={() => setFileForm(f => ({ ...f, file: null, fileName: selectedFile?.fileName ?? '' }))}
+                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '.8rem' }}>✕
+                                </button>
                             </div>
                         )}
-                        {!fileForm.file && fileForm.url && (
-                            <div style={{ marginTop: 4, fontSize: '.72rem', color: '#059669' }}>
-                                <a href={fileForm.url} target="_blank" rel="noopener noreferrer">🔗 عرض الملف الحالي</a>
+                        {!isNewFile && !fileForm.file && (
+                            <div style={{ marginTop: 4, fontSize: '.72rem', color: '#6b7280' }}>
+                                ℹ️ اختر ملفاً جديداً إذا أردت استبدال الملف الحالي
                             </div>
                         )}
                     </div>
 
+                    {/* FilePriority */}
                     <div className="lec-field">
-                        <label className="lec-label">الترتيب</label>
-                        <input className="lec-inp" name="order" type="number" min="1" value={fileForm.order}
-                            onChange={e => setFileForm(f => ({ ...f, order: e.target.value }))}
-                            placeholder={`${files.length + 1} (تلقائي)`} />
+                        <label className="lec-label">الأولوية (FilePriority)</label>
+                        <input
+                            className="lec-inp"
+                            name="filePriority"
+                            type="number"
+                            min="1"
+                            value={fileForm.filePriority}
+                            onChange={e => setFileForm(f => ({ ...f, filePriority: e.target.value }))}
+                            placeholder={`${files.length + 1} (تلقائي)`}
+                        />
                     </div>
 
+                    {/* FileTitle */}
                     <div className="lec-field">
-                        <label className="lec-label">عنوان الملف</label>
-                        <input className="lec-inp" name="title" value={fileForm.title}
-                            onChange={e => setFileForm(f => ({ ...f, title: e.target.value }))}
-                            placeholder="عنوان الملف..." />
+                        <label className="lec-label">عنوان الملف (FileTitle)</label>
+                        <input
+                            className="lec-inp"
+                            name="fileTitle"
+                            value={fileForm.fileTitle}
+                            onChange={e => setFileForm(f => ({ ...f, fileTitle: e.target.value }))}
+                            placeholder="عنوان الملف..."
+                        />
                     </div>
 
                     <div className="pw-files-actions">
-                        <button className="lec-act-btn save" onClick={handleFileSave}
+                        <button
+                            className="lec-act-btn save"
+                            onClick={handleFileSave}
                             disabled={savingFile}
                             style={{ padding: '7px 16px', fontSize: '.76rem' }}>
                             {savingFile ? '⏳...' : '💾 حفظ'}
                         </button>
-                        <button className="lec-act-btn new"
+                        <button
+                            className="lec-act-btn new"
                             onClick={() => { setFileForm({ ...FILE_BLANK }); setSelectedFile(null); setIsNewFile(true); setFileDelConfirm(false); }}
                             style={{ padding: '7px 16px', fontSize: '.76rem' }}>
                             ➕ جديد
@@ -593,14 +625,18 @@ function FilesSection({ planworkId, planworkName }) {
                         {!isNewFile && (
                             fileDelConfirm
                                 ? <>
-                                    <button className="lec-act-btn delete" onClick={handleFileDelete}
+                                    <button
+                                        className="lec-act-btn delete"
+                                        onClick={handleFileDelete}
                                         disabled={deletingFile}
                                         style={{ padding: '7px 14px', fontSize: '.74rem' }}>
                                         {deletingFile ? '⏳...' : 'تأكيد'}
                                     </button>
                                     <button className="adm-fclear" onClick={() => setFileDelConfirm(false)}>إلغاء</button>
                                 </>
-                                : <button className="lec-act-btn delete" onClick={handleFileDelete}
+                                : <button
+                                    className="lec-act-btn delete"
+                                    onClick={handleFileDelete}
                                     style={{ padding: '7px 16px', fontSize: '.76rem' }}>
                                     🗑 حذف
                                 </button>
@@ -623,21 +659,28 @@ function FilesSection({ planworkId, planworkName }) {
                     ) : (
                         <table className="pw-files-tbl">
                             <thead>
-                                <tr><th>الرقم</th><th>العنوان</th><th>الأسم</th></tr>
+                                <tr>
+                                    <th>fileId</th>
+                                    <th>الأولوية</th>
+                                    <th>العنوان</th>
+                                    <th>اسم الملف</th>
+                                </tr>
                             </thead>
                             <tbody>
-                                {[...files].sort((a, b) => Number(a.order) - Number(b.order)).map(f => (
-                                    <tr key={f.id} className={selectedFile?.id === f.id ? 'active' : ''} onClick={() => pickFile(f)}>
-                                        <td style={{ fontFamily: "'Courier New',monospace", fontWeight: 900, color: T.blue }}>{f.id}</td>
-                                        <td>{f.title || '—'}</td>
-                                        <td>{f.url
-                                            ? <a href={f.url} target="_blank" rel="noopener noreferrer"
-                                                onClick={e => e.stopPropagation()}
-                                                style={{ color: T.blue, textDecoration: 'underline' }}>{f.name}</a>
-                                            : f.name}
-                                        </td>
-                                    </tr>
-                                ))}
+                                {[...files]
+                                    .sort((a, b) => Number(a.filePriority) - Number(b.filePriority))
+                                    .map(f => (
+                                        <tr
+                                            key={f.fileId}
+                                            className={selectedFile?.fileId === f.fileId ? 'active' : ''}
+                                            onClick={() => pickFile(f)}
+                                        >
+                                            <td style={{ fontFamily: "'Courier New',monospace", fontWeight: 900, color: T.blue }}>{f.fileId}</td>
+                                            <td style={{ textAlign: 'center' }}>{f.filePriority ?? '—'}</td>
+                                            <td>{f.fileTitle || '—'}</td>
+                                            <td>{f.fileName || '—'}</td>
+                                        </tr>
+                                    ))}
                             </tbody>
                         </table>
                     )}
