@@ -9,6 +9,7 @@ using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -25,6 +26,18 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // ======= Controllers & Swagger =======
 builder.Services.AddControllers();
+// rate limiting
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("CheckoutLimit", opt =>
+    {
+        opt.PermitLimit = 3;
+        opt.Window = TimeSpan.FromMinutes(1);
+        opt.QueueLimit = 0;
+        opt.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
+    });
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -130,6 +143,24 @@ builder.Services.AddHttpClient("BankClient", client =>
     client.DefaultRequestHeaders.Authorization =
         new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authValue);
 });
+builder.Services.AddHttpClient("BankClient", client =>
+{
+    var paymentSettings = builder.Configuration
+        .GetSection("PaymentSettings")
+        .Get<PaymentSettings>()
+        ?? throw new InvalidOperationException("PaymentSettings section not found.");
+
+    client.BaseAddress = new Uri(paymentSettings.BaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(30);  // ← أضف ده
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+
+    var authValue = Convert.ToBase64String(
+        Encoding.ASCII.GetBytes(
+            $"merchant.{paymentSettings.MerchantId}:{paymentSettings.ApiPassword}"));
+
+    client.DefaultRequestHeaders.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", authValue);
+});
 #endregion
 
 #region (Authentication And Authorization)
@@ -191,6 +222,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.Map("/clerk-proxy", proxyApp =>
 {
     proxyApp.Run(async ctx =>

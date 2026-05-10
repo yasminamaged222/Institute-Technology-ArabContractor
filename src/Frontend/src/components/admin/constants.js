@@ -67,6 +67,8 @@ export const TABS = [
     { id: 'news', label: 'الأخبار', icon: '📰' },
     { id: 'books', label: 'المكتبة', icon: '📖' }, // ← ADDED
     { id: 'planwork', label: 'خطة العمل', icon: '📋' }, // ← NEW
+    { id: 'online', label: 'الأونلاين', icon: '💻' }, // ✅ NEW
+
 ];
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -83,4 +85,6 @@ export const TAB_TITLES = {
     news: { tag: 'إدارة المحتوى', title: ['إدارة', 'الأخبار'] },
     books: { tag: 'إدارة المحتوى', title: ['مكتبة', 'الكتب'] }, // ← ADDED
     planwork: { tag: 'إدارة خطة العمل', title: ['خطة', 'العمل'] }, // ← NEW
+    online: { tag: 'إدارة الأونلاين', title: ['روابط', 'الاجتماعات'] }, // ✅ NEW
+
 };

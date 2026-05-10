@@ -1,9 +1,8 @@
 ﻿using Institute.API.DTOs;
+using Institute.Application.DTOs;   // ← استخدم الـ DTOs الجديدة
 using Institute.Domain.Entities;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -35,11 +34,8 @@ namespace Institute.Application.Services
                     {
                         operation = "PURCHASE",
                         returnUrl = $"{_settings.ReturnUrl}?orderId={order.Id}",
-                        cancelUrl = "https://localhost:5173/checkout", // ✅ URL حقيقي
-                        merchant = new
-                        {
-                            name = _settings.MerchantName
-                        },
+                        cancelUrl = _settings.CancelUrl,  // ✅ من الـ settings
+                        merchant = new { name = _settings.MerchantName },
                         displayControl = new
                         {
                             billingAddress = "HIDE",
@@ -54,6 +50,7 @@ namespace Institute.Application.Services
                         description = $"Order #{order.Id}"
                     }
                 };
+
                 var json = JsonSerializer.Serialize(payload);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -63,24 +60,15 @@ namespace Institute.Application.Services
                 );
 
                 if (!response.IsSuccessStatusCode)
-                {
-                    var error = await response.Content.ReadAsStringAsync();
-                    throw new Exception(error);
-                }
+                    throw new Exception(await response.Content.ReadAsStringAsync());
 
                 var body = await response.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(body);
-
                 var root = doc.RootElement;
 
-                var sessionId = root
-                    .GetProperty("session")
-                    .GetProperty("id")
-                    .GetString();
+                var sessionId = root.GetProperty("session").GetProperty("id").GetString();
+                var successIndicator = root.GetProperty("successIndicator").GetString();
 
-                var successIndicator = root
-                    .GetProperty("successIndicator")
-                    .GetString();
                 order.GatewaySessionId = sessionId;
                 order.SuccessIndicator = successIndicator;
 
@@ -93,51 +81,15 @@ namespace Institute.Application.Services
                         SessionId = sessionId,
                         SuccessIndicator = successIndicator,
                         OrderId = order.Id.ToString(),
-                        //CheckoutJsUrl =
-                        //    $"{_settings.BaseUrl}/checkout/version/{_settings.ApiVersion}/checkout.js"
                         CheckoutJsUrl = $"{_settings.BaseUrl}/static/checkout/checkout.min.js"
                     }
                 };
             }
             catch (Exception ex)
             {
-                return new CheckoutResponseDto
-                {
-                    Success = false,
-                    Message = ex.Message,
-                    Data = null
-                };
+                return new CheckoutResponseDto { Success = false, Message = ex.Message };
             }
         }
-
-
-        // DTOs
-
-        public class CheckoutResponseDto
-        {
-            public bool Success { get; set; }
-            public string Message { get; set; }
-            public CheckoutDataDto Data { get; set; }
-        }
-
-        public class CheckoutDataDto
-        {
-            public string SessionId { get; set; }
-            public string SuccessIndicator { get; set; }
-            public string OrderId { get; set; }
-            public string CheckoutJsUrl { get; set; }
-            public CourseDto Course { get; set; }
-        }
-
-        public class CourseDto
-        {
-            public int Id { get; set; }
-            public string Title { get; set; }
-            public decimal Price { get; set; }
-            public string Currency { get; set; }
-        }
-
-
 
         public async Task<(bool IsSuccess, string? GatewayResponse)>
             RefundPaymentAsync(string orderNumber, string transactionId, decimal amount)
@@ -145,14 +97,7 @@ namespace Institute.Application.Services
             try
             {
                 var client = _httpClientFactory.CreateClient("BankClient");
-
-                // Basic Auth
-                var authBytes = Encoding.ASCII.GetBytes($"merchant.{_settings.MerchantId}:{_settings.ApiPassword}");
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
-
-                // Refund transaction ID (must be unique)
-                var refundTransactionId = $"refund-{Guid.NewGuid():N}";
+                SetBasicAuth(client);
 
                 var payload = new
                 {
@@ -164,22 +109,18 @@ namespace Institute.Application.Services
                     }
                 };
 
-                var json = JsonSerializer.Serialize(payload);
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
-
                 var url = $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}" +
-                          $"/order/{orderNumber}/transaction/{refundTransactionId}";
+                          $"/order/{orderNumber}/transaction/refund-{Guid.NewGuid():N}";
 
-                var response = await client.PutAsync(url, content);
+                var response = await client.PutAsync(url,
+                    new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
                 var body = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                     return (false, body);
 
                 using var doc = JsonDocument.Parse(body);
-                var root = doc.RootElement;
-                var result = root.TryGetProperty("result", out var r) ? r.GetString() : null;
-
+                var result = doc.RootElement.TryGetProperty("result", out var r) ? r.GetString() : null;
                 return (result == "SUCCESS", body);
             }
             catch (Exception ex)
@@ -193,42 +134,26 @@ namespace Institute.Application.Services
         {
             try
             {
-                // 1️⃣ URL endpoint للبنك
-                var url = $"{_settings.BaseUrl}/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/order/{orderNumber}";
-
                 var client = _httpClientFactory.CreateClient("BankClient");
+                SetBasicAuth(client);
 
-                // 2️⃣ Authorization Basic
-                var authBytes = Encoding.ASCII.GetBytes($"merchant.{_settings.MerchantId}:{_settings.ApiPassword}");
-                client.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
+                var url = $"{_settings.BaseUrl}/api/rest/version/{_settings.ApiVersion}" +
+                          $"/merchant/{_settings.MerchantId}/order/{orderNumber}";
 
-                // 3️⃣ Call GET
                 var response = await client.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    return (false, null, errorContent);
-                }
+                    return (false, null, await response.Content.ReadAsStringAsync());
 
-                // 4️⃣ Parse JSON
                 var body = await response.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(body);
                 var root = doc.RootElement;
 
-                // 5️⃣ Extract result
                 var result = root.GetProperty("result").GetString();
-                bool isSuccess = result == "SUCCESS";
+                string? successIndicator = root.TryGetProperty("successIndicator", out var p)
+                    ? p.GetString() : null;
 
-                // 6️⃣ Extract successIndicator
-                string? successIndicator = null;
-                if (root.TryGetProperty("successIndicator", out var indicatorProp))
-                {
-                    successIndicator = indicatorProp.GetString();
-                }
-
-                return (isSuccess, successIndicator, body);
+                return (result == "SUCCESS", successIndicator, body);
             }
             catch (Exception ex)
             {
@@ -236,5 +161,13 @@ namespace Institute.Application.Services
             }
         }
 
+        // ─── Helper ───────────────────────────────────────────────────
+        private void SetBasicAuth(HttpClient client)
+        {
+            var authBytes = Encoding.ASCII.GetBytes(
+                $"merchant.{_settings.MerchantId}:{_settings.ApiPassword}");
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
+        }
     }
 }

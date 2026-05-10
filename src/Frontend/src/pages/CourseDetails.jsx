@@ -260,12 +260,6 @@ const REFUND_STATUS_MAP = {
     Sent: { label: 'تم التحويل', bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
 };
 
-// ── FIXED Refund Policy ───────────────────────────────────────────────────────
-// Policy (from checkout page):
-//   • 7+ working days before start  → full refund
-//   • 2–6 days before start         → 25% deducted, 75% refunded
-//   • Less than 2 days before start → blocked (too close)
-//   • Course already started        → blocked (started)
 function getRefundPolicy(courseDateStr, coursePrice) {
     if (!courseDateStr) return { type: 'unknown' };
     const raw = courseDateStr.split(' - ')[0].trim();
@@ -280,17 +274,12 @@ function getRefundPolicy(courseDateStr, coursePrice) {
     startDate.setHours(0, 0, 0, 0);
     const daysLeft = Math.round((startDate - today) / (1000 * 60 * 60 * 24));
 
-    // Course already started (today is on or after start date)
     if (daysLeft <= 0) return { type: 'blocked', reason: 'started' };
-    // Less than 2 working days before start
     if (daysLeft < 2) return { type: 'blocked', reason: 'tooClose', daysLeft };
-    // 2–6 days: partial refund (25% deducted)
     if (daysLeft <= 6) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
-    // 7+ days: full refund
     return { type: 'full', daysLeft };
 }
 
-// ── Helper: render refund policy box ─────────────────────────────────────────
 function renderPolicyBox(policy) {
     if (policy.type === 'blocked') {
         const msg = policy.reason === 'started'
@@ -457,6 +446,11 @@ const CourseDetails = () => {
     const [existingRefund, setExistingRefund] = useState(null);
     const [loadingRefundCheck, setLoadingRefundCheck] = useState(false);
 
+    // ── PATCH 1: New state variables ──
+    const [mode, setMode] = useState('onsite'); // 'onsite' | 'online'
+    const [onlineSetting, setOnlineSetting] = useState(null); // { link, visible } | null
+    const [onlineLoading, setOnlineLoading] = useState(false);
+
     const safeGetToken = useCallback(async () => {
         try { return await getToken(); } catch (_) { return null; }
     }, [getToken]);
@@ -613,25 +607,71 @@ const CourseDetails = () => {
         }
     }, [course?.id, isOwned, fetchCertForCourse]);
 
+    // ── PATCH 2: Fetch online setting when course is known ──
+    useEffect(() => {
+        if (!course?.id) { setOnlineSetting(null); return; }
+        setOnlineLoading(true);
+        (async () => {
+            try {
+                const token = await safeGetToken();
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+                const res = await fetch(`${API_BASE}/Admin/online-settings/${course.id}`, { headers });
+                if (res.ok) {
+                    const data = await res.json();
+                    const item = Array.isArray(data) ? data[0] : data;
+                    if (item) {
+                        setOnlineSetting({
+                            link: item.meetingLink ?? item.MeetingLink ?? '',
+                            visible: !!(item.isVisible ?? item.IsVisible ?? false),
+                        });
+                    } else {
+                        setOnlineSetting(null);
+                    }
+                } else {
+                    setOnlineSetting(null);
+                }
+            } catch {
+                setOnlineSetting(null);
+            } finally {
+                setOnlineLoading(false);
+            }
+        })();
+    }, [course?.id, safeGetToken]);
+
     useEffect(() => {
         document.title = course?.title ? `${course.title} - المعهد التكنولوجي` : 'المعهد التكنولوجي';
     }, [course]);
 
-    const addToCart = async (buyNow = false) => {
+    // ── PATCH 6: Updated addToCart with mode support ──
+    const addToCart = async (buyNow = false, courseMode = 'onsite') => {
         if (!course) return;
+        const priceToUse = courseMode === 'online'
+            ? Math.round(course.price * 1.1)
+            : course.price;
         try {
             const token = await safeGetToken();
             if (token) {
                 await fetch(`${API_BASE}/cart/add/${course.id}`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseId: course.id, quantity: 1 }),
+                    body: JSON.stringify({ courseId: course.id, quantity: 1, mode: courseMode }),
                 });
             }
         } catch { }
         const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
         if (!cart.some(i => i.id === course.id)) {
-            cart.push({ id: course.id, slug: course.slug, title: course.title, instructor: course.place || 'غير محدد', image: course.image, currentPrice: course.price || 0, originalPrice: course.originalPrice || 0, quantity: 1 });
+            cart.push({
+                id: course.id,
+                slug: course.slug,
+                title: course.title,
+                instructor: course.place || 'غير محدد',
+                image: course.image,
+                currentPrice: priceToUse,
+                originalPrice: course.originalPrice || 0,
+                quantity: 1,
+                mode: courseMode,
+                modeLabel: courseMode === 'online' ? 'أونلاين' : 'حضوري',
+            });
             localStorage.setItem('cartItems', JSON.stringify(cart));
             window.dispatchEvent(new Event('cartUpdated'));
         }
@@ -715,9 +755,20 @@ const CourseDetails = () => {
     const statusInfo = existingRefund ? REFUND_STATUS_MAP[existingRefund.status] : null;
     const getCertUrl = (c) => c?.url || null;
 
-    // Compute refund policy once for the current course (used in both modal and submit button)
     const refundPolicy = course ? getRefundPolicy(course.date, course.price) : { type: 'unknown' };
     const isRefundBlocked = refundPolicy.type === 'blocked';
+
+    // ── PATCH 3: Derive prices and mode tab styles ──
+    const onlinePrice = course ? Math.round(course.price * 1.1) : 0;
+    const activePrice = mode === 'online' ? onlinePrice : course?.price ?? 0;
+
+    const modeTabBase = {
+        flex: 1, padding: '9px 10px', border: 'none', borderRadius: '8px', fontSize: '14px',
+        fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif',
+        transition: 'all .2s',
+    };
+    const modeTabActive = { ...modeTabBase, background: 'linear-gradient(135deg,#0865a8,#1a84d4)', color: '#fff', boxShadow: '0 3px 10px rgba(8,101,168,0.3)' };
+    const modeTabInactive = { ...modeTabBase, background: '#f0f1f2', color: '#6b7280' };
 
     if (loading) return (
         <>
@@ -927,13 +978,39 @@ const CourseDetails = () => {
                                 </div>
 
                                 <div style={S.priceContent}>
+
+                                    {/* ── PATCH 4: Mode toggle + dynamic price display ── */}
+                                    {!isOwned && !course.isFree && (
+                                        <div style={{ display: 'flex', gap: 6, padding: '6px', background: '#f0f1f2', borderRadius: '10px', marginBottom: '16px' }}>
+                                            <button style={mode === 'onsite' ? modeTabActive : modeTabInactive} onClick={() => setMode('onsite')}>
+                                                🏢 حضوري
+                                            </button>
+                                            <button style={mode === 'online' ? modeTabActive : modeTabInactive} onClick={() => setMode('online')}>
+                                                🌐 أونلاين
+                                            </button>
+                                        </div>
+                                    )}
+
                                     <div style={S.priceSec}>
                                         {isOwned ? (
-                                            <><span style={S.ownedLabel}>✅ مسجل</span><span style={S.priceSub}>لديك هذه الدورة بالفعل</span></>
+                                            <>
+                                                <span style={S.ownedLabel}>✅ مسجل</span>
+                                                <span style={S.priceSub}>لديك هذه الدورة بالفعل</span>
+                                            </>
                                         ) : course.isFree ? (
-                                            <><span style={S.freeLabel}>مجاناً</span><span style={S.priceSub}>دورة مجانية بالكامل</span></>
+                                            <>
+                                                <span style={S.freeLabel}>مجاناً</span>
+                                                <span style={S.priceSub}>دورة مجانية بالكامل</span>
+                                            </>
                                         ) : (
-                                            <span style={S.paidPrice}>{course.price.toLocaleString('ar-EG')} {course.currency}</span>
+                                            <>
+                                                <span style={S.paidPrice}>{activePrice.toLocaleString('ar-EG')} {course.currency}</span>
+                                                {mode === 'online' && (
+                                                    <span style={{ fontSize: '13px', color: '#7c3aed', fontWeight: 700, display: 'block', marginTop: '-6px', marginBottom: '4px' }}>
+                                                        🌐 سعر التدريب الإلكتروني
+                                                    </span>
+                                                )}
+                                            </>
                                         )}
                                     </div>
 
@@ -963,6 +1040,41 @@ const CourseDetails = () => {
 
                                                 <button className="btnViewMyCourses" style={S.btnViewMyCourses} onClick={() => navigate('/my-courses')}>عرض في دوراتي</button>
 
+                                                {/* ── PATCH 5 Location B: Online meeting link for owned users ── */}
+                                                {onlineLoading ? (
+                                                    <div style={{ padding: '12px 0', textAlign: 'center', fontSize: '13px', color: '#7c3aed', fontFamily: '"Droid Arabic Kufi",serif' }}>
+                                                        <svg style={{ width: 16, height: 16, animation: 'spin 1s linear infinite', verticalAlign: 'middle', marginLeft: 6 }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                                        جاري تحميل رابط الاجتماع...
+                                                    </div>
+                                                ) : onlineSetting?.visible && onlineSetting?.link ? (
+                                                    <a
+                                                        href={onlineSetting.link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                                                            width: '100%', padding: '13px 20px', boxSizing: 'border-box',
+                                                            background: 'linear-gradient(135deg,#5b21b6,#7c3aed)',
+                                                            color: '#fff', borderRadius: '10px', textDecoration: 'none',
+                                                            fontSize: '15px', fontWeight: 'bold',
+                                                            fontFamily: '"Droid Arabic Kufi",serif',
+                                                            boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
+                                                            transition: 'all .25s ease',
+                                                        }}
+                                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.5)'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,58,237,0.35)'; }}
+                                                    >
+                                                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                            <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+                                                        </svg>
+                                                        🌐 انضم إلى الاجتماع الإلكتروني
+                                                    </a>
+                                                ) : onlineSetting && !onlineSetting.visible ? (
+                                                    <div style={{ padding: '12px 14px', borderRadius: '10px', background: '#f8f9fa', border: '1.5px solid #e2e8f0', fontSize: '13px', color: '#6b7280', fontFamily: '"Droid Arabic Kufi",serif', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                                        🕐 رابط الاجتماع سيُتاح قريبًا
+                                                    </div>
+                                                ) : null}
+
                                                 {!course.isFree && (
                                                     <button className="btnRefund" style={S.btnRefund} onClick={openRefund}>💸 طلب استرداد المبلغ</button>
                                                 )}
@@ -989,9 +1101,10 @@ const CourseDetails = () => {
                                                 </button>
                                             </>
                                         ) : (
+                                            // ── PATCH 5 Location A: Paid action buttons with mode ──
                                             <>
-                                                <button className="btnAddCart" style={S.btnAddCart} onClick={() => addToCart(false)}>إضافة إلى السلة</button>
-                                                <button className="btnBuyNow" style={S.btnBuyNow} onClick={() => addToCart(true)}>اشترِ الآن</button>
+                                                <button className="btnAddCart" style={S.btnAddCart} onClick={() => addToCart(false, mode)}>إضافة إلى السلة</button>
+                                                <button className="btnBuyNow" style={S.btnBuyNow} onClick={() => addToCart(true, mode)}>اشترِ الآن</button>
                                             </>
                                         )}
                                     </div>

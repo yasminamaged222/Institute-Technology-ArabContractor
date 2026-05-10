@@ -293,39 +293,49 @@ export default function CheckoutPage() {
     }, [isSignedIn, getToken]);
 
     // Mastercard global callbacks
-    useEffect(() => {
-        window.completeCallback = async (resultIndicator) => {
-            if (resultIndicator === successIndicatorRef.current) {
-                try {
-                    const token = await getTokenRef.current();
-                    await fetch(
-                        `${API_BASE}/api/checkout/result?orderId=${orderIdRef.current}&transactionRef=${resultIndicator}`,
-                        { method: "GET", headers: { Authorization: `Bearer ${token}` } }
-                    );
-                } catch (_) { }
-                localStorage.removeItem("cartItems");
-                window.dispatchEvent(new Event("cartUpdated"));
-                navigate(`/payment-return?orderId=${orderIdRef.current}&resultIndicator=${resultIndicator}`);
-            } else {
-                setLoading(false);
-                setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
-            }
-        };
-        window.errorCallback = (err) => {
-            setLoading(false);
-            setError("حدث خطأ أثناء الدفع: " + (err?.error?.explanation || "يرجى المحاولة مرة أخرى."));
-        };
-        window.cancelCallback = () => {
-            setLoading(false);
-            setError("تم إلغاء عملية الدفع.");
-        };
-        return () => {
-            delete window.completeCallback;
-            delete window.errorCallback;
-            delete window.cancelCallback;
-        };
-    }, []);
+  useEffect(() => {
+    window.completeCallbackReact = async (resultIndicator) => {
+        if (resultIndicator === successIndicatorRef.current) {
+            try {
+                const token = await getTokenRef.current();
+                await fetch(
+                    `${API_BASE}/api/checkout/result?orderId=${orderIdRef.current}&transactionRef=${resultIndicator}`,
+                    {
+                        method: "GET",
+                        headers: { Authorization: `Bearer ${token}` }
+                    }
+                );
+            } catch (_) { }
 
+            localStorage.removeItem("cartItems");
+            window.dispatchEvent(new Event("cartUpdated"));
+
+            navigate(`/payment-return?orderId=${orderIdRef.current}&resultIndicator=${resultIndicator}`);
+        } else {
+            setLoading(false);
+            setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
+        }
+    };
+
+    window.errorCallbackReact = (err) => {
+        setLoading(false);
+        setError(
+            "حدث خطأ أثناء الدفع: " +
+            (err?.error?.explanation || "يرجى المحاولة مرة أخرى.")
+        );
+    };
+
+    window.cancelCallbackReact = () => {
+        setLoading(false);
+        setError("تم إلغاء عملية الدفع.");
+    };
+
+    return () => {
+        delete window.completeCallbackReact;
+        delete window.errorCallbackReact;
+        delete window.cancelCallbackReact;
+    };
+}, []);
     const subtotal = cartItems.reduce((sum, item) => sum + (item.currentPrice ?? 0) * (item.quantity || 1), 0);
     const totalOriginalPrice = cartItems.reduce((sum, item) => sum + (item.originalPrice ?? item.currentPrice ?? 0) * (item.quantity || 1), 0);
     const totalDiscount = totalOriginalPrice - subtotal;
