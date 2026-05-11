@@ -10,7 +10,7 @@ const T = {
     gray500: '#6b7280', gray700: '#374151',
 };
 
-const BLANK = { id: 0, date: '', title: '', details: '', images: [] };
+const BLANK = { id: 0, date: '', title: '', details: '' };
 
 function formatDateAr(dateStr) {
     if (!dateStr) return '—';
@@ -221,113 +221,74 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
     );
 }
 
-// ── MultiImageUploader ────────────────────────────────────────────────────────
-// Each image entry: { uid, file (File|null), previewSrc, serverUrl (string|null), isMain, naturalSize }
-function MultiImageUploader({ images, onChange }) {
+// ── SingleImageUploader ───────────────────────────────────────────────────────
+// Manages one image: either an existing server URL or a new File to upload
+// imageState: { file: File|null, previewSrc: string|null, serverUrl: string|null }
+function SingleImageUploader({ imageState, onChange }) {
     const fileRef = useRef();
     const [dragOver, setDragOver] = useState(false);
 
-    const addFiles = (files) => {
-        const valid = Array.from(files).filter(f => f.type.startsWith('image/'));
-        if (!valid.length) return;
-        const newEntries = valid.map((file, i) => ({
-            uid: `${Date.now()}_${i}_${Math.random()}`,
+    const pickFile = (file) => {
+        if (!file || !file.type.startsWith('image/')) return;
+        onChange({
             file,
             previewSrc: URL.createObjectURL(file),
-            serverUrl: null,
-            isMain: images.length === 0 && i === 0, // first ever upload = main
-            naturalSize: null,
-        }));
-        // if no main set yet, make first new one main
-        const hasMain = images.some(img => img.isMain);
-        if (!hasMain && newEntries.length > 0) newEntries[0].isMain = true;
-        onChange([...images, ...newEntries]);
+            serverUrl: null, // new file replaces server image
+        });
     };
 
-    const setMain = (uid) => {
-        onChange(images.map(img => ({ ...img, isMain: img.uid === uid })));
-    };
+    const clear = () => onChange({ file: null, previewSrc: null, serverUrl: null });
 
-    const remove = (uid) => {
-        const next = images.filter(img => img.uid !== uid);
-        // if removed was main and there are others left, make first one main
-        const removedWasMain = images.find(img => img.uid === uid)?.isMain;
-        if (removedWasMain && next.length > 0) next[0].isMain = true;
-        onChange(next);
-    };
-
-    const handleImgLoad = (uid, e) => {
-        onChange(images.map(img =>
-            img.uid === uid ? { ...img, naturalSize: { w: e.target.naturalWidth, h: e.target.naturalHeight } } : img
-        ));
-    };
-
-    const mainImg = images.find(img => img.isMain) || images[0];
+    const hasImage = imageState?.previewSrc;
 
     return (
         <div className="news-multi-img-wrap">
             <div className="news-label" style={{ marginBottom: 8 }}>
-                صور الخبر
+                صورة الخبر
                 <span style={{ marginRight: 8, fontSize: '.65rem', color: T.gray500, fontWeight: 400 }}>
-                    الصورة الرئيسية تظهر في القائمة وكصورة غلاف — باقي الصور تظهر في تفاصيل الخبر
+                    تظهر في القائمة وكصورة غلاف للخبر
                 </span>
             </div>
 
-            {/* ── Upload Zone ── */}
-            <div
-                className={`news-img-zone${dragOver ? ' over' : ''}`}
-                style={{ minHeight: 72, marginBottom: 12 }}
-                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={e => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
-                onClick={() => fileRef.current.click()}
-            >
-                <div className="news-img-placeholder" style={{ padding: '14px 12px' }}>
-                    <div className="news-img-icon" style={{ fontSize: '1.6rem' }}>🖼️</div>
-                    <span className="news-img-hint">اسحب صور هنا أو اضغط للاختيار</span>
-                    <span className="news-img-types">JPG · PNG · WEBP — يمكن رفع أكثر من صورة</span>
-                </div>
-            </div>
-            <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }}
-                onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
-
-            {/* ── Image Grid ── */}
-            {images.length > 0 && (
-                <div className="news-img-grid">
-                    {images.map(img => (
-                        <div key={img.uid} className={`news-img-thumb${img.isMain ? ' is-main' : ''}`}>
-                            <img
-                                src={img.previewSrc}
-                                alt=""
-                                className="news-img-thumb-img"
-                                onLoad={e => handleImgLoad(img.uid, e)}
-                            />
-                            {/* Main badge */}
-                            {img.isMain && (
-                                <span className="news-img-main-badge">رئيسية</span>
-                            )}
-                            {/* Size badge */}
-                            {img.naturalSize && (
-                                <span className="news-img-size-badge">{img.naturalSize.w}×{img.naturalSize.h}</span>
-                            )}
-                            {/* Actions overlay */}
-                            <div className="news-img-thumb-overlay">
-                                {!img.isMain && (
-                                    <button className="news-img-action-btn set-main" onClick={() => setMain(img.uid)}
-                                        title="تعيين كرئيسية">⭐ رئيسية</button>
-                                )}
-                                <button className="news-img-action-btn remove" onClick={() => remove(img.uid)}
-                                    title="حذف الصورة">✕</button>
-                            </div>
+            {!hasImage ? (
+                <>
+                    <div
+                        className={`news-img-zone${dragOver ? ' over' : ''}`}
+                        style={{ minHeight: 72, marginBottom: 12 }}
+                        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={e => { e.preventDefault(); setDragOver(false); pickFile(e.dataTransfer.files[0]); }}
+                        onClick={() => fileRef.current.click()}
+                    >
+                        <div className="news-img-placeholder" style={{ padding: '14px 12px' }}>
+                            <div className="news-img-icon" style={{ fontSize: '1.6rem' }}>🖼️</div>
+                            <span className="news-img-hint">اسحب الصورة هنا أو اضغط للاختيار</span>
+                            <span className="news-img-types">JPG · PNG · WEBP</span>
                         </div>
-                    ))}
+                    </div>
+                    <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+                        onChange={e => { pickFile(e.target.files[0]); e.target.value = ''; }} />
+                </>
+            ) : (
+                <div className="news-single-img-preview">
+                    <img src={imageState.previewSrc} alt="صورة الخبر" className="news-single-img" />
+                    <div className="news-single-img-actions">
+                        <button className="news-img-action-btn set-main" onClick={() => fileRef.current.click()}>
+                            🔄 تغيير الصورة
+                        </button>
+                        <button className="news-img-action-btn remove" onClick={clear}>
+                            ✕ حذف الصورة
+                        </button>
+                    </div>
+                    {imageState.file && (
+                        <span className="news-img-new-badge">صورة جديدة — لم تُرفع بعد</span>
+                    )}
+                    {!imageState.file && imageState.serverUrl && (
+                        <span className="news-img-server-badge">صورة محفوظة</span>
+                    )}
+                    <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+                        onChange={e => { pickFile(e.target.files[0]); e.target.value = ''; }} />
                 </div>
-            )}
-
-            {images.length === 0 && (
-                <p style={{ fontSize: '.7rem', color: T.gray500, textAlign: 'center', margin: '4px 0 0' }}>
-                    لم يتم رفع أي صورة بعد
-                </p>
             )}
         </div>
     );
@@ -393,25 +354,22 @@ const CSS = `
 .news-inp:disabled{background:${T.gray100};color:${T.gray500};cursor:not-allowed;}
 .news-divider{height:1px;background:${T.gray100};margin:4px 0 20px;}
 
-/* ── Multi Image ── */
-.news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;overflow:visible;}
+/* ── Single Image ── */
+.news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;overflow:visible;box-sizing:border-box;}
 .news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.03);}
 .news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;}
 .news-img-icon{font-size:2rem;}
 .news-img-hint{color:${T.gray500};font-size:.68rem;font-weight:600;text-align:center;line-height:1.6;}
 .news-img-types{color:${T.gray300};font-size:.62rem;background:${T.gray100};padding:2px 10px;border-radius:2px;}
-.news-img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:4px;}
-.news-img-thumb{position:relative;border-radius:5px;overflow:hidden;border:2px solid ${T.gray300};background:#000;aspect-ratio:4/3;cursor:default;transition:border-color .18s;}
-.news-img-thumb.is-main{border-color:${T.orange};box-shadow:0 0 0 2px rgba(245,124,0,.25);}
-.news-img-thumb-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .28s;}
-.news-img-thumb:hover .news-img-thumb-img{transform:scale(1.06);}
-.news-img-main-badge{position:absolute;top:5px;right:5px;background:${T.orange};color:#fff;font-size:.58rem;font-weight:800;padding:2px 8px;border-radius:2px;z-index:2;pointer-events:none;}
-.news-img-size-badge{position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.8);font-size:.55rem;font-family:'Courier New',monospace;padding:2px 6px;border-radius:2px;z-index:2;pointer-events:none;}
-.news-img-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;opacity:0;transition:opacity .2s;}
-.news-img-thumb:hover .news-img-thumb-overlay{opacity:1;}
+.news-single-img-preview{position:relative;border-radius:8px;overflow:hidden;border:2px solid ${T.orange};background:#000;max-height:260px;display:flex;flex-direction:column;align-items:stretch;margin-bottom:12px;}
+.news-single-img{width:100%;max-height:220px;object-fit:cover;display:block;}
+.news-single-img-actions{display:flex;gap:8px;padding:8px 10px;background:rgba(0,0,0,.65);position:absolute;bottom:0;left:0;right:0;justify-content:flex-end;}
+.news-img-new-badge{position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;font-size:.58rem;font-weight:800;padding:3px 10px;border-radius:3px;pointer-events:none;}
+.news-img-server-badge{position:absolute;top:8px;right:8px;background:${T.blue};color:#fff;font-size:.58rem;font-weight:800;padding:3px 10px;border-radius:3px;pointer-events:none;}
 .news-img-action-btn{border:none;border-radius:3px;padding:4px 10px;font-size:.64rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
 .news-img-action-btn.set-main{background:${T.orange};color:#fff;}
 .news-img-action-btn.remove{background:#dc2626;color:#fff;}
+.news-multi-img-wrap{margin-bottom:4px;}
 
 /* ── RichTextEditor ── */
 .news-rte-block{border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
@@ -503,41 +461,27 @@ async function apiFetch(path, opts = {}) {
     return null;
 }
 
-// ── Map API images array → internal image entries ────────────────────────────
-// TODO: adjust field names once you have the real API response shape
-// Expected shape per image: { id, imageUrl, isMain }
-function mapApiImages(apiImages = []) {
-    return apiImages.map(img => ({
-        uid: `server_${img.id ?? Math.random()}`,
-        file: null,
-        previewSrc: resolveImg(img.imageUrl ?? img.url),
-        serverUrl: img.imageUrl ?? img.url ?? null,
-        isMain: img.isMain ?? false,
-        naturalSize: null,
-        serverId: img.id ?? null,
-    }));
-}
-
 // ── Build FormData for POST/PUT ───────────────────────────────────────────────
-// TODO: adjust field names to match your backend once confirmed
-function buildFormData(form, images, isNew) {
+// Backend has [Required] on ImageUrl — rejects empty string "".
+// When uploading a new file: send the file as `Image` + ImageUrl as "pending"
+// (backend should overwrite ImageUrl after processing the uploaded file).
+// When keeping existing: send ImageUrl = existing Azure URL, no file.
+function buildFormData(form, imageState, isNew) {
     const fd = new FormData();
     fd.append('Id', isNew ? '0' : String(form.id));
     fd.append('Title', form.title || '');
     fd.append('Details', form.details || '');
     fd.append('Date', form.date ? `${form.date}T00:00:00.000Z` : '');
 
-    images.forEach((img, idx) => {
-        if (img.file) {
-            // New file to upload
-            fd.append('Images', img.file);
-            fd.append(`ImagesIsMain[${idx}]`, img.isMain ? 'true' : 'false');
-        } else if (img.serverUrl) {
-            // Existing server image — send its id to keep it
-            fd.append('ExistingImageIds', String(img.serverId ?? ''));
-            fd.append(`ExistingIsMain[${idx}]`, img.isMain ? 'true' : 'false');
-        }
-    });
+    if (imageState?.file) {
+        // New file: send the binary + a non-empty placeholder for ImageUrl
+        // Backend overwrites ImageUrl after uploading the file to blob storage
+        fd.append('Image', imageState.file);
+        fd.append('ImageUrl', 'pending');
+    } else {
+        // Existing server image: send its URL back so backend keeps it
+        fd.append('ImageUrl', imageState?.serverUrl || 'pending');
+    }
 
     return fd;
 }
@@ -552,7 +496,10 @@ export default function NewsTab() {
     const [total, setTotal] = useState(0);
     const [selected, setSelected] = useState(null);
     const [form, setForm] = useState({ ...BLANK });
-    const [images, setImages] = useState([]); // internal image entries
+
+    // imageState: { file: File|null, previewSrc: string|null, serverUrl: string|null }
+    const [imageState, setImageState] = useState({ file: null, previewSrc: null, serverUrl: null });
+
     const [isNew, setIsNew] = useState(false);
     const [search, setSearch] = useState('');
     const [notification, setNotif] = useState(null);
@@ -567,6 +514,7 @@ export default function NewsTab() {
     };
 
     // ── Load list ──
+    // getAllNews returns: { pageIndex, pageSize, totalItems, totalPages, data: [{id, title, publishedAt, imageUrl}] }
     const loadList = useCallback(async () => {
         setLoading(true);
         try {
@@ -585,55 +533,46 @@ export default function NewsTab() {
     useEffect(() => { loadList(); }, [loadList]);
 
     // ── Fetch single ──
+    // getById returns: { id, title, details, publishedAt, imageUrl }
     const pickById = async (id, listItem) => {
         setDetailL(true);
         setDelConf(false);
         setIsNew(false);
+
+        // Optimistic update from list item
         if (listItem) {
             setSelected(listItem);
-            // Optimistically show main image from list
-            const mainImgUrl = resolveImg(listItem.imageUrl);
-            setImages(mainImgUrl ? [{
-                uid: `list_${listItem.id}`,
-                file: null,
-                previewSrc: mainImgUrl,
-                serverUrl: listItem.imageUrl,
-                isMain: true,
-                naturalSize: null,
-                serverId: null,
-            }] : []);
-            setForm({ id: listItem.id, title: listItem.title, details: '', date: toInputDate(listItem.publishedAt) });
+            const imgUrl = resolveImg(listItem.imageUrl);
+            setImageState({ file: null, previewSrc: imgUrl, serverUrl: listItem.imageUrl || null });
+            setForm({
+                id: listItem.id,
+                title: listItem.title || '',
+                details: '',
+                date: toInputDate(listItem.publishedAt),
+            });
         }
+
         try {
+            // getById response: { id, title, details, publishedAt, imageUrl }
             const item = await apiFetch(`/api/admin/AdminNews/${id}`);
             if (item) {
                 const mapped = {
                     id: item.id,
                     title: item.title || '',
                     details: item.details || '',
+                    // API may return `date` or `publishedAt` — handle both
                     date: toInputDate(item.date || item.publishedAt),
                 };
                 setSelected(mapped);
                 setForm(mapped);
 
-                // TODO: replace 'item.images' with the real field name from your API
-                // Expected: item.images = [{ id, imageUrl, isMain }, ...]
-                // Fallback: single imageUrl for backward compat
-                if (item.images && Array.isArray(item.images) && item.images.length > 0) {
-                    setImages(mapApiImages(item.images));
-                } else if (item.imageUrl) {
-                    setImages([{
-                        uid: `server_${item.id}`,
-                        file: null,
-                        previewSrc: resolveImg(item.imageUrl),
-                        serverUrl: item.imageUrl,
-                        isMain: true,
-                        naturalSize: null,
-                        serverId: null,
-                    }]);
-                } else {
-                    setImages([]);
-                }
+                // Single imageUrl field from API
+                const imgUrl = resolveImg(item.imageUrl);
+                setImageState({
+                    file: null,
+                    previewSrc: imgUrl,
+                    serverUrl: item.imageUrl || null,
+                });
             }
         } catch (e) {
             toast('فشل تحميل تفاصيل الخبر', 'error');
@@ -648,12 +587,26 @@ export default function NewsTab() {
     const handleSave = async () => {
         if (!form.title.trim()) { toast('عنوان الخبر مطلوب', 'error'); return; }
         if (!form.date) { toast('التاريخ مطلوب', 'error'); return; }
+        if (!imageState?.file && !imageState?.serverUrl) { toast('صورة الخبر مطلوبة', 'error'); return; }
         if (!form.details || !form.details.trim() || form.details === '<div><br></div>') {
             toast('تفاصيل الخبر مطلوبة', 'error'); return;
         }
         setSaving(true);
         try {
-            const fd = buildFormData(form, images, isNew);
+            const fd = buildFormData(form, imageState, isNew);
+
+            // ── DEBUG: log every FormData field before sending ──────────────
+            console.group('📤 FormData being sent to API');
+            for (const [key, val] of fd.entries()) {
+                if (val instanceof File) {
+                    console.log(`  ${key}: [File] name="${val.name}" size=${val.size} type="${val.type}"`);
+                } else {
+                    console.log(`  ${key}: "${val}"`);
+                }
+            }
+            console.groupEnd();
+            // ────────────────────────────────────────────────────────────────
+
             if (isNew) {
                 await apiFetch('/api/admin/AdminNews', { method: 'POST', body: fd });
                 toast('تم إضافة الخبر بنجاح');
@@ -675,7 +628,7 @@ export default function NewsTab() {
         setSelected(null);
         setIsNew(true);
         setDelConf(false);
-        setImages([]);
+        setImageState({ file: null, previewSrc: null, serverUrl: null });
     };
 
     const handleDelete = async () => {
@@ -698,10 +651,9 @@ export default function NewsTab() {
     const handleReset = () => {
         if (isNew) {
             setForm({ ...BLANK });
-            setImages([]);
+            setImageState({ file: null, previewSrc: null, serverUrl: null });
         } else if (selected) {
             setForm({ ...selected });
-            // Re-fetch images for selected item
             pickById(selected.id, null);
         }
         setDelConf(false);
@@ -712,9 +664,6 @@ export default function NewsTab() {
         (n.title || '').toLowerCase().includes(search.toLowerCase()) ||
         formatDateAr(n.publishedAt).includes(search)
     );
-
-    // Main image for sidebar icon
-    const mainImage = images.find(img => img.isMain) || images[0];
 
     return (
         <div className="news-root">
@@ -821,9 +770,9 @@ export default function NewsTab() {
                                 </div>
                             </div>
 
-                            {/* ── Multi Image Upload ── */}
+                            {/* ── Single Image Upload ── */}
                             <div style={{ marginBottom: 20 }}>
-                                <MultiImageUploader images={images} onChange={setImages} />
+                                <SingleImageUploader imageState={imageState} onChange={setImageState} />
                             </div>
 
                             <div className="news-divider" />
