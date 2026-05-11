@@ -10,13 +10,12 @@ const T = {
     gray500: '#6b7280', gray700: '#374151',
 };
 
-const BLANK = { id: 0, date: '', title: '', details: '', image: null, imageUrl: null };
+const BLANK = { id: 0, date: '', title: '', details: '', images: [] };
 
 function formatDateAr(dateStr) {
     if (!dateStr) return '—';
-    try {
-        return new Date(dateStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch { return dateStr; }
+    try { return new Date(dateStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); }
+    catch { return dateStr; }
 }
 function toInputDate(dateStr) {
     if (!dateStr) return '';
@@ -38,13 +37,9 @@ const FONT_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32
 function textToHtml(text = '') {
     if (!text) return '';
     if (/<[a-z][\s\S]*>/i.test(text)) return text;
-    return text
-        .split('\n')
-        .map(line => line
-            ? `<div>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`
-            : '<div><br></div>'
-        )
-        .join('');
+    return text.split('\n').map(line =>
+        line ? `<div>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : '<div><br></div>'
+    ).join('');
 }
 
 function wrapSelectionWithStyle(property, value) {
@@ -93,9 +88,7 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
         lastValueRef.current = value;
     }, [value]);
 
-    useEffect(() => {
-        if (urlOpen && urlInputRef.current) urlInputRef.current.focus();
-    }, [urlOpen]);
+    useEffect(() => { if (urlOpen && urlInputRef.current) urlInputRef.current.focus(); }, [urlOpen]);
 
     useEffect(() => {
         if (!urlOpen) return;
@@ -169,20 +162,19 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                     {sub && <div className="news-rte-sub">{sub}</div>}
                 </div>
             </div>
-
             <div className="news-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
-                <button className="news-tb-btn bold" title="عريض (Ctrl+B)" onClick={() => exec('bold')}>B</button>
-                <button className="news-tb-btn italic" title="مائل (Ctrl+I)" onClick={() => exec('italic')}>I</button>
-                <button className="news-tb-btn under" title="تحته خط (Ctrl+U)" onClick={() => exec('underline')}>U</button>
+                <button className="news-tb-btn bold" title="عريض" onClick={() => exec('bold')}>B</button>
+                <button className="news-tb-btn italic" title="مائل" onClick={() => exec('italic')}>I</button>
+                <button className="news-tb-btn under" title="تحته خط" onClick={() => exec('underline')}>U</button>
                 <div className="news-rte-sep" />
-                <div className="news-tb-size-wrap" title="حجم الخط (بالبكسل)">
+                <div className="news-tb-size-wrap">
                     <select className="news-tb-select news-tb-size-select" value={fontSize} onChange={handleFontSize} onMouseDown={saveSelection}>
                         {FONT_SIZES.map(px => <option key={px} value={px}>{px}</option>)}
                     </select>
                     <span className="news-tb-size-unit">px</span>
                 </div>
                 <div className="news-rte-sep" />
-                <div className="news-tb-color-wrap" title="لون الخط">
+                <div className="news-tb-color-wrap">
                     <button className="news-tb-color-btn" onMouseDown={saveSelection}>
                         <span className="news-color-letter" style={{ color: fontColor }}>A</span>
                         <span className="news-color-bar" style={{ background: fontColor }} />
@@ -207,7 +199,6 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                 </div>
                 <button className="news-tb-btn" title="إزالة الرابط" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
             </div>
-
             <div
                 ref={editorRef}
                 contentEditable
@@ -226,6 +217,118 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
                 onMouseUp={() => { saveSelection(); detectFontSize(); }}
                 onKeyUp={() => { saveSelection(); detectFontSize(); }}
             />
+        </div>
+    );
+}
+
+// ── MultiImageUploader ────────────────────────────────────────────────────────
+// Each image entry: { uid, file (File|null), previewSrc, serverUrl (string|null), isMain, naturalSize }
+function MultiImageUploader({ images, onChange }) {
+    const fileRef = useRef();
+    const [dragOver, setDragOver] = useState(false);
+
+    const addFiles = (files) => {
+        const valid = Array.from(files).filter(f => f.type.startsWith('image/'));
+        if (!valid.length) return;
+        const newEntries = valid.map((file, i) => ({
+            uid: `${Date.now()}_${i}_${Math.random()}`,
+            file,
+            previewSrc: URL.createObjectURL(file),
+            serverUrl: null,
+            isMain: images.length === 0 && i === 0, // first ever upload = main
+            naturalSize: null,
+        }));
+        // if no main set yet, make first new one main
+        const hasMain = images.some(img => img.isMain);
+        if (!hasMain && newEntries.length > 0) newEntries[0].isMain = true;
+        onChange([...images, ...newEntries]);
+    };
+
+    const setMain = (uid) => {
+        onChange(images.map(img => ({ ...img, isMain: img.uid === uid })));
+    };
+
+    const remove = (uid) => {
+        const next = images.filter(img => img.uid !== uid);
+        // if removed was main and there are others left, make first one main
+        const removedWasMain = images.find(img => img.uid === uid)?.isMain;
+        if (removedWasMain && next.length > 0) next[0].isMain = true;
+        onChange(next);
+    };
+
+    const handleImgLoad = (uid, e) => {
+        onChange(images.map(img =>
+            img.uid === uid ? { ...img, naturalSize: { w: e.target.naturalWidth, h: e.target.naturalHeight } } : img
+        ));
+    };
+
+    const mainImg = images.find(img => img.isMain) || images[0];
+
+    return (
+        <div className="news-multi-img-wrap">
+            <div className="news-label" style={{ marginBottom: 8 }}>
+                صور الخبر
+                <span style={{ marginRight: 8, fontSize: '.65rem', color: T.gray500, fontWeight: 400 }}>
+                    الصورة الرئيسية تظهر في القائمة وكصورة غلاف — باقي الصور تظهر في تفاصيل الخبر
+                </span>
+            </div>
+
+            {/* ── Upload Zone ── */}
+            <div
+                className={`news-img-zone${dragOver ? ' over' : ''}`}
+                style={{ minHeight: 72, marginBottom: 12 }}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
+                onClick={() => fileRef.current.click()}
+            >
+                <div className="news-img-placeholder" style={{ padding: '14px 12px' }}>
+                    <div className="news-img-icon" style={{ fontSize: '1.6rem' }}>🖼️</div>
+                    <span className="news-img-hint">اسحب صور هنا أو اضغط للاختيار</span>
+                    <span className="news-img-types">JPG · PNG · WEBP — يمكن رفع أكثر من صورة</span>
+                </div>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }}
+                onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
+
+            {/* ── Image Grid ── */}
+            {images.length > 0 && (
+                <div className="news-img-grid">
+                    {images.map(img => (
+                        <div key={img.uid} className={`news-img-thumb${img.isMain ? ' is-main' : ''}`}>
+                            <img
+                                src={img.previewSrc}
+                                alt=""
+                                className="news-img-thumb-img"
+                                onLoad={e => handleImgLoad(img.uid, e)}
+                            />
+                            {/* Main badge */}
+                            {img.isMain && (
+                                <span className="news-img-main-badge">رئيسية</span>
+                            )}
+                            {/* Size badge */}
+                            {img.naturalSize && (
+                                <span className="news-img-size-badge">{img.naturalSize.w}×{img.naturalSize.h}</span>
+                            )}
+                            {/* Actions overlay */}
+                            <div className="news-img-thumb-overlay">
+                                {!img.isMain && (
+                                    <button className="news-img-action-btn set-main" onClick={() => setMain(img.uid)}
+                                        title="تعيين كرئيسية">⭐ رئيسية</button>
+                                )}
+                                <button className="news-img-action-btn remove" onClick={() => remove(img.uid)}
+                                    title="حذف الصورة">✕</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {images.length === 0 && (
+                <p style={{ fontSize: '.7rem', color: T.gray500, textAlign: 'center', margin: '4px 0 0' }}>
+                    لم يتم رفع أي صورة بعد
+                </p>
+            )}
         </div>
     );
 }
@@ -290,23 +393,25 @@ const CSS = `
 .news-inp:disabled{background:${T.gray100};color:${T.gray500};cursor:not-allowed;}
 .news-divider{height:1px;background:${T.gray100};margin:4px 0 20px;}
 
-/* ── IMAGE ZONE ── */
-.news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;min-height:60px;overflow:visible;}
+/* ── Multi Image ── */
+.news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;overflow:visible;}
 .news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.03);}
-.news-img-zone.has-image{border-style:solid;border-color:${T.gray300};border-radius:8px;overflow:hidden;background:#000;}
-.news-img-zone.has-image:hover{border-color:${T.orange};}
-.news-img-preview{width:100%;height:auto;display:block;object-fit:fill;}
-.news-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.42);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
-.news-img-zone.has-image:hover .news-img-overlay{opacity:1;}
-.news-img-overlay-txt{color:#fff;font-size:.78rem;font-weight:700;margin-top:6px;}
-.news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:24px 12px;}
+.news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;}
 .news-img-icon{font-size:2rem;}
 .news-img-hint{color:${T.gray500};font-size:.68rem;font-weight:600;text-align:center;line-height:1.6;}
 .news-img-types{color:${T.gray300};font-size:.62rem;background:${T.gray100};padding:2px 10px;border-radius:2px;}
-.news-img-meta{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(0,0,0,.6);width:100%;box-sizing:border-box;pointer-events:none;position:absolute;bottom:0;left:0;right:0;}
-.news-img-meta-txt{color:rgba(255,255,255,.75);font-size:.62rem;font-family:'Courier New',monospace;}
-.news-remove-img{background:#fef2f2;color:#dc2626;border:1.5px solid rgba(220,38,38,.3);border-radius:3px;padding:7px;font-size:.72rem;font-weight:700;cursor:pointer;width:100%;font-family:inherit;margin-top:8px;transition:background .14s;}
-.news-remove-img:hover{background:#fee2e2;}
+.news-img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:4px;}
+.news-img-thumb{position:relative;border-radius:5px;overflow:hidden;border:2px solid ${T.gray300};background:#000;aspect-ratio:4/3;cursor:default;transition:border-color .18s;}
+.news-img-thumb.is-main{border-color:${T.orange};box-shadow:0 0 0 2px rgba(245,124,0,.25);}
+.news-img-thumb-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .28s;}
+.news-img-thumb:hover .news-img-thumb-img{transform:scale(1.06);}
+.news-img-main-badge{position:absolute;top:5px;right:5px;background:${T.orange};color:#fff;font-size:.58rem;font-weight:800;padding:2px 8px;border-radius:2px;z-index:2;pointer-events:none;}
+.news-img-size-badge{position:absolute;bottom:5px;left:5px;background:rgba(0,0,0,.6);color:rgba(255,255,255,.8);font-size:.55rem;font-family:'Courier New',monospace;padding:2px 6px;border-radius:2px;z-index:2;pointer-events:none;}
+.news-img-thumb-overlay{position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;opacity:0;transition:opacity .2s;}
+.news-img-thumb:hover .news-img-thumb-overlay{opacity:1;}
+.news-img-action-btn{border:none;border-radius:3px;padding:4px 10px;font-size:.64rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.news-img-action-btn.set-main{background:${T.orange};color:#fff;}
+.news-img-action-btn.remove{background:#dc2626;color:#fff;}
 
 /* ── RichTextEditor ── */
 .news-rte-block{border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
@@ -398,14 +503,42 @@ async function apiFetch(path, opts = {}) {
     return null;
 }
 
-function buildFormData(form, imageFile, isNew) {
+// ── Map API images array → internal image entries ────────────────────────────
+// TODO: adjust field names once you have the real API response shape
+// Expected shape per image: { id, imageUrl, isMain }
+function mapApiImages(apiImages = []) {
+    return apiImages.map(img => ({
+        uid: `server_${img.id ?? Math.random()}`,
+        file: null,
+        previewSrc: resolveImg(img.imageUrl ?? img.url),
+        serverUrl: img.imageUrl ?? img.url ?? null,
+        isMain: img.isMain ?? false,
+        naturalSize: null,
+        serverId: img.id ?? null,
+    }));
+}
+
+// ── Build FormData for POST/PUT ───────────────────────────────────────────────
+// TODO: adjust field names to match your backend once confirmed
+function buildFormData(form, images, isNew) {
     const fd = new FormData();
     fd.append('Id', isNew ? '0' : String(form.id));
     fd.append('Title', form.title || '');
     fd.append('Details', form.details || '');
     fd.append('Date', form.date ? `${form.date}T00:00:00.000Z` : '');
-    fd.append('ImageUrl', form.imageUrl && form.imageUrl !== 'N/A' ? form.imageUrl : (imageFile ? 'pending' : 'N/A'));
-    if (imageFile) fd.append('Image', imageFile);
+
+    images.forEach((img, idx) => {
+        if (img.file) {
+            // New file to upload
+            fd.append('Images', img.file);
+            fd.append(`ImagesIsMain[${idx}]`, img.isMain ? 'true' : 'false');
+        } else if (img.serverUrl) {
+            // Existing server image — send its id to keep it
+            fd.append('ExistingImageIds', String(img.serverId ?? ''));
+            fd.append(`ExistingIsMain[${idx}]`, img.isMain ? 'true' : 'false');
+        }
+    });
+
     return fd;
 }
 
@@ -419,18 +552,14 @@ export default function NewsTab() {
     const [total, setTotal] = useState(0);
     const [selected, setSelected] = useState(null);
     const [form, setForm] = useState({ ...BLANK });
+    const [images, setImages] = useState([]); // internal image entries
     const [isNew, setIsNew] = useState(false);
     const [search, setSearch] = useState('');
     const [notification, setNotif] = useState(null);
-    const [dragOver, setDragOver] = useState(false);
     const [deleteConfirm, setDelConf] = useState(false);
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailL] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [imageFile, setImageFile] = useState(null);
-    const [previewSrc, setPreviewSrc] = useState(null);
-    const [imgNaturalSize, setImgNaturalSize] = useState(null);
-    const fileRef = useRef();
 
     const toast = (msg, type = 'success') => {
         setNotif({ msg, type });
@@ -460,12 +589,20 @@ export default function NewsTab() {
         setDetailL(true);
         setDelConf(false);
         setIsNew(false);
-        setImageFile(null);
-        setImgNaturalSize(null);
         if (listItem) {
             setSelected(listItem);
-            setForm({ id: listItem.id, title: listItem.title, details: '', date: toInputDate(listItem.publishedAt), imageUrl: listItem.imageUrl, image: null });
-            setPreviewSrc(resolveImg(listItem.imageUrl));
+            // Optimistically show main image from list
+            const mainImgUrl = resolveImg(listItem.imageUrl);
+            setImages(mainImgUrl ? [{
+                uid: `list_${listItem.id}`,
+                file: null,
+                previewSrc: mainImgUrl,
+                serverUrl: listItem.imageUrl,
+                isMain: true,
+                naturalSize: null,
+                serverId: null,
+            }] : []);
+            setForm({ id: listItem.id, title: listItem.title, details: '', date: toInputDate(listItem.publishedAt) });
         }
         try {
             const item = await apiFetch(`/api/admin/AdminNews/${id}`);
@@ -475,11 +612,28 @@ export default function NewsTab() {
                     title: item.title || '',
                     details: item.details || '',
                     date: toInputDate(item.date || item.publishedAt),
-                    imageUrl: item.imageUrl || null,
                 };
                 setSelected(mapped);
                 setForm(mapped);
-                setPreviewSrc(resolveImg(item.imageUrl));
+
+                // TODO: replace 'item.images' with the real field name from your API
+                // Expected: item.images = [{ id, imageUrl, isMain }, ...]
+                // Fallback: single imageUrl for backward compat
+                if (item.images && Array.isArray(item.images) && item.images.length > 0) {
+                    setImages(mapApiImages(item.images));
+                } else if (item.imageUrl) {
+                    setImages([{
+                        uid: `server_${item.id}`,
+                        file: null,
+                        previewSrc: resolveImg(item.imageUrl),
+                        serverUrl: item.imageUrl,
+                        isMain: true,
+                        naturalSize: null,
+                        serverId: null,
+                    }]);
+                } else {
+                    setImages([]);
+                }
             }
         } catch (e) {
             toast('فشل تحميل تفاصيل الخبر', 'error');
@@ -490,19 +644,6 @@ export default function NewsTab() {
 
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-    const applyImage = (file) => {
-        if (!file || !file.type.startsWith('image/')) return;
-        setImageFile(file);
-        setImgNaturalSize(null);
-        const blobUrl = URL.createObjectURL(file);
-        setPreviewSrc(blobUrl);
-        setForm(f => ({ ...f, imageUrl: null }));
-    };
-
-    const handleImgLoad = (e) => {
-        setImgNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight });
-    };
-
     // ── Save ──
     const handleSave = async () => {
         if (!form.title.trim()) { toast('عنوان الخبر مطلوب', 'error'); return; }
@@ -512,7 +653,7 @@ export default function NewsTab() {
         }
         setSaving(true);
         try {
-            const fd = buildFormData(form, imageFile, isNew);
+            const fd = buildFormData(form, images, isNew);
             if (isNew) {
                 await apiFetch('/api/admin/AdminNews', { method: 'POST', body: fd });
                 toast('تم إضافة الخبر بنجاح');
@@ -520,7 +661,6 @@ export default function NewsTab() {
                 await apiFetch(`/api/admin/AdminNews/${form.id}`, { method: 'PUT', body: fd });
                 toast('تم حفظ التغييرات بنجاح');
             }
-            setImageFile(null);
             setIsNew(false);
             await loadList();
         } catch (e) {
@@ -535,9 +675,7 @@ export default function NewsTab() {
         setSelected(null);
         setIsNew(true);
         setDelConf(false);
-        setImageFile(null);
-        setPreviewSrc(null);
-        setImgNaturalSize(null);
+        setImages([]);
     };
 
     const handleDelete = async () => {
@@ -558,12 +696,13 @@ export default function NewsTab() {
     };
 
     const handleReset = () => {
-        if (isNew) { setForm({ ...BLANK }); setPreviewSrc(null); setImageFile(null); setImgNaturalSize(null); }
-        else if (selected) {
+        if (isNew) {
+            setForm({ ...BLANK });
+            setImages([]);
+        } else if (selected) {
             setForm({ ...selected });
-            setPreviewSrc(resolveImg(selected.imageUrl));
-            setImageFile(null);
-            setImgNaturalSize(null);
+            // Re-fetch images for selected item
+            pickById(selected.id, null);
         }
         setDelConf(false);
         toast('تم إلغاء التغييرات', 'info');
@@ -574,7 +713,8 @@ export default function NewsTab() {
         formatDateAr(n.publishedAt).includes(search)
     );
 
-    const hasImage = !!previewSrc;
+    // Main image for sidebar icon
+    const mainImage = images.find(img => img.isMain) || images[0];
 
     return (
         <div className="news-root">
@@ -681,62 +821,14 @@ export default function NewsTab() {
                                 </div>
                             </div>
 
-                            {/* ── Image upload ── */}
-                            <div className="news-field" style={{ marginBottom: 20 }}>
-                                <label className="news-label" style={{ marginBottom: 6 }}>
-                                    صورة الخبر (اختياري)
-                                    {imgNaturalSize && (
-                                        <span style={{ marginRight: 8, background: T.gray100, color: T.gray500, fontSize: '.6rem', fontWeight: 700, padding: '1px 8px', borderRadius: 2, fontFamily: "'Courier New', monospace" }}>
-                                            {imgNaturalSize.w} × {imgNaturalSize.h}
-                                        </span>
-                                    )}
-                                </label>
-
-                                <div
-                                    className={`news-img-zone${hasImage ? ' has-image' : ''}${dragOver ? ' over' : ''}`}
-                                    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                                    onDragLeave={() => setDragOver(false)}
-                                    onDrop={e => { e.preventDefault(); setDragOver(false); applyImage(e.dataTransfer.files[0]); }}
-                                    onClick={() => fileRef.current.click()}
-                                >
-                                    {hasImage ? (
-                                        <>
-                                            <img src={previewSrc} alt="معاينة الخبر" className="news-img-preview" onLoad={handleImgLoad} />
-                                            <div className="news-img-overlay">
-                                                <span style={{ fontSize: '1.8rem' }}>🖼️</span>
-                                                <span className="news-img-overlay-txt">اضغط لتغيير الصورة</span>
-                                            </div>
-                                            {imgNaturalSize && (
-                                                <div className="news-img-meta">
-                                                    <span className="news-img-meta-txt">{imgNaturalSize.w} × {imgNaturalSize.h} px</span>
-                                                    <span className="news-img-meta-txt">{imageFile ? `${(imageFile.size / 1024).toFixed(0)} KB` : 'مُحمَّلة من الخادم'}</span>
-                                                </div>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <div className="news-img-placeholder">
-                                            <div className="news-img-icon">🖼️</div>
-                                            <span className="news-img-hint">اسحب صورة هنا<br />أو اضغط للاختيار</span>
-                                            <span className="news-img-types">JPG · PNG · WEBP</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => applyImage(e.target.files[0])} />
-
-                                {hasImage && (
-                                    <button className="news-remove-img" onClick={() => {
-                                        setPreviewSrc(null); setImageFile(null); setImgNaturalSize(null);
-                                        setForm(f => ({ ...f, imageUrl: null }));
-                                    }}>
-                                        ✕ حذف الصورة
-                                    </button>
-                                )}
+                            {/* ── Multi Image Upload ── */}
+                            <div style={{ marginBottom: 20 }}>
+                                <MultiImageUploader images={images} onChange={setImages} />
                             </div>
 
                             <div className="news-divider" />
 
-                            {/* ── RichTextEditor replaces textarea ── */}
+                            {/* ── RichTextEditor ── */}
                             <RichTextEditor
                                 icon="📝"
                                 label="تفاصيل الخبر *"
@@ -744,7 +836,7 @@ export default function NewsTab() {
                                 name="details"
                                 value={form.details}
                                 onChange={handleChange}
-                                placeholder="أدخل تفاصيل الخبر هنا...&#10;&#10;يمكنك كتابة الخبر بشكل كامل بما يشمل المقدمة، والتفاصيل، والخاتمة."
+                                placeholder="أدخل تفاصيل الخبر هنا..."
                                 minHeight={200}
                             />
 

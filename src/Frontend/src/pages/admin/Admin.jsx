@@ -26,7 +26,6 @@ import LecturersTab from './mohadren';  // ← ADD
 import NewsTab from './NewsTab';
 import BooksTab from './BooksTab'; // ← ADDED
 import PlanworkTab from './PlanworkTab'; // ← ADD
-import OnlineTab from './OnlineTab'; // ← NEW
 
 
 const TABS = [
@@ -40,7 +39,6 @@ const TABS = [
     { id: 'news', label: 'الأخبار', icon: '📰' },
     { id: 'books', label: 'الكتب', icon: '📖' }, // ← ADDED
     { id: 'planwork', label: 'خطة العمل', icon: '📋' }, // ← ADD
-    { id: 'online', label: 'الأونلاين', icon: '💻' }, // ← NEW
 
 
 ];

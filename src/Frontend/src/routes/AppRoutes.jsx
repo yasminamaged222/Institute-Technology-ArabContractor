@@ -38,7 +38,6 @@ import Mohadren from '../pages/admin/mohadren';
 import NewsTab from '../pages/admin/NewsTab';
 import BooksTab from '../pages/admin/BooksTab';
 import PlanworkTab from '../pages/admin/PlanworkTab';
-import OnlineTab from '../pages/admin/OnlineTab';
 
 
    
@@ -86,7 +85,6 @@ const AppRoutes = () => {
                 <Route path="/admin/news" element={<NewsTab />} />
                 <Route path="/admin/books" element={<BooksTab />} />
                 <Route path="/admin/planwork" element={<PlanworkTab />} />
-                <Route path="/admin/online" element={<OnlineTab />} />
 
 
             
