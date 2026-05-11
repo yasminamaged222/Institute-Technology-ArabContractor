@@ -41,20 +41,18 @@ namespace Institute.Application.Services
 
             using var stream = file.OpenReadStream();
 
-            var blobHttpHeader = new BlobHttpHeaders
-            {
-                ContentType = file.ContentType // 🔥 أهم سطر
-            };
-
             await blobClient.UploadAsync(stream, new BlobUploadOptions
             {
-                HttpHeaders = blobHttpHeader
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    ContentType = file.ContentType
+                }
             });
 
-            return originalFileName;
+            return originalFileName; // 🔥 مهم جدًا
         }
 
-        
+
 
     }
 }

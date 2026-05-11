@@ -49,14 +49,12 @@ namespace Institute.API.Controllers
                 Id = x.NewsId,
                 Title = x.ATitel,
                 PublishedAt = x.NewsDate ?? DateTime.UtcNow,
+                ImageUrl = BuildImageUrl(
+                        x.NewsPics?
+                        .OrderBy(p => p.PicPeriorty)
+                        .FirstOrDefault()?.ImageName
 
-                ImageUrl = x.NewsPics?
-    .OrderBy(p => p.PicPeriorty)
-    .FirstOrDefault()?.ImageName != null
-        ? $"https://acwebappbackup.blob.core.windows.net/icemt/{x.NewsPics
-            .OrderBy(p => p.PicPeriorty)
-            .FirstOrDefault().ImageName}"
-        : null
+            )
             }).ToList();
 
             var countSpec = new NewsWithFiltersForCountSpec(newsParams);
@@ -88,14 +86,12 @@ namespace Institute.API.Controllers
                 Title = news.ATitel,
                 Details = news.ADetails,
                 PublishedAt = news.NewsDate ?? DateTime.UtcNow,
-                ImageUrl = news.NewsPics?
-    .OrderBy(p => p.PicPeriorty)
-    .FirstOrDefault()?.ImageName != null
-        ? $"https://acwebappbackup.blob.core.windows.net/icemt/{news.NewsPics
-            .OrderBy(p => p.PicPeriorty)
-            .FirstOrDefault().ImageName}"
-        : null
-            });
+                ImageUrl = BuildImageUrl(
+                        news.NewsPics?
+                        .OrderBy(p => p.PicPeriorty)
+                        .FirstOrDefault()?.ImageName
+
+            )});
         }
 
         // ── CREATE ───────────────────────────────
@@ -132,6 +128,16 @@ namespace Institute.API.Controllers
                 return NotFound();
 
             return Ok(new { message = "Deleted successfully" });
+        }
+
+        // ── BUILD URL (SAFE) ─────────────────────────
+
+        private string? BuildImageUrl(string? blobName)
+        {
+            if (string.IsNullOrWhiteSpace(blobName))
+                return null;
+
+            return $"https://acwebappbackup.blob.core.windows.net/icemt/news/{blobName}";
         }
     }
 }

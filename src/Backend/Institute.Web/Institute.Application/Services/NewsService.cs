@@ -148,16 +148,19 @@ namespace Institute.Application.Services
             return pic?.ImageName;
         }
 
-        // ── BUILD URL (SAFE) ─────────────────────────
+        // ── Get URL (SAFE) ─────────────────────────
         private string? GetImageUrl(string? blobName)
         {
             if (string.IsNullOrWhiteSpace(blobName))
                 return null;
 
-            var baseUrl = _config["AzureBlobStorage:BaseUrl"];
+            var baseUrl = _config["AzureStorage:BaseUrl"];
 
             return $"{baseUrl?.TrimEnd('/')}/news/{blobName.TrimStart('/')}";
         }
+
+        
+
 
         // ── DTO ───────────────────────────────
         private NewsCreateUpdateDto ToDto(
