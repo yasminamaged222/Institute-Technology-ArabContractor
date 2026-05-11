@@ -121,7 +121,7 @@ namespace Institute.API.Controllers
 
         /// GET /api/refund/admin/all?status=Pending
         [HttpGet("admin/all")]
-        [Authorize(Roles = "Admin")]  // ✅
+      //  [Authorize(Roles = "Admin")]  // ✅
         public async Task<IActionResult> GetAll([FromQuery] string? status = null)
         {
             var requests = await _refundService.GetAllAsync(status);
