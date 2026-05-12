@@ -64,8 +64,7 @@ namespace Institute.API.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> UploadCertificate([FromForm] UploadCertificateDto dto)
         {
-            var uploadsFolder = "D:\\home\\site\\userfiles\\certificates";
-            var result = await _adminService.UploadCertificateAsync(dto, uploadsFolder);
+            var result = await _adminService.UploadCertificateAsync(dto, "");
 
             if (!result)
                 return BadRequest("Certificate already uploaded");
@@ -127,9 +126,7 @@ namespace Institute.API.Controllers
         [HttpPut("certificates")]
         public async Task<IActionResult> UpdateCertificate([FromForm] UpdateCertificateDto dto)
         {
-            var uploadsFolder = "D:\\home\\site\\userfiles\\certificates";
-            var result = await _adminService.UpdateCertificateAsync(dto, uploadsFolder);
-
+            var result = await _adminService.UpdateCertificateAsync(dto, "");
             if (!result)
                 return NotFound("Certificate not found");
 
@@ -139,39 +136,41 @@ namespace Institute.API.Controllers
         [HttpDelete("certificates/{id}")]
         public async Task<IActionResult> DeleteCertificate(int id)
         {
-            var uploadsFolder = Path.Combine(_env.WebRootPath, "certificates");
-            var result = await _adminService.DeleteCertificateAsync(id, uploadsFolder);
+            var result = await _adminService.DeleteCertificateAsync(id, "");
 
             if (!result)
                 return NotFound("Certificate not found");
 
-            return Ok(new { message = "Certificate deleted successfully" });
-        }
-
-        [HttpGet("certificates/download/{fileName}")]
-        [AllowAnonymous]
-        public IActionResult DownloadCertificate(string fileName)
-        {
-            var filePath = Path.Combine(
-                "D:\\home\\site\\userfiles\\certificates",
-                fileName
-            );
-
-            if (!System.IO.File.Exists(filePath))
-                return NotFound();
-
-            var contentType = Path.GetExtension(fileName).ToLower() switch
+            return Ok(new
             {
-                ".pdf" => "application/pdf",
-                ".png" => "image/png",
-                ".jpg" => "image/jpeg",
-                ".jpeg" => "image/jpeg",
-                _ => "application/octet-stream"
-            };
-
-            Response.Headers.Add("Content-Disposition", $"inline; filename={fileName}");
-            var fileBytes = System.IO.File.ReadAllBytes(filePath);
-            return File(fileBytes, contentType);
+                message = "Certificate deleted successfully"
+            });
         }
+
+        //[HttpGet("certificates/download/{fileName}")]
+        //[AllowAnonymous]
+        //public IActionResult DownloadCertificate(string fileName)
+        //{
+        //    var filePath = Path.Combine(
+        //        "D:\\home\\site\\userfiles\\certificates",
+        //        fileName
+        //    );
+
+        //    if (!System.IO.File.Exists(filePath))
+        //        return NotFound();
+
+        //    var contentType = Path.GetExtension(fileName).ToLower() switch
+        //    {
+        //        ".pdf" => "application/pdf",
+        //        ".png" => "image/png",
+        //        ".jpg" => "image/jpeg",
+        //        ".jpeg" => "image/jpeg",
+        //        _ => "application/octet-stream"
+        //    };
+
+        //    Response.Headers.Add("Content-Disposition", $"inline; filename={fileName}");
+        //    var fileBytes = System.IO.File.ReadAllBytes(filePath);
+        //    return File(fileBytes, contentType);
+        //}
     }
 }
