@@ -1,12 +1,11 @@
-﻿using Institute.Application.DTOs;
-using Institute.Application.Interfaces.IService;
+﻿using Institute.Application.Interfaces.IService;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Institute.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class  LecturerController : ControllerBase
+    public class LecturerController : ControllerBase
     {
         private readonly ILecturerService _service;
 
@@ -15,8 +14,7 @@ namespace Institute.API.Controllers
             _service = service;
         }
 
-        // ── GET ALL ───────────────────────────────────────────────────────────────
-        /// <summary>GET /api/lecturer — يجيب كل المحاضرين (عام، بدون Auth)</summary>
+        // ── GET ALL ───────────────────────────────────────────────────────────
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -24,17 +22,16 @@ namespace Institute.API.Controllers
             return Ok(result);
         }
 
-        // ── GET BY ID ─────────────────────────────────────────────────────────────
-        /// <summary>GET /api/lecturer/{id}</summary>
+        // ── GET BY ID ─────────────────────────────────────────────────────────
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var result = await _service.GetByIdAsync(id);
-            return result == null ? NotFound() : Ok(result);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
         }
-
-        
-
-        
     }
 }
