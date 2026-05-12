@@ -3,23 +3,30 @@ using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.AdminSpec.Planfiles;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 
 namespace Institute.Application.Services
 {
     public class PlanFileService : IPlanFileService
     {
         private readonly IRepository<PlanFile> _planFileRepo;
+        private readonly IBlobStorage _blobStorage;
+        private readonly IConfiguration _config;
 
-        public PlanFileService(IRepository<PlanFile> planFileRepo)
+        private const string Container = "icemt";
+        private const string Folder = "planfiles";
+
+        public PlanFileService(
+            IRepository<PlanFile> planFileRepo,
+            IBlobStorage blobStorage,
+            IConfiguration config)
         {
             _planFileRepo = planFileRepo;
+            _blobStorage = blobStorage;
+            _config = config;
         }
 
+        // ── GET FILES ───────────────────────────────
         public async Task<IEnumerable<PlanFileDto>> GetFilesAsync(int planId)
         {
             var spec = new PlanFilesByPlanIdSpec(planId);
@@ -31,11 +38,14 @@ namespace Institute.Application.Services
                 PlanId = x.PlanId,
                 FileId = x.FileId,
                 FileTitle = x.FileTitle,
-                FileName = x.FileName,
-                FilePeriorty = x.FilePeriorty
+                FilePeriorty = x.FilePeriorty,
+
+                // ✅ يرجع URL كامل
+                FileName = BuildFileUrl(x.FileName)
             });
         }
 
+        // ── ADD ─────────────────────────────────────
         public async Task AddAsync(CreatePlanFileDto dto)
         {
             var spec = new PlanFilesByPlanIdSpec(dto.PlanId);
@@ -47,25 +57,11 @@ namespace Institute.Application.Services
                 ? existingFiles.Max(x => x.FileId) + 1
                 : 1;
 
-            // save physical file
-            var uploadsFolder = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot/files");
-
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var uniqueFileName =
-                Guid.NewGuid() +
-                Path.GetExtension(dto.File.FileName);
-
-            var filePath =
-                Path.Combine(uploadsFolder, uniqueFileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await dto.File.CopyToAsync(stream);
-            }
+            // ✅ Upload To Azure Blob
+            var uploadedFileName = await _blobStorage.UploadFileAsync(
+                dto.File,
+                Container,
+                Folder);
 
             var planFile = new PlanFile
             {
@@ -73,7 +69,9 @@ namespace Institute.Application.Services
                 FileId = nextFileId,
                 FileTitle = dto.FileTitle,
                 FilePeriorty = dto.FilePeriorty,
-                FileName = uniqueFileName
+
+                // ✅ اسم الملف فقط
+                FileName = uploadedFileName
             };
 
             await _planFileRepo.AddAsync(planFile);
@@ -81,6 +79,7 @@ namespace Institute.Application.Services
             await _planFileRepo.SaveChangesAsync();
         }
 
+        // ── DELETE ──────────────────────────────────
         public async Task DeleteAsync(int planId, int fileId)
         {
             var spec = new PlanFileByIdSpec(planId, fileId);
@@ -91,18 +90,20 @@ namespace Institute.Application.Services
             if (file == null)
                 throw new Exception("File not found");
 
-            // delete physical file
-            var filePath = Path.Combine(
-                Directory.GetCurrentDirectory(),
-                "wwwroot/files",
-                file.FileName!);
-
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-
             _planFileRepo.Delete(file);
 
             await _planFileRepo.SaveChangesAsync();
+        }
+
+        // ── BUILD FILE URL ──────────────────────────
+        private string? BuildFileUrl(string? fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                return null;
+
+            var baseUrl = _config["AzureStorage:BaseUrl"];
+
+            return $"{baseUrl?.TrimEnd('/')}/planfiles/{fileName}";
         }
     }
 }
