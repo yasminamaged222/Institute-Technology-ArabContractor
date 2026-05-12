@@ -105,8 +105,11 @@ const S = {
     ownedLabel: { fontSize: '32px', fontWeight: 'bold', color: '#4a4a8a', display: 'block', lineHeight: 1.2 },
     freeLabel: { fontSize: '32px', fontWeight: 'bold', color: '#1a7a3c', display: 'block', lineHeight: 1.2 },
     priceSub: { fontSize: '13px', color: '#666', marginTop: '4px', display: 'block' },
-    paidPrice: { fontSize: '32px', fontWeight: 'bold', color: '#f57c00', display: 'block', marginBottom: '8px' },
-    strikePrice: { fontSize: '16px', color: '#000', textDecoration: 'line-through', opacity: 0.5 },
+    paidPrice: { fontSize: '32px', fontWeight: 'bold', color: '#f57c00', display: 'block', marginBottom: '4px' },
+    strikePrice: { fontSize: '16px', color: '#000', textDecoration: 'line-through', opacity: 0.5, display: 'block', marginBottom: '4px' },
+    discountBadge: { display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, backgroundColor: '#fce7f3', color: '#be185d', marginBottom: '6px' },
+    modeBadgeOnline: { display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, backgroundColor: '#ede9fe', color: '#7c3aed', marginTop: '4px' },
+    modeBadgeOnsite: { display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700, backgroundColor: '#e0f2fe', color: '#0865a8', marginTop: '4px' },
     actionBtns: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' },
     btnViewMyCourses: { width: '100%', padding: '14px 24px', background: 'linear-gradient(135deg,#4a4a8a 0%,#7b5ea7 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '17px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Droid Arabic Kufi",serif', transition: 'all 0.3s', boxShadow: '0 4px 12px rgba(74,74,138,0.3)' },
     btnCertPreview: {
@@ -273,7 +276,6 @@ function getRefundPolicy(courseDateStr, coursePrice) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
     const daysLeft = Math.round((startDate - today) / (1000 * 60 * 60 * 24));
-
     if (daysLeft <= 0) return { type: 'blocked', reason: 'started' };
     if (daysLeft < 2) return { type: 'blocked', reason: 'tooClose', daysLeft };
     if (daysLeft <= 6) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
@@ -330,7 +332,6 @@ async function parseServerError(res) {
 // ─────────────────────────────────────────────────────────────────────────────
 const CertificateModal = ({ cert, courseTitle, onClose }) => {
     const [iframeError, setIframeError] = useState(false);
-
     const certUrl = cert?.url || null;
     const certName = cert?.name || cert?.fileName || `شهادة_${courseTitle || 'الدورة'}.pdf`;
     const isPdf = certUrl && certUrl.toLowerCase().includes('.pdf');
@@ -358,37 +359,22 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                         </svg>
                     </button>
                 </div>
-
                 <div style={S.certModalBody}>
                     <div style={S.certPreviewArea}>
                         {!iframeError && isPdf ? (
-                            <iframe
-                                src={`${certUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                                style={S.certIframe}
-                                title="معاينة الشهادة"
-                                onError={() => setIframeError(true)}
-                            />
+                            <iframe src={`${certUrl}#toolbar=0&navpanes=0&scrollbar=0`} style={S.certIframe} title="معاينة الشهادة" onError={() => setIframeError(true)} />
                         ) : (
                             !iframeError && certUrl.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? (
-                                <img
-                                    src={certUrl}
-                                    alt="شهادة الإتمام"
-                                    style={{ maxWidth: '100%', maxHeight: '420px', objectFit: 'contain', borderRadius: '4px' }}
-                                    onError={() => setIframeError(true)}
-                                />
+                                <img src={certUrl} alt="شهادة الإتمام" style={{ maxWidth: '100%', maxHeight: '420px', objectFit: 'contain', borderRadius: '4px' }} onError={() => setIframeError(true)} />
                             ) : (
                                 <div style={S.certFallback}>
                                     <div style={S.certFallbackIcon}>📄</div>
-                                    <p style={S.certFallbackText}>
-                                        لا يمكن عرض الشهادة هنا مباشرةً.<br />
-                                        يمكنك فتحها في تبويب جديد أو تحميلها.
-                                    </p>
+                                    <p style={S.certFallbackText}>لا يمكن عرض الشهادة هنا مباشرةً.<br />يمكنك فتحها في تبويب جديد أو تحميلها.</p>
                                 </div>
                             )
                         )}
                     </div>
                 </div>
-
                 <div style={S.certModalFooter}>
                     <div style={S.certModalInfo}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -398,15 +384,11 @@ const CertificateModal = ({ cert, courseTitle, onClose }) => {
                     </div>
                     <div style={S.certModalActions}>
                         <a href={certUrl} target="_blank" rel="noopener noreferrer" style={S.btnOpenNewTab} className="btnOpenNewTab">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
-                            </svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" /></svg>
                             فتح في تبويب جديد
                         </a>
                         <a href={certUrl} download={certName} style={S.btnCertDownloadModal} className="btnCertDownloadModal">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                            </svg>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
                             تحميل الشهادة
                         </a>
                     </div>
@@ -446,9 +428,8 @@ const CourseDetails = () => {
     const [existingRefund, setExistingRefund] = useState(null);
     const [loadingRefundCheck, setLoadingRefundCheck] = useState(false);
 
-    // ── PATCH 1: New state variables ──
     const [mode, setMode] = useState('onsite'); // 'onsite' | 'online'
-    const [onlineSetting, setOnlineSetting] = useState(null); // { link, visible } | null
+    const [onlineSetting, setOnlineSetting] = useState(null);
     const [onlineLoading, setOnlineLoading] = useState(false);
 
     const safeGetToken = useCallback(async () => {
@@ -474,19 +455,13 @@ const CourseDetails = () => {
         try {
             const token = await safeGetToken();
             if (!token) return;
-            const res = await fetch(`${API_BASE}/Admin/certificates/${courseId}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await fetch(`${API_BASE}/Admin/certificates/${courseId}`, { headers: { Authorization: `Bearer ${token}` } });
             if (!res.ok) return;
             const data = await res.json();
             const raw = Array.isArray(data) ? data[0] : data;
             if (!raw) return;
-            const rawUrl =
-                raw.url || raw.fileUrl || raw.filePath || raw.path ||
-                raw.downloadUrl || raw.fileName || raw.filename || null;
-            const url = rawUrl
-                ? (rawUrl.startsWith('http') ? rawUrl : `${API_BASE}/${rawUrl.replace(/^\//, '')}`)
-                : null;
+            const rawUrl = raw.url || raw.fileUrl || raw.filePath || raw.path || raw.downloadUrl || raw.fileName || raw.filename || null;
+            const url = rawUrl ? (rawUrl.startsWith('http') ? rawUrl : `${API_BASE}/${rawUrl.replace(/^\//, '')}`) : null;
             setCert({ ...raw, url });
         } catch {
             setCert(null);
@@ -551,13 +526,36 @@ const CourseDetails = () => {
         return { startDate: p[0]?.trim() || '', endDate: p[1]?.trim() || p[0]?.trim() || '' };
     };
 
+    // ── UPDATED transform: captures all discount/pricing fields from API ──
     const transform = (a) => {
         const { startDate, endDate } = extractDates(a.date);
         const isFree = !a.cost || a.cost === 0;
+
+        // Onsite pricing
+        const onsitePrice = a.cost || 0;
+        const onsiteOriginalPrice = a.originalPrice ?? a.onSale ?? (a.cost ? Math.round(a.cost / (1 - (a.discountPercent || 0) / 100)) : 0);
+        const onsiteDiscountPercent = a.discountPercent ?? a.DiscountPercent ?? 0;
+        const onsiteDiscountAmount = a.discountAmount ?? a.DiscountAmount ?? 0;
+
+        // Online pricing
+        const onlineCostRaw = a.onlineCost ?? a.online_cost ?? a.OnlineCost ?? null;
+        const onlineOriginalPrice = a.onlineOriginalPrice ?? null;
+        const onlineDiscountPercent = a.onlineDiscountPercent ?? a.OnlineDiscountPercent ?? 0;
+        const onlineDiscountAmount = a.onlineDiscountAmount ?? a.OnlineDiscountAmount ?? 0;
+
         return {
             id: a.id, slug: a.slug, title: a.title, description: a.description,
-            place: a.place, price: a.cost || 0,
-            originalPrice: a.onSale || (a.cost ? a.cost * 1.6 : 0),
+            place: a.place,
+            // Onsite
+            price: onsitePrice,
+            originalPrice: onsiteOriginalPrice,
+            discountPercent: onsiteDiscountPercent,
+            discountAmount: onsiteDiscountAmount,
+            // Online
+            onlineCost: onlineCostRaw,
+            onlineOriginalPrice,
+            onlineDiscountPercent,
+            onlineDiscountAmount,
             currency: 'جنيه', isFree,
             duration: 26, videoDuration: 26,
             articlesCount: a.files?.length || 12,
@@ -607,7 +605,6 @@ const CourseDetails = () => {
         }
     }, [course?.id, isOwned, fetchCertForCourse]);
 
-    // ── PATCH 2: Fetch online setting when course is known ──
     useEffect(() => {
         if (!course?.id) { setOnlineSetting(null); return; }
         setOnlineLoading(true);
@@ -642,11 +639,11 @@ const CourseDetails = () => {
         document.title = course?.title ? `${course.title} - المعهد التكنولوجي` : 'المعهد التكنولوجي';
     }, [course]);
 
-    // ── PATCH 6: Updated addToCart with mode support ──
     const addToCart = async (buyNow = false, courseMode = 'onsite') => {
         if (!course) return;
-        const priceToUse = courseMode === 'online'
-            ? Math.round(course.price * 1.1)
+        const isOnline = courseMode === 'online';
+        const priceToUse = isOnline
+            ? (course.onlineCost != null ? course.onlineCost : 0)
             : course.price;
         try {
             const token = await safeGetToken();
@@ -654,23 +651,20 @@ const CourseDetails = () => {
                 await fetch(`${API_BASE}/cart/add/${course.id}`, {
                     method: 'POST',
                     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ courseId: course.id, quantity: 1, mode: courseMode }),
+                    body: JSON.stringify({ isOnline }),
                 });
             }
         } catch { }
+
         const cart = JSON.parse(localStorage.getItem('cartItems') || '[]');
         if (!cart.some(i => i.id === course.id)) {
             cart.push({
-                id: course.id,
-                slug: course.slug,
-                title: course.title,
-                instructor: course.place || 'غير محدد',
-                image: course.image,
+                id: course.id, slug: course.slug, title: course.title,
+                instructor: course.place || 'غير محدد', image: course.image,
                 currentPrice: priceToUse,
-                originalPrice: course.originalPrice || 0,
-                quantity: 1,
-                mode: courseMode,
-                modeLabel: courseMode === 'online' ? 'أونلاين' : 'حضوري',
+                originalPrice: isOnline ? (course.onlineOriginalPrice || 0) : (course.originalPrice || 0),
+                quantity: 1, isOnline,
+                modeLabel: isOnline ? 'أونلاين' : 'حضوري',
             });
             localStorage.setItem('cartItems', JSON.stringify(cart));
             window.dispatchEvent(new Event('cartUpdated'));
@@ -758,9 +752,12 @@ const CourseDetails = () => {
     const refundPolicy = course ? getRefundPolicy(course.date, course.price) : { type: 'unknown' };
     const isRefundBlocked = refundPolicy.type === 'blocked';
 
-    // ── PATCH 3: Derive prices and mode tab styles ──
-    const onlinePrice = course ? Math.round(course.price * 1.1) : 0;
-    const activePrice = mode === 'online' ? onlinePrice : course?.price ?? 0;
+    // ── Pricing calculations (reactive to mode) ──
+    const onlineCost = course?.onlineCost ?? null;
+    const onlinePriceFree = onlineCost === null || onlineCost === 0;
+    const activePrice = mode === 'online'
+        ? (onlineCost != null ? onlineCost : 0)
+        : (course?.price ?? 0);
 
     const modeTabBase = {
         flex: 1, padding: '9px 10px', border: 'none', borderRadius: '8px', fontSize: '14px',
@@ -979,7 +976,7 @@ const CourseDetails = () => {
 
                                 <div style={S.priceContent}>
 
-                                    {/* ── PATCH 4: Mode toggle + dynamic price display ── */}
+                                    {/* ── Mode toggle (onsite / online) for paid unowned courses ── */}
                                     {!isOwned && !course.isFree && (
                                         <div style={{ display: 'flex', gap: 6, padding: '6px', background: '#f0f1f2', borderRadius: '10px', marginBottom: '16px' }}>
                                             <button style={mode === 'onsite' ? modeTabActive : modeTabInactive} onClick={() => setMode('onsite')}>
@@ -991,6 +988,7 @@ const CourseDetails = () => {
                                         </div>
                                     )}
 
+                                    {/* ── UPDATED PRICE SECTION — fully reactive to mode toggle ── */}
                                     <div style={S.priceSec}>
                                         {isOwned ? (
                                             <>
@@ -1002,14 +1000,60 @@ const CourseDetails = () => {
                                                 <span style={S.freeLabel}>مجاناً</span>
                                                 <span style={S.priceSub}>دورة مجانية بالكامل</span>
                                             </>
-                                        ) : (
+                                        ) : mode === 'online' ? (
                                             <>
-                                                <span style={S.paidPrice}>{activePrice.toLocaleString('ar-EG')} {course.currency}</span>
-                                                {mode === 'online' && (
-                                                    <span style={{ fontSize: '13px', color: '#7c3aed', fontWeight: 700, display: 'block', marginTop: '-6px', marginBottom: '4px' }}>
-                                                        🌐 سعر التدريب الإلكتروني
+                                                {onlinePriceFree ? (
+                                                    <span style={S.freeLabel}>مجاناً</span>
+                                                ) : (
+                                                    <>
+                                                        <span style={S.paidPrice}>
+                                                            {Number(activePrice).toLocaleString('ar-EG')} {course.currency}
+                                                        </span>
+                                                        {/* Show original price with strikethrough if there's a discount */}
+                                                        {course.onlineOriginalPrice > activePrice && (
+                                                            <span style={S.strikePrice}>
+                                                                {Number(course.onlineOriginalPrice).toLocaleString('ar-EG')} {course.currency}
+                                                            </span>
+                                                        )}
+                                                        {/* Fallback: show originalPrice if onlineOriginalPrice not available */}
+                                                        {!course.onlineOriginalPrice && course.originalPrice > activePrice && (
+                                                            <span style={S.strikePrice}>
+                                                                {Number(course.originalPrice).toLocaleString('ar-EG')} {course.currency}
+                                                            </span>
+                                                        )}
+                                                        {/* Discount badge */}
+                                                        {course.onlineDiscountPercent > 0 && (
+                                                            <span style={S.discountBadge}>
+                                                                🏷️ خصم {course.onlineDiscountPercent}%
+                                                            </span>
+                                                        )}
+                                                    </>
+                                                )}
+                                                <span style={S.modeBadgeOnline}>
+                                                    🌐 سعر التدريب الإلكتروني
+                                                </span>
+                                            </>
+                                        ) : (
+                                            // Onsite mode
+                                            <>
+                                                <span style={S.paidPrice}>
+                                                    {Number(course.price ?? 0).toLocaleString('ar-EG')} {course.currency}
+                                                </span>
+                                                {/* Show original price with strikethrough if there's a discount */}
+                                                {course.originalPrice > course.price && (
+                                                    <span style={S.strikePrice}>
+                                                        {Number(course.originalPrice).toLocaleString('ar-EG')} {course.currency}
                                                     </span>
                                                 )}
+                                                {/* Discount badge */}
+                                                {course.discountPercent > 0 && (
+                                                    <span style={S.discountBadge}>
+                                                        🏷️ خصم {course.discountPercent}%
+                                                    </span>
+                                                )}
+                                                <span style={S.modeBadgeOnsite}>
+                                                    🏢 سعر التدريب الحضوري
+                                                </span>
                                             </>
                                         )}
                                     </div>
@@ -1040,30 +1084,16 @@ const CourseDetails = () => {
 
                                                 <button className="btnViewMyCourses" style={S.btnViewMyCourses} onClick={() => navigate('/my-courses')}>عرض في دوراتي</button>
 
-                                                {/* ── PATCH 5 Location B: Online meeting link for owned users ── */}
                                                 {onlineLoading ? (
                                                     <div style={{ padding: '12px 0', textAlign: 'center', fontSize: '13px', color: '#7c3aed', fontFamily: '"Droid Arabic Kufi",serif' }}>
                                                         <svg style={{ width: 16, height: 16, animation: 'spin 1s linear infinite', verticalAlign: 'middle', marginLeft: 6 }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                                         جاري تحميل رابط الاجتماع...
                                                     </div>
                                                 ) : onlineSetting?.visible && onlineSetting?.link ? (
-                                                    <a
-                                                        href={onlineSetting.link}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        style={{
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                                                            width: '100%', padding: '13px 20px', boxSizing: 'border-box',
-                                                            background: 'linear-gradient(135deg,#5b21b6,#7c3aed)',
-                                                            color: '#fff', borderRadius: '10px', textDecoration: 'none',
-                                                            fontSize: '15px', fontWeight: 'bold',
-                                                            fontFamily: '"Droid Arabic Kufi",serif',
-                                                            boxShadow: '0 4px 14px rgba(124,58,237,0.35)',
-                                                            transition: 'all .25s ease',
-                                                        }}
+                                                    <a href={onlineSetting.link} target="_blank" rel="noopener noreferrer"
+                                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '13px 20px', boxSizing: 'border-box', background: 'linear-gradient(135deg,#5b21b6,#7c3aed)', color: '#fff', borderRadius: '10px', textDecoration: 'none', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi",serif', boxShadow: '0 4px 14px rgba(124,58,237,0.35)', transition: 'all .25s ease' }}
                                                         onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.5)'; }}
-                                                        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,58,237,0.35)'; }}
-                                                    >
+                                                        onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,58,237,0.35)'; }}>
                                                         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                                                             <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
                                                         </svg>
@@ -1091,17 +1121,15 @@ const CourseDetails = () => {
                                                         {enrollMsg.text}
                                                     </div>
                                                 )}
-                                                <button
-                                                    className="btnEnroll"
+                                                <button className="btnEnroll"
                                                     style={{ ...S.btnEnroll, opacity: enrolling ? 0.7 : 1, cursor: enrolling ? 'not-allowed' : 'pointer' }}
                                                     onClick={handleEnroll}
-                                                    disabled={enrolling}
-                                                >
+                                                    disabled={enrolling}>
                                                     {enrolling ? '⏳ جاري التسجيل...' : '🎁 اشترك الآن — مجاناً'}
                                                 </button>
                                             </>
                                         ) : (
-                                            // ── PATCH 5 Location A: Paid action buttons with mode ──
+                                            // Paid — pass current mode to addToCart
                                             <>
                                                 <button className="btnAddCart" style={S.btnAddCart} onClick={() => addToCart(false, mode)}>إضافة إلى السلة</button>
                                                 <button className="btnBuyNow" style={S.btnBuyNow} onClick={() => addToCart(true, mode)}>اشترِ الآن</button>
@@ -1146,11 +1174,7 @@ const CourseDetails = () => {
 
             {/* ── CERTIFICATE PREVIEW MODAL ──────────────────────────────────── */}
             {showCertModal && cert && getCertUrl(cert) && (
-                <CertificateModal
-                    cert={cert}
-                    courseTitle={course.title}
-                    onClose={() => setShowCertModal(false)}
-                />
+                <CertificateModal cert={cert} courseTitle={course.title} onClose={() => setShowCertModal(false)} />
             )}
 
             {/* ── REFUND MODAL ───────────────────────────────────────────────── */}
@@ -1201,7 +1225,6 @@ const CourseDetails = () => {
                             ) : (
                                 <>
                                     {renderPolicyBox(refundPolicy)}
-
                                     <div style={S.infoBox}>
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                         <p style={S.infoBoxText}>سيتم مراجعة طلبك من قِبل الإدارة خلال 3-5 أيام عمل.</p>

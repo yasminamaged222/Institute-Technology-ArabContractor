@@ -27,6 +27,20 @@ const CartItemFull = ({ item, onRemove }) => {
                         </h3>
                     </div>
 
+                    {/* ── UPDATED: Mode badge (online / onsite) ── */}
+                    {item.isOnline !== undefined && (
+                        <span style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '5px',
+                            padding: '3px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700,
+                            backgroundColor: item.isOnline ? '#ede9fe' : '#e0f2fe',
+                            color: item.isOnline ? '#7c3aed' : '#0865a8',
+                            marginBottom: '10px', alignSelf: 'flex-start',
+                            fontFamily: '"Droid Arabic Kufi",serif',
+                        }}>
+                            {item.isOnline ? '🌐 أونلاين' : '🏢 حضوري'}
+                        </span>
+                    )}
+
                     {(item.instructor || item.place) && (
                         <p className="mb-2 text-sm text-black md:mb-3">
                             <span className="font-semibold text-[#0865a8]">
@@ -118,6 +132,7 @@ export default function ShoppingCartPage() {
                     const token = await getToken();
                     if (!token) throw new Error("No token");
 
+                    // ── GET /api/Cart ──
                     const response = await fetch(`${API_BASE}/cart`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -140,10 +155,13 @@ export default function ShoppingCartPage() {
                         originalPrice: item.cost ?? item.price ?? 0,
                         slug: item.slug || "",
                         quantity: 1,
+                        // ── UPDATED: carry isOnline from API response ──
+                        isOnline: item.isOnline ?? item.IsOnline ?? false,
                     }));
 
                     setItems(transformedItems);
                 } else {
+                    // Guest: read from localStorage (CourseDetails stores isOnline there too)
                     const localCart = JSON.parse(localStorage.getItem("cartItems") || "[]");
                     setItems(localCart);
                 }
@@ -172,6 +190,7 @@ export default function ShoppingCartPage() {
             if (isSignedIn) {
                 const token = await getToken();
                 if (token) {
+                    // ── DELETE /api/Cart/remove/{planworkId} ──
                     await fetch(`${API_BASE}/cart/remove/${planworkId}`, {
                         method: "DELETE",
                         headers: { Authorization: `Bearer ${token}` },
@@ -221,7 +240,6 @@ export default function ShoppingCartPage() {
                 @media (min-width: 1025px) { .cart-main { padding-top: 130px !important; } }
             `}</style>
 
-            
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
                 <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
                     <a

@@ -28,7 +28,6 @@ const styles = {
     cardHeaderOverlayHover: { opacity: 1 },
     iconWrapper: { position: 'relative', zIndex: 2, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', padding: '24px', backdropFilter: 'blur(10px)', border: '2px solid rgba(255,255,255,0.3)' },
     icon: { width: '48px', height: '48px', color: '#ffffff', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' },
-    discountBadge: { position: 'absolute', right: '12px', top: '12px', borderRadius: '10px', backgroundColor: '#f57c00', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold', color: '#ffffff', boxShadow: '0 2px 8px rgba(245,124,0,0.4)', fontFamily: '"Droid Arabic Kufi", serif', zIndex: 3 },
     freeBadge: { position: 'absolute', right: '12px', top: '12px', borderRadius: '10px', backgroundColor: '#ffffff', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold', color: '#1a7a3c', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontFamily: '"Droid Arabic Kufi", serif', zIndex: 3 },
     ownedBadge: { position: 'absolute', right: '12px', top: '12px', borderRadius: '10px', backgroundColor: '#ffffff', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold', color: '#4a4a8a', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontFamily: '"Droid Arabic Kufi", serif', zIndex: 3 },
     certCardRibbon: { position: 'absolute', left: '12px', bottom: '12px', backgroundColor: 'rgba(124,58,237,0.88)', backdropFilter: 'blur(6px)', borderRadius: '8px', padding: '4px 10px', fontSize: '14px', boxShadow: '0 2px 8px rgba(124,58,237,0.4)', border: '1.5px solid rgba(255,255,255,0.3)', zIndex: 3, fontFamily: '"Droid Arabic Kufi", serif', color: '#fff', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' },
@@ -40,9 +39,8 @@ const styles = {
     infoIcon: { width: '18px', height: '18px', flexShrink: 0, color: '#0865a8', marginTop: '2px' },
     clampText: { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.4', flex: 1 },
     description: { fontSize: '14px', lineHeight: '1.6', color: '#000000', opacity: 0.7, marginBottom: '16px', fontFamily: '"Droid Arabic Kufi", serif' },
-    priceSection: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderTop: '2px solid #f0f0f0', marginBottom: '16px' },
+    priceSection: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: '2px solid #f0f0f0', marginBottom: '12px' },
     priceContainer: { display: 'flex', flexDirection: 'column', gap: '4px' },
-    originalPrice: { fontSize: '13px', color: '#000000', textDecoration: 'line-through', fontFamily: '"Droid Arabic Kufi", serif', opacity: 0.5 },
     currentPrice: { fontSize: '24px', fontWeight: 'bold', color: '#f57c00', fontFamily: '"Droid Arabic Kufi", serif' },
     freePriceLabel: { fontSize: '24px', fontWeight: 'bold', color: '#1a7a3c', fontFamily: '"Droid Arabic Kufi", serif' },
     priceLabel: { fontSize: '12px', color: '#000000', fontFamily: '"Droid Arabic Kufi", serif', opacity: 0.6, marginTop: '2px' },
@@ -145,12 +143,6 @@ const REFUND_STATUS_MAP = {
     Sent: { label: 'تم التحويل', bg: '#f0fff4', color: '#1a7a3c', icon: '💸' },
 };
 
-// ── FIXED Refund Policy ───────────────────────────────────────────────────────
-// Policy (from checkout page):
-//   • 7+ working days before start  → full refund
-//   • 2–6 days before start         → 25% deducted, 75% refunded
-//   • Less than 2 days before start → blocked (too close)
-//   • Course already started        → blocked (started)
 function getRefundPolicy(courseDateStr, coursePrice) {
     if (!courseDateStr) return { type: 'unknown' };
     const raw = courseDateStr.split(' - ')[0].trim();
@@ -165,18 +157,12 @@ function getRefundPolicy(courseDateStr, coursePrice) {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     startDate.setHours(0, 0, 0, 0);
     const daysLeft = Math.round((startDate - today) / (1000 * 60 * 60 * 24));
-
-    // Course already started (today is on or after start date)
     if (daysLeft <= 0) return { type: 'blocked', reason: 'started' };
-    // Less than 2 working days before start
     if (daysLeft < 2) return { type: 'blocked', reason: 'tooClose', daysLeft };
-    // 2–6 days: partial refund (25% deducted)
     if (daysLeft <= 6) return { type: 'partial', daysLeft, refundAmount: (coursePrice * 0.75).toLocaleString('ar-EG') };
-    // 7+ days: full refund
     return { type: 'full', daysLeft };
 }
 
-// ── Helper: render refund policy box ─────────────────────────────────────────
 function renderPolicyBox(policy, stylesRef) {
     if (policy.type === 'blocked') {
         const msg = policy.reason === 'started'
@@ -231,20 +217,32 @@ async function parseServerError(res) {
     return defaults[status] || `حدث خطأ غير متوقع (${status})`;
 }
 
+// ── Mode Toggle Component ─────────────────────────────────────────────────────
+const ModeToggle = ({ mode, onChange }) => {
+    const base = {
+        flex: 1, padding: '7px 8px', border: 'none', borderRadius: '7px',
+        fontSize: '13px', fontWeight: 'bold', cursor: 'pointer',
+        fontFamily: '"Droid Arabic Kufi", serif', transition: 'all .2s',
+    };
+    const active = { ...base, background: 'linear-gradient(135deg,#0865a8,#1a84d4)', color: '#fff', boxShadow: '0 2px 8px rgba(8,101,168,0.3)' };
+    const inactive = { ...base, background: '#f0f1f2', color: '#6b7280' };
+    return (
+        <div style={{ display: 'flex', gap: 5, padding: '5px', background: '#f0f1f2', borderRadius: '9px', marginBottom: '10px' }}>
+            <button style={mode === 'onsite' ? active : inactive} onClick={() => onChange('onsite')}>🏢 حضوري</button>
+            <button style={mode === 'online' ? active : inactive} onClick={() => onChange('online')}>🌐 أونلاين</button>
+        </div>
+    );
+};
+
 // ── Certificate Preview Modal ─────────────────────────────────────────────────
 const CertPreviewModal = ({ cert, onClose }) => {
     useEffect(() => {
         const handler = (e) => { if (e.key === 'Escape') onClose(); };
         window.addEventListener('keydown', handler);
         document.body.style.overflow = 'hidden';
-        return () => {
-            window.removeEventListener('keydown', handler);
-            document.body.style.overflow = '';
-        };
+        return () => { window.removeEventListener('keydown', handler); document.body.style.overflow = ''; };
     }, [onClose]);
-
     const isPdf = cert?.url?.toLowerCase().includes('.pdf');
-
     return (
         <div style={styles.certModalOverlay} onClick={onClose}>
             <div style={styles.certModalBox} onClick={e => e.stopPropagation()}>
@@ -256,17 +254,14 @@ const CertPreviewModal = ({ cert, onClose }) => {
                     <button style={styles.certModalClose} onClick={onClose}>✕</button>
                 </div>
                 <div style={styles.certModalBody}>
-                    {isPdf ? (
-                        <iframe src={cert.url} title="certificate" style={styles.certIframe} />
-                    ) : (
-                        <img src={cert.url} alt={cert.name || 'شهادة'} style={styles.certImg} onError={e => { e.target.style.display = 'none'; }} />
-                    )}
+                    {isPdf
+                        ? <iframe src={cert.url} title="certificate" style={styles.certIframe} />
+                        : <img src={cert.url} alt={cert.name || 'شهادة'} style={styles.certImg} onError={e => { e.target.style.display = 'none'; }} />
+                    }
                 </div>
                 <div style={styles.certModalFooter}>
                     <a href={cert.url} download={cert.name || 'certificate'} target="_blank" rel="noopener noreferrer" style={styles.certModalDownloadBtn}>
-                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                        </svg>
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
                         <span>تحميل الشهادة</span>
                     </a>
                     <button style={styles.certModalCancelBtn} onClick={onClose}>إغلاق</button>
@@ -342,14 +337,13 @@ const RefundModal = ({ course, onClose, getToken }) => {
         try {
             const token = await safeToken();
             if (!token) { setError('يجب تسجيل الدخول أولاً'); setSubmitting(false); return; }
-            let planworkId = course.id;
-            let orderId = null;
+            let planworkId = course.id, orderId = null;
             try {
-                const myCoursesRes = await fetch(`${API_BASE}/course/my-courses`, { headers: { Authorization: `Bearer ${token}` } });
-                if (myCoursesRes.ok) {
-                    const myList = await myCoursesRes.json();
-                    const enrollment = myList.find(e => String(e.childId) === String(course.id));
-                    if (enrollment) { planworkId = enrollment.childId ?? course.id; orderId = enrollment.orderId ?? null; }
+                const r = await fetch(`${API_BASE}/course/my-courses`, { headers: { Authorization: `Bearer ${token}` } });
+                if (r.ok) {
+                    const list = await r.json();
+                    const e = list.find(e => String(e.childId) === String(course.id));
+                    if (e) { planworkId = e.childId ?? course.id; orderId = e.orderId ?? null; }
                 }
             } catch { }
             if (!orderId) { setError('لم يتم العثور على بيانات الطلب الأصلي. يرجى التواصل مع الدعم.'); setSubmitting(false); return; }
@@ -408,12 +402,10 @@ const RefundModal = ({ course, onClose, getToken }) => {
                     ) : (
                         <>
                             {renderPolicyBox(policy, styles)}
-
                             <div style={styles.refundInfoBox}>
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '2px' }}><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <p style={styles.refundInfoText}>سيتم مراجعة طلبك من قِبل الإدارة خلال 3-5 أيام عمل.</p>
                             </div>
-
                             <label style={styles.formLabel}>سبب طلب الاسترداد <span style={{ color: '#e53935' }}>*</span></label>
                             <textarea style={styles.refundTextarea} placeholder="يرجى توضيح سبب رغبتك في استرداد المبلغ..." value={refundReason} onChange={e => { setRefundReason(e.target.value); setError(null); }} rows={3} maxLength={500} />
                             <div style={styles.charCount}>{refundReason.length} / 500</div>
@@ -466,10 +458,14 @@ const CoursesPage = () => {
     const [hoveredHeaderCard, setHoveredHeaderCard] = useState(null);
     const [refundCourse, setRefundCourse] = useState(null);
     const [ownedCourseIds, setOwnedCourseIds] = useState(new Set());
-
     const [certificates, setCertificates] = useState({});
     const [certsLoading, setCertsLoading] = useState({});
     const [previewCert, setPreviewCert] = useState(null);
+
+    // ── per-card mode state: { [courseId]: 'onsite' | 'online' } ──
+    const [courseModes, setCourseModes] = useState({});
+    const getCourseMode = (id) => courseModes[id] || 'onsite';
+    const handleModeChange = (id, mode) => setCourseModes(prev => ({ ...prev, [id]: mode }));
 
     const showToast = (message, type = 'success') => setToast({ message, type });
 
@@ -495,18 +491,11 @@ const CoursesPage = () => {
         try {
             const token = await safeGetToken();
             if (!token) return;
-            const res = await fetch(
-                `${API_BASE}/Admin/certificates/${userId}/${planworkId}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const res = await fetch(`${API_BASE}/Admin/certificates/${userId}/${planworkId}`, { headers: { Authorization: `Bearer ${token}` } });
             if (!res.ok) return;
             const data = await res.json();
-            if (data && data.url) {
-                setCertificates(prev => ({ ...prev, [planworkId]: data }));
-            }
-        } catch {
-            // cert not available — fail silently
-        } finally {
+            if (data && data.url) setCertificates(prev => ({ ...prev, [planworkId]: data }));
+        } catch { } finally {
             setCertsLoading(prev => ({ ...prev, [planworkId]: false }));
         }
     }, [isSignedIn, safeGetToken, userId]);
@@ -516,24 +505,14 @@ const CoursesPage = () => {
         await Promise.allSettled([...ownedIds].map(id => fetchCertForCourse(id)));
     }, [fetchCertForCourse]);
 
-    useEffect(() => {
-        fetchOwnedCourses();
-    }, [fetchOwnedCourses]);
+    useEffect(() => { fetchOwnedCourses(); }, [fetchOwnedCourses]);
+    useEffect(() => { if (ownedCourseIds.size > 0) fetchCertsForOwned(ownedCourseIds); }, [ownedCourseIds, fetchCertsForOwned]);
 
     useEffect(() => {
-        if (ownedCourseIds.size > 0) {
-            fetchCertsForOwned(ownedCourseIds);
-        }
-    }, [ownedCourseIds, fetchCertsForOwned]);
-
-    useEffect(() => {
-        const onUpdate = () => { fetchOwnedCourses(); };
+        const onUpdate = () => fetchOwnedCourses();
         window.addEventListener('enrollUpdated', onUpdate);
         window.addEventListener('cartUpdated', onUpdate);
-        return () => {
-            window.removeEventListener('enrollUpdated', onUpdate);
-            window.removeEventListener('cartUpdated', onUpdate);
-        };
+        return () => { window.removeEventListener('enrollUpdated', onUpdate); window.removeEventListener('cartUpdated', onUpdate); };
     }, [fetchOwnedCourses]);
 
     useEffect(() => {
@@ -570,8 +549,7 @@ const CoursesPage = () => {
             if (!res.ok) {
                 const errMsg = data?.message || await parseServerError(res);
                 setEnrollMsgs(prev => ({ ...prev, [course.id]: { type: 'error', text: errMsg } }));
-                showToast(errMsg, 'error');
-                return;
+                showToast(errMsg, 'error'); return;
             }
             if (data.alreadyEnrolled) {
                 setEnrollMsgs(prev => ({ ...prev, [course.id]: { type: 'info', text: '✅ أنت مسجل في هذا الكورس بالفعل' } }));
@@ -591,6 +569,10 @@ const CoursesPage = () => {
 
     const addToCart = async (course) => {
         if (!isSignedIn) { showToast('الرجاء تسجيل الدخول أولاً', 'warning'); return; }
+        const isOnline = getCourseMode(course.id) === 'online';
+        // If online price is null → treat as free (0)
+        const onlinePrice = course.onlineCost != null ? course.onlineCost : 0;
+        const priceToUse = isOnline ? onlinePrice : (course.cost || 0);
         setAddingToCart(course.id);
         try {
             const token = await safeGetToken();
@@ -598,7 +580,7 @@ const CoursesPage = () => {
             const res = await fetch(`${API_BASE}/cart/add/${course.id}`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ courseId: course.id, quantity: 1 }),
+                body: JSON.stringify({ isOnline }),
             });
             if (!res.ok) {
                 const msgs = { 401: 'انتهت الجلسة، سجل دخول مرة أخرى', 404: 'الدورة غير موجودة', 409: 'الدورة موجودة بالفعل في السلة', 500: 'خطأ في الخادم' };
@@ -606,7 +588,15 @@ const CoursesPage = () => {
             }
             const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
             if (!cartItems.some(i => i.id === course.id)) {
-                cartItems.push({ id: course.id, title: course.title, instructor: course.place || 'غير محدد', image: 'book', currentPrice: course.cost || 0, originalPrice: course.cost ? course.cost / 0.6 : 0, quantity: 1, slug: course.slug || '', date: course.date || '', place: course.place || '' });
+                cartItems.push({
+                    id: course.id, title: course.title,
+                    instructor: course.place || 'غير محدد', image: 'book',
+                    currentPrice: priceToUse,
+                    originalPrice: course.cost ? course.cost / 0.6 : 0,
+                    quantity: 1, slug: course.slug || '',
+                    date: course.date || '', place: course.place || '',
+                    isOnline, modeLabel: isOnline ? 'أونلاين' : 'حضوري',
+                });
                 localStorage.setItem('cartItems', JSON.stringify(cartItems));
                 window.dispatchEvent(new Event('cartUpdated'));
             }
@@ -645,14 +635,8 @@ const CoursesPage = () => {
             <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } ${mediaQueryStyles}`}</style>
             <div dir="rtl" style={{ backgroundColor: '#ffffff', minHeight: '100vh' }}>
                 {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-
-                {refundCourse && (
-                    <RefundModal course={refundCourse} getToken={safeGetToken} onClose={() => setRefundCourse(null)} />
-                )}
-
-                {previewCert && (
-                    <CertPreviewModal cert={previewCert} onClose={() => setPreviewCert(null)} />
-                )}
+                {refundCourse && <RefundModal course={refundCourse} getToken={safeGetToken} onClose={() => setRefundCourse(null)} />}
+                {previewCert && <CertPreviewModal cert={previewCert} onClose={() => setPreviewCert(null)} />}
 
                 <div style={{ ...styles.overviewBar, top: 70 }} className="overview-bar">
                     <div style={styles.overviewBarText}>
@@ -663,12 +647,12 @@ const CoursesPage = () => {
                 </div>
 
                 <div style={styles.mainContainer} className="main-container">
-                    <div style={styles.pageHeader} className="page-header">
+                    <div style={styles.pageHeader}>
                         <div style={{ position: 'relative', display: 'inline-block' }}>
-                            <h1 style={styles.h1} className="page-title">{programData?.programName || 'الدورات التدريبية'}</h1>
+                            <h1 style={styles.h1}>{programData?.programName || 'الدورات التدريبية'}</h1>
                             <div style={styles.h1Underline} />
                         </div>
-                        <p style={styles.subtitle} className="page-subtitle">اختر الدورة المناسبة لك وابدأ رحلتك التعليمية</p>
+                        <p style={styles.subtitle}>اختر الدورة المناسبة لك وابدأ رحلتك التعليمية</p>
                     </div>
 
                     {courses.length === 0 ? (
@@ -681,9 +665,18 @@ const CoursesPage = () => {
                                 const isAdding = addingToCart === course.id;
                                 const isEnrolling = enrollingId === course.id;
                                 const enrollMsg = enrollMsgs[course.id] || null;
-                                const currentPrice = course.cost;
                                 const cert = certificates[course.id] || null;
                                 const certLoading = certsLoading[course.id] || false;
+
+                                // ── mode & price logic ──
+                                const mode = getCourseMode(course.id);
+                                console.log(course);
+                                // onlineCost: use field from API if present, else null
+                                const onlineCost = course.onlineCost ?? course.online_cost ?? null;
+                                const onlinePriceFree = onlineCost === null || onlineCost === 0;
+                                const activePrice = mode === 'online'
+                                    ? (onlineCost != null ? onlineCost : 0)
+                                    : (course.cost || 0);
 
                                 return (
                                     <div key={course.id}
@@ -691,7 +684,7 @@ const CoursesPage = () => {
                                         onMouseEnter={() => setHoveredCard(course.id)}
                                         onMouseLeave={() => setHoveredCard(null)}>
 
-                                        {/* card header */}
+                                        {/* ── card header ── */}
                                         <div
                                             style={{ ...styles.cardHeader, ...(isOwned ? styles.cardHeaderOwned : isFree ? styles.cardHeaderFree : {}) }}
                                             className="card-header"
@@ -703,31 +696,24 @@ const CoursesPage = () => {
                                                     <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                                                 </svg>
                                             </div>
-
                                             {isOwned
                                                 ? <div style={styles.ownedBadge}>✅ مسجل</div>
                                                 : isFree && <div style={styles.freeBadge}>مجاناً</div>
                                             }
-
                                             {isOwned && certLoading && (
-                                                <div style={styles.certCardRibbon} title="جاري التحقق من الشهادة...">
-                                                    <span style={styles.certRibbonSpinner} />
-                                                </div>
+                                                <div style={styles.certCardRibbon}><span style={styles.certRibbonSpinner} /></div>
                                             )}
                                             {isOwned && !certLoading && cert && (
-                                                <div
-                                                    style={styles.certCardRibbon}
-                                                    title="شهادتك جاهزة — اضغط للمعاينة"
-                                                    onClick={(e) => { e.stopPropagation(); setPreviewCert(cert); }}
-                                                >
+                                                <div style={styles.certCardRibbon} onClick={(e) => { e.stopPropagation(); setPreviewCert(cert); }}>
                                                     📜 <span style={{ fontSize: '12px' }}>شهادة</span>
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* card body */}
+                                        {/* ── card body ── */}
                                         <div style={styles.cardBody} className="card-body">
                                             <h3 style={styles.courseTitle}>{course.title}</h3>
+
                                             <div style={styles.infoSection}>
                                                 {course.place && (
                                                     <div style={styles.infoRow}>
@@ -742,66 +728,104 @@ const CoursesPage = () => {
                                                     </div>
                                                 )}
                                             </div>
+
                                             {course.description && <p style={styles.description}>{course.description}</p>}
 
-                                            {/* price */}
+                                            {/* ── mode toggle (paid + unowned only) ── */}
+                                            {!isOwned && !isFree && (
+                                                <ModeToggle mode={mode} onChange={(m) => handleModeChange(course.id, m)} />
+                                            )}
+
+                                            {/* ── price section ── */}
                                             <div style={styles.priceSection}>
                                                 <div style={styles.priceContainer}>
-                                                    {isOwned ? (
-                                                        <><span style={{ ...styles.freePriceLabel, color: '#4a4a8a' }}>مسجل ✓</span><span style={styles.priceLabel}>لديك هذه الدورة بالفعل</span></>
-                                                    ) : isFree ? (
-                                                        <><span style={styles.freePriceLabel}>مجاناً</span><span style={styles.priceLabel}>دورة مجانية بالكامل</span></>
+
+                                                    {activePrice > 0 ? (
+                                                        <>
+                                                            {/* Original Price */}
+                                                            {(mode === 'online'
+                                                                ? course.onlineOldCost
+                                                                : course.oldCost
+                                                            ) > activePrice && (
+                                                                    <span
+                                                                        style={{
+                                                                            textDecoration: 'line-through',
+                                                                            color: '#999',
+                                                                            fontSize: '14px',
+                                                                            fontFamily: '"Droid Arabic Kufi", serif'
+                                                                        }}
+                                                                    >
+                                                                        {mode === 'online'
+                                                                            ? course.onlineOldCost
+                                                                            : course.oldCost
+                                                                        } جنيه
+                                                                    </span>
+                                                                )}
+
+                                                            {/* Current Price */}
+                                                            <span style={styles.currentPrice}>
+                                                                {activePrice} جنيه
+                                                            </span>
+
+                                                            {/* Discount */}
+                                                            {(mode === 'online'
+                                                                ? course.onlineDiscountPercentage
+                                                                : course.discountPercentage
+                                                            ) > 0 && (
+                                                                    <span
+                                                                        style={{
+                                                                            background: '#ffeded',
+                                                                            color: '#e53935',
+                                                                            padding: '3px 8px',
+                                                                            borderRadius: '6px',
+                                                                            fontSize: '12px',
+                                                                            fontWeight: 'bold',
+                                                                            width: 'fit-content',
+                                                                            fontFamily: '"Droid Arabic Kufi", serif'
+                                                                        }}
+                                                                    >
+                                                                        خصم {mode === 'online'
+                                                                            ? course.onlineDiscountPercentage
+                                                                            : course.discountPercentage
+                                                                        }%
+                                                                    </span>
+                                                                )}
+                                                        </>
                                                     ) : (
-                                                        <><span style={styles.currentPrice}>{currentPrice?.toFixed(2)} ج.م</span><span style={styles.priceLabel}>السعر الشامل</span></>
+                                                        <span style={styles.freePriceLabel}>
+                                                            مجاناً
+                                                        </span>
                                                     )}
+
+                                                    <span style={styles.priceLabel}>
+                                                        {mode === 'online' ? 'السعر الأونلاين' : 'السعر الحضوري'}
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            {/* buttons */}
+                                            {/* ── buttons ── */}
                                             <div style={styles.buttonsContainer}>
                                                 {isOwned ? (
                                                     <>
-                                                        {certLoading && (
-                                                            <div style={styles.certLoadingRow}>
-                                                                <div style={styles.certLoadingPulse} />
-                                                            </div>
-                                                        )}
+                                                        {certLoading && <div style={styles.certLoadingRow}><div style={styles.certLoadingPulse} /></div>}
                                                         {!certLoading && cert && (
                                                             <div style={styles.certSection}>
                                                                 <div style={styles.certSectionHeader}>
-                                                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                                                                    </svg>
+                                                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>
                                                                     <span style={styles.certSectionTitle}>شهادة الإتمام جاهزة</span>
                                                                 </div>
                                                                 <div style={styles.certBtnRow}>
-                                                                    <button
-                                                                        style={styles.certPreviewBtn}
-                                                                        onClick={(e) => { e.stopPropagation(); setPreviewCert(cert); }}
-                                                                    >
-                                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                                        </svg>
+                                                                    <button style={styles.certPreviewBtn} onClick={(e) => { e.stopPropagation(); setPreviewCert(cert); }}>
+                                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                                                                         <span>معاينة</span>
                                                                     </button>
-                                                                    <a
-                                                                        href={cert.url}
-                                                                        download={cert.name || 'certificate'}
-                                                                        target="_blank"
-                                                                        rel="noopener noreferrer"
-                                                                        onClick={e => e.stopPropagation()}
-                                                                        style={styles.certDownloadBtn}
-                                                                    >
-                                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
-                                                                        </svg>
+                                                                    <a href={cert.url} download={cert.name || 'certificate'} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} style={styles.certDownloadBtn}>
+                                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
                                                                         <span>تحميل</span>
                                                                     </a>
                                                                 </div>
                                                             </div>
                                                         )}
-
                                                         <button
                                                             style={{ ...styles.detailsBtn, ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}) }}
                                                             onMouseEnter={() => setHoveredDetailsBtn(course.id)}
@@ -861,14 +885,21 @@ const CoursesPage = () => {
                                                             style={{ ...styles.addToCartBtn, ...(hoveredAddBtn === course.id && !isAdding ? styles.addToCartBtnHover : {}), ...(isAdding ? styles.addToCartBtnDisabled : {}) }}
                                                             onMouseEnter={() => !isAdding && setHoveredAddBtn(course.id)}
                                                             onMouseLeave={() => setHoveredAddBtn(null)}>
-                                                            {isAdding ? (
-                                                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                            {isAdding
+                                                                ? <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                                                     <svg style={{ width: '20px', height: '20px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                                                                     جاري الإضافة...
                                                                 </span>
-                                                            ) : 'أضف إلى السلة'}
+                                                                : 'أضف إلى السلة'
+                                                            }
                                                         </button>
-                                                        <button style={{ ...styles.detailsBtn, ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}) }} onMouseEnter={() => setHoveredDetailsBtn(course.id)} onMouseLeave={() => setHoveredDetailsBtn(null)} onClick={() => navigate(`/course/${course.slug}`)}>عرض التفاصيل</button>
+                                                        <button
+                                                            style={{ ...styles.detailsBtn, ...(hoveredDetailsBtn === course.id ? styles.detailsBtnHover : {}) }}
+                                                            onMouseEnter={() => setHoveredDetailsBtn(course.id)}
+                                                            onMouseLeave={() => setHoveredDetailsBtn(null)}
+                                                            onClick={() => navigate(`/course/${course.slug}`)}>
+                                                            عرض التفاصيل
+                                                        </button>
                                                     </>
                                                 )}
                                             </div>
