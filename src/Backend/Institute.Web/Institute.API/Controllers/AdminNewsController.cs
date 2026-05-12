@@ -1,8 +1,4 @@
-﻿// ══════════════════════════════════════════════════════════
-// المسار: Institute.API/Controllers/NewsController.cs
-// استبدل الملف الموجود بالكامل
-// ══════════════════════════════════════════════════════════
-using AutoMapper;
+﻿using AutoMapper;
 using Institute.API.DTOs;
 using Institute.API.Helpers;
 using Institute.Application.DTOs;
@@ -53,7 +49,6 @@ namespace Institute.API.Controllers
                         x.NewsPics?
                         .OrderBy(p => p.PicPeriorty)
                         .FirstOrDefault()?.ImageName
-
             )
             }).ToList();
 
@@ -89,9 +84,14 @@ namespace Institute.API.Controllers
                 ImageUrl = BuildImageUrl(
                         news.NewsPics?
                         .OrderBy(p => p.PicPeriorty)
-                        .FirstOrDefault()?.ImageName
+                        .FirstOrDefault()?.ImageName),
 
-            )});
+                // ✅ زيادة — كل الصور مرتبة
+                ImageUrls = news.NewsPics?
+                    .OrderBy(p => p.PicPeriorty)
+                    .Select(p => BuildImageUrl(p.ImageName))
+                    .ToList()
+            });
         }
 
         // ── CREATE ───────────────────────────────
@@ -99,6 +99,10 @@ namespace Institute.API.Controllers
         public async Task<IActionResult> Create([FromForm] NewsCreateUpdateDto dto)
         {
             var result = await _newsWriteService.CreateAsync(dto);
+
+            // ✅ زيادة — بناء الـ URL بعد ما الـ Service يرجع اسم الملف بس
+            result.ImageUrl = BuildImageUrl(result.ImageUrl);
+            result.ImageUrls = result.ImageUrls?.Select(u => BuildImageUrl(u)).ToList();
 
             return CreatedAtAction(
                 nameof(GetNewsById),
@@ -114,6 +118,10 @@ namespace Institute.API.Controllers
 
             if (result == null)
                 return NotFound();
+
+            // ✅ زيادة — بناء الـ URL بعد ما الـ Service يرجع اسم الملف بس
+            result.ImageUrl = BuildImageUrl(result.ImageUrl);
+            result.ImageUrls = result.ImageUrls?.Select(u => BuildImageUrl(u)).ToList();
 
             return Ok(result);
         }
@@ -131,7 +139,6 @@ namespace Institute.API.Controllers
         }
 
         // ── BUILD URL (SAFE) ─────────────────────────
-
         private string? BuildImageUrl(string? blobName)
         {
             if (string.IsNullOrWhiteSpace(blobName))

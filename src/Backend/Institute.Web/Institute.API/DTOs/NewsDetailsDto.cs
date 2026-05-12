@@ -7,6 +7,8 @@
         public string? Details { get; set; }
         public DateTime PublishedAt { get; set; }
         public string? ImageUrl { get; set; }
+        public List<string?>? ImageUrls { get; set; }
+
     }
 
 

@@ -3,7 +3,6 @@ using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Domain.Enums;
 using Institute.Domain.specifications;
-using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,11 +13,9 @@ namespace Institute.Application.Services
     {
         private readonly IRepository<AppUser> _userRepository;
         private readonly IRepository<Cart> _cartRepository;
-       
         private readonly IRepository<Order> _orderRepository;
         private readonly IRepository<OrderItem> _orderItemRepository;
         private readonly IRepository<Payment> _paymentRepository;
-   
         private readonly IRepository<Enrollment> _enrollmentRepository;
 
         public CheckoutService(
@@ -27,38 +24,37 @@ namespace Institute.Application.Services
             IRepository<Order> orderRepository,
             IRepository<OrderItem> orderItemRepository,
             IRepository<Payment> paymentRepository,
-            IRepository<Enrollment> enrollmentRepository
-            )
+            IRepository<Enrollment> enrollmentRepository)
         {
             _userRepository = userRepository;
             _cartRepository = cartRepository;
-            
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository;
             _paymentRepository = paymentRepository;
-            
             _enrollmentRepository = enrollmentRepository;
         }
+
         public async Task<AppUser> GetUserByClerkIdAsync(string clerkUserId)
         {
             var spec = new BaseSpecification<AppUser>(u => u.ClerkUserId == clerkUserId);
             return (await _userRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
         }
-        //NewCODE 
+
         public async Task UpdateOrderGatewayDataAsync(Order order)
         {
             _orderRepository.Update(order);
             await _orderRepository.SaveChangesAsync();
         }
+
         public async Task<Order?> GetOrderByIdAsync(int orderId)
         {
             var spec = new BaseSpecification<Order>(o => o.Id == orderId);
             spec.AddInclude(o => o.Items);
-            spec.AddInclude("Items.Planwork"); // for CourseTitle in refund response
+            spec.AddInclude("Items.Planwork");
 
-            return (await _orderRepository.GetAllWithSpecAsync(spec))
-                .FirstOrDefault();
+            return (await _orderRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
         }
+
         public async Task<Order> CreateOrderAsync(int userId)
         {
             var spec = new BaseSpecification<Cart>(c => c.UserId == userId && !c.IsCheckedOut);
@@ -80,7 +76,7 @@ namespace Institute.Application.Services
             };
 
             await _orderRepository.AddAsync(order);
-            await _orderRepository.SaveChangesAsync(); // عشان نجيب Id
+            await _orderRepository.SaveChangesAsync();
 
             foreach (var item in cart.Items)
             {
@@ -88,7 +84,8 @@ namespace Institute.Application.Services
                 {
                     OrderId = order.Id,
                     PlanworkId = item.PlanworkId,
-                    Price = item.Price
+                    Price = item.Price,
+                    IsOnline = item.IsOnline  // ✅ ينقل IsOnline من CartItem
                 });
             }
 
@@ -106,11 +103,11 @@ namespace Institute.Application.Services
             cart.IsCheckedOut = true;
             _cartRepository.Update(cart);
 
-            // ✅ Save once for everything
             await _orderRepository.SaveChangesAsync();
 
             return order;
         }
+
         public async Task UpdateOrderAsync(Order order)
         {
             if (order == null)
@@ -119,19 +116,18 @@ namespace Institute.Application.Services
             _orderRepository.Update(order);
             await _orderRepository.SaveChangesAsync();
         }
+
         public async Task<Payment> MarkOrderAsPaidAsync(Order order, string transactionRef, string gatewayResponse)
         {
             if (order == null)
                 throw new ArgumentNullException(nameof(order));
 
-            // 1️⃣ جيب الـ Payment الموجود بدل ما تعمل جديد
             var paymentSpec = new BaseSpecification<Payment>(p => p.OrderId == order.Id);
             var payment = (await _paymentRepository.GetAllWithSpecAsync(paymentSpec)).FirstOrDefault();
 
             if (payment == null)
                 throw new Exception("Payment record not found for this order.");
 
-            // 2️⃣ Update الـ Payment الموجود
             payment.Status = PaymentStatus.Success;
             payment.TransactionRef = transactionRef;
             payment.GatewayResponse = gatewayResponse;
@@ -139,11 +135,9 @@ namespace Institute.Application.Services
             payment.Method = PaymentMethod.Visa;
             _paymentRepository.Update(payment);
 
-            // 3️⃣ Update الـ Order
             order.Status = OrderStatus.Paid;
             _orderRepository.Update(order);
 
-            // 4️⃣ Enrollments
             foreach (var item in order.Items)
             {
                 var enrollmentExists = await _enrollmentRepository.AnyAsync(
@@ -156,18 +150,15 @@ namespace Institute.Application.Services
                         UserId = order.UserId,
                         PlanworkId = item.PlanworkId,
                         OrderId = order.Id,
-                        EnrolledAt = DateTime.UtcNow
+                        EnrolledAt = DateTime.UtcNow,
+                        IsOnline = item.IsOnline  // ✅ ينقل IsOnline من OrderItem
                     });
                 }
             }
 
-            // 5️⃣ Save everything
             await _orderRepository.SaveChangesAsync();
 
             return payment;
         }
-
- 
-
     }
 }

@@ -2,6 +2,7 @@
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
 namespace Institute.Application.Services
@@ -42,27 +43,12 @@ namespace Institute.Application.Services
             await _newsRepo.AddAsync(entity);
             await _newsRepo.SaveChangesAsync();
 
-            string? blobName = null;
+            if (dto.Images != null && dto.Images.Any())
+                await UploadAndSavePicsAsync(entity.NewsId, dto.Images);
 
-            if (dto.Image != null)
-            {
-                blobName = await _blobStorage.UploadFileAsync(
-                    dto.Image,
-                    Container,
-                    Folder);
+            var blobNames = await GetExistingBlobNames(entity.NewsId);
 
-                await _picRepo.AddAsync(new NewsPic
-                {
-                    NewsId = entity.NewsId,
-                    ImageName = blobName,
-                    StartUpPic = true,
-                    PicPeriorty = 1
-                });
-
-                await _picRepo.SaveChangesAsync();
-            }
-
-            return ToDto(entity, blobName);
+            return ToDto(entity, blobNames);
         }
 
         // ── UPDATE ───────────────────────────────
@@ -78,41 +64,21 @@ namespace Institute.Application.Services
             _newsRepo.Update(entity);
             await _newsRepo.SaveChangesAsync();
 
-            string? blobName = null;
-
-            var pics = (await _picRepo.GetAllAsync())
-                .Where(p => p.NewsId == id)
-                .ToList();
-
-            foreach (var pic in pics)
-                _picRepo.Delete(pic);
-
-            if (pics.Any())
-                await _picRepo.SaveChangesAsync();
-
-            if (dto.Image != null)
+            // ✅ لو في صور جديدة — رفعهم بس من غير ما نمسح القديمة
+            if (dto.Images != null && dto.Images.Any())
             {
-                blobName = await _blobStorage.UploadFileAsync(
-                    dto.Image,
-                    Container,
-                    Folder);
+                // ✅ أول priority للصور الجديدة بعد آخر واحدة موجودة
+                var lastPriority = (await _picRepo.GetAllAsync())
+                    .Where(p => p.NewsId == id)
+                    .OrderByDescending(p => p.PicPeriorty)
+                    .FirstOrDefault()?.PicPeriorty ?? 0;
 
-                await _picRepo.AddAsync(new NewsPic
-                {
-                    NewsId = entity.NewsId,
-                    ImageName = blobName,
-                    StartUpPic = true,
-                    PicPeriorty = 1
-                });
-
-                await _picRepo.SaveChangesAsync();
-            }
-            else
-            {
-                blobName = await GetExistingBlobName(id);
+                await UploadAndSavePicsAsync(entity.NewsId, dto.Images, lastPriority);
             }
 
-            return ToDto(entity, blobName);
+            var blobNames = await GetExistingBlobNames(entity.NewsId);
+
+            return ToDto(entity, blobNames);
         }
 
         // ── DELETE ───────────────────────────────
@@ -137,7 +103,45 @@ namespace Institute.Application.Services
             return true;
         }
 
-        // ── GET BLOB NAME ─────────────────────────
+        // ── UPLOAD MULTIPLE IMAGES ────────────────────────
+        private async Task UploadAndSavePicsAsync(
+            int newsId,
+            List<IFormFile> images,
+            int startPriority = 0)
+        {
+            int priority = startPriority + 1;
+
+            foreach (var image in images)
+            {
+                var blobPath = await _blobStorage.UploadFileAsync(image, Container, Folder);
+
+                // ✅ حفظ اسم الملف بس في الـ DB بدون المسار
+                var fileName = Path.GetFileName(blobPath);
+
+                await _picRepo.AddAsync(new NewsPic
+                {
+                    NewsId = newsId,
+                    ImageName = fileName,
+                    // ✅ أول صورة في الـ Create بس هي الرئيسية
+                    StartUpPic = priority == 1,
+                    PicPeriorty = priority++
+                });
+            }
+
+            await _picRepo.SaveChangesAsync();
+        }
+
+        // ── GET ALL EXISTING BLOB NAMES ───────────────────
+        private async Task<List<string?>> GetExistingBlobNames(int newsId)
+        {
+            return (await _picRepo.GetAllAsync())
+                .Where(p => p.NewsId == newsId)
+                .OrderBy(p => p.PicPeriorty)
+                .Select(p => p.ImageName)
+                .ToList();
+        }
+
+        // ── GET BLOB NAME (موجودة — مش بنمسحها) ──────────
         private async Task<string?> GetExistingBlobName(int newsId)
         {
             var pic = (await _picRepo.GetAllAsync())
@@ -148,7 +152,7 @@ namespace Institute.Application.Services
             return pic?.ImageName;
         }
 
-        // ── Get URL (SAFE) ─────────────────────────
+        // ── Get URL (safe) ────────────────
         private string? GetImageUrl(string? blobName)
         {
             if (string.IsNullOrWhiteSpace(blobName))
@@ -159,13 +163,10 @@ namespace Institute.Application.Services
             return $"{baseUrl?.TrimEnd('/')}/news/{blobName.TrimStart('/')}";
         }
 
-        
-
-
         // ── DTO ───────────────────────────────
         private NewsCreateUpdateDto ToDto(
             Dailynews entity,
-            string? blobName)
+            List<string?> blobNames)
         {
             return new NewsCreateUpdateDto
             {
@@ -173,7 +174,9 @@ namespace Institute.Application.Services
                 Title = entity.ATitel,
                 Details = entity.ADetails,
                 Date = entity.NewsDate ?? DateTime.UtcNow,
-                ImageUrl = GetImageUrl(blobName)
+                // ✅ بيرجع اسم الملف بس — الـ Controller هو اللي يبني الـ URL
+                ImageUrl = blobNames.FirstOrDefault(),
+                ImageUrls = blobNames
             };
         }
     }
