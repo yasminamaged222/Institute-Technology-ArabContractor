@@ -10,7 +10,21 @@ const T = {
     gray500: '#6b7280', gray700: '#374151',
 };
 
-const BLANK = { id: 0, date: '', title: '', details: '' };
+const BLANK = { id: 0, date: '', title: '', details: '', isActive: true };
+
+// ── ActiveToggle ──────────────────────────────────────────────────────────────
+function ActiveToggle({ value, onChange }) {
+    return (
+        <label className="news-toggle-wrap" title={value ? 'الخبر مرئي — اضغط للإخفاء' : 'الخبر مخفي — اضغط للإظهار'}>
+            <div className={`news-toggle-track${value ? ' on' : ''}`} onClick={() => onChange(!value)}>
+                <div className="news-toggle-thumb" />
+            </div>
+            <span className={`news-toggle-label${value ? ' on' : ' off'}`}>
+                {value ? '👁 مرئي' : '🙈 مخفي'}
+            </span>
+        </label>
+    );
+}
 
 function formatDateAr(dateStr) {
     if (!dateStr) return '—';
@@ -222,8 +236,6 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
 }
 
 // ── MultiImageUploader ────────────────────────────────────────────────────────
-// Each image slot: { file: File|null, previewSrc: string|null, serverUrl: string|null }
-// images[0] is always the MAIN image (shown in list + cover)
 function MultiImageUploader({ images, onChange }) {
     const fileRef = useRef();
     const [dragOver, setDragOver] = useState(false);
@@ -239,10 +251,7 @@ function MultiImageUploader({ images, onChange }) {
         onChange([...images, ...newSlots]);
     };
 
-    const remove = (idx) => {
-        const next = images.filter((_, i) => i !== idx);
-        onChange(next);
-    };
+    const remove = (idx) => onChange(images.filter((_, i) => i !== idx));
 
     const setMain = (idx) => {
         if (idx === 0) return;
@@ -267,16 +276,11 @@ function MultiImageUploader({ images, onChange }) {
                     الصورة الأولى هي الصورة الرئيسية — تظهر في القائمة وكغلاف للخبر
                 </span>
             </div>
-
-            {/* Grid of uploaded images */}
             {images.length > 0 && (
                 <div className="news-imgs-grid">
                     {images.map((img, idx) => (
                         <MultiImageSlot
-                            key={idx}
-                            img={img}
-                            idx={idx}
-                            isMain={idx === 0}
+                            key={idx} img={img} idx={idx} isMain={idx === 0}
                             onRemove={() => remove(idx)}
                             onSetMain={() => setMain(idx)}
                             onReplace={(file) => replaceFile(idx, file)}
@@ -284,8 +288,6 @@ function MultiImageUploader({ images, onChange }) {
                     ))}
                 </div>
             )}
-
-            {/* Drop zone — always visible to add more */}
             <div
                 className={`news-img-zone${dragOver ? ' over' : ''}`}
                 style={{ minHeight: 72, marginTop: images.length ? 12 : 0 }}
@@ -297,9 +299,7 @@ function MultiImageUploader({ images, onChange }) {
                 <div className="news-img-placeholder" style={{ padding: '14px 12px' }}>
                     <div className="news-img-icon" style={{ fontSize: '1.6rem' }}>🖼️</div>
                     <span className="news-img-hint">
-                        {images.length === 0
-                            ? 'اسحب الصور هنا أو اضغط للاختيار'
-                            : '+ إضافة صور أخرى'}
+                        {images.length === 0 ? 'اسحب الصور هنا أو اضغط للاختيار' : '+ إضافة صور أخرى'}
                     </span>
                     <span className="news-img-types">JPG · PNG · WEBP — يمكن اختيار أكثر من صورة</span>
                 </div>
@@ -315,16 +315,12 @@ function MultiImageSlot({ img, idx, isMain, onRemove, onSetMain, onReplace }) {
     return (
         <div className={`news-img-slot${isMain ? ' main' : ''}`}>
             <img src={img.previewSrc} alt={`صورة ${idx + 1}`} className="news-slot-img" />
-
             {isMain && <div className="news-main-badge">⭐ رئيسية</div>}
             {img.file && !isMain && <div className="news-new-badge-slot">جديدة</div>}
             {img.file && isMain && <div className="news-new-badge-slot main">جديدة ⭐</div>}
             {!img.file && img.serverUrl && <div className="news-server-badge-slot">{isMain ? '⭐ محفوظة' : 'محفوظة'}</div>}
-
             <div className="news-slot-actions">
-                {!isMain && (
-                    <button className="news-slot-btn promote" title="تعيين كصورة رئيسية" onClick={onSetMain}>⭐</button>
-                )}
+                {!isMain && <button className="news-slot-btn promote" title="تعيين كصورة رئيسية" onClick={onSetMain}>⭐</button>}
                 <button className="news-slot-btn replace" title="استبدال الصورة" onClick={() => fileRef.current.click()}>🔄</button>
                 <button className="news-slot-btn remove" title="حذف الصورة" onClick={onRemove}>✕</button>
             </div>
@@ -394,6 +390,21 @@ const CSS = `
 .news-inp:disabled{background:${T.gray100};color:${T.gray500};cursor:not-allowed;}
 .news-divider{height:1px;background:${T.gray100};margin:4px 0 20px;}
 
+/* ── Active Toggle ── */
+.news-toggle-wrap{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:6px 0;}
+.news-toggle-track{width:46px;height:26px;border-radius:13px;background:${T.gray300};border:1.5px solid ${T.gray300};position:relative;transition:background .22s,border-color .22s;flex-shrink:0;}
+.news-toggle-track.on{background:#16a34a;border-color:#16a34a;}
+.news-toggle-thumb{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .22s cubic-bezier(.4,0,.2,1);}
+.news-toggle-track.on .news-toggle-thumb{transform:translateX(-20px);}
+.news-toggle-label{font-size:.76rem;font-weight:800;}
+.news-toggle-label.on{color:#16a34a;}
+.news-toggle-label.off{color:${T.gray500};}
+
+/* sidebar status dot */
+.news-row-status{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+.news-row-status.on{background:#16a34a;}
+.news-row-status.off{background:${T.gray300};}
+
 /* ── Multi Image Grid ── */
 .news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;overflow:visible;box-sizing:border-box;}
 .news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.03);}
@@ -402,22 +413,14 @@ const CSS = `
 .news-img-hint{color:${T.gray500};font-size:.68rem;font-weight:600;text-align:center;line-height:1.6;}
 .news-img-types{color:${T.gray300};font-size:.62rem;background:${T.gray100};padding:2px 10px;border-radius:2px;}
 .news-multi-img-wrap{margin-bottom:4px;}
-
-/* image grid */
 .news-imgs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:4px;}
-
-/* individual slot */
 .news-img-slot{position:relative;border-radius:6px;overflow:hidden;border:2px solid ${T.gray300};background:#000;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;transition:border-color .2s,box-shadow .2s;}
 .news-img-slot.main{border-color:${T.orange};box-shadow:0 0 0 3px rgba(245,124,0,.2);}
 .news-slot-img{width:100%;height:100%;object-fit:cover;display:block;}
-
-/* badges */
 .news-main-badge{position:absolute;top:5px;right:5px;background:${T.orange};color:#fff;font-size:.55rem;font-weight:800;padding:2px 8px;border-radius:3px;pointer-events:none;z-index:2;}
 .news-new-badge-slot{position:absolute;top:5px;left:5px;background:#f59e0b;color:#fff;font-size:.52rem;font-weight:800;padding:2px 6px;border-radius:3px;pointer-events:none;z-index:2;}
 .news-new-badge-slot.main{background:${T.orange};}
 .news-server-badge-slot{position:absolute;top:5px;left:5px;background:${T.blue};color:#fff;font-size:.52rem;font-weight:800;padding:2px 6px;border-radius:3px;pointer-events:none;z-index:2;}
-
-/* hover actions */
 .news-slot-actions{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;gap:4px;padding:5px;opacity:0;transition:opacity .18s;}
 .news-img-slot:hover .news-slot-actions{opacity:1;}
 .news-slot-btn{border:none;border-radius:3px;padding:4px 7px;font-size:.7rem;cursor:pointer;font-family:inherit;font-weight:700;line-height:1;}
@@ -515,38 +518,28 @@ async function apiFetch(path, opts = {}) {
     return null;
 }
 
-// ── Build FormData for POST/PUT ───────────────────────────────────────────────
-// images array: [{ file, previewSrc, serverUrl }, ...]
-// images[0] = main image
-// Backend fields:
-//   Images      → array of new File uploads
-//   ImageUrl    → main image URL (server) or "pending" if uploading new
-//   ImageUrls   → remaining image URLs (server) as array of strings
+// ── Build FormData ────────────────────────────────────────────────────────────
 function buildFormData(form, images, isNew) {
     const fd = new FormData();
     fd.append('Id', isNew ? '0' : String(form.id));
     fd.append('Title', form.title || '');
     fd.append('Details', form.details || '');
     fd.append('Date', form.date ? `${form.date}T00:00:00.000Z` : '');
+    fd.append('IsActive', String(form.isActive));   // ← NEW
 
     const main = images[0];
     const rest = images.slice(1);
 
-    // Main image
     if (main?.file) {
-        fd.append('Images', main.file);   // first file = main
-        fd.append('ImageUrl', 'pending'); // backend sets this after upload
+        fd.append('Images', main.file);
+        fd.append('ImageUrl', 'pending');
     } else {
         fd.append('ImageUrl', main?.serverUrl || 'pending');
     }
 
-    // Additional images
     rest.forEach(img => {
-        if (img.file) {
-            fd.append('Images', img.file);
-        } else if (img.serverUrl) {
-            fd.append('ImageUrls', img.serverUrl);
-        }
+        if (img.file) fd.append('Images', img.file);
+        else if (img.serverUrl) fd.append('ImageUrls', img.serverUrl);
     });
 
     return fd;
@@ -562,11 +555,7 @@ export default function NewsTab() {
     const [total, setTotal] = useState(0);
     const [selected, setSelected] = useState(null);
     const [form, setForm] = useState({ ...BLANK });
-
-    // images: array of { file, previewSrc, serverUrl }
-    // images[0] is always the main/cover image
     const [images, setImages] = useState([]);
-
     const [isNew, setIsNew] = useState(false);
     const [search, setSearch] = useState('');
     const [notification, setNotif] = useState(null);
@@ -599,7 +588,6 @@ export default function NewsTab() {
     useEffect(() => { loadList(); }, [loadList]);
 
     // ── Fetch single ──
-    // API returns: { id, title, details, publishedAt, imageUrl, imageUrls? }
     const pickById = async (id, listItem) => {
         setDetailL(true);
         setDelConf(false);
@@ -614,6 +602,7 @@ export default function NewsTab() {
                 title: listItem.title || '',
                 details: '',
                 date: toInputDate(listItem.publishedAt),
+                isActive: listItem.isActive ?? true,   // ← NEW
             });
         }
 
@@ -625,21 +614,19 @@ export default function NewsTab() {
                     title: item.title || '',
                     details: item.details || '',
                     date: toInputDate(item.date || item.publishedAt),
+                    isActive: item.isActive ?? true,   // ← NEW
                 };
                 setSelected(mapped);
                 setForm(mapped);
 
-                // Build images array: main first, then extras
                 const slots = [];
                 const mainResolved = resolveImg(item.imageUrl);
                 if (mainResolved) slots.push({ file: null, previewSrc: mainResolved, serverUrl: item.imageUrl });
-
                 const extras = item.imageUrls ?? item.ImageUrls ?? [];
                 extras.forEach(u => {
                     const r = resolveImg(u);
                     if (r) slots.push({ file: null, previewSrc: r, serverUrl: u });
                 });
-
                 setImages(slots);
             }
         } catch (e) {
@@ -662,17 +649,6 @@ export default function NewsTab() {
         setSaving(true);
         try {
             const fd = buildFormData(form, images, isNew);
-
-            console.group('📤 FormData being sent to API');
-            for (const [key, val] of fd.entries()) {
-                if (val instanceof File) {
-                    console.log(`  ${key}: [File] name="${val.name}" size=${val.size} type="${val.type}"`);
-                } else {
-                    console.log(`  ${key}: "${val}"`);
-                }
-            }
-            console.groupEnd();
-
             if (isNew) {
                 await apiFetch('/api/admin/AdminNews', { method: 'POST', body: fd });
                 toast('تم إضافة الخبر بنجاح');
@@ -726,7 +702,6 @@ export default function NewsTab() {
         toast('تم إلغاء التغييرات', 'info');
     };
 
-    // Main image for sidebar thumbnail
     const mainImageOf = (item) => resolveImg(item.imageUrl);
 
     const filtered = news.filter(n =>
@@ -791,6 +766,8 @@ export default function NewsTab() {
                                 <div className="news-row-title">{item.title || 'بدون عنوان'}</div>
                                 <div className="news-row-date">{formatDateAr(item.publishedAt)}</div>
                             </div>
+                            {/* ── status dot ── */}
+                            <div className={`news-row-status ${(item.isActive ?? true) ? 'on' : 'off'}`} title={(item.isActive ?? true) ? 'مرئي' : 'مخفي'} />
                             <div className="news-row-id">#{item.id}</div>
                         </div>
                     ))}
@@ -833,6 +810,16 @@ export default function NewsTab() {
                                     <label className="news-label">التاريخ *</label>
                                     <input className="news-inp" type="date" name="date" value={form.date} onChange={handleChange} style={{ direction: 'ltr', textAlign: 'right' }} />
                                 </div>
+
+                                {/* ── IsActive toggle — spans full width, sits below date ── */}
+                                <div className="news-field" style={{ gridColumn: '1/-1' }}>
+                                    <label className="news-label">حالة الظهور</label>
+                                    <ActiveToggle
+                                        value={form.isActive}
+                                        onChange={val => setForm(f => ({ ...f, isActive: val }))}
+                                    />
+                                </div>
+
                                 <div className="news-field" style={{ gridColumn: '1/-1' }}>
                                     <label className="news-label">عنوان الخبر *</label>
                                     <input className="news-inp" name="title" value={form.title} onChange={handleChange} placeholder="أدخل عنوان الخبر هنا..." />
