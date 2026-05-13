@@ -107,40 +107,19 @@ const craftItems = [
     { Icon: AssignmentTurnedInIcon, title: 'الاختبارات والتقييم', text: 'اختبارات سيكومترية وتقييمات تخصصية في اللغة والحاسب والهندسة.', link: '/tests' },
 ];
 
-// ─── STATS: computed dynamically — years from 1978, rest from API ─────────────
+// ─── STATS ────────────────────────────────────────────────────────────────────
 const FOUNDING_YEAR = 1978;
 function buildStats(apiStats) {
     const currentYear = new Date().getFullYear();
     const yearsExp = currentYear - FOUNDING_YEAR;
-    // Pull live values from the same API the admin uses; fall back to reasonable defaults
     const gs = (fields, fb) => { if (!apiStats) return fb; for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; } return fb; };
     const traineesPerYear = gs(['enrollmentsCount', 'usersCount'], 12000);
     const programs = gs(['planworksCount', 'coursesCount'], 200);
     return [
-        {
-            raw: yearsExp,
-            suffix: '+',
-            sub: `${FOUNDING_YEAR}–${currentYear}`,
-            l: 'عامًا من الخبرة',
-        },
-        {
-            raw: traineesPerYear,
-            suffix: '+',
-            sub: null,
-            l: 'متدرب سنويًا',
-        },
-        {
-            raw: programs,
-            suffix: '+',
-            sub: null,
-            l: 'برنامج تدريبي',
-        },
-        {
-            raw: FOUNDING_YEAR,
-            suffix: '',
-            sub: null,
-            l: 'سنة التأسيس',
-        },
+        { raw: yearsExp, suffix: '+', sub: `${FOUNDING_YEAR}–${currentYear}`, l: 'عامًا من الخبرة' },
+        { raw: traineesPerYear, suffix: '+', sub: null, l: 'متدرب سنويًا' },
+        { raw: programs, suffix: '+', sub: null, l: 'برنامج تدريبي' },
+        { raw: FOUNDING_YEAR, suffix: '', sub: null, l: 'سنة التأسيس' },
     ];
 }
 
@@ -216,7 +195,6 @@ export default function Home() {
     const [gsapReady, setGsapReady] = useState(false);
     const [apiStats, setApiStats] = useState(null);
 
-    // ── Fetch public stats (same endpoint as admin) ───────────────────────
     useEffect(() => {
         fetch('https://acwebsite-icmet-test.azurewebsites.net/api/Admin/stats')
             .then(r => r.ok ? r.json() : Promise.reject())
@@ -224,7 +202,6 @@ export default function Home() {
             .catch(() => setApiStats(null));
     }, []);
 
-    // ── Refs for GSAP targets ──────────────────────────────────────────────
     const heroRef = useRef(null);
     const heroInnerRef = useRef(null);
     const progressRef = useRef(null);
@@ -260,9 +237,7 @@ export default function Home() {
             .catch(() => setNewsLoading(false));
     }, []);
 
-    // ── Load GSAP + ScrollTrigger from CDN, then wire everything ──────────
     useEffect(() => {
-        // Dynamically load GSAP + ScrollTrigger so no npm install needed
         const loadScript = (src) => new Promise((res, rej) => {
             if (document.querySelector(`script[src="${src}"]`)) return res();
             const s = document.createElement('script');
@@ -281,113 +256,58 @@ export default function Home() {
             gsap.registerPlugin(ScrollTrigger);
             setGsapReady(true);
 
-            // ─────────────────────────────────────────────────────────────
-            // 1. SCROLL PROGRESS BAR
-            // ─────────────────────────────────────────────────────────────
             gsap.to(progressRef.current, {
-                scaleX: 1,
-                ease: 'none',
-                scrollTrigger: {
-                    trigger: document.body,
-                    start: 'top top',
-                    end: 'bottom bottom',
-                    scrub: true,
-                },
+                scaleX: 1, ease: 'none',
+                scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: true },
             });
 
-            // ─────────────────────────────────────────────────────────────
-            // 2. HERO PARALLAX — bg images scroll at 40% speed
-            // ─────────────────────────────────────────────────────────────
             if (heroRef.current) {
                 gsap.to(heroRef.current.querySelectorAll('.hero-bg-layer'), {
-                    yPercent: 30,
-                    ease: 'none',
-                    scrollTrigger: {
-                        trigger: heroRef.current,
-                        start: 'top top',
-                        end: 'bottom top',
-                        scrub: true,
-                    },
+                    yPercent: 30, ease: 'none',
+                    scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true },
                 });
-                // Hero content fades + drifts up while scrolling away
                 gsap.to(heroInnerRef.current, {
-                    yPercent: -20,
-                    opacity: 0,
-                    ease: 'none',
-                    scrollTrigger: {
-                        trigger: heroRef.current,
-                        start: 'center top',
-                        end: 'bottom top',
-                        scrub: true,
-                    },
+                    yPercent: -20, opacity: 0, ease: 'none',
+                    scrollTrigger: { trigger: heroRef.current, start: 'center top', end: 'bottom top', scrub: true },
                 });
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 3. STATS COUNTER ANIMATION
-            // ─────────────────────────────────────────────────────────────
             if (statsRef.current) {
+                // Make cells visible immediately
+                const cells = statsRef.current.querySelectorAll('.stat-cell');
+                cells.forEach(cell => { cell.style.opacity = '1'; cell.style.transform = 'translateY(0)'; });
+
+                // Start counters immediately on load
                 const counters = statsRef.current.querySelectorAll('[data-count]');
                 counters.forEach((el) => {
                     const target = +el.getAttribute('data-count');
                     const suffix = el.getAttribute('data-suffix') || '';
-                    // Year fields (no suffix, > 1000) count from near the target
-                    // Large numbers (trainees) count from a lower starting point
                     const isYear = target > 1000 && suffix === '';
                     const isLarge = target >= 1000 && !isYear;
                     const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
-                    ScrollTrigger.create({
-                        trigger: el,
-                        start: 'top 88%',
-                        once: true,
-                        onEnter: () => {
-                            const obj = { val: startVal };
-                            gsap.to(obj, {
-                                val: target,
-                                duration: isYear ? 1.4 : isLarge ? 2.2 : 1.8,
-                                ease: 'power2.out',
-                                onUpdate: () => {
-                                    const v = Math.round(obj.val);
-                                    el.textContent = v.toLocaleString('ar-EG') + suffix;
-                                },
-                            });
+
+                    const obj = { val: startVal };
+                    gsap.to(obj, {
+                        val: target,
+                        duration: isYear ? 1.4 : isLarge ? 2.2 : 1.8,
+                        ease: 'power2.out',
+                        onUpdate: () => {
+                            el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix;
                         },
                     });
                 });
-
-                // Stat cells slide up
-                const cells = statsRef.current.querySelectorAll('.stat-cell');
-                gsap.fromTo(cells,
-                    { opacity: 0, y: 40 },
-                    {
-                        opacity: 1, y: 0,
-                        duration: 0.8,
-                        ease: 'power3.out',
-                        stagger: 0.12,
-                        scrollTrigger: { trigger: statsRef.current, start: 'top 85%', once: true },
-                    }
-                );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 4. FEATURE CARDS — stagger slide-up
-            // ─────────────────────────────────────────────────────────────
             if (featCards.current.length) {
                 gsap.fromTo(featCards.current,
                     { opacity: 0, y: 60, scale: 0.96 },
                     {
-                        opacity: 1, y: 0, scale: 1,
-                        duration: 0.9,
-                        ease: 'power3.out',
-                        stagger: 0.14,
-                        scrollTrigger: { trigger: featRef.current, start: 'top 78%', once: true },
+                        opacity: 1, y: 0, scale: 1, duration: 0.9, ease: 'power3.out', stagger: 0.14,
+                        scrollTrigger: { trigger: featRef.current, start: 'top 78%', once: true }
                     }
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 5. ABOUT SECTION — image scale-in + text slide
-            // ─────────────────────────────────────────────────────────────
             if (aboutImgRef.current) {
                 gsap.fromTo(aboutImgRef.current,
                     { opacity: 0, scale: 0.92, x: 40 },
@@ -398,8 +318,7 @@ export default function Home() {
                 );
             }
             if (aboutTxtRef.current) {
-                const kids = aboutTxtRef.current.children;
-                gsap.fromTo(kids,
+                gsap.fromTo(aboutTxtRef.current.children,
                     { opacity: 0, y: 36 },
                     {
                         opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1,
@@ -408,41 +327,26 @@ export default function Home() {
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 6. VISION CARDS — stagger + slight scale
-            // ─────────────────────────────────────────────────────────────
             if (visionCards.current.length) {
                 gsap.fromTo(visionCards.current,
                     { opacity: 0, y: 50, scale: 0.95 },
                     {
-                        opacity: 1, y: 0, scale: 1,
-                        duration: 0.85,
-                        ease: 'power3.out',
-                        stagger: 0.13,
-                        scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true },
+                        opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'power3.out', stagger: 0.13,
+                        scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true }
                     }
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 7. DOWNLOADS BAR — wipe in from side
-            // ─────────────────────────────────────────────────────────────
             if (dlRef.current) {
                 gsap.fromTo(dlRef.current.querySelectorAll('.dl-item'),
                     { opacity: 0, x: -40 },
                     {
-                        opacity: 1, x: 0,
-                        duration: 0.7,
-                        ease: 'power2.out',
-                        stagger: 0.12,
-                        scrollTrigger: { trigger: dlRef.current, start: 'top 85%', once: true },
+                        opacity: 1, x: 0, duration: 0.7, ease: 'power2.out', stagger: 0.12,
+                        scrollTrigger: { trigger: dlRef.current, start: 'top 85%', once: true }
                     }
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 8. CERTS SECTION — fade + left slide
-            // ─────────────────────────────────────────────────────────────
             if (certRef.current) {
                 gsap.fromTo(certRef.current,
                     { opacity: 0, y: 40 },
@@ -453,9 +357,6 @@ export default function Home() {
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 9. SCHOOLS — featured card + grid cascade
-            // ─────────────────────────────────────────────────────────────
             if (schoolsRef.current) {
                 const featured = schoolsRef.current.querySelector('.school-featured');
                 const cards = schoolsRef.current.querySelectorAll('.school-card');
@@ -479,25 +380,16 @@ export default function Home() {
                 }
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 10. PROTOCOL CARDS — stagger
-            // ─────────────────────────────────────────────────────────────
             if (protoCards.current.length) {
                 gsap.fromTo(protoCards.current,
                     { opacity: 0, y: 44, scale: 0.96 },
                     {
-                        opacity: 1, y: 0, scale: 1,
-                        duration: 0.8,
-                        ease: 'power3.out',
-                        stagger: 0.1,
-                        scrollTrigger: { trigger: protoRef.current, start: 'top 80%', once: true },
+                        opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.1,
+                        scrollTrigger: { trigger: protoRef.current, start: 'top 80%', once: true }
                     }
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 11. NEWS SECTION
-            // ─────────────────────────────────────────────────────────────
             if (newsRef.current) {
                 gsap.fromTo(newsRef.current,
                     { opacity: 0, y: 30 },
@@ -508,40 +400,32 @@ export default function Home() {
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 12. CRAFT CARDS
-            // ─────────────────────────────────────────────────────────────
             if (craftCards.current.length) {
                 gsap.fromTo(craftCards.current,
                     { opacity: 0, y: 50 },
                     {
-                        opacity: 1, y: 0,
-                        duration: 0.85,
-                        ease: 'power3.out',
-                        stagger: 0.14,
-                        scrollTrigger: { trigger: craftRef.current, start: 'top 80%', once: true },
+                        opacity: 1, y: 0, duration: 0.85, ease: 'power3.out', stagger: 0.14,
+                        scrollTrigger: { trigger: craftRef.current, start: 'top 80%', once: true }
                     }
                 );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 13. LIBRARY SECTION — split reveal
-            // ─────────────────────────────────────────────────────────────
             if (libRef.current) {
                 const [visual, content] = libRef.current.querySelectorAll('.lib-visual, .lib-content');
-                gsap.fromTo(visual, { opacity: 0, x: 60 }, {
-                    opacity: 1, x: 0, duration: 1, ease: 'power3.out',
-                    scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
-                });
-                gsap.fromTo(content, { opacity: 0, x: -60 }, {
-                    opacity: 1, x: 0, duration: 1, ease: 'power3.out', delay: 0.15,
-                    scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
-                });
+                gsap.fromTo(visual, { opacity: 0, x: 60 },
+                    {
+                        opacity: 1, x: 0, duration: 1, ease: 'power3.out',
+                        scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
+                    }
+                );
+                gsap.fromTo(content, { opacity: 0, x: -60 },
+                    {
+                        opacity: 1, x: 0, duration: 1, ease: 'power3.out', delay: 0.15,
+                        scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
+                    }
+                );
             }
 
-            // ─────────────────────────────────────────────────────────────
-            // 14. TECH/SCHOOLS HEADER
-            // ─────────────────────────────────────────────────────────────
             if (techRef.current) {
                 gsap.fromTo(techRef.current.querySelector('.tech-header'),
                     { opacity: 0, y: 30 },
@@ -560,16 +444,8 @@ export default function Home() {
         <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w }}>
 
             {/* ── SCROLL PROGRESS BAR ─────────────────────────────────────── */}
-            <div style={{
-                position: 'fixed', top: 0, left: 0, right: 0, height: 3,
-                zIndex: 9999, background: C.g3,
-            }}>
-                <div ref={progressRef} style={{
-                    height: '100%',
-                    background: `linear-gradient(90deg, ${C.o}, ${C.b})`,
-                    transformOrigin: 'left center',
-                    transform: 'scaleX(0)',
-                }} />
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999, background: C.g3 }}>
+                <div ref={progressRef} style={{ height: '100%', background: `linear-gradient(90deg, ${C.o}, ${C.b})`, transformOrigin: 'left center', transform: 'scaleX(0)' }} />
             </div>
 
             <style>{`
@@ -577,7 +453,6 @@ export default function Home() {
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
-        /* ── Hero ── */
         .hero-swiper{width:100%;height:clamp(300px,100vh,710px);}
         .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;overflow:hidden;}
         .hero-bg-layer{position:absolute;inset:-20% 0;will-change:transform;}
@@ -595,13 +470,11 @@ export default function Home() {
         .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
         .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:44px;}
 
-        /* ── Stats ── */
         .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);}
         @media(max-width:760px){.stats-bar{grid-template-columns:repeat(2,1fr);}}
-        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;opacity:0;}
+        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;}        
         .stat-cell:last-child{border-left:none;}
 
-        /* ── Feature cards ── */
         .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.5vw,28px);}
         @media(max-width:780px){.feat-grid{grid-template-columns:1fr;}}
         .feat-card{
@@ -620,21 +493,17 @@ export default function Home() {
         .feat-num{font-family:${F};font-size:clamp(2.4rem,4vw,3.8rem);font-weight:900;color:${C.g3};line-height:1;margin-bottom:20px;letter-spacing:-2px;transition:color .3s;}
         .feat-card:hover .feat-num{color:${C.o};}
 
-        /* ── Vision grid ── */
         .vision-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,20px);}
         @media(max-width:500px){.vision-grid{grid-template-columns:1fr;}}
         .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;opacity:0;}
         .vis-item:hover{border-color:${C.o};box-shadow:0 4px 24px rgba(245,124,0,.10);}
 
-        /* ── Downloads grid ── */
         .dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,2vw,16px);}
         @media(max-width:600px){.dl-grid{grid-template-columns:1fr;}}
 
-        /* ── Cert cards ── */
         .cert-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:24px;color:${C.w};transition:background .25s,border-color .25s;height:100%;display:flex;flex-direction:column;gap:14px;}
         .cert-card:hover{background:rgba(255,255,255,.1);border-color:rgba(245,124,0,.4);}
 
-        /* ── Protocols ── */
         .proto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
         @media(max-width:900px){.proto-grid{grid-template-columns:repeat(2,1fr);}}
         @media(max-width:560px){.proto-grid{grid-template-columns:1fr;}}
@@ -643,7 +512,6 @@ export default function Home() {
         .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:linear-gradient(180deg,${C.o},${C.b});transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
         .proto-card:hover::after{transform:scaleY(1);}
 
-        /* ── Schools ── */
         .schools-layout{display:grid;grid-template-columns:minmax(0,280px) 1fr;gap:20px;align-items:stretch;}
         @media(max-width:960px){.schools-layout{grid-template-columns:1fr;}}
         .school-featured{border-radius:12px;border:2px solid ${C.b};background:linear-gradient(160deg,${C.b} 0%,${C.bd} 100%);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s,box-shadow .3s;opacity:0;}
@@ -654,11 +522,9 @@ export default function Home() {
         .school-card:hover{border-color:${C.b};transform:translateY(-5px);box-shadow:0 12px 32px rgba(8,101,168,.12);}
         .sc-meta{font-family:${F};font-size:.68rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
 
-        /* ── Craft ── */
         .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;opacity:0;}
         .craft-card:hover{border-color:${C.o};transform:translateY(-4px);}
 
-        /* ── News ── */
         .news-card{overflow:hidden;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,transform .25s;height:100%;}
         .news-card:hover{border-color:${C.b};transform:translateY(-4px);}
         .news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{width:44px;height:44px;border-radius:50%;background:${C.w};border:1px solid ${C.g3};color:${C.b}!important;transition:all .25s;}
@@ -668,11 +534,9 @@ export default function Home() {
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
         @media(max-width:600px){.news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{display:none!important;}}
 
-        /* ── ob-outline ── */
         a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
         a.ob-outline:hover{background:${C.o};color:#fff;}
 
-        /* ── Grids ── */
         .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,24px);}
         .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,2vw,24px);}
         .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.8vw,20px);}
@@ -686,7 +550,6 @@ export default function Home() {
         .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
         .why-card:hover{border-color:${C.o};transform:translateY(-3px);}
 
-        /* ── Library ── */
         .lib-split{display:grid;grid-template-columns:1fr 1fr;min-height:clamp(260px,36vw,480px);}
         @media(max-width:680px){.lib-split{grid-template-columns:1fr;min-height:unset;}}
         .lib-visual{background:${C.o};display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);position:relative;overflow:hidden;opacity:0;}
@@ -694,16 +557,17 @@ export default function Home() {
         .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
         .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
 
-        /* ── dl-item initial state ── */
         .dl-item{opacity:0;}
 
         @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
         .scroll-ind{animation:bounce 2s ease-in-out infinite;}
         @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
 
-        /* ── about img opacity reset for GSAP ── */
         .about-img-wrap{opacity:0;}
         .about-txt-wrap>*{opacity:0;}
+
+        /* ── Force English numerals on stat counters ── */
+        .stat-counter{font-variant-numeric:lining-nums;unicode-bidi:plaintext;direction:ltr;display:inline-block;}
       `}</style>
 
             {/* 1 ─ HERO ──────────────────────────────────────────────────────── */}
@@ -713,12 +577,7 @@ export default function Home() {
                     navigation pagination={{ clickable: true }} loop speed={800}>
                     {slides.map((sl, i) => (
                         <SwiperSlide key={i}>
-                            {/* Parallax bg layer — GSAP moves this */}
-                            <div className="hero-bg-layer" style={{
-                                backgroundImage: `url(${sl.image})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                            }} />
+                            <div className="hero-bg-layer" style={{ backgroundImage: `url(${sl.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                             <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(4,20,40,.82) 0%, rgba(4,20,40,.58) 60%, rgba(4,20,40,.28) 100%)' }} />
                             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
                             <div ref={i === 0 ? heroInnerRef : null} style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
@@ -749,12 +608,14 @@ export default function Home() {
                     <div className="stats-bar">
                         {buildStats(apiStats).map((s, i) => (
                             <div key={i} className="stat-cell">
+                                {/* data-count drives the GSAP counter; initial display uses en-US numerals */}
                                 <div
+                                    className="stat-counter"
                                     data-count={s.raw}
                                     data-suffix={s.suffix}
                                     style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}
                                 >
-                                    {s.raw.toLocaleString('ar-EG')}{s.suffix}
+                                    {s.raw.toLocaleString('en-US')}{s.suffix}
                                 </div>
                                 {s.sub && (
                                     <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>
@@ -873,13 +734,7 @@ export default function Home() {
                     <div className="dl-grid">
                         {downloadItems.map((item, i) => (
                             <a key={i} className="dl-item" href={item.pdfUrl} target="_blank" rel="noopener noreferrer"
-                                style={{
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
-                                    padding: 'clamp(16px,2.5vw,24px) clamp(12px,2vw,20px)',
-                                    background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)',
-                                    borderRadius: 8, textDecoration: 'none', color: C.w, textAlign: 'center',
-                                    transition: 'background .2s,transform .2s',
-                                }}
+                                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 'clamp(16px,2.5vw,24px) clamp(12px,2vw,20px)', background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, textDecoration: 'none', color: C.w, textAlign: 'center', transition: 'background .2s,transform .2s' }}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.13)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.transform = ''; }}
                             >
@@ -1080,7 +935,7 @@ export default function Home() {
                                         <div style={{ position: 'relative', paddingTop: '58%' }}>
                                             <img src={n.imageUrl} alt={n.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                                             <div style={{ position: 'absolute', top: 0, left: 0, background: C.b, color: C.w, padding: '5px 14px', fontFamily: F, fontSize: '.66rem', fontWeight: 700, letterSpacing: 1, borderRadius: '0 0 6px 0' }}>
-                                                {new Date(n.publishedAt).toLocaleDateString('ar-EG', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                {new Date(n.publishedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                             </div>
                                         </div>
                                         <div style={{ padding: '16px' }}>
