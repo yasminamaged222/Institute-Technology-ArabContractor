@@ -46,11 +46,11 @@ async function apiFetch(path) {
 // ── Helpers ──
 function fmtMoney(n) {
     if (n == null || isNaN(Number(n))) return '0';
-    return Number(n).toLocaleString('ar-EG');
+    return Number(n).toLocaleString('en-US');
 }
 function formatDateAr(raw) {
     if (!raw) return null;
-    try { return new Date(raw).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }); }
+    try { return new Date(raw).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
     catch { return raw; }
 }
 function buildExportRows(rows, grandTotal) {
