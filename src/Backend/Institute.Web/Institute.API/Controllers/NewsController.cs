@@ -12,7 +12,7 @@ namespace Institute.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class  NewsController : ControllerBase
+    public class NewsController : ControllerBase
     {
         private readonly IReadOnlyService<Dailynews> _newsService;
         private readonly IMapper _mapper;
@@ -31,15 +31,32 @@ namespace Institute.API.Controllers
             _newsWriteService = newsWriteService;
         }
 
-        // ── GET ALL (موجود) ───────────────────────────────────────────────────
-        /// <summary>GET /api/news/getAllNews?pageIndex=1&amp;pageSize=10</summary>
+        // ── GET ALL ───────────────────────────────────────────────────
         [HttpGet("getAllNews")]
         public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews(
             [FromQuery] NewsSpecParams newsParams)
         {
             var spec = new NewsWithMainPicSpec(newsParams);
             var news = await _repo.GetAllWithSpecAsync(spec);
-            var data = _mapper.Map<IReadOnlyList<Dailynews>, IReadOnlyList<NewsListDto>>(news);
+
+            // ✅ بدل الـ mapper — بنبني يدوياً عشان نضيف ImageUrls
+            var data = news.Select(x => new NewsListDto
+            {
+                Id = x.NewsId,
+                Title = x.ATitel,
+                PublishedAt = x.NewsDate ?? DateTime.UtcNow,
+                ImageUrl = BuildImageUrl(
+                    x.NewsPics?
+                    .OrderBy(p => p.PicPeriorty)
+                    .FirstOrDefault()?.ImageName),
+
+                // ✅ زيادة — كل الصور
+                ImageUrls = x.NewsPics?
+                    .OrderBy(p => p.PicPeriorty)
+                    .Select(p => BuildImageUrl(p.ImageName))
+                    .ToList()
+            }).ToList();
+
             var countSpec = new NewsWithFiltersForCountSpec(newsParams);
             var count = await _repo.GetCountAsync(countSpec);
 
@@ -47,8 +64,7 @@ namespace Institute.API.Controllers
                 newsParams.PageIndex, newsParams.PageSize, count, data));
         }
 
-        // ── GET BY ID (موجود) ─────────────────────────────────────────────────
-        /// <summary>GET /api/news/{id}</summary>
+        // ── GET BY ID ─────────────────────────────────────────────────
         [HttpGet("{id}")]
         public async Task<IActionResult> GetNewsById(int id)
         {
@@ -56,11 +72,27 @@ namespace Institute.API.Controllers
 
             var spec = new NewsWithDetailsSpec(id);
             var news = await _newsService.GetEntityWithSpec(spec);
+
             if (news == null) return NotFound();
 
-            return Ok(_mapper.Map<NewsDetailsDto>(news));
+            var dto = _mapper.Map<NewsDetailsDto>(news);
+
+            // ✅ زيادة — كل الصور
+            dto.ImageUrls = news.NewsPics?
+                .OrderBy(p => p.PicPeriorty)
+                .Select(p => BuildImageUrl(p.ImageName))
+                .ToList();
+
+            return Ok(dto);
         }
 
-         
+        // ── BUILD URL ─────────────────────────────────────────────────
+        private string? BuildImageUrl(string? blobName)
+        {
+            if (string.IsNullOrWhiteSpace(blobName))
+                return null;
+
+            return $"https://acwebappbackup.blob.core.windows.net/icemt/news/{blobName}";
+        }
     }
 }
