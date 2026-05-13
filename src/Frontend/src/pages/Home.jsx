@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 

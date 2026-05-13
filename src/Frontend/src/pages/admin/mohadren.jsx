@@ -9,6 +9,7 @@ const IMAGE_BASE_URL = 'https://www.arabcont.com/icemt/assets/images/';
 
 // ── Map API response → internal form shape ────────────────────────────────────
 function apiToForm(apiLec) {
+    console.log("API PIC:", apiLec.pic);
     return {
         id:           apiLec.id,
         name:         apiLec.name        || '',
@@ -20,12 +21,10 @@ function apiToForm(apiLec) {
         certificates: apiLec.edu         || '',
         details:      apiLec.details     || '',
         photo:        apiLec.pic
-            ? (apiLec.pic.startsWith('data:') || apiLec.pic.startsWith('http')
-                ? apiLec.pic
-                : `${IMAGE_BASE_URL}${apiLec.pic}`)
-            : null,
+    
     };
 }
+console.log();
 
 // ── Map internal form → API POST/PUT body ─────────────────────────────────────
 function formToApi(form) {
