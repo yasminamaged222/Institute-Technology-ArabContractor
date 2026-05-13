@@ -23,21 +23,48 @@ export function toStatusKey(s) {
     return map[String(s).toLowerCase()] ?? s;
 }
 
+/**
+ * Resolves a certificate URL from the API.
+ *
+ * The backend now returns fileUrl in two forms:
+ *   1. Absolute blob URL  → "https://acwebappbackup.blob.core.windows.net/icemt/certificates/..."
+ *      (from GET /api/Admin/certificates/{userId}/{planworkId})
+ *   2. Relative API path  → "/api/Admin/certificates/download/{guid}.jpg"
+ *      (from GET /api/Admin/certificates  — all certs list)
+ *
+ * Both must resolve to a usable URL for <img>, <iframe>, and download links.
+ */
 export function resolveCertUrl(url) {
     if (!url) return null;
-    if (url === 'uploaded') return url;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    if (url.startsWith('/')) return `${API_HOST}${url}`;
-    return url;
+    if (url === 'uploaded') return null;                          // legacy sentinel — no real URL
+    if (url.startsWith('https://') || url.startsWith('http://')) return url;  // already absolute (blob URL)
+    if (url.startsWith('/')) return `${API_HOST}${url}`;          // relative path → prepend host
+    return `${API_HOST}/${url}`;                                  // safety fallback
+}
+
+/** Normalise a raw cert object from the API into a consistent shape. */
+export function normaliseCert(raw) {
+    if (!raw) return null;
+    // The API uses fileUrl as the primary field (confirmed from Swagger screenshots)
+    const rawUrl = raw.fileUrl ?? raw.url ?? raw.filePath ?? raw.path ?? raw.downloadUrl ?? null;
+    const url = resolveCertUrl(rawUrl);
+    return {
+        ...raw,
+        url,          // resolved, always-absolute URL (or null)
+        rawUrl,       // original value from API
+        name: raw.fileName ?? raw.filename ?? raw.name ?? null,
+        uploadedAt: raw.uploadedAt ? fmtDate(raw.uploadedAt) : null,
+    };
 }
 
 /** Reverse both headers and every row so Excel/PDF exports read RTL. */
 export function rtlExport(headers, rows) {
     return {
         headers: [...headers].reverse(),
-        rows: rows.map(r => [...r].reverse()),  // ← fixed
+        rows: rows.map(r => [...r].reverse()),
     };
 }
+
 export function triggerDownload(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

@@ -11,6 +11,46 @@ const T = {
     font: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif',
 };
 
+const BASE = 'https://acwebsite-icmet-test.azurewebsites.net';
+
+function resolveImg(url) {
+    if (!url || url === 'N/A' || url === 'pending') return null;
+    if (url.startsWith('http')) return url;
+    return `${BASE}/${url.replace(/^\//, '')}`;
+}
+
+// ── Build a unified images array from the API response ───────────────────────
+// Handles all possible shapes the backend might return:
+//   Shape A (new): { imageUrl, imageUrls: ['url1', 'url2', ...] }
+//   Shape B (new): { images: [{ imageUrl, isMain }, ...] }
+//   Shape C (old): { imageUrl }  — single image only
+function buildImagesArray(item) {
+    if (!item) return [];
+
+    // Shape B: structured array with isMain flag
+    if (Array.isArray(item.images) && item.images.length > 0) {
+        return [...item.images]
+            .sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0))
+            .map(i => resolveImg(i.imageUrl))
+            .filter(Boolean);
+    }
+
+    const result = [];
+
+    // Main image first
+    const main = resolveImg(item.imageUrl);
+    if (main) result.push(main);
+
+    // Shape A: imageUrls array of extra images
+    const extras = item.imageUrls ?? item.ImageUrls ?? [];
+    extras.forEach(u => {
+        const r = resolveImg(u);
+        if (r && !result.includes(r)) result.push(r);
+    });
+
+    return result;
+}
+
 const STYLES = `
     @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
 
@@ -68,6 +108,19 @@ const STYLES = `
     }
     .nd-gallery-main-wrap:hover .nd-zoom-badge { background: rgba(8,101,168,0.85) !important; }
 
+    /* nav arrows inside gallery */
+    .nd-gal-arrow {
+        position: absolute; top: 50%; transform: translateY(-50%);
+        background: rgba(0,0,0,0.45); border: 2px solid rgba(255,255,255,0.25);
+        color: #fff; border-radius: 50%; width: 38px; height: 38px;
+        font-size: 22px; cursor: pointer; display: flex; align-items: center;
+        justify-content: center; z-index: 5; transition: background 0.2s;
+        line-height: 1;
+    }
+    .nd-gal-arrow:hover { background: ${T.orange}; border-color: ${T.orange}; }
+    .nd-gal-arrow.prev { right: 10px; }
+    .nd-gal-arrow.next { left: 10px; }
+
     @keyframes nd-fadeIn  { from { opacity:0; } to { opacity:1; } }
     @keyframes nd-zoomIn  { from { transform:scale(1.08); opacity:0; } to { transform:scale(1); opacity:1; } }
     @keyframes nd-slideUp { from { transform:translateY(30px); opacity:0; } to { transform:translateY(0); opacity:1; } }
@@ -110,22 +163,26 @@ const HeadingBar = ({ light = false }) => (
     </div>
 );
 
-// ── Image Gallery ────────────────────────────────────────────────────────────
+// ── Image Gallery ─────────────────────────────────────────────────────────────
+// images: string[]  (resolved URLs, index 0 = main/cover)
 function NewsGallery({ images, title, onOpenModal }) {
     const [activeIdx, setActiveIdx] = useState(0);
 
     if (!images || images.length === 0) return null;
 
-    const active = images[activeIdx];
+    const prev = () => setActiveIdx(i => Math.max(i - 1, 0));
+    const next = () => setActiveIdx(i => Math.min(i + 1, images.length - 1));
 
     return (
         <div style={{ marginBottom: 'clamp(28px,4vw,44px)' }}>
             {/* Main image */}
-            <div className="nd-gallery-main-wrap" onClick={() => onOpenModal(activeIdx)}
-                style={{ marginBottom: 12, width: '100%', paddingTop: '52%' }}>
+            <div className="nd-gallery-main-wrap"
+                style={{ marginBottom: 12, width: '100%', paddingTop: '52%' }}
+                onClick={() => onOpenModal(activeIdx)}
+            >
                 <img
-                    key={active.imageUrl}
-                    src={active.imageUrl}
+                    key={images[activeIdx]}
+                    src={images[activeIdx]}
                     alt={title}
                     style={{
                         position: 'absolute', inset: 0, width: '100%', height: '100%',
@@ -133,6 +190,8 @@ function NewsGallery({ images, title, onOpenModal }) {
                         animation: 'nd-fadeIn 0.3s ease',
                     }}
                 />
+
+                {/* Zoom hint */}
                 <span className="nd-zoom-badge" style={{
                     position: 'absolute', top: 12, left: 12, zIndex: 4,
                     background: 'rgba(0,0,0,0.55)', color: T.white,
@@ -142,6 +201,8 @@ function NewsGallery({ images, title, onOpenModal }) {
                 }}>
                     🔍 اضغط للتكبير
                 </span>
+
+                {/* Counter */}
                 {images.length > 1 && (
                     <span style={{
                         position: 'absolute', top: 12, right: 12, zIndex: 4,
@@ -152,19 +213,27 @@ function NewsGallery({ images, title, onOpenModal }) {
                         {activeIdx + 1} / {images.length}
                     </span>
                 )}
+
+                {/* Inline prev/next arrows */}
+                {activeIdx > 0 && (
+                    <button className="nd-gal-arrow prev" onClick={e => { e.stopPropagation(); prev(); }}>›</button>
+                )}
+                {activeIdx < images.length - 1 && (
+                    <button className="nd-gal-arrow next" onClick={e => { e.stopPropagation(); next(); }}>‹</button>
+                )}
             </div>
 
-            {/* Thumbnails strip — only shown when more than 1 image */}
+            {/* Thumbnail strip — only when > 1 image */}
             {images.length > 1 && (
                 <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-                    {images.map((img, i) => (
+                    {images.map((src, i) => (
                         <div
-                            key={img.imageUrl + i}
+                            key={src + i}
                             className={`nd-gallery-thumb${i === activeIdx ? ' active' : ''}`}
                             style={{ width: 'clamp(70px,9vw,100px)' }}
                             onClick={() => setActiveIdx(i)}
                         >
-                            <img src={img.imageUrl} alt="" />
+                            <img src={src} alt="" />
                         </div>
                     ))}
                 </div>
@@ -173,7 +242,7 @@ function NewsGallery({ images, title, onOpenModal }) {
     );
 }
 
-// ── Main Component ───────────────────────────────────────────────────────────
+// ── Main Component ────────────────────────────────────────────────────────────
 const NewsDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -182,36 +251,24 @@ const NewsDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [relatedNews, setRelatedNews] = useState([]);
-    const [modalIdx, setModalIdx] = useState(null); // null = closed, number = open at index
+    const [modalIdx, setModalIdx] = useState(null);
 
-    // Derived images array — normalizes both old (imageUrl) and new (images[]) API shapes
-    // TODO: once you have the real API, adjust the field names here
-    // Expected new shape: newsItem.images = [{ id, imageUrl, isMain }, ...]
-    const allImages = (() => {
-        if (!newsItem) return [];
-        if (newsItem.images && Array.isArray(newsItem.images) && newsItem.images.length > 0) {
-            // New multi-image API — sort so main image is first
-            return [...newsItem.images].sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0));
-        }
-        // Fallback: single imageUrl
-        if (newsItem.imageUrl) return [{ imageUrl: newsItem.imageUrl, isMain: true }];
-        return [];
-    })();
-
-    const mainImage = allImages[0];
+    // Resolved images array (strings) — index 0 is always the main/cover image
+    const allImages = buildImagesArray(newsItem);
+    const mainImage = allImages[0] ?? null;
 
     useEffect(() => {
         injectStyles();
         window.scrollTo({ top: 0, behavior: 'smooth' });
         setLoading(true);
 
-        fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/news/${id}`)
+        fetch(`${BASE}/api/news/${id}`)
             .then(r => { if (!r.ok) throw new Error('Failed to fetch'); return r.json(); })
             .then(data => {
                 setNewsItem(data);
                 setLoading(false);
                 const year = new Date(data.publishedAt).getFullYear();
-                return fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews?year=${year}`);
+                return fetch(`${BASE}/api/News/getAllNews?year=${year}`);
             })
             .then(r => r.json())
             .then(data => {
@@ -287,7 +344,7 @@ const NewsDetails = () => {
                 </div>
             </div>
 
-            {/* ══ HERO — uses main image ══ */}
+            {/* ══ HERO — always uses main (index 0) image ══ */}
             <section
                 className="nd-hero-grid nd-hero-cut"
                 style={{
@@ -300,7 +357,7 @@ const NewsDetails = () => {
                 <div style={{ position: 'absolute', top: 0, right: 0, width: 'clamp(6px,0.8vw,10px)', height: '100%', background: `linear-gradient(to bottom, ${T.orange}, ${T.orangeLight})`, zIndex: 4 }} />
 
                 {mainImage && (
-                    <img src={mainImage.imageUrl} alt={newsItem.title}
+                    <img src={mainImage} alt={newsItem.title}
                         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', animation: 'nd-zoomIn 0.9s ease-out', zIndex: 0 }} />
                 )}
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(4,68,120,0.45) 0%, rgba(4,68,120,0.82) 100%)`, zIndex: 2 }} />
@@ -331,8 +388,12 @@ const NewsDetails = () => {
                         <div style={{ height: '4px', background: `linear-gradient(to left, ${T.orange}, ${T.blue})` }} />
                         <div style={{ padding: 'clamp(24px,4vw,48px) clamp(20px,4vw,48px)' }}>
 
-                            {/* Gallery — shown above the article text */}
-                            <NewsGallery images={allImages} title={newsItem.title} onOpenModal={setModalIdx} />
+                            {/* Gallery — all images with thumbnails + arrows */}
+                            <NewsGallery
+                                images={allImages}
+                                title={newsItem.title}
+                                onOpenModal={setModalIdx}
+                            />
 
                             {/* Article text */}
                             <div style={{ textAlign: 'justify' }}>
@@ -387,7 +448,7 @@ const NewsDetails = () => {
                                     onClick={() => navigate(`/news/${item.id}`)}
                                     style={{ position: 'relative', background: T.white, borderRadius: '3px', overflow: 'hidden', border: `1.5px solid ${T.gray100}`, boxShadow: '0 2px 12px rgba(0,0,0,0.07)' }}>
                                     <div style={{ position: 'relative', height: 'clamp(160px,18vw,220px)', overflow: 'hidden' }}>
-                                        <img src={item.imageUrl} alt={item.title} className="nd-rel-img"
+                                        <img src={resolveImg(item.imageUrl)} alt={item.title} className="nd-rel-img"
                                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                                     </div>
                                     <div className="nd-bar" />
@@ -413,7 +474,7 @@ const NewsDetails = () => {
                 </p>
             </div>
 
-            {/* ══ IMAGE MODAL — with prev/next navigation ══ */}
+            {/* ══ IMAGE MODAL — fullscreen lightbox with prev/next ══ */}
             {modalIdx !== null && allImages.length > 0 && (
                 <div onClick={() => setModalIdx(null)}
                     style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', animation: 'nd-fadeIn 0.3s ease-out' }}>
@@ -447,9 +508,21 @@ const NewsDetails = () => {
                         </button>
                     )}
 
-                    {/* Image */}
-                    <img src={allImages[modalIdx].imageUrl} alt={newsItem.title} onClick={e => e.stopPropagation()}
-                        style={{ maxWidth: '88%', maxHeight: '88%', objectFit: 'contain', borderRadius: '3px', boxShadow: '0 12px 48px rgba(0,0,0,0.6)', animation: 'nd-zoomIn 0.35s ease-out' }} />
+                    {/* Modal thumbnail strip */}
+                    {allImages.length > 1 && (
+                        <div style={{ position: 'absolute', bottom: 20, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 10000 }}>
+                            {allImages.map((src, i) => (
+                                <div key={i} onClick={e => { e.stopPropagation(); setModalIdx(i); }}
+                                    style={{ width: 54, height: 40, borderRadius: 4, overflow: 'hidden', cursor: 'pointer', border: `2px solid ${i === modalIdx ? T.orange : 'rgba(255,255,255,0.25)'}`, transition: 'border-color 0.2s', flexShrink: 0 }}>
+                                    <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Full image */}
+                    <img src={allImages[modalIdx]} alt={newsItem.title} onClick={e => e.stopPropagation()}
+                        style={{ maxWidth: '88%', maxHeight: '78%', objectFit: 'contain', borderRadius: '3px', boxShadow: '0 12px 48px rgba(0,0,0,0.6)', animation: 'nd-zoomIn 0.35s ease-out' }} />
                 </div>
             )}
 
