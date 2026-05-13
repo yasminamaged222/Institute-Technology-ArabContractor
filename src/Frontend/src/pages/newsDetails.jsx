@@ -358,7 +358,7 @@ const NewsDetails = () => {
 
                 {mainImage && (
                     <img src={mainImage} alt={newsItem.title}
-                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', animation: 'nd-zoomIn 0.9s ease-out', zIndex: 0 }} />
+                        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'top', animation: 'nd-zoomIn 0.9s ease-out', zIndex: 0 }} />
                 )}
                 <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(180deg, rgba(4,68,120,0.45) 0%, rgba(4,68,120,0.82) 100%)`, zIndex: 2 }} />
 
