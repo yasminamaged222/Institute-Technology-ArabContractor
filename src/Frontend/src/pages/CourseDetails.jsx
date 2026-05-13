@@ -6,11 +6,7 @@ import { useAuth } from '@clerk/clerk-react';
 
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
-// ── Resolve cert URL ─────────────────────────────────────────────────────────
-// The backend returns fileUrl in two forms:
-//   • Absolute blob URL  → "https://acwebappbackup.blob.core.windows.net/..."  ✅ use directly
-//   • Relative API path  → "/api/Admin/certificates/download/{guid}.jpg"       ⚠️ requires auth token
-// We store the raw URL and handle auth-gated paths separately via fetchBlobUrl.
+
 function resolveCertUrl(url) {
     if (!url) return null;
     if (url === 'uploaded') return null;
@@ -387,11 +383,6 @@ async function parseServerError(res) {
     return defaults[status] || `حدث خطأ غير متوقع (${status})`;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Certificate Preview Modal
-// Handles both:
-//   • Direct blob URLs (https://acwebappbackup.blob.core.windows.net/...) → use directly
-//   • Auth-gated relative paths (/api/Admin/certificates/download/guid.jpg) → fetch with token → blob URL
 // ─────────────────────────────────────────────────────────────────────────────
 const CertificateModal = ({ cert, courseTitle, onClose, getToken }) => {
     const [blobUrl, setBlobUrl] = useState(null);     // resolved object URL for preview & download

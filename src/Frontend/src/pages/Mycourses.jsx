@@ -7,10 +7,6 @@ import { Button } from '@mui/material';
 
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
-// ── Resolve any cert URL from the API to an absolute URL ────────────────────
-// The backend now returns fileUrl in two forms:
-//   • Absolute blob URL  → "https://acwebappbackup.blob.core.windows.net/..."
-//   • Relative API path  → "/api/Admin/certificates/download/{guid}.jpg"
 function resolveCertUrl(url) {
     if (!url) return null;
     if (url === 'uploaded') return null;
