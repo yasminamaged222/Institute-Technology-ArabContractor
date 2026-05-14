@@ -1,3 +1,17 @@
+/**
+ * NewsTab.jsx — Layout matches PlanworkTab exactly:
+ * - Left panel (sidebar): fixed height, independent scroll
+ * - Right panel (form): fixed height, independent scroll
+ * - Both panels are the same height (calc(100vh - 120px))
+ *
+ * API:
+ * GET    /api/admin/AdminNews/getAllNews?PageIndex=1&PageSize=100
+ * GET    /api/admin/AdminNews/{id}
+ * POST   /api/admin/AdminNews  (FormData)
+ * PUT    /api/admin/AdminNews/{id}  (FormData)
+ * DELETE /api/admin/AdminNews/{id}
+ */
+
 import { useState, useRef, useEffect, useCallback } from "react";
 
 const BASE = "https://acwebsite-icmet-test.azurewebsites.net";
@@ -12,20 +26,7 @@ const T = {
 
 const BLANK = { id: 0, date: '', title: '', details: '', isActive: true };
 
-// ── ActiveToggle ──────────────────────────────────────────────────────────────
-function ActiveToggle({ value, onChange }) {
-    return (
-        <label className="news-toggle-wrap" title={value ? 'الخبر مرئي — اضغط للإخفاء' : 'الخبر مخفي — اضغط للإظهار'}>
-            <div className={`news-toggle-track${value ? ' on' : ''}`} onClick={() => onChange(!value)}>
-                <div className="news-toggle-thumb" />
-            </div>
-            <span className={`news-toggle-label${value ? ' on' : ' off'}`}>
-                {value ? '👁 مرئي' : '🙈 مخفي'}
-            </span>
-        </label>
-    );
-}
-
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDateAr(dateStr) {
     if (!dateStr) return '—';
     try { return new Date(dateStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); }
@@ -45,7 +46,21 @@ function previewSnippet(text, len = 55) {
     return text.length > len ? text.slice(0, len) + '…' : text;
 }
 
-// ── Rich Text Helpers ──────────────────────────────────────────────────────────
+// ── ActiveToggle ──────────────────────────────────────────────────────────────
+function ActiveToggle({ value, onChange }) {
+    return (
+        <label className="nt-toggle-wrap" title={value ? 'مرئي — اضغط للإخفاء' : 'مخفي — اضغط للإظهار'}>
+            <div className={`nt-toggle-track${value ? ' on' : ''}`} onClick={() => onChange(!value)}>
+                <div className="nt-toggle-thumb" />
+            </div>
+            <span className={`nt-toggle-label${value ? ' on' : ' off'}`}>
+                {value ? '👁 مرئي' : '🙈 مخفي'}
+            </span>
+        </label>
+    );
+}
+
+// ── RichTextEditor ─────────────────────────────────────────────────────────────
 const FONT_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64, 72];
 
 function textToHtml(text = '') {
@@ -55,7 +70,6 @@ function textToHtml(text = '') {
         line ? `<div>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : '<div><br></div>'
     ).join('');
 }
-
 function wrapSelectionWithStyle(property, value) {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
@@ -69,7 +83,6 @@ function wrapSelectionWithStyle(property, value) {
     nr.selectNodeContents(span);
     sel.addRange(nr);
 }
-
 function getComputedAtCursor(editorEl, cssProp) {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return null;
@@ -84,13 +97,11 @@ function getComputedAtCursor(editorEl, cssProp) {
     return null;
 }
 
-// ── RichTextEditor ─────────────────────────────────────────────────────────────
 function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, minHeight = 180 }) {
     const editorRef = useRef(null);
     const savedSelRef = useRef(null);
     const lastValueRef = useRef(null);
     const urlInputRef = useRef(null);
-
     const [fontColor, setFontColor] = useState('#0a0a0a');
     const [fontSize, setFontSize] = useState(14);
     const [urlOpen, setUrlOpen] = useState(false);
@@ -101,136 +112,81 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
         editorRef.current.innerHTML = textToHtml(value);
         lastValueRef.current = value;
     }, [value]);
-
     useEffect(() => { if (urlOpen && urlInputRef.current) urlInputRef.current.focus(); }, [urlOpen]);
-
     useEffect(() => {
         if (!urlOpen) return;
-        const h = e => { if (!e.target.closest('.news-rte-url-wrap')) setUrlOpen(false); };
+        const h = e => { if (!e.target.closest('.nt-rte-url-wrap')) setUrlOpen(false); };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
     }, [urlOpen]);
 
-    const saveSelection = () => {
-        const s = window.getSelection();
-        if (s?.rangeCount > 0) savedSelRef.current = s.getRangeAt(0).cloneRange();
-    };
-    const restoreSelection = () => {
-        const s = window.getSelection();
-        if (s && savedSelRef.current) { s.removeAllRanges(); s.addRange(savedSelRef.current); }
-    };
-    const emitChange = () => {
-        if (!editorRef.current) return;
-        const h = editorRef.current.innerHTML;
-        lastValueRef.current = h;
-        onChange({ target: { name, value: h } });
-    };
-    const exec = (cmd, val = null) => {
-        editorRef.current?.focus();
-        document.execCommand(cmd, false, val);
-        emitChange();
-    };
-
+    const saveSelection = () => { const s = window.getSelection(); if (s?.rangeCount > 0) savedSelRef.current = s.getRangeAt(0).cloneRange(); };
+    const restoreSelection = () => { const s = window.getSelection(); if (s && savedSelRef.current) { s.removeAllRanges(); s.addRange(savedSelRef.current); } };
+    const emitChange = () => { if (!editorRef.current) return; const h = editorRef.current.innerHTML; lastValueRef.current = h; onChange({ target: { name, value: h } }); };
+    const exec = (cmd, val = null) => { editorRef.current?.focus(); document.execCommand(cmd, false, val); emitChange(); };
     const detectFontSize = () => {
         const fsVal = getComputedAtCursor(editorRef.current, 'fontSize');
-        if (fsVal) {
-            const px = Math.round(parseFloat(fsVal));
-            const closest = FONT_SIZES.reduce((p, c) => Math.abs(c - px) < Math.abs(p - px) ? c : p);
-            setFontSize(closest);
-        }
+        if (fsVal) { const px = Math.round(parseFloat(fsVal)); setFontSize(FONT_SIZES.reduce((p, c) => Math.abs(c - px) < Math.abs(p - px) ? c : p)); }
     };
-
-    const handleFontSize = e => {
-        const px = Number(e.target.value);
-        setFontSize(px);
-        restoreSelection();
-        editorRef.current?.focus();
-        wrapSelectionWithStyle('fontSize', `${px}px`);
-        emitChange();
-    };
-
+    const handleFontSize = e => { const px = Number(e.target.value); setFontSize(px); restoreSelection(); editorRef.current?.focus(); wrapSelectionWithStyle('fontSize', `${px}px`); emitChange(); };
     const confirmUrl = () => {
         restoreSelection();
         const url = urlValue.trim();
         if (url && url !== 'https://') {
             exec('createLink', url);
             const sel = window.getSelection();
-            if (sel?.anchorNode) {
-                let node = sel.anchorNode;
-                while (node && node !== editorRef.current) {
-                    if (node.nodeName === 'A') { node.target = '_blank'; node.rel = 'noopener noreferrer'; break; }
-                    node = node.parentNode;
-                }
-            }
+            if (sel?.anchorNode) { let node = sel.anchorNode; while (node && node !== editorRef.current) { if (node.nodeName === 'A') { node.target = '_blank'; node.rel = 'noopener noreferrer'; break; } node = node.parentNode; } }
         }
-        setUrlOpen(false);
-        emitChange();
+        setUrlOpen(false); emitChange();
     };
 
     return (
-        <div className="news-rte-block">
-            <div className="news-rte-hdr">
-                <span className="news-rte-icon">{icon}</span>
-                <div style={{ flex: 1 }}>
-                    <div className="news-rte-label">{label}</div>
-                    {sub && <div className="news-rte-sub">{sub}</div>}
-                </div>
+        <div className="nt-rte-block">
+            <div className="nt-rte-hdr">
+                <span className="nt-rte-icon">{icon}</span>
+                <div style={{ flex: 1 }}><div className="nt-rte-label">{label}</div>{sub && <div className="nt-rte-sub">{sub}</div>}</div>
             </div>
-            <div className="news-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
-                <button className="news-tb-btn bold" title="عريض" onClick={() => exec('bold')}>B</button>
-                <button className="news-tb-btn italic" title="مائل" onClick={() => exec('italic')}>I</button>
-                <button className="news-tb-btn under" title="تحته خط" onClick={() => exec('underline')}>U</button>
-                <div className="news-rte-sep" />
-                <div className="news-tb-size-wrap">
-                    <select className="news-tb-select news-tb-size-select" value={fontSize} onChange={handleFontSize} onMouseDown={saveSelection}>
+            <div className="nt-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
+                <button className="nt-tb-btn bold" onClick={() => exec('bold')}>B</button>
+                <button className="nt-tb-btn italic" onClick={() => exec('italic')}>I</button>
+                <button className="nt-tb-btn under" onClick={() => exec('underline')}>U</button>
+                <div className="nt-rte-sep" />
+                <div className="nt-tb-size-wrap">
+                    <select className="nt-tb-select" value={fontSize} onChange={handleFontSize} onMouseDown={saveSelection}>
                         {FONT_SIZES.map(px => <option key={px} value={px}>{px}</option>)}
                     </select>
-                    <span className="news-tb-size-unit">px</span>
+                    <span className="nt-tb-size-unit">px</span>
                 </div>
-                <div className="news-rte-sep" />
-                <div className="news-tb-color-wrap">
-                    <button className="news-tb-color-btn" onMouseDown={saveSelection}>
-                        <span className="news-color-letter" style={{ color: fontColor }}>A</span>
-                        <span className="news-color-bar" style={{ background: fontColor }} />
-                        <input type="color" className="news-tb-color-input" value={fontColor}
+                <div className="nt-rte-sep" />
+                <div className="nt-tb-color-wrap">
+                    <button className="nt-tb-color-btn" onMouseDown={saveSelection}>
+                        <span className="nt-color-letter" style={{ color: fontColor }}>A</span>
+                        <span className="nt-color-bar" style={{ background: fontColor }} />
+                        <input type="color" className="nt-tb-color-input" value={fontColor}
                             onChange={e => { const c = e.target.value; setFontColor(c); restoreSelection(); exec('foreColor', c); }} />
                     </button>
                 </div>
-                <div className="news-rte-sep" />
-                <div className="news-rte-url-wrap">
-                    <button className={`news-tb-btn${urlOpen ? ' active' : ''}`} title="إضافة رابط"
+                <div className="nt-rte-sep" />
+                <div className="nt-rte-url-wrap">
+                    <button className={`nt-tb-btn${urlOpen ? ' active' : ''}`}
                         onClick={() => { saveSelection(); setUrlValue('https://'); setUrlOpen(true); }}
                         onMouseDown={saveSelection}>🔗</button>
                     {urlOpen && (
-                        <div className="news-url-popover">
+                        <div className="nt-url-popover">
                             <input ref={urlInputRef} type="url" placeholder="https://example.com" value={urlValue}
                                 onChange={e => setUrlValue(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') confirmUrl(); if (e.key === 'Escape') { setUrlOpen(false); restoreSelection(); } }} />
-                            <button className="news-url-ok" onClick={confirmUrl}>إدراج</button>
-                            <button className="news-url-cancel" onClick={() => { setUrlOpen(false); restoreSelection(); }}>إلغاء</button>
+                            <button className="nt-url-ok" onClick={confirmUrl}>إدراج</button>
+                            <button className="nt-url-cancel" onClick={() => { setUrlOpen(false); restoreSelection(); }}>إلغاء</button>
                         </div>
                     )}
                 </div>
-                <button className="news-tb-btn" title="إزالة الرابط" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
+                <button className="nt-tb-btn" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
             </div>
-            <div
-                ref={editorRef}
-                contentEditable
-                suppressContentEditableWarning
-                className="news-rte-editor"
-                data-placeholder={placeholder}
-                style={{ minHeight }}
-                onInput={emitChange}
-                onKeyDown={e => {
-                    if (e.ctrlKey || e.metaKey) {
-                        if (e.key === 'b') { e.preventDefault(); exec('bold'); }
-                        if (e.key === 'i') { e.preventDefault(); exec('italic'); }
-                        if (e.key === 'u') { e.preventDefault(); exec('underline'); }
-                    }
-                }}
-                onMouseUp={() => { saveSelection(); detectFontSize(); }}
-                onKeyUp={() => { saveSelection(); detectFontSize(); }}
-            />
+            <div ref={editorRef} contentEditable suppressContentEditableWarning className="nt-rte-editor"
+                data-placeholder={placeholder} style={{ minHeight }} onInput={emitChange}
+                onKeyDown={e => { if (e.ctrlKey || e.metaKey) { if (e.key === 'b') { e.preventDefault(); exec('bold'); } if (e.key === 'i') { e.preventDefault(); exec('italic'); } if (e.key === 'u') { e.preventDefault(); exec('underline'); } } }}
+                onMouseUp={() => { saveSelection(); detectFontSize(); }} onKeyUp={() => { saveSelection(); detectFontSize(); }} />
         </div>
     );
 }
@@ -243,16 +199,9 @@ function MultiImageUploader({ images, onChange }) {
     const addFiles = (files) => {
         const valid = Array.from(files).filter(f => f.type.startsWith('image/'));
         if (!valid.length) return;
-        const newSlots = valid.map(file => ({
-            file,
-            previewSrc: URL.createObjectURL(file),
-            serverUrl: null,
-        }));
-        onChange([...images, ...newSlots]);
+        onChange([...images, ...valid.map(file => ({ file, previewSrc: URL.createObjectURL(file), serverUrl: null }))]);
     };
-
     const remove = (idx) => onChange(images.filter((_, i) => i !== idx));
-
     const setMain = (idx) => {
         if (idx === 0) return;
         const next = [...images];
@@ -260,7 +209,6 @@ function MultiImageUploader({ images, onChange }) {
         next.unshift(picked);
         onChange(next);
     };
-
     const replaceFile = (idx, file) => {
         if (!file || !file.type.startsWith('image/')) return;
         const next = [...images];
@@ -269,39 +217,32 @@ function MultiImageUploader({ images, onChange }) {
     };
 
     return (
-        <div className="news-multi-img-wrap">
-            <div className="news-label" style={{ marginBottom: 8 }}>
+        <div className="nt-multi-img-wrap">
+            <div className="nt-label" style={{ marginBottom: 8 }}>
                 صور الخبر
                 <span style={{ marginRight: 8, fontSize: '.65rem', color: T.gray500, fontWeight: 400 }}>
-                    الصورة الأولى هي الصورة الرئيسية — تظهر في القائمة وكغلاف للخبر
+                    الصورة الأولى هي الصورة الرئيسية
                 </span>
             </div>
             {images.length > 0 && (
-                <div className="news-imgs-grid">
+                <div className="nt-imgs-grid">
                     {images.map((img, idx) => (
-                        <MultiImageSlot
-                            key={idx} img={img} idx={idx} isMain={idx === 0}
-                            onRemove={() => remove(idx)}
-                            onSetMain={() => setMain(idx)}
-                            onReplace={(file) => replaceFile(idx, file)}
-                        />
+                        <MultiImageSlot key={idx} img={img} idx={idx} isMain={idx === 0}
+                            onRemove={() => remove(idx)} onSetMain={() => setMain(idx)}
+                            onReplace={(file) => replaceFile(idx, file)} />
                     ))}
                 </div>
             )}
-            <div
-                className={`news-img-zone${dragOver ? ' over' : ''}`}
+            <div className={`nt-img-zone${dragOver ? ' over' : ''}`}
                 style={{ minHeight: 72, marginTop: images.length ? 12 : 0 }}
                 onDragOver={e => { e.preventDefault(); setDragOver(true); }}
                 onDragLeave={() => setDragOver(false)}
                 onDrop={e => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
-                onClick={() => fileRef.current.click()}
-            >
-                <div className="news-img-placeholder" style={{ padding: '14px 12px' }}>
-                    <div className="news-img-icon" style={{ fontSize: '1.6rem' }}>🖼️</div>
-                    <span className="news-img-hint">
-                        {images.length === 0 ? 'اسحب الصور هنا أو اضغط للاختيار' : '+ إضافة صور أخرى'}
-                    </span>
-                    <span className="news-img-types">JPG · PNG · WEBP — يمكن اختيار أكثر من صورة</span>
+                onClick={() => fileRef.current.click()}>
+                <div className="nt-img-placeholder" style={{ padding: '14px 12px' }}>
+                    <div style={{ fontSize: '1.6rem' }}>🖼️</div>
+                    <span className="nt-img-hint">{images.length === 0 ? 'اسحب الصور هنا أو اضغط للاختيار' : '+ إضافة صور أخرى'}</span>
+                    <span className="nt-img-types">JPG · PNG · WEBP</span>
                 </div>
             </div>
             <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }}
@@ -313,16 +254,15 @@ function MultiImageUploader({ images, onChange }) {
 function MultiImageSlot({ img, idx, isMain, onRemove, onSetMain, onReplace }) {
     const fileRef = useRef();
     return (
-        <div className={`news-img-slot${isMain ? ' main' : ''}`}>
-            <img src={img.previewSrc} alt={`صورة ${idx + 1}`} className="news-slot-img" />
-            {isMain && <div className="news-main-badge">⭐ رئيسية</div>}
-            {img.file && !isMain && <div className="news-new-badge-slot">جديدة</div>}
-            {img.file && isMain && <div className="news-new-badge-slot main">جديدة ⭐</div>}
-            {!img.file && img.serverUrl && <div className="news-server-badge-slot">{isMain ? '⭐ محفوظة' : 'محفوظة'}</div>}
-            <div className="news-slot-actions">
-                {!isMain && <button className="news-slot-btn promote" title="تعيين كصورة رئيسية" onClick={onSetMain}>⭐</button>}
-                <button className="news-slot-btn replace" title="استبدال الصورة" onClick={() => fileRef.current.click()}>🔄</button>
-                <button className="news-slot-btn remove" title="حذف الصورة" onClick={onRemove}>✕</button>
+        <div className={`nt-img-slot${isMain ? ' main' : ''}`}>
+            <img src={img.previewSrc} alt={`صورة ${idx + 1}`} className="nt-slot-img" />
+            {isMain && <div className="nt-main-badge">⭐ رئيسية</div>}
+            {img.file && <div className="nt-new-badge-slot">جديدة</div>}
+            {!img.file && img.serverUrl && <div className="nt-server-badge-slot">{isMain ? '⭐ محفوظة' : 'محفوظة'}</div>}
+            <div className="nt-slot-actions">
+                {!isMain && <button className="nt-slot-btn promote" onClick={onSetMain}>⭐</button>}
+                <button className="nt-slot-btn replace" onClick={() => fileRef.current.click()}>🔄</button>
+                <button className="nt-slot-btn remove" onClick={onRemove}>✕</button>
             </div>
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
                 onChange={e => { onReplace(e.target.files[0]); e.target.value = ''; }} />
@@ -332,232 +272,348 @@ function MultiImageSlot({ img, idx, isMain, onRemove, onSetMain, onReplace }) {
 
 // ── CSS ────────────────────────────────────────────────────────────────────────
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
-.news-root {
+.nt-layout {
     display: flex;
     direction: rtl;
-    font-family: "Noto Kufi Arabic", sans-serif;
-    background: #f0f1f2;
     gap: 16px;
-    padding: 16px;
-    align-items: stretch; /* Forces children to match height */
-    height: 100vh; /* Lock to viewport height */
-    box-sizing: border-box;
-    overflow: hidden; /* Prevent the whole page from scrolling */
+    align-items: stretch;
 }
-.news-sidebar {
+/* ── LEFT PANEL (sidebar list) — mirrors lec-panel pw-left-panel ── */
+.nt-left-panel {
     width: clamp(230px, 26vw, 290px);
-    background: #fff;
-    border-radius: 3px;
-    border: 1.5px solid #d0d3d8;
-    display: flex;
-    flex-direction: column;
     flex-shrink: 0;
-    /* Remove sticky and max-height */
-}
-.news-brand{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;border-bottom:1.5px solid #f0f1f2;gap:8px;}
-.news-brand-icon{width:36px;height:36px;border-radius:3px;background:linear-gradient(135deg,#0865a8,#1a84d4);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#bfdbfe;border:1.5px solid rgba(8,101,168,.25);flex-shrink:0;}
-.news-brand-name{font-size:.78rem;font-weight:800;color:#0a0a0a;}
-.news-brand-sub{font-size:.64rem;color:#6b7280;margin-top:2px;}
-.news-search-wrap{padding:12px 12px 6px;flex-shrink:0;position:relative;z-index:1;}
-.news-search-wrap input{width:100%;padding:9px 34px 9px 12px;background:#fff;border:1.5px solid #d0d3d8;border-radius:3px;color:#0a0a0a;font-family:inherit;font-size:.76rem;direction:rtl;outline:none;box-sizing:border-box;}
-.news-search-wrap input::placeholder{color:#6b7280;}
-.news-search-wrap input:focus{border-color:#f57c00;box-shadow:0 0 0 3px rgba(245,124,0,.1);}
-.news-search-icon{position:absolute;right:22px;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.4;pointer-events:none;}
-.news-search-clear{position:absolute;left:20px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;font-size:1rem;padding:2px;}
-.news-list-hdr{padding:4px 14px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.news-count-badge{background:rgba(8,101,168,.1);color:#0865a8;border:1.5px solid rgba(8,101,168,.25);border-radius:2px;padding:1px 9px;font-size:.66rem;font-weight:900;font-family:'Courier New',monospace;}
-.news-new-btn{background:rgba(245,124,0,.1);color:#f57c00;border:1.5px solid rgba(245,124,0,.35);border-radius:2px;padding:4px 12px;font-size:.72rem;font-weight:800;cursor:pointer;font-family:inherit;transition:all .16s;}
-.news-new-btn:hover{background:rgba(245,124,0,.18);}
-.news-list {
-    flex: 1;
+    background: #fff;
+    border-radius: 3px;
+    border: 1.5px solid #d0d3d8;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
     overflow-y: auto;
-    padding: 4px 8px 12px;
 }
-.news-list::-webkit-scrollbar{width:4px;}
-.news-list::-webkit-scrollbar-thumb{background:rgba(245,124,0,.35);border-radius:2px;}
-.news-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:3px;margin-bottom:3px;cursor:pointer;border:1.5px solid transparent;transition:background .13s,border-color .13s;}
-.news-row:hover{background:rgba(8,101,168,.05);border-color:rgba(8,101,168,.12);}
-.news-row.active{background:rgba(245,124,0,.09);border-color:rgba(245,124,0,.35);border-right:3px solid #f57c00;}
-.news-row-icon{width:38px;height:38px;border-radius:3px;background:linear-gradient(135deg,${T.blue},${T.blueLight});display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;border:1.5px solid rgba(8,101,168,.3);overflow:hidden;}
-.news-row-info{overflow:hidden;flex:1;}
-.news-row-title{color:#0a0a0a;font-size:.75rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.news-row-date{color:#6b7280;font-size:.63rem;margin-top:2px;}
-.news-row-id{background:#f0f1f2;color:#6b7280;font-size:.6rem;padding:2px 7px;border-radius:2px;flex-shrink:0;font-weight:700;font-family:'Courier New',monospace;}
-.news-sidebar-footer{padding:10px 14px;border-top:1.5px solid #f0f1f2;text-align:center;font-size:.6rem;color:#6b7280;background:#fff;}
-.news-main {
+/* ── RIGHT PANEL (form) — mirrors lec-form-wrap ── */
+.nt-form-wrap {
     flex: 1;
-    display: flex;
-    flex-direction: column;
     min-width: 0;
-    height: 100%; /* Fill parent */
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+/* scrollbar styling */
+.nt-left-panel::-webkit-scrollbar,
+.nt-form-wrap::-webkit-scrollbar { width: 4px; }
+.nt-left-panel::-webkit-scrollbar-thumb,
+.nt-form-wrap::-webkit-scrollbar-thumb { background: rgba(245,124,0,.35); border-radius: 2px; }
+
+/* ── Panel header (brand / title bar) ── */
+.nt-panel-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 10px;
+    border-bottom: 1.5px solid #f0f1f2;
+    flex-shrink: 0;
+    gap: 8px;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+.nt-brand-icon {
+    width: 36px; height: 36px; border-radius: 3px;
+    background: linear-gradient(135deg, ${T.blue}, ${T.blueLight});
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; color: #bfdbfe;
+    border: 1.5px solid rgba(8,101,168,.25); flex-shrink: 0;
+}
+.nt-brand-name { font-size: .78rem; font-weight: 800; color: #0a0a0a; }
+.nt-brand-sub { font-size: .64rem; color: #6b7280; margin-top: 2px; }
+
+/* ── Search ── */
+.nt-search-wrap { padding: 10px 12px 6px; flex-shrink: 0; position: relative; }
+.nt-search-wrap input {
+    width: 100%; padding: 8px 32px 8px 12px;
+    background: #fff; border: 1.5px solid #d0d3d8;
+    border-radius: 3px; color: #0a0a0a;
+    font-family: inherit; font-size: .76rem;
+    direction: rtl; outline: none; box-sizing: border-box;
+}
+.nt-search-wrap input::placeholder { color: #6b7280; }
+.nt-search-wrap input:focus { border-color: ${T.orange}; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
+.nt-search-icon { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); font-size: .75rem; opacity: .4; pointer-events: none; }
+.nt-search-clear { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; font-size: 1rem; padding: 2px; }
+
+/* ── List header ── */
+.nt-list-hdr {
+    padding: 4px 14px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.nt-count-badge {
+    background: rgba(8,101,168,.1); color: ${T.blue};
+    border: 1.5px solid rgba(8,101,168,.25); border-radius: 2px;
+    padding: 1px 9px; font-size: .66rem; font-weight: 900;
+    font-family: 'Courier New', monospace;
+}
+.nt-new-btn {
+    background: rgba(245,124,0,.1); color: ${T.orange};
+    border: 1.5px solid rgba(245,124,0,.35); border-radius: 2px;
+    padding: 4px 12px; font-size: .72rem; font-weight: 800;
+    cursor: pointer; font-family: inherit; transition: all .16s;
+}
+.nt-new-btn:hover { background: rgba(245,124,0,.18); }
+
+/* ── List rows ── */
+.nt-list { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
+.nt-list::-webkit-scrollbar { width: 4px; }
+.nt-list::-webkit-scrollbar-thumb { background: rgba(245,124,0,.35); border-radius: 2px; }
+.nt-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 3px; margin-bottom: 3px;
+    cursor: pointer; border: 1.5px solid transparent;
+    transition: background .13s, border-color .13s;
+}
+.nt-row:hover { background: rgba(8,101,168,.05); border-color: rgba(8,101,168,.12); }
+.nt-row.active { background: rgba(245,124,0,.09); border-color: rgba(245,124,0,.35); border-right: 3px solid ${T.orange}; }
+.nt-row-icon {
+    width: 38px; height: 38px; border-radius: 3px;
+    background: linear-gradient(135deg, ${T.blue}, ${T.blueLight});
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+    border: 1.5px solid rgba(8,101,168,.3); overflow: hidden;
+}
+.nt-row-info { overflow: hidden; flex: 1; }
+.nt-row-title { color: #0a0a0a; font-size: .75rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nt-row-date { color: #6b7280; font-size: .63rem; margin-top: 2px; }
+.nt-row-id {
+    background: #f0f1f2; color: #6b7280; font-size: .6rem;
+    padding: 2px 7px; border-radius: 2px; flex-shrink: 0;
+    font-weight: 700; font-family: 'Courier New', monospace;
+}
+.nt-row-status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+.nt-row-status.on { background: #16a34a; }
+.nt-row-status.off { background: ${T.gray300}; }
+.nt-sidebar-footer {
+    padding: 10px 14px; border-top: 1.5px solid #f0f1f2;
+    text-align: center; font-size: .6rem; color: #6b7280;
+    background: #fff; flex-shrink: 0;
 }
 
-.news-body {
-    flex: 1;
-    padding: 0; 
-    overflow-y: auto; /* This allows the form to scroll if it's long */
-    display: flex;
-    flex-direction: column;
-}
-
-.news-card {
-    flex: 1; /* Stretch the white card to the bottom */
-    display: flex;
-    flex-direction: column;
+/* ── Form card (mirrors adm-card lec-form-card) ── */
+.nt-form-card {
     background: #fff;
     border: 1.5px solid #d0d3d8;
     border-radius: 3px;
-    margin-bottom: 0; /* Remove bottom margin to align with sidebar */
+    margin-bottom: 0;
 }
-.news-topbar{background:#fff;border-bottom:3px solid ${T.orange};padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.news-notif{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:3px;font-size:.8rem;font-weight:700;animation:news-notif-in .3s cubic-bezier(.34,1.56,.64,1);border-right:4px solid;margin:14px 24px 0;}
-.news-notif-success{background:#f0fdf4;border-color:#16a34a;color:#15803d;}
-.news-notif-error{background:#fef2f2;border-color:#dc2626;color:#dc2626;}
-.news-notif-info{background:rgba(8,101,168,.06);border-color:${T.blue};color:${T.blue};}
-@keyframes news-notif-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.news-body::-webkit-scrollbar{width:5px;}
-.news-body::-webkit-scrollbar-thumb{background:${T.gray300};border-radius:3px;}
-.news-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to left,${T.orange},${T.blue});z-index:2;}
-@keyframes news-card-up{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-.news-form-hdr{background:${T.blueDark};padding:20px 26px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;overflow:hidden;}
-.news-form-hdr::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(245,124,0,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(245,124,0,.07) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;}
-.news-form-tag{display:inline-block;background:${T.orange};color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:2px;margin-bottom:6px;position:relative;z-index:1;}
-.news-form-title{font-size:1.1rem;font-weight:900;color:#fff;margin:0;position:relative;z-index:1;}
-.news-form-sub{font-size:.72rem;color:rgba(255,255,255,.4);margin:4px 0 0;position:relative;z-index:1;}
-.news-stat-pill{display:inline-flex;align-items:center;padding:5px 14px;border-radius:2px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.72);font-size:.72rem;font-weight:700;position:relative;z-index:1;}
-.news-form-body {
-    padding: 26px;
-    flex: 1; /* Ensures the body content area expands */
+.nt-form-hdr {
+    background: ${T.blueDark}; padding: 20px 26px;
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+    flex-wrap: wrap; position: relative; overflow: hidden;
 }
-.news-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:22px;}
-.news-field{display:flex;flex-direction:column;gap:5px;}
-.news-label{font-size:.72rem;font-weight:700;color:${T.gray700};}
-.news-inp{border:1.5px solid ${T.gray300};border-radius:3px;padding:9px 12px;font-size:.8rem;color:${T.black};width:100%;background:#fff;direction:rtl;font-family:inherit;transition:border .18s,box-shadow .18s;outline:none;box-sizing:border-box;}
-.news-inp:focus{border-color:${T.orange};box-shadow:0 0 0 3px rgba(245,124,0,.1);}
-.news-inp::placeholder{color:${T.gray500};}
-.news-inp:disabled{background:${T.gray100};color:${T.gray500};cursor:not-allowed;}
-.news-divider{height:1px;background:${T.gray100};margin:4px 0 20px;}
+.nt-form-hdr::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(245,124,0,.07) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(245,124,0,.07) 1px, transparent 1px);
+    background-size: 36px 36px; pointer-events: none;
+}
+.nt-form-tag {
+    display: inline-block; background: ${T.orange}; color: #fff;
+    font-size: .7rem; font-weight: 700; padding: 4px 14px;
+    border-radius: 2px; margin-bottom: 6px; position: relative; z-index: 1;
+}
+.nt-form-title { font-size: 1.1rem; font-weight: 900; color: #fff; margin: 0; position: relative; z-index: 1; }
+.nt-form-sub { font-size: .72rem; color: rgba(255,255,255,.4); margin: 4px 0 0; position: relative; z-index: 1; }
+.nt-stat-pill {
+    display: inline-flex; align-items: center;
+    padding: 5px 14px; border-radius: 2px;
+    background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.15);
+    color: rgba(255,255,255,.72); font-size: .72rem; font-weight: 700;
+    position: relative; z-index: 1;
+}
+.nt-form-body { padding: 26px; }
+.nt-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin-bottom: 22px; }
+.nt-field { display: flex; flex-direction: column; gap: 5px; }
+.nt-label { font-size: .72rem; font-weight: 700; color: ${T.gray700}; }
+.nt-inp {
+    border: 1.5px solid ${T.gray300}; border-radius: 3px;
+    padding: 9px 12px; font-size: .8rem; color: ${T.black};
+    width: 100%; background: #fff; direction: rtl;
+    font-family: inherit; transition: border .18s, box-shadow .18s;
+    outline: none; box-sizing: border-box;
+}
+.nt-inp:focus { border-color: ${T.orange}; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
+.nt-inp::placeholder { color: ${T.gray500}; }
+.nt-inp:disabled { background: ${T.gray100}; color: ${T.gray500}; cursor: not-allowed; }
+.nt-divider { height: 1px; background: ${T.gray100}; margin: 4px 0 20px; }
 
 /* ── Active Toggle ── */
-.news-toggle-wrap{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:6px 0;}
-.news-toggle-track{width:46px;height:26px;border-radius:13px;background:${T.gray300};border:1.5px solid ${T.gray300};position:relative;transition:background .22s,border-color .22s;flex-shrink:0;}
-.news-toggle-track.on{background:#16a34a;border-color:#16a34a;}
-.news-toggle-thumb{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .22s cubic-bezier(.4,0,.2,1);}
-.news-toggle-track.on .news-toggle-thumb{transform:translateX(-20px);}
-.news-toggle-label{font-size:.76rem;font-weight:800;}
-.news-toggle-label.on{color:#16a34a;}
-.news-toggle-label.off{color:${T.gray500};}
+.nt-toggle-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 6px 0; }
+.nt-toggle-track {
+    width: 46px; height: 26px; border-radius: 13px;
+    background: ${T.gray300}; border: 1.5px solid ${T.gray300};
+    position: relative; transition: background .22s, border-color .22s; flex-shrink: 0;
+}
+.nt-toggle-track.on { background: #16a34a; border-color: #16a34a; }
+.nt-toggle-thumb {
+    position: absolute; top: 2px; right: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    transition: transform .22s cubic-bezier(.4,0,.2,1);
+}
+.nt-toggle-track.on .nt-toggle-thumb { transform: translateX(-20px); }
+.nt-toggle-label { font-size: .76rem; font-weight: 800; }
+.nt-toggle-label.on { color: #16a34a; }
+.nt-toggle-label.off { color: ${T.gray500}; }
 
-/* sidebar status dot */
-.news-row-status{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:2px;}
-.news-row-status.on{background:#16a34a;}
-.news-row-status.off{background:${T.gray300};}
-
-/* ── Multi Image Grid ── */
-.news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;overflow:visible;box-sizing:border-box;}
-.news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.03);}
-.news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 12px;}
-.news-img-icon{font-size:2rem;}
-.news-img-hint{color:${T.gray500};font-size:.68rem;font-weight:600;text-align:center;line-height:1.6;}
-.news-img-types{color:${T.gray300};font-size:.62rem;background:${T.gray100};padding:2px 10px;border-radius:2px;}
-.news-multi-img-wrap{margin-bottom:4px;}
-.news-imgs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:4px;}
-.news-img-slot{position:relative;border-radius:6px;overflow:hidden;border:2px solid ${T.gray300};background:#000;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;transition:border-color .2s,box-shadow .2s;}
-.news-img-slot.main{border-color:${T.orange};box-shadow:0 0 0 3px rgba(245,124,0,.2);}
-.news-slot-img{width:100%;height:100%;object-fit:cover;display:block;}
-.news-main-badge{position:absolute;top:5px;right:5px;background:${T.orange};color:#fff;font-size:.55rem;font-weight:800;padding:2px 8px;border-radius:3px;pointer-events:none;z-index:2;}
-.news-new-badge-slot{position:absolute;top:5px;left:5px;background:#f59e0b;color:#fff;font-size:.52rem;font-weight:800;padding:2px 6px;border-radius:3px;pointer-events:none;z-index:2;}
-.news-new-badge-slot.main{background:${T.orange};}
-.news-server-badge-slot{position:absolute;top:5px;left:5px;background:${T.blue};color:#fff;font-size:.52rem;font-weight:800;padding:2px 6px;border-radius:3px;pointer-events:none;z-index:2;}
-.news-slot-actions{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;gap:4px;padding:5px;opacity:0;transition:opacity .18s;}
-.news-img-slot:hover .news-slot-actions{opacity:1;}
-.news-slot-btn{border:none;border-radius:3px;padding:4px 7px;font-size:.7rem;cursor:pointer;font-family:inherit;font-weight:700;line-height:1;}
-.news-slot-btn.promote{background:${T.orange};color:#fff;}
-.news-slot-btn.replace{background:${T.blue};color:#fff;}
-.news-slot-btn.remove{background:#dc2626;color:#fff;}
+/* ── Multi Image ── */
+.nt-img-zone {
+    width: 100%; border-radius: 6px; border: 2px dashed ${T.gray300};
+    background: ${T.gray50}; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+    transition: border-color .18s, background .18s;
+    box-sizing: border-box;
+}
+.nt-img-zone:hover, .nt-img-zone.over { border-color: ${T.orange}; background: rgba(245,124,0,.03); }
+.nt-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 12px; }
+.nt-img-hint { color: ${T.gray500}; font-size: .68rem; font-weight: 600; text-align: center; }
+.nt-img-types { color: ${T.gray300}; font-size: .62rem; background: ${T.gray100}; padding: 2px 10px; border-radius: 2px; }
+.nt-multi-img-wrap { margin-bottom: 4px; }
+.nt-imgs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px; margin-bottom: 4px; }
+.nt-img-slot {
+    position: relative; border-radius: 6px; overflow: hidden;
+    border: 2px solid ${T.gray300}; background: #000;
+    aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;
+    transition: border-color .2s, box-shadow .2s;
+}
+.nt-img-slot.main { border-color: ${T.orange}; box-shadow: 0 0 0 3px rgba(245,124,0,.2); }
+.nt-slot-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nt-main-badge { position: absolute; top: 5px; right: 5px; background: ${T.orange}; color: #fff; font-size: .55rem; font-weight: 800; padding: 2px 8px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-new-badge-slot { position: absolute; top: 5px; left: 5px; background: #f59e0b; color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 6px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-server-badge-slot { position: absolute; top: 5px; left: 5px; background: ${T.blue}; color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 6px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-slot-actions { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px; opacity: 0; transition: opacity .18s; }
+.nt-img-slot:hover .nt-slot-actions { opacity: 1; }
+.nt-slot-btn { border: none; border-radius: 3px; padding: 4px 7px; font-size: .7rem; cursor: pointer; font-family: inherit; font-weight: 700; line-height: 1; }
+.nt-slot-btn.promote { background: ${T.orange}; color: #fff; }
+.nt-slot-btn.replace { background: ${T.blue}; color: #fff; }
+.nt-slot-btn.remove { background: #dc2626; color: #fff; }
 
 /* ── RichTextEditor ── */
-.news-rte-block{border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.news-rte-hdr{background:${T.gray50};padding:10px 16px;border-bottom:1.5px solid ${T.gray100};display:flex;align-items:center;gap:9px;}
-.news-rte-icon{font-size:1.1rem;}
-.news-rte-label{font-weight:800;font-size:.8rem;color:${T.black};}
-.news-rte-sub{font-size:.65rem;color:${T.gray500};margin-top:2px;}
-.news-rte-toolbar{display:flex;align-items:center;gap:4px;padding:7px 12px;background:#fff;border-bottom:1.5px solid ${T.gray100};flex-wrap:wrap;}
-.news-rte-sep{width:1px;height:20px;background:#e5e7eb;margin:0 2px;flex-shrink:0;}
-.news-tb-btn{min-width:30px;height:28px;padding:0 7px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};color:${T.gray700};font-size:.78rem;font-weight:700;cursor:pointer;transition:all .14s;font-family:inherit;}
-.news-tb-btn:hover,.news-tb-btn.active{background:${T.orange};color:#fff;border-color:${T.orange};}
-.news-tb-btn.bold{font-weight:900;}
-.news-tb-btn.italic{font-style:italic;}
-.news-tb-btn.under{text-decoration:underline;}
-.news-tb-size-wrap{display:flex;align-items:center;gap:3px;}
-.news-tb-select{padding:4px 6px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};color:${T.gray700};font-family:inherit;font-size:.74rem;cursor:pointer;outline:none;}
-.news-tb-select:focus{border-color:${T.orange};}
-.news-tb-size-unit{font-size:.65rem;color:${T.gray500};font-weight:700;}
-.news-tb-color-wrap{position:relative;}
-.news-tb-color-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 6px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};cursor:pointer;position:relative;}
-.news-color-letter{font-size:.9rem;font-weight:900;line-height:1;}
-.news-color-bar{width:14px;height:3px;border-radius:2px;}
-.news-tb-color-input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;}
-.news-rte-url-wrap{position:relative;}
-.news-url-popover{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1.5px solid ${T.gray300};border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:10px;z-index:500;display:flex;gap:6px;min-width:320px;border-top:3px solid ${T.orange};}
-.news-url-popover input{flex:1;padding:7px 10px;border:1.5px solid ${T.gray300};border-radius:4px;font-family:inherit;font-size:.76rem;direction:ltr;outline:none;}
-.news-url-popover input:focus{border-color:${T.orange};}
-.news-url-ok{padding:7px 14px;background:${T.orange};color:#fff;border:none;border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
-.news-url-cancel{padding:7px 10px;background:${T.gray100};color:${T.gray700};border:1.5px solid ${T.gray300};border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
-.news-rte-editor{
-    padding:12px 16px;
-    outline:none;
-    font-family:"Noto Kufi Arabic",sans-serif;
-    font-size:.82rem;
-    color:#0a0a0a;
-    line-height:1.9;
-    direction:rtl;
-    background:#fff;
-
-    /* الحل */
-    overflow-wrap: break-word;
-    word-break: break-word;
-    white-space: pre-wrap;
+.nt-rte-block { border-radius: 3px; border: 1.5px solid ${T.gray300}; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.nt-rte-hdr { background: ${T.gray50}; padding: 10px 16px; border-bottom: 1.5px solid ${T.gray100}; display: flex; align-items: center; gap: 9px; }
+.nt-rte-icon { font-size: 1.1rem; }
+.nt-rte-label { font-weight: 800; font-size: .8rem; color: ${T.black}; }
+.nt-rte-sub { font-size: .65rem; color: ${T.gray500}; margin-top: 2px; }
+.nt-rte-toolbar { display: flex; align-items: center; gap: 4px; padding: 7px 12px; background: #fff; border-bottom: 1.5px solid ${T.gray100}; flex-wrap: wrap; }
+.nt-rte-sep { width: 1px; height: 20px; background: #e5e7eb; margin: 0 2px; flex-shrink: 0; }
+.nt-tb-btn { min-width: 30px; height: 28px; padding: 0 7px; border-radius: 4px; border: 1.5px solid ${T.gray300}; background: ${T.gray50}; color: ${T.gray700}; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .14s; font-family: inherit; }
+.nt-tb-btn:hover, .nt-tb-btn.active { background: ${T.orange}; color: #fff; border-color: ${T.orange}; }
+.nt-tb-btn.bold { font-weight: 900; }
+.nt-tb-btn.italic { font-style: italic; }
+.nt-tb-btn.under { text-decoration: underline; }
+.nt-tb-size-wrap { display: flex; align-items: center; gap: 3px; }
+.nt-tb-select { padding: 4px 6px; border-radius: 4px; border: 1.5px solid ${T.gray300}; background: ${T.gray50}; color: ${T.gray700}; font-family: inherit; font-size: .74rem; cursor: pointer; outline: none; }
+.nt-tb-select:focus { border-color: ${T.orange}; }
+.nt-tb-size-unit { font-size: .65rem; color: ${T.gray500}; font-weight: 700; }
+.nt-tb-color-wrap { position: relative; }
+.nt-tb-color-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 6px; border-radius: 4px; border: 1.5px solid ${T.gray300}; background: ${T.gray50}; cursor: pointer; position: relative; }
+.nt-color-letter { font-size: .9rem; font-weight: 900; line-height: 1; }
+.nt-color-bar { width: 14px; height: 3px; border-radius: 2px; }
+.nt-tb-color-input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
+.nt-rte-url-wrap { position: relative; }
+.nt-url-popover {
+    position: absolute; top: calc(100% + 6px); right: 0;
+    background: #fff; border: 1.5px solid ${T.gray300};
+    border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    padding: 10px; z-index: 500;
+    display: flex; gap: 6px; min-width: 320px;
+    border-top: 3px solid ${T.orange};
 }
-.news-rte-editor:empty::before{content:attr(data-placeholder);color:#9ca3af;pointer-events:none;}
-.news-rte-editor a{color:#0865a8;text-decoration:underline;}
+.nt-url-popover input { flex: 1; padding: 7px 10px; border: 1.5px solid ${T.gray300}; border-radius: 4px; font-family: inherit; font-size: .76rem; direction: ltr; outline: none; }
+.nt-url-popover input:focus { border-color: ${T.orange}; }
+.nt-url-ok { padding: 7px 14px; background: ${T.orange}; color: #fff; border: none; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.nt-url-cancel { padding: 7px 10px; background: ${T.gray100}; color: ${T.gray700}; border: 1.5px solid ${T.gray300}; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.nt-rte-editor {
+    padding: 12px 16px; outline: none;
+    font-family: inherit; font-size: .82rem; color: #0a0a0a;
+    line-height: 1.9; direction: rtl; background: #fff;
+    overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap;
+}
+.nt-rte-editor:empty::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
+.nt-rte-editor a { color: #0865a8; text-decoration: underline; }
 
 /* ── Actions ── */
-.news-actions{display:flex;gap:9px;margin-top:24px;padding-top:18px;border-top:2px solid ${T.gray100};flex-wrap:wrap;align-items:center;}
-.news-act-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:3px;font-family:inherit;font-size:.8rem;font-weight:800;cursor:pointer;border:none;transition:all .2s cubic-bezier(.4,0,.2,1);white-space:nowrap;}
-.news-act-btn:hover{transform:translateY(-2px);}
-.news-act-btn:active{transform:translateY(0);}
-.news-act-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-.news-act-btn.save{background:#16a34a;color:#fff;box-shadow:0 3px 12px rgba(22,163,74,.3);}
-.news-act-btn.save:hover{background:#15803d;}
-.news-act-btn.new{background:${T.blue};color:#fff;box-shadow:0 3px 12px rgba(8,101,168,.3);}
-.news-act-btn.new:hover{background:${T.blueDark};}
-.news-act-btn.reset{background:${T.orange};color:#fff;box-shadow:0 3px 12px rgba(245,124,0,.3);}
-.news-act-btn.reset:hover{background:${T.orangeDark};}
-.news-act-btn.delete{background:#dc2626;color:#fff;box-shadow:0 3px 12px rgba(220,38,38,.3);}
-.news-act-btn.delete:hover{background:#b91c1c;}
-.news-delete-confirm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fef2f2;border:1.5px solid rgba(220,38,38,.3);border-radius:3px;padding:9px 14px;border-right:4px solid #dc2626;}
-.news-delete-warn{font-size:.78rem;color:#dc2626;font-weight:700;}
-.news-act-btn.cancel{background:${T.gray100};color:${T.gray500};border:1.5px solid ${T.gray300};box-shadow:none;}
-.news-act-btn.cancel:hover{border-color:${T.black};color:${T.black};}
-.news-empty{text-align:center;padding:60px 20px;color:${T.gray500};}
-.news-empty-icon{font-size:2.4rem;margin-bottom:12px;opacity:.35;}
-.news-skeleton{background:linear-gradient(90deg,#f0f1f2 25%,#e0e2e5 50%,#f0f1f2 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:3px;}
-@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-.news-loading-row{display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:3px;}
-@media(max-width:900px){.news-root{flex-direction:column;}.news-sidebar{width:100%;height:auto;max-height:280px;}.news-fields-grid{grid-template-columns:1fr;}}
+.nt-actions {
+    display: flex; gap: 9px; margin-top: 24px;
+    padding-top: 18px; border-top: 2px solid ${T.gray100};
+    flex-wrap: wrap; align-items: center;
+}
+.nt-act-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; border-radius: 3px;
+    font-family: inherit; font-size: .8rem; font-weight: 800;
+    cursor: pointer; border: none;
+    transition: all .2s cubic-bezier(.4,0,.2,1); white-space: nowrap;
+}
+.nt-act-btn:hover { transform: translateY(-2px); }
+.nt-act-btn:active { transform: translateY(0); }
+.nt-act-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.nt-act-btn.save { background: #16a34a; color: #fff; box-shadow: 0 3px 12px rgba(22,163,74,.3); }
+.nt-act-btn.save:hover { background: #15803d; }
+.nt-act-btn.new { background: ${T.blue}; color: #fff; box-shadow: 0 3px 12px rgba(8,101,168,.3); }
+.nt-act-btn.new:hover { background: ${T.blueDark}; }
+.nt-act-btn.reset { background: ${T.orange}; color: #fff; box-shadow: 0 3px 12px rgba(245,124,0,.3); }
+.nt-act-btn.reset:hover { background: ${T.orangeDark}; }
+.nt-act-btn.delete { background: #dc2626; color: #fff; box-shadow: 0 3px 12px rgba(220,38,38,.3); }
+.nt-act-btn.delete:hover { background: #b91c1c; }
+.nt-act-btn.cancel { background: ${T.gray100}; color: ${T.gray500}; border: 1.5px solid ${T.gray300}; box-shadow: none; }
+.nt-act-btn.cancel:hover { border-color: ${T.black}; color: ${T.black}; }
+.nt-delete-confirm {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #fef2f2; border: 1.5px solid rgba(220,38,38,.3);
+    border-radius: 3px; padding: 9px 14px; border-right: 4px solid #dc2626;
+}
+.nt-delete-warn { font-size: .78rem; color: #dc2626; font-weight: 700; }
+
+/* ── Notification ── */
+.nt-notif {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; border-radius: 3px;
+    font-size: .8rem; font-weight: 700;
+    border-right: 4px solid;
+    margin-bottom: 12px;
+    animation: nt-notif-in .3s cubic-bezier(.34,1.56,.64,1);
+}
+.nt-notif-success { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+.nt-notif-error { background: #fef2f2; border-color: #dc2626; color: #dc2626; }
+.nt-notif-info { background: rgba(8,101,168,.06); border-color: ${T.blue}; color: ${T.blue}; }
+@keyframes nt-notif-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Skeleton ── */
+.nt-skeleton { background: linear-gradient(90deg, #f0f1f2 25%, #e0e2e5 50%, #f0f1f2 75%); background-size: 200% 100%; animation: nt-shimmer 1.4s infinite; border-radius: 3px; }
+@keyframes nt-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.nt-loading-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-bottom: 3px; }
+
+.nt-empty { text-align: center; padding: 40px 12px; color: ${T.gray500}; }
+.nt-empty-icon { font-size: 2rem; margin-bottom: 10px; opacity: .35; }
+
+@media (max-width: 900px) {
+    .nt-layout { flex-direction: column; }
+    .nt-left-panel { width: 100%; height: 260px; }
+    .nt-form-wrap { height: auto; }
+    .nt-fields-grid { grid-template-columns: 1fr; }
+}
 `;
 
 function injectStyles() {
-    if (document.getElementById('news-tab-styles')) return;
+    if (document.getElementById('nt-styles')) return;
     const el = document.createElement('style');
-    el.id = 'news-tab-styles';
+    el.id = 'nt-styles';
     el.textContent = CSS;
     document.head.appendChild(el);
 }
 
-// ── API helpers ──────────────────────────────────────────────────────────────
+// ── API helpers ───────────────────────────────────────────────────────────────
 async function apiFetch(path, opts = {}) {
     const res = await fetch(`${BASE}${path}`, opts);
     if (!res.ok) {
@@ -581,14 +637,13 @@ async function apiFetch(path, opts = {}) {
     return null;
 }
 
-// ── Build FormData ────────────────────────────────────────────────────────────
 function buildFormData(form, images, isNew) {
     const fd = new FormData();
     fd.append('Id', isNew ? '0' : String(form.id));
     fd.append('Title', form.title || '');
     fd.append('Details', form.details || '');
     fd.append('Date', form.date ? `${form.date}T00:00:00.000Z` : '');
-    fd.append('IsActive', String(form.isActive));   // ← NEW
+    fd.append('IsActive', String(form.isActive));
 
     const main = images[0];
     const rest = images.slice(1);
@@ -608,9 +663,9 @@ function buildFormData(form, images, isNew) {
     return fd;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════════
 // NewsTab
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════════
 export default function NewsTab() {
     injectStyles();
 
@@ -632,7 +687,7 @@ export default function NewsTab() {
         setTimeout(() => setNotif(null), 3500);
     };
 
-    // ── Load list ──
+    // ── Load list ─────────────────────────────────────────────────────────────
     const loadList = useCallback(async () => {
         setLoading(true);
         try {
@@ -650,7 +705,7 @@ export default function NewsTab() {
 
     useEffect(() => { loadList(); }, [loadList]);
 
-    // ── Fetch single ──
+    // ── Fetch single ──────────────────────────────────────────────────────────
     const pickById = async (id, listItem) => {
         setDetailL(true);
         setDelConf(false);
@@ -665,7 +720,7 @@ export default function NewsTab() {
                 title: listItem.title || '',
                 details: '',
                 date: toInputDate(listItem.publishedAt),
-                isActive: listItem.isActive ?? true,   // ← NEW
+                isActive: listItem.isActive ?? true,
             });
         }
 
@@ -677,7 +732,7 @@ export default function NewsTab() {
                     title: item.title || '',
                     details: item.details || '',
                     date: toInputDate(item.date || item.publishedAt),
-                    isActive: item.isActive ?? true,   // ← NEW
+                    isActive: item.isActive ?? true,
                 };
                 setSelected(mapped);
                 setForm(mapped);
@@ -701,7 +756,7 @@ export default function NewsTab() {
 
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-    // ── Save ──
+    // ── Save ──────────────────────────────────────────────────────────────────
     const handleSave = async () => {
         if (!form.title.trim()) { toast('عنوان الخبر مطلوب', 'error'); return; }
         if (!form.date) { toast('التاريخ مطلوب', 'error'); return; }
@@ -754,18 +809,11 @@ export default function NewsTab() {
     };
 
     const handleReset = () => {
-        if (isNew) {
-            setForm({ ...BLANK });
-            setImages([]);
-        } else if (selected) {
-            setForm({ ...selected });
-            pickById(selected.id, null);
-        }
+        if (isNew) { setForm({ ...BLANK }); setImages([]); }
+        else if (selected) { setForm({ ...selected }); pickById(selected.id, null); }
         setDelConf(false);
         toast('تم إلغاء التغييرات', 'info');
     };
-
-    const mainImageOf = (item) => resolveImg(item.imageUrl);
 
     const filtered = news.filter(n =>
         (n.title || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -773,170 +821,182 @@ export default function NewsTab() {
     );
 
     return (
-        <div style={{ display: 'flex', gap: '16px', direction: 'rtl', alignItems: 'flex-start' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-            {/* ════ SIDEBAR ════ */}
-            <aside className="news-sidebar">
-                <div className="news-brand">
-                    <div className="news-brand-icon">📰</div>
-                    <div>
-                        <div className="news-brand-name">ICEMT</div>
-                        <div className="news-brand-sub">إدارة الأخبار</div>
+            {/* Notification */}
+            {notification && (
+                <div className={`nt-notif nt-notif-${notification.type}`} style={{ marginBottom: 12 }}>
+                    <span>{notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}</span>
+                    {notification.msg}
+                </div>
+            )}
+
+            <div className="nt-layout">
+
+                {/* ════ LEFT PANEL ════ */}
+                <div className="nt-left-panel">
+
+                    {/* Brand header */}
+                    <div className="nt-panel-hdr">
+                        <div className="nt-brand-icon">📰</div>
+                        <div style={{ flex: 1 }}>
+                            <div className="nt-brand-name">ICEMT</div>
+                            <div className="nt-brand-sub">إدارة الأخبار</div>
+                        </div>
+                        <span className="nt-count-badge">{filtered.length}</span>
                     </div>
-                </div>
 
-                <div className="news-search-wrap" style={{ position: 'relative' }}>
-                    <input type="text" placeholder="بحث بالعنوان أو التاريخ..." value={search} onChange={e => setSearch(e.target.value)} />
-                    <span className="news-search-icon">🔍</span>
-                    {search && <button className="news-search-clear" onClick={() => setSearch('')}>✕</button>}
-                </div>
-
-                <div className="news-list-hdr">
-                    <span style={{ color: '#374151', fontSize: '.68rem', fontWeight: 700 }}>
-                        الأخبار &nbsp;<span className="news-count-badge">{filtered.length}</span>
-                    </span>
-                    <button className="news-new-btn" onClick={handleNew}>+ جديد</button>
-                </div>
-
-                <div className="news-list">
-                    {loading && [1, 2, 3].map(i => (
-                        <div className="news-loading-row" key={i}>
-                            <div className="news-skeleton" style={{ width: 38, height: 38, flexShrink: 0 }} />
-                            <div style={{ flex: 1 }}>
-                                <div className="news-skeleton" style={{ height: 12, marginBottom: 6 }} />
-                                <div className="news-skeleton" style={{ height: 10, width: '60%' }} />
-                            </div>
-                        </div>
-                    ))}
-                    {!loading && filtered.length === 0 && (
-                        <div className="news-empty" style={{ padding: '32px 12px' }}>
-                            <div className="news-empty-icon">🔍</div>
-                            <p style={{ fontSize: '.74rem' }}>لا توجد نتائج</p>
-                        </div>
-                    )}
-                    {!loading && filtered.map(item => (
-                        <div
-                            key={item.id}
-                            className={`news-row${selected?.id === item.id ? ' active' : ''}`}
-                            onClick={() => pickById(item.id, item)}
-                        >
-                            <div className="news-row-icon">
-                                {mainImageOf(item)
-                                    ? <img src={mainImageOf(item)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : '📰'}
-                            </div>
-                            <div className="news-row-info">
-                                <div className="news-row-title">{item.title || 'بدون عنوان'}</div>
-                                <div className="news-row-date">{formatDateAr(item.publishedAt)}</div>
-                            </div>
-                            {/* ── status dot ── */}
-                            <div className={`news-row-status ${(item.isActive ?? true) ? 'on' : 'off'}`} title={(item.isActive ?? true) ? 'مرئي' : 'مخفي'} />
-                            <div className="news-row-id">#{item.id}</div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="news-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
-            </aside>
-
-            {/* ════ MAIN ════ */}
-            <main style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                minWidth: 0
-            }}>
-                {notification && (
-                    <div className={`news-notif news-notif-${notification.type}`}>
-                        <span>{notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}</span>
-                        {notification.msg}
+                    {/* Search */}
+                    <div className="nt-search-wrap" style={{ position: 'relative' }}>
+                        <input type="text" placeholder="بحث بالعنوان أو التاريخ..."
+                            value={search} onChange={e => setSearch(e.target.value)} />
+                        <span className="nt-search-icon">🔍</span>
+                        {search && <button className="nt-search-clear" onClick={() => setSearch('')}>✕</button>}
                     </div>
-                )}
 
-                <div className="news-body">
-                    <div className="news-card">
+                    {/* List header */}
+                    <div className="nt-list-hdr">
+                        <span style={{ color: '#374151', fontSize: '.68rem', fontWeight: 700 }}>الأخبار</span>
+                        <button className="nt-new-btn" onClick={handleNew}>+ جديد</button>
+                    </div>
 
-                        <div className="news-form-hdr">
+                    {/* List */}
+                    <div className="nt-list">
+                        {loading && [1, 2, 3].map(i => (
+                            <div className="nt-loading-row" key={i}>
+                                <div className="nt-skeleton" style={{ width: 38, height: 38, flexShrink: 0 }} />
+                                <div style={{ flex: 1 }}>
+                                    <div className="nt-skeleton" style={{ height: 12, marginBottom: 6 }} />
+                                    <div className="nt-skeleton" style={{ height: 10, width: '60%' }} />
+                                </div>
+                            </div>
+                        ))}
+                        {!loading && filtered.length === 0 && (
+                            <div className="nt-empty">
+                                <div className="nt-empty-icon">🔍</div>
+                                <p style={{ fontSize: '.74rem' }}>لا توجد نتائج</p>
+                            </div>
+                        )}
+                        {!loading && filtered.map(item => {
+                            const imgSrc = resolveImg(item.imageUrl);
+                            return (
+                                <div key={item.id}
+                                    className={`nt-row${selected?.id === item.id ? ' active' : ''}`}
+                                    onClick={() => pickById(item.id, item)}>
+                                    <div className="nt-row-icon">
+                                        {imgSrc
+                                            ? <img src={imgSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            : '📰'}
+                                    </div>
+                                    <div className="nt-row-info">
+                                        <div className="nt-row-title">{item.title || 'بدون عنوان'}</div>
+                                        <div className="nt-row-date">{formatDateAr(item.publishedAt)}</div>
+                                    </div>
+                                    <div className={`nt-row-status ${(item.isActive ?? true) ? 'on' : 'off'}`}
+                                        title={(item.isActive ?? true) ? 'مرئي' : 'مخفي'} />
+                                    <div className="nt-row-id">#{item.id}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="nt-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
+                </div>
+
+                {/* ════ FORM AREA ════ */}
+                <div className="nt-form-wrap">
+                    <div className="nt-form-card">
+
+                        {/* Header */}
+                        <div className="nt-form-hdr">
                             <div>
-                                <div className="news-form-tag">{isNew ? 'خبر جديد' : `ID: #${selected?.id}`}</div>
-                                <h2 className="news-form-title">
+                                <div className="nt-form-tag">{isNew ? 'خبر جديد' : `ID: #${selected?.id}`}</div>
+                                <h2 className="nt-form-title">
                                     {detailLoading ? '⏳ جاري التحميل...' : isNew ? '➕ إضافة خبر جديد' : '✏️ تعديل بيانات الخبر'}
                                 </h2>
-                                {!isNew && selected && <p className="news-form-sub">{previewSnippet(selected.title, 60)}</p>}
+                                {!isNew && selected && <p className="nt-form-sub">{previewSnippet(selected.title, 60)}</p>}
                             </div>
-                            <div className="news-stat-pill">📰 {total} خبر</div>
+                            <div className="nt-stat-pill">📰 {total} خبر</div>
                         </div>
 
-                        <div className="news-form-body">
+                        {/* Body */}
+                        {detailLoading ? (
+                            <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ جاري تحميل البيانات...</div>
+                        ) : (
+                            <div className="nt-form-body">
 
-                            <div className="news-fields-grid">
-                                <div className="news-field">
-                                    <label className="news-label">الرقم</label>
-                                    <input className="news-inp" value={isNew ? 'تلقائي' : form.id} disabled />
-                                </div>
-                                <div className="news-field">
-                                    <label className="news-label">التاريخ *</label>
-                                    <input className="news-inp" type="date" name="date" value={form.date} onChange={handleChange} style={{ direction: 'ltr', textAlign: 'right' }} />
+                                <div className="nt-fields-grid">
+                                    <div className="nt-field">
+                                        <label className="nt-label">الرقم</label>
+                                        <input className="nt-inp" value={isNew ? 'تلقائي' : form.id} disabled
+                                            style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
+                                    </div>
+                                    <div className="nt-field">
+                                        <label className="nt-label">التاريخ <span style={{ color: '#dc2626' }}>*</span></label>
+                                        <input className="nt-inp" type="date" name="date" value={form.date}
+                                            onChange={handleChange} style={{ direction: 'ltr', textAlign: 'right' }} />
+                                    </div>
+
+                                    {/* IsActive toggle — full width */}
+                                    <div className="nt-field" style={{ gridColumn: '1/-1' }}>
+                                        <label className="nt-label">حالة الظهور</label>
+                                        <ActiveToggle value={form.isActive} onChange={val => setForm(f => ({ ...f, isActive: val }))} />
+                                    </div>
+
+                                    {/* Title — full width */}
+                                    <div className="nt-field" style={{ gridColumn: '1/-1' }}>
+                                        <label className="nt-label">عنوان الخبر <span style={{ color: '#dc2626' }}>*</span></label>
+                                        <input className="nt-inp" name="title" value={form.title}
+                                            onChange={handleChange} placeholder="أدخل عنوان الخبر هنا..." />
+                                    </div>
                                 </div>
 
-                                {/* ── IsActive toggle — spans full width, sits below date ── */}
-                                <div className="news-field" style={{ gridColumn: '1/-1' }}>
-                                    <label className="news-label">حالة الظهور</label>
-                                    <ActiveToggle
-                                        value={form.isActive}
-                                        onChange={val => setForm(f => ({ ...f, isActive: val }))}
-                                    />
+                                {/* Multi-image uploader */}
+                                <div style={{ marginBottom: 20 }}>
+                                    <MultiImageUploader images={images} onChange={setImages} />
                                 </div>
 
-                                <div className="news-field" style={{ gridColumn: '1/-1' }}>
-                                    <label className="news-label">عنوان الخبر *</label>
-                                    <input className="news-inp" name="title" value={form.title} onChange={handleChange} placeholder="أدخل عنوان الخبر هنا..." />
+                                <div className="nt-divider" />
+
+                                {/* Rich text editor */}
+                                <RichTextEditor
+                                    icon="📝"
+                                    label="تفاصيل الخبر *"
+                                    sub="حدد النص أولاً ثم اختر التنسيق من شريط الأدوات"
+                                    name="details"
+                                    value={form.details}
+                                    onChange={handleChange}
+                                    placeholder="أدخل تفاصيل الخبر هنا..."
+                                    minHeight={200}
+                                />
+
+                                {/* Actions */}
+                                <div className="nt-actions">
+                                    <button className="nt-act-btn save" onClick={handleSave} disabled={saving}>
+                                        {saving ? '⏳ جاري الحفظ...' : '💾 حفظ'}
+                                    </button>
+                                    <button className="nt-act-btn new" onClick={handleNew} disabled={saving}>➕ خبر جديد</button>
+                                    <button className="nt-act-btn reset" onClick={handleReset} disabled={saving}>↩ إلغاء</button>
+                                    <div style={{ flex: 1 }} />
+                                    {!isNew && (
+                                        deleteConfirm ? (
+                                            <div className="nt-delete-confirm">
+                                                <span className="nt-delete-warn">⚠️ هل أنت متأكد من حذف هذا الخبر؟</span>
+                                                <button className="nt-act-btn delete" onClick={handleDelete} disabled={saving}>تأكيد الحذف</button>
+                                                <button className="nt-act-btn cancel" onClick={() => setDelConf(false)}>إلغاء</button>
+                                            </div>
+                                        ) : (
+                                            <button className="nt-act-btn delete" onClick={handleDelete} disabled={saving}>🗑 حذف الخبر</button>
+                                        )
+                                    )}
                                 </div>
+
                             </div>
-
-                            {/* ── Multi Image Upload ── */}
-                            <div style={{ marginBottom: 20 }}>
-                                <MultiImageUploader images={images} onChange={setImages} />
-                            </div>
-
-                            <div className="news-divider" />
-
-                            {/* ── RichTextEditor ── */}
-                            <RichTextEditor
-                                icon="📝"
-                                label="تفاصيل الخبر *"
-                                sub="حدد النص أولاً ثم اختر التنسيق من شريط الأدوات — يمكن إضافة روابط للمقالات"
-                                name="details"
-                                value={form.details}
-                                onChange={handleChange}
-                                placeholder="أدخل تفاصيل الخبر هنا..."
-                                minHeight={200}
-                            />
-
-                            <div className="news-actions">
-                                <button className="news-act-btn save" onClick={handleSave} disabled={saving}>
-                                    {saving ? '⏳ جاري الحفظ...' : '💾 حفظ'}
-                                </button>
-                                <button className="news-act-btn new" onClick={handleNew} disabled={saving}>➕ خبر جديد</button>
-                                <button className="news-act-btn reset" onClick={handleReset} disabled={saving}>↩ إلغاء</button>
-                                <div style={{ flex: 1 }} />
-                                {!isNew && (
-                                    deleteConfirm ? (
-                                        <div className="news-delete-confirm">
-                                            <span className="news-delete-warn">⚠️ هل أنت متأكد من حذف هذا الخبر؟</span>
-                                            <button className="news-act-btn delete" onClick={handleDelete} disabled={saving}>تأكيد الحذف</button>
-                                            <button className="news-act-btn cancel" onClick={() => setDelConf(false)}>إلغاء</button>
-                                        </div>
-                                    ) : (
-                                        <button className="news-act-btn delete" onClick={handleDelete} disabled={saving}>🗑 حذف الخبر</button>
-                                    )
-                                )}
-                            </div>
-
-                        </div>
+                        )}
                     </div>
                 </div>
-            </main>
+
+            </div>
         </div>
     );
 }
