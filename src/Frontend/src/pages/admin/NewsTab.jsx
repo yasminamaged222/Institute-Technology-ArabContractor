@@ -333,8 +333,28 @@ function MultiImageSlot({ img, idx, isMain, onRemove, onSetMain, onReplace }) {
 // ── CSS ────────────────────────────────────────────────────────────────────────
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
-.news-root{display:flex;height:100vh;direction:rtl;font-family:"Noto Kufi Arabic",sans-serif;background:${T.gray100};overflow:hidden;}
-.news-sidebar{width:clamp(230px,26vw,290px);min-width:230px;background:#fff;display:flex;flex-direction:column;height:100vh;overflow:hidden;flex-shrink:0;border-radius:3px;border:1.5px solid #d0d3d8;box-shadow:0 2px 10px rgba(0,0,0,.06);}
+.news-root {
+    display: flex;
+    direction: rtl;
+    font-family: "Noto Kufi Arabic", sans-serif;
+    background: #f0f1f2;
+    gap: 16px;
+    padding: 16px;
+    align-items: stretch; /* Forces children to match height */
+    height: 100vh; /* Lock to viewport height */
+    box-sizing: border-box;
+    overflow: hidden; /* Prevent the whole page from scrolling */
+}
+.news-sidebar {
+    width: clamp(230px, 26vw, 290px);
+    background: #fff;
+    border-radius: 3px;
+    border: 1.5px solid #d0d3d8;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    /* Remove sticky and max-height */
+}
 .news-brand{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;border-bottom:1.5px solid #f0f1f2;gap:8px;}
 .news-brand-icon{width:36px;height:36px;border-radius:3px;background:linear-gradient(135deg,#0865a8,#1a84d4);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#bfdbfe;border:1.5px solid rgba(8,101,168,.25);flex-shrink:0;}
 .news-brand-name{font-size:.78rem;font-weight:800;color:#0a0a0a;}
@@ -349,7 +369,11 @@ const CSS = `
 .news-count-badge{background:rgba(8,101,168,.1);color:#0865a8;border:1.5px solid rgba(8,101,168,.25);border-radius:2px;padding:1px 9px;font-size:.66rem;font-weight:900;font-family:'Courier New',monospace;}
 .news-new-btn{background:rgba(245,124,0,.1);color:#f57c00;border:1.5px solid rgba(245,124,0,.35);border-radius:2px;padding:4px 12px;font-size:.72rem;font-weight:800;cursor:pointer;font-family:inherit;transition:all .16s;}
 .news-new-btn:hover{background:rgba(245,124,0,.18);}
-.news-list{flex:1;overflow-y:auto;padding:4px 8px 12px;}
+.news-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 8px 12px;
+}
 .news-list::-webkit-scrollbar{width:4px;}
 .news-list::-webkit-scrollbar-thumb{background:rgba(245,124,0,.35);border-radius:2px;}
 .news-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:3px;margin-bottom:3px;cursor:pointer;border:1.5px solid transparent;transition:background .13s,border-color .13s;}
@@ -361,17 +385,39 @@ const CSS = `
 .news-row-date{color:#6b7280;font-size:.63rem;margin-top:2px;}
 .news-row-id{background:#f0f1f2;color:#6b7280;font-size:.6rem;padding:2px 7px;border-radius:2px;flex-shrink:0;font-weight:700;font-family:'Courier New',monospace;}
 .news-sidebar-footer{padding:10px 14px;border-top:1.5px solid #f0f1f2;text-align:center;font-size:.6rem;color:#6b7280;background:#fff;}
-.news-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.news-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%; /* Fill parent */
+}
+
+.news-body {
+    flex: 1;
+    padding: 0; 
+    overflow-y: auto; /* This allows the form to scroll if it's long */
+    display: flex;
+    flex-direction: column;
+}
+
+.news-card {
+    flex: 1; /* Stretch the white card to the bottom */
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1.5px solid #d0d3d8;
+    border-radius: 3px;
+    margin-bottom: 0; /* Remove bottom margin to align with sidebar */
+}
 .news-topbar{background:#fff;border-bottom:3px solid ${T.orange};padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.06);}
 .news-notif{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:3px;font-size:.8rem;font-weight:700;animation:news-notif-in .3s cubic-bezier(.34,1.56,.64,1);border-right:4px solid;margin:14px 24px 0;}
 .news-notif-success{background:#f0fdf4;border-color:#16a34a;color:#15803d;}
 .news-notif-error{background:#fef2f2;border-color:#dc2626;color:#dc2626;}
 .news-notif-info{background:rgba(8,101,168,.06);border-color:${T.blue};color:${T.blue};}
 @keyframes news-notif-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.news-body{flex:1;overflow-y:auto;padding:20px 24px 48px;}
 .news-body::-webkit-scrollbar{width:5px;}
 .news-body::-webkit-scrollbar-thumb{background:${T.gray300};border-radius:3px;}
-.news-card{background:#fff;border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);position:relative;animation:news-card-up .22s ease;}
 .news-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to left,${T.orange},${T.blue});z-index:2;}
 @keyframes news-card-up{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
 .news-form-hdr{background:${T.blueDark};padding:20px 26px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;overflow:hidden;}
@@ -380,7 +426,10 @@ const CSS = `
 .news-form-title{font-size:1.1rem;font-weight:900;color:#fff;margin:0;position:relative;z-index:1;}
 .news-form-sub{font-size:.72rem;color:rgba(255,255,255,.4);margin:4px 0 0;position:relative;z-index:1;}
 .news-stat-pill{display:inline-flex;align-items:center;padding:5px 14px;border-radius:2px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.72);font-size:.72rem;font-weight:700;position:relative;z-index:1;}
-.news-form-body{padding:26px;}
+.news-form-body {
+    padding: 26px;
+    flex: 1; /* Ensures the body content area expands */
+}
 .news-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:22px;}
 .news-field{display:flex;flex-direction:column;gap:5px;}
 .news-label{font-size:.72rem;font-weight:700;color:${T.gray700};}
@@ -456,7 +505,21 @@ const CSS = `
 .news-url-popover input:focus{border-color:${T.orange};}
 .news-url-ok{padding:7px 14px;background:${T.orange};color:#fff;border:none;border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
 .news-url-cancel{padding:7px 10px;background:${T.gray100};color:${T.gray700};border:1.5px solid ${T.gray300};border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
-.news-rte-editor{padding:12px 16px;outline:none;font-family:"Noto Kufi Arabic",sans-serif;font-size:.82rem;color:#0a0a0a;line-height:1.9;direction:rtl;background:#fff;}
+.news-rte-editor{
+    padding:12px 16px;
+    outline:none;
+    font-family:"Noto Kufi Arabic",sans-serif;
+    font-size:.82rem;
+    color:#0a0a0a;
+    line-height:1.9;
+    direction:rtl;
+    background:#fff;
+
+    /* الحل */
+    overflow-wrap: break-word;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
 .news-rte-editor:empty::before{content:attr(data-placeholder);color:#9ca3af;pointer-events:none;}
 .news-rte-editor a{color:#0865a8;text-decoration:underline;}
 
@@ -710,7 +773,7 @@ export default function NewsTab() {
     );
 
     return (
-        <div className="news-root">
+        <div style={{ display: 'flex', gap: '16px', direction: 'rtl', alignItems: 'flex-start' }}>
 
             {/* ════ SIDEBAR ════ */}
             <aside className="news-sidebar">
@@ -777,7 +840,12 @@ export default function NewsTab() {
             </aside>
 
             {/* ════ MAIN ════ */}
-            <main className="news-main">
+            <main style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                minWidth: 0
+            }}>
                 {notification && (
                     <div className={`news-notif news-notif-${notification.type}`}>
                         <span>{notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}</span>

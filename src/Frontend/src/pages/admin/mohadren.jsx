@@ -507,7 +507,7 @@ const LecturersTab = () => {
             <div className="lec-layout">
 
                 {/* ══ LEFT PANEL ══ */}
-                <div className="lec-panel">
+                <div className="lec-panel" style={{ height: 'calc(100vh - 120px)', overflowY: 'auto', position: 'sticky', top: 0 }}>
                     <div className="lec-panel-hdr">
                         <span className="lec-count-badge">{filtered.length}</span>
                         <span style={{ fontWeight: 800, fontSize: '.8rem', color: '#0a0a0a', flex: 1, textAlign: 'center' }}>
@@ -567,7 +567,7 @@ const LecturersTab = () => {
                 </div>
 
                 {/* ══ FORM AREA ══ */}
-                <div className="lec-form-wrap">
+                <div className="lec-form-wrap" style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
                     <div className="adm-card lec-form-card">
 
                         <div className="lec-form-hdr">
