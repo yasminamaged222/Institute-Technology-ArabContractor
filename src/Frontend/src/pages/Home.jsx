@@ -978,31 +978,73 @@ export default function Home() {
             </section>
 
             {/* 13 ─ LIBRARY ──────────────────────────────────────────────────── */}
+            {/* 13 ─ LIBRARY ──────────────────────────────────────────────────── */}
             <section style={{ background: C.k }} ref={libRef}>
                 <div className="lib-split">
-                    <div className="lib-visual">
-                        <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, right: -110, pointerEvents: 'none' }} />
-                        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
-                            <LibraryBooksIcon sx={{ fontSize: 'clamp(36px,5.5vw,64px)', color: C.w, marginBottom: 10 }} />
-                            <div style={{ fontFamily: F, fontSize: 'clamp(.95rem,2vw,1.7rem)', fontWeight: 900, color: C.w, lineHeight: 1.3, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
-                            <div style={{ width: 32, height: 2, background: 'rgba(255,255,255,.5)', margin: '0 auto 14px' }} />
-                            <div className="lib-tags">
-                                {['5,000+ كتاب', '200+ دورية', 'رقمية'].map((t, i) => (
-                                    <span key={i} className="lib-tag"><AutoStoriesIcon sx={{ fontSize: 11 }} /> {t}</span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+
+                    {/* ── RIGHT: المكتبة الرئيسية (black) ── */}
                     <div className="lib-content">
                         <Eyebrow light>المكتبة</Eyebrow>
                         <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 14 }}>
                             مرجعك العلمي الأشمل في علوم التشييد والإدارة
                         </h3>
-                        <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 28 }}>
-                            مفتوحة لجميع المتدربين والباحثين. تضم آلاف المراجع الهندسية والمالية والإدارية مع قواعد بيانات رقمية متكاملة.
+                        <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 20 }}>
+                            مكتبة متخصصة تأسست عام 1970، تضم أكثر من 4200 كتاب في العلوم الهندسية والإدارية، مع قواعد بيانات رقمية متكاملة مفتوحة لجميع المتدربين والباحثين.
                         </p>
+                        {/* Quick stats */}
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
+                            {[
+                                { val: '4200+', lbl: 'كتاب' },
+                                { val: '2500+', lbl: 'مادة علمية' },
+                                { val: '23', lbl: 'مجال' },
+                            ].map((s, i) => (
+                                <div key={i} style={{ background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '10px 18px', textAlign: 'center', flex: '1 1 70px' }}>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.5vw,1.2rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>{s.val}</div>
+                                    <div style={{ fontFamily: F, fontSize: '.62rem', color: 'rgba(255,255,255,.45)', marginTop: 4, letterSpacing: 1 }}>{s.lbl}</div>
+                                </div>
+                            ))}
+                        </div>
                         <div><SolidBtn to="/library" orange>زيارة المكتبة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn></div>
                     </div>
+
+                    {/* ── LEFT: سفارة المعرفة (orange) ── */}
+                    <div className="lib-visual" style={{ flexDirection: 'column', gap: 0, justifyContent: 'center', alignItems: 'flex-start', padding: 'clamp(28px,5vw,64px) clamp(20px,4vw,56px)' }}>
+                        {/* Decorative circle */}
+                        <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, left: -110, pointerEvents: 'none' }} />
+
+                        <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+                            {/* Badge */}
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.25)', borderRadius: 20, padding: '5px 14px', marginBottom: 18 }}>
+                                <StarIcon sx={{ fontSize: 13, color: C.w }} />
+                                <span style={{ fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.5, color: C.w, textTransform: 'uppercase' }}>أول سفارة لشركة مقاولات</span>
+                            </div>
+
+                            <div style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.65rem)', fontWeight: 900, color: C.w, lineHeight: 1.35, marginBottom: 8 }}>
+                                سفارة المعرفة
+                            </div>
+                            <div style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.4vw,1.05rem)', fontWeight: 700, color: 'rgba(255,255,255,.75)', marginBottom: 16 }}>
+                                مكتبة الإسكندرية — بروتوكول تعاون
+                            </div>
+
+                            <div style={{ width: 36, height: 2, background: 'rgba(255,255,255,.5)', marginBottom: 18 }} />
+
+                            <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.9rem)', color: 'rgba(255,255,255,.8)', lineHeight: 1.9, marginBottom: 24 }}>
+                                بوابة رقمية تمنح المستفيدين وصولاً إلى أكثر من 509,000 وعاء رقمي، وأرشيف 17.5 مليون مقالة صحفية، وكنوز تاريخية ومعرفية لا محدودة.
+                            </p>
+
+                            {/* Mini stats */}
+                            <div className="lib-tags" style={{ justifyContent: 'flex-start', marginBottom: 24 }}>
+                                {['509,089 وعاء رقمي', '17.5M مقالة', '24 سفارة معرفة'].map((t, i) => (
+                                    <span key={i} className="lib-tag"><AutoStoriesIcon sx={{ fontSize: 11 }} /> {t}</span>
+                                ))}
+                            </div>
+
+                            <SolidBtn to="/library#embassy" style={{ background: 'rgba(255,255,255,.15)', border: '1.5px solid rgba(255,255,255,.35)' }}>
+                                اكتشف السفارة <ArrowForwardIosIcon sx={{ fontSize: 11 }} />
+                            </SolidBtn>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 
