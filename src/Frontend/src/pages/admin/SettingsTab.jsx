@@ -1,282 +1,474 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// SettingsTab.jsx
+// SettingsTab.jsx  (redesigned)
 // Path: src/pages/admin/SettingsTab.jsx
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 
-// T tokens — inline here so this file has no path dependency issues
+// ── Design tokens (same palette as the rest of the dashboard) ─────────────
 const T = {
     orange: '#f57c00', orangeLight: '#ff9a3c', orangeDark: '#bf5200',
     blue: '#0865a8', blueDark: '#044478',
     black: '#0a0a0a', white: '#ffffff',
-    gray100: '#f0f1f2', gray300: '#d0d3d8',
+    gray100: '#f0f1f2', gray200: '#e5e7eb', gray300: '#d0d3d8',
     gray500: '#6b7280', gray700: '#374151',
+    green: '#16a34a', greenBg: '#f0fdf4', greenBorder: '#86efac',
+    red: '#dc2626', redBg: '#fef2f2', redBorder: 'rgba(220,38,38,.2)',
     font: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif',
 };
 
-// ── Storage key — must match the one in constants.js ─────────────────────────
-const STORAGE_KEY = 'icemt_admin_emails';
-
-// ── Hardcoded fallback (the original list — never deletable) ─────────────────
-const SUPER_ADMINS = [
-    'yasminamaged22@gmail.com',
-    'abeer.naguib@gmail.com',
-    'amrshamy91@gmail.com',
-    'abdelmawla1642@gmail.com',
-    'mostafa.awaad@gmail.com',
-    'samiryousri96@gmail.com',   // ← kept from your navbar list
+// ── All admin tabs in the system ──────────────────────────────────────────
+const ADMIN_TABS = [
+    { id: 'users', label: '👤 المستخدمون' },
+    { id: 'courses', label: '📚 الدورات' },
+    { id: 'attendance', label: '✅ الحضور' },
+    { id: 'certificates', label: '📜 الشهادات' },
+    { id: 'refunds', label: '💳 المستردات' },
+    { id: 'finance', label: '💰 المالية' },
+    { id: 'lecturers', label: '🎓 المحاضرون' },
+    { id: 'news', label: '📰 الأخبار' },
+    { id: 'books', label: '📖 الكتب' },
+    { id: 'workplan', label: '📋 خطة العمل' },
+    { id: 'settings', label: '⚙️ الإعدادات' },
 ];
 
-// ── Public helper (mirrors constants.js — imported by Navbar & AdminDashboard)
-export function getAdminEmails() {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-    } catch (_) { }
-    return [...SUPER_ADMINS];
-}
+// ── Static placeholder users (replace with API data when ready) ───────────
+const STATIC_USERS = [
+    { id: 1, username: 'yasmin.amaged', email: 'yasminamaged22@gmail.com' },
+    { id: 2, username: 'abeer.naguib', email: 'abeer.naguib@gmail.com' },
+    { id: 3, username: 'amr.shamy', email: 'amrshamy91@gmail.com' },
+    { id: 4, username: 'abdelmawla', email: 'abdelmawla1642@gmail.com' },
+    { id: 5, username: 'mostafa.awaad', email: 'mostafa.awaad@gmail.com' },
+    { id: 6, username: 'samir.yousri', email: 'samiryousri96@gmail.com' },
+    { id: 7, username: 'hana.khalil', email: 'hana.khalil@example.com' },
+    { id: 8, username: 'omar.hassan', email: 'omar.hassan@example.com' },
+    { id: 9, username: 'nada.ibrahim', email: 'nada.ibrahim@example.com' },
+];
 
-function saveAdminEmails(list) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-}
+// ── Items per page ────────────────────────────────────────────────────────
+const ITEMS_PER_PAGE = 6;
 
 // ─────────────────────────────────────────────────────────────────────────────
 export default function SettingsTab({ currentUserEmail = '' }) {
-    const [emails, setEmails] = useState([]);
-    const [input, setInput] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
-    const [deleteTarget, setDeleteTarget] = useState(null); // email pending confirm
+    // ── UI state ────────────────────────────────────────────────────────────
+    const [search, setSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [expandedRow, setExpandedRow] = useState(null); // user id with open tab-select panel
 
-    // Load on mount
-    useEffect(() => {
-        setEmails(getAdminEmails());
-    }, []);
+    // ── Per-user role state  { [userId]: { isAdmin, isManager, tabs: Set } }
+    const [roles, setRoles] = useState(() => {
+        const init = {};
+        STATIC_USERS.forEach(u => {
+            init[u.id] = { isAdmin: false, isManager: false, tabs: new Set() };
+        });
+        return init;
+    });
 
-    const showSuccess = msg => { setSuccess(msg); setTimeout(() => setSuccess(''), 3500); };
-    const showError = msg => { setError(msg); setTimeout(() => setError(''), 3500); };
-
-    const isValidEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim().toLowerCase());
-
-    const handleAdd = () => {
-        const val = input.trim().toLowerCase();
-        if (!val) { showError('أدخل البريد الإلكتروني أولاً'); return; }
-        if (!isValidEmail(val)) { showError('صيغة البريد الإلكتروني غير صحيحة'); return; }
-        if (emails.includes(val)) { showError('هذا البريد مضاف بالفعل'); return; }
-        const updated = [...emails, val];
-        setEmails(updated);
-        saveAdminEmails(updated);
-        setInput('');
-        showSuccess(`✅ تم إضافة ${val} كمدير`);
+    // ── Notification state ──────────────────────────────────────────────────
+    const [toast, setToast] = useState(null); // { type: 'success'|'error', msg }
+    const showToast = (type, msg) => {
+        setToast({ type, msg });
+        setTimeout(() => setToast(null), 3200);
     };
 
-    const handleDelete = (email) => {
-        if (deleteTarget !== email) { setDeleteTarget(email); return; }
-        // confirm
-        const updated = emails.filter(e => e !== email);
-        setEmails(updated);
-        saveAdminEmails(updated);
-        setDeleteTarget(null);
-        showSuccess(`تم حذف ${email} من قائمة المديرين`);
+    // ── Filtered + paginated users ──────────────────────────────────────────
+    const filtered = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        if (!q) return STATIC_USERS;
+        return STATIC_USERS.filter(u =>
+            u.username.toLowerCase().includes(q) ||
+            u.email.toLowerCase().includes(q)
+        );
+    }, [search]);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+    const safePage = Math.min(currentPage, totalPages);
+    const paginated = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
+    // ── Role helpers ────────────────────────────────────────────────────────
+    const setAdmin = (userId, checked) => {
+        setRoles(prev => ({
+            ...prev,
+            [userId]: {
+                ...prev[userId],
+                isAdmin: checked,
+                // if unchecking admin, clear tab selection; keep manager state
+                tabs: checked ? prev[userId].tabs : new Set(),
+            },
+        }));
+        if (!checked) setExpandedRow(null);
+        showToast('success', checked
+            ? `✅ تم منح صلاحية المدير`
+            : `تم سحب صلاحية المدير`);
     };
 
-    const isSuperAdmin = email => SUPER_ADMINS.includes(email);
-    const isCurrentUser = email => email === currentUserEmail?.toLowerCase();
+    const setManager = (userId, checked) => {
+        setRoles(prev => ({
+            ...prev,
+            [userId]: {
+                ...prev[userId],
+                isManager: checked,
+                // manager → auto-grant all tabs; uncheck manager → keep custom tabs
+                tabs: checked ? new Set(ADMIN_TABS.map(t => t.id)) : prev[userId].tabs,
+            },
+        }));
+        showToast('success', checked
+            ? `✅ تم منح صلاحية المدير العام (كل التبويبات)`
+            : `تم تغيير الصلاحية`);
+    };
 
+    const toggleTab = (userId, tabId) => {
+        setRoles(prev => {
+            const current = new Set(prev[userId].tabs);
+            current.has(tabId) ? current.delete(tabId) : current.add(tabId);
+            return { ...prev, [userId]: { ...prev[userId], tabs: current } };
+        });
+    };
+
+    const toggleExpanded = (userId) => {
+        setExpandedRow(prev => (prev === userId ? null : userId));
+    };
+
+    const getRole = (userId) => roles[userId] || { isAdmin: false, isManager: false, tabs: new Set() };
+    const isMe = (email) => email.toLowerCase() === currentUserEmail.toLowerCase();
+
+    // ── Stats ───────────────────────────────────────────────────────────────
+    const stats = useMemo(() => {
+        let admins = 0, managers = 0;
+        STATIC_USERS.forEach(u => {
+            const r = roles[u.id];
+            if (r?.isManager) managers++;
+            else if (r?.isAdmin) admins++;
+        });
+        return { admins, managers, total: STATIC_USERS.length };
+    }, [roles]);
+
+    // ────────────────────────────────────────────────────────────────────────
     return (
         <div>
             {/* ── Section header ── */}
             <div className="adm-section-hdr">
                 <div>
                     <div className="adm-section-tag">إعدادات النظام</div>
-                    <div className="adm-section-title">إدارة <span>المديرين</span></div>
+                    <div className="adm-section-title">إدارة <span>الصلاحيات</span></div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: '.72rem', color: T.gray500, fontFamily: T.font }}>
-                        إجمالي المديرين:
-                    </span>
-                    <span style={{ fontFamily: 'Courier New', fontWeight: 900, fontSize: '.9rem', color: T.blue }}>
-                        {emails.length}
-                    </span>
+                <div style={{ display: 'flex', gap: 10 }}>
+                    <StatPill color={T.blue} icon="🛡" label="Admin" value={stats.admins} />
+                    <StatPill color={T.orange} icon="👑" label="Manager" value={stats.managers} />
+                    <StatPill color={T.gray500} icon="👥" label="Total" value={stats.total} />
                 </div>
             </div>
 
             {/* ── Info banner ── */}
-            <div style={{ background: 'rgba(8,101,168,0.05)', border: `1.5px solid rgba(8,101,168,0.18)`, borderRadius: 3, borderRight: `4px solid ${T.blue}`, padding: '12px 16px', marginBottom: 20, display: 'flex', alignItems: 'flex-start', gap: 10, fontFamily: T.font }}>
+            <div style={infoBannerStyle}>
                 <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>ℹ️</span>
                 <div>
-                    <div style={{ fontWeight: 700, fontSize: '.78rem', color: T.blue, marginBottom: 3 }}>كيف تعمل صلاحيات المديرين؟</div>
-                    <div style={{ fontSize: '.72rem', color: T.gray700, lineHeight: 1.7 }}>
-                        أي مستخدم بريده الإلكتروني موجود في هذه القائمة سيتمكن من الوصول للوحة الإدارة.
-                        البريد المُضاف يظهر في قائمة <code style={{ background: T.gray100, padding: '1px 5px', borderRadius: 2, fontFamily: 'Courier New', fontSize: '.7rem' }}>ADMIN_EMAILS</code> تلقائياً.
-                        المديرون الأساسيون (🔒) لا يمكن حذفهم.
+                    <div style={{ fontWeight: 700, fontSize: '.78rem', color: T.blue, marginBottom: 3 }}>كيف تعمل الصلاحيات؟</div>
+                    <div style={{ fontSize: '.72rem', color: T.gray700, lineHeight: 1.8 }}>
+                        <b>مدير (Admin):</b> اختر التبويبات التي يمكنه الوصول إليها يدوياً.&nbsp;&nbsp;
+                        <b>مدير عام (Manager):</b> يصل تلقائياً لجميع التبويبات دون قيود.
                     </div>
                 </div>
             </div>
 
-            {/* ── Notifications ── */}
-            {error && (
-                <div className="adm-err" style={{ marginBottom: 14 }}>
-                    ⚠️ {error}
-                    <button style={{ marginRight: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem' }} onClick={() => setError('')}>✕</button>
-                </div>
-            )}
-            {success && (
-                <div style={{ background: '#f0fdf4', border: '1.5px solid #86efac', color: '#166534', borderRadius: 3, padding: '10px 14px', marginBottom: 14, fontSize: '.78rem', display: 'flex', alignItems: 'center', gap: 8, fontFamily: T.font, borderRight: '4px solid #16a34a' }}>
-                    {success}
+            {/* ── Toast ── */}
+            {toast && (
+                <div style={{
+                    ...toastBase,
+                    background: toast.type === 'success' ? T.greenBg : T.redBg,
+                    border: `1.5px solid ${toast.type === 'success' ? T.greenBorder : T.redBorder}`,
+                    borderRight: `4px solid ${toast.type === 'success' ? T.green : T.red}`,
+                    color: toast.type === 'success' ? T.green : T.red,
+                }}>
+                    {toast.msg}
                 </div>
             )}
 
-            {/* ── Add email form ── */}
-            <div className="adm-card" style={{ marginBottom: 20 }}>
-                <div style={{ padding: '20px 22px' }}>
-                    <div style={{ fontWeight: 900, fontSize: '.88rem', color: T.black, fontFamily: T.font, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span>➕</span> إضافة مدير جديد
-                    </div>
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <div className="adm-search" style={{ flex: 1, minWidth: 260 }}>
-                            <input
-                                type="email"
-                                placeholder="أدخل البريد الإلكتروني للمدير الجديد..."
-                                value={input}
-                                onChange={e => { setInput(e.target.value); setError(''); }}
-                                onKeyDown={e => e.key === 'Enter' && handleAdd()}
-                                style={{ direction: 'ltr', textAlign: 'left' }}
-                            />
-                        </div>
-                        <button
-                            onClick={handleAdd}
-                            style={{ padding: '10px 24px', background: T.blue, color: T.white, border: 'none', borderRadius: 3, fontFamily: T.font, fontSize: '.8rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: `0 4px 14px rgba(8,101,168,0.3)`, transition: 'all .18s' }}
-                            onMouseEnter={e => e.currentTarget.style.background = T.blueDark}
-                            onMouseLeave={e => e.currentTarget.style.background = T.blue}
-                        >
-                            ✚ إضافة
-                        </button>
-                    </div>
-                    <div style={{ marginTop: 8, fontSize: '.68rem', color: T.gray500, fontFamily: T.font }}>
-                        💡 اضغط Enter أو زر "إضافة" — يجب أن يكون المستخدم مسجلاً في النظام بنفس البريد
-                    </div>
+            {/* ── Search ── */}
+            <div className="adm-toolbar" style={{ marginBottom: 14 }}>
+                <div className="adm-search" style={{ flex: 1 }}>
+                    <input
+                        type="text"
+                        placeholder="ابحث بالاسم أو البريد الإلكتروني..."
+                        value={search}
+                        onChange={e => { setSearch(e.target.value); setCurrentPage(1); setExpandedRow(null); }}
+                    />
                 </div>
+                {search && (
+                    <button className="adm-fclear" onClick={() => { setSearch(''); setCurrentPage(1); }}>✕</button>
+                )}
             </div>
 
-            {/* ── Emails list ── */}
+            {/* ── Table ── */}
             <div className="adm-card">
-                <div style={{ padding: '16px 22px 12px', borderBottom: `1.5px solid ${T.gray100}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                {/* Table header counts */}
+                <div style={{ padding: '14px 20px 10px', borderBottom: `1.5px solid ${T.gray100}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                     <span style={{ fontWeight: 900, fontSize: '.88rem', color: T.black, fontFamily: T.font }}>
-                        📋 قائمة المديرين الحاليين
+                        👥 قائمة المستخدمين
                     </span>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                        <span style={{ fontSize: '.68rem', padding: '2px 10px', borderRadius: 2, background: 'rgba(8,101,168,0.08)', border: `1px solid rgba(8,101,168,0.2)`, color: T.blue, fontWeight: 700 }}>
-                            🔒 {SUPER_ADMINS.length} أساسيون
-                        </span>
-                        <span style={{ fontSize: '.68rem', padding: '2px 10px', borderRadius: 2, background: T.gray100, border: `1px solid ${T.gray300}`, color: T.gray500, fontWeight: 700 }}>
-                            ✚ {emails.filter(e => !isSuperAdmin(e)).length} مضافون
-                        </span>
+                    <span style={{ fontSize: '.68rem', color: T.gray500, fontFamily: T.font }}>
+                        {filtered.length} نتيجة
+                    </span>
+                </div>
+
+                {filtered.length === 0 ? (
+                    <div className="adm-empty"><div className="adm-emi">🔍</div><p>لا توجد نتائج مطابقة</p></div>
+                ) : (
+                    <div className="adm-tscr">
+                        <table className="adm-tbl" style={{ minWidth: 680 }}>
+                            <thead>
+                                <tr>
+                                    <th className="c" style={{ width: 36 }}>#</th>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th className="c" style={{ width: 110 }}>Admin</th>
+                                    <th className="c" style={{ width: 110 }}>Manager</th>
+                                    <th className="c" style={{ width: 100 }}>Tabs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginated.map((user, idx) => {
+                                    const rowNum = (safePage - 1) * ITEMS_PER_PAGE + idx + 1;
+                                    const role = getRole(user.id);
+                                    const me = isMe(user.email);
+                                    const tabCount = role.tabs.size;
+                                    const isOpen = expandedRow === user.id;
+
+                                    return (
+                                        <React.Fragment key={user.id}>
+                                            {/* ── Main row ── */}
+                                            <tr className={isOpen ? 'xopen' : ''} style={me ? { background: 'rgba(8,101,168,0.04)' } : {}}>
+                                                <td style={{ textAlign: 'center', color: T.gray500, fontSize: '.68rem' }}>{rowNum}</td>
+
+                                                {/* User */}
+                                                <td>
+                                                    <div className="adm-uc">
+                                                        <div className="adm-av" style={{ background: role.isManager ? T.orange : role.isAdmin ? T.blue : T.gray300 }}>
+                                                            {user.username[0].toUpperCase()}
+                                                        </div>
+                                                        <div>
+                                                            <span className="adm-uname">{user.username}</span>
+                                                            {me && <span style={{ marginRight: 6, fontSize: '.58rem', padding: '1px 6px', borderRadius: 2, background: T.greenBg, border: `1px solid ${T.greenBorder}`, color: T.green }}>● أنت</span>}
+                                                        </div>
+                                                    </div>
+                                                </td>
+
+                                                {/* Email */}
+                                                <td className="adm-email" style={{ direction: 'ltr', textAlign: 'left' }}>{user.email}</td>
+
+                                                {/* Admin checkbox */}
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <label style={checkLabelStyle}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={role.isAdmin || role.isManager}
+                                                            disabled={role.isManager}
+                                                            onChange={e => setAdmin(user.id, e.target.checked)}
+                                                            style={{ accentColor: T.blue, width: 15, height: 15, cursor: role.isManager ? 'not-allowed' : 'pointer' }}
+                                                        />
+                                                        <span style={{ fontSize: '.68rem', color: (role.isAdmin || role.isManager) ? T.blue : T.gray500, fontWeight: 700, fontFamily: T.font }}>
+                                                            {(role.isAdmin || role.isManager) ? 'Admin' : 'نعم'}
+                                                        </span>
+                                                    </label>
+                                                </td>
+
+                                                {/* Manager checkbox */}
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <label style={checkLabelStyle}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={role.isManager}
+                                                            onChange={e => setManager(user.id, e.target.checked)}
+                                                            style={{ accentColor: T.orange, width: 15, height: 15, cursor: 'pointer' }}
+                                                        />
+                                                        <span style={{ fontSize: '.68rem', color: role.isManager ? T.orange : T.gray500, fontWeight: 700, fontFamily: T.font }}>
+                                                            {role.isManager ? 'Manager' : 'نعم'}
+                                                        </span>
+                                                    </label>
+                                                </td>
+
+                                                {/* Tab access button */}
+                                                <td style={{ textAlign: 'center' }}>
+                                                    {role.isManager ? (
+                                                        <span style={{ fontSize: '.62rem', color: T.orange, fontWeight: 700, fontFamily: T.font }}>كل التبويبات</span>
+                                                    ) : role.isAdmin ? (
+                                                        <span
+                                                            className={`adm-pill${isOpen ? ' op' : ''}`}
+                                                            onClick={() => toggleExpanded(user.id)}
+                                                            style={{ cursor: 'pointer' }}
+                                                        >
+                                                            {isOpen ? '▲ إخفاء' : `▼ ${tabCount > 0 ? tabCount : 'اختر'}`}
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ color: T.gray300 }}>—</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+
+                                            {/* ── Expanded tab-select panel ── */}
+                                            {isOpen && role.isAdmin && !role.isManager && (
+                                                <tr className="adm-xrow">
+                                                    <td colSpan={6}>
+                                                        <div className="adm-xin" style={{ padding: '14px 18px' }}>
+                                                            <div style={{ fontWeight: 700, fontSize: '.78rem', color: T.blue, fontFamily: T.font, marginBottom: 10 }}>
+                                                                🔑 التبويبات المتاحة لـ <span style={{ fontFamily: 'Courier New' }}>{user.email}</span>
+                                                            </div>
+
+                                                            {/* Quick actions */}
+                                                            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                                                                <button
+                                                                    onClick={() => setRoles(prev => ({ ...prev, [user.id]: { ...prev[user.id], tabs: new Set(ADMIN_TABS.map(t => t.id)) } }))}
+                                                                    style={quickBtnStyle(T.blue)}
+                                                                >
+                                                                    ✅ تحديد الكل
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setRoles(prev => ({ ...prev, [user.id]: { ...prev[user.id], tabs: new Set() } }))}
+                                                                    style={quickBtnStyle(T.gray500)}
+                                                                >
+                                                                    ✕ إلغاء الكل
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Tabs grid */}
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                                                {ADMIN_TABS.map(tab => {
+                                                                    const checked = role.tabs.has(tab.id);
+                                                                    return (
+                                                                        <label
+                                                                            key={tab.id}
+                                                                            style={{
+                                                                                display: 'flex', alignItems: 'center', gap: 6,
+                                                                                padding: '7px 13px', borderRadius: 3, cursor: 'pointer',
+                                                                                border: `1.5px solid ${checked ? T.blue : T.gray300}`,
+                                                                                background: checked ? 'rgba(8,101,168,0.06)' : T.white,
+                                                                                transition: 'all .14s',
+                                                                                fontFamily: T.font,
+                                                                            }}
+                                                                        >
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={checked}
+                                                                                onChange={() => toggleTab(user.id, tab.id)}
+                                                                                style={{ accentColor: T.blue, width: 13, height: 13 }}
+                                                                            />
+                                                                            <span style={{ fontSize: '.74rem', fontWeight: checked ? 700 : 500, color: checked ? T.blue : T.gray700 }}>
+                                                                                {tab.label}
+                                                                            </span>
+                                                                        </label>
+                                                                    );
+                                                                })}
+                                                            </div>
+
+                                                            {/* Summary */}
+                                                            <div style={{ marginTop: 12, fontSize: '.68rem', color: T.gray500, fontFamily: T.font }}>
+                                                                {role.tabs.size === 0
+                                                                    ? '⚠️ لم يتم تحديد أي تبويب — المدير لن يرى أي محتوى'
+                                                                    : `✅ تم تحديد ${role.tabs.size} من ${ADMIN_TABS.length} تبويب`}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </React.Fragment>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+                )}
 
-                <div style={{ padding: '12px 16px' }}>
-                    {emails.length === 0 && (
-                        <div className="adm-empty"><div className="adm-emi">📭</div><p>لا يوجد مديرون</p></div>
-                    )}
-                    {emails.map((email, idx) => {
-                        const isSuper = isSuperAdmin(email);
-                        const isMe = isCurrentUser(email);
-                        const isPending = deleteTarget === email;
-                        return (
-                            <div key={email} style={{
-                                display: 'flex', alignItems: 'center', gap: 12,
-                                padding: '12px 14px', borderRadius: 3, marginBottom: 6,
-                                background: isMe ? 'rgba(8,101,168,0.04)' : idx % 2 === 0 ? T.white : '#fafbfc',
-                                border: `1.5px solid ${isMe ? 'rgba(8,101,168,0.2)' : T.gray100}`,
-                                transition: 'border-color .15s',
-                            }}>
-                                {/* Avatar */}
-                                <div style={{ width: 36, height: 36, borderRadius: 3, background: isSuper ? T.blue : T.orange, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.white, fontWeight: 900, fontSize: '.72rem', flexShrink: 0 }}>
-                                    {email[0].toUpperCase()}
-                                </div>
-
-                                {/* Email */}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ fontFamily: 'Courier New', fontSize: '.82rem', fontWeight: 700, color: T.black, direction: 'ltr', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {email}
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 5, marginTop: 3, flexWrap: 'wrap' }}>
-                                        {isSuper && (
-                                            <span style={{ fontSize: '.58rem', fontWeight: 700, padding: '1px 7px', borderRadius: 2, background: 'rgba(8,101,168,0.08)', border: `1px solid rgba(8,101,168,0.2)`, color: T.blue }}>
-                                                🔒 مدير أساسي
-                                            </span>
-                                        )}
-                                        {!isSuper && (
-                                            <span style={{ fontSize: '.58rem', fontWeight: 700, padding: '1px 7px', borderRadius: 2, background: 'rgba(245,124,0,0.06)', border: `1px solid rgba(245,124,0,0.2)`, color: T.orange }}>
-                                                ✚ مُضاف
-                                            </span>
-                                        )}
-                                        {isMe && (
-                                            <span style={{ fontSize: '.58rem', fontWeight: 700, padding: '1px 7px', borderRadius: 2, background: '#f0fdf4', border: '1px solid #86efac', color: '#16a34a' }}>
-                                                ● أنت
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Delete / Confirm */}
-                                {!isSuper && !isMe && (
-                                    isPending ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                            <span style={{ fontSize: '.72rem', color: '#dc2626', fontWeight: 700, fontFamily: T.font, whiteSpace: 'nowrap' }}>تأكيد الحذف؟</span>
-                                            <button
-                                                onClick={() => handleDelete(email)}
-                                                style={{ padding: '5px 12px', background: '#dc2626', color: T.white, border: 'none', borderRadius: 2, fontFamily: T.font, fontSize: '.7rem', fontWeight: 700, cursor: 'pointer' }}>
-                                                نعم
-                                            </button>
-                                            <button
-                                                onClick={() => setDeleteTarget(null)}
-                                                style={{ padding: '5px 12px', background: T.gray100, color: T.gray500, border: `1.5px solid ${T.gray300}`, borderRadius: 2, fontFamily: T.font, fontSize: '.7rem', fontWeight: 700, cursor: 'pointer' }}>
-                                                لا
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={() => handleDelete(email)}
-                                            style={{ padding: '5px 12px', background: '#fef2f2', color: '#dc2626', border: '1.5px solid rgba(220,38,38,.2)', borderRadius: 2, fontFamily: T.font, fontSize: '.7rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .14s' }}
-                                            onMouseEnter={e => e.currentTarget.style.background = '#fee2e2'}
-                                            onMouseLeave={e => e.currentTarget.style.background = '#fef2f2'}>
-                                            🗑 حذف
-                                        </button>
-                                    )
-                                )}
-                                {(isSuper || isMe) && (
-                                    <span style={{ fontSize: '.68rem', color: T.gray300, fontFamily: T.font, whiteSpace: 'nowrap' }}>
-                                        {isMe ? '(أنت)' : '(محمي)'}
-                                    </span>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Export list */}
-                {emails.length > 0 && (
-                    <div style={{ padding: '12px 22px 16px', borderTop: `1.5px solid ${T.gray100}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                        <span style={{ fontSize: '.68rem', color: T.gray500, fontFamily: T.font }}>
-                            آخر تحديث: {new Date().toLocaleDateString('ar-EG')}
-                        </span>
+                {/* ── Pagination ── */}
+                {totalPages > 1 && (
+                    <div style={{ padding: '10px 20px 14px', borderTop: `1.5px solid ${T.gray100}`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                         <button
-                            onClick={() => {
-                                const text = emails.join('\n');
-                                navigator.clipboard?.writeText(text);
-                                showSuccess('تم نسخ القائمة للحافظة ✅');
-                            }}
-                            style={{ padding: '6px 16px', background: T.gray100, color: T.gray700, border: `1.5px solid ${T.gray300}`, borderRadius: 2, fontFamily: T.font, fontSize: '.72rem', fontWeight: 700, cursor: 'pointer' }}>
-                            📋 نسخ القائمة
-                        </button>
+                            disabled={safePage === 1}
+                            onClick={() => setCurrentPage(p => p - 1)}
+                            style={pageBtn(safePage === 1)}
+                        >›</button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                            <button
+                                key={p}
+                                onClick={() => setCurrentPage(p)}
+                                style={pageBtn(false, p === safePage)}
+                            >{p}</button>
+                        ))}
+                        <button
+                            disabled={safePage === totalPages}
+                            onClick={() => setCurrentPage(p => p + 1)}
+                            style={pageBtn(safePage === totalPages)}
+                        >‹</button>
                     </div>
                 )}
             </div>
         </div>
     );
 }
+
+// ── Small stat pill ───────────────────────────────────────────────────────────
+function StatPill({ color, icon, label, value }) {
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 3, background: `${color}10`, border: `1px solid ${color}30` }}>
+            <span style={{ fontSize: '.8rem' }}>{icon}</span>
+            <span style={{ fontSize: '.68rem', color, fontWeight: 700, fontFamily: '"Droid Arabic Kufi","Noto Kufi Arabic",serif' }}>{label}</span>
+            <span style={{ fontFamily: 'Courier New', fontWeight: 900, fontSize: '.9rem', color }}>{value}</span>
+        </div>
+    );
+}
+
+// ── Style helpers ─────────────────────────────────────────────────────────────
+const infoBannerStyle = {
+    background: 'rgba(8,101,168,0.05)',
+    border: '1.5px solid rgba(8,101,168,0.18)',
+    borderRadius: 3,
+    borderRight: '4px solid #0865a8',
+    padding: '12px 16px',
+    marginBottom: 18,
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 10,
+    fontFamily: '"Droid Arabic Kufi","Noto Kufi Arabic",serif',
+};
+
+const toastBase = {
+    borderRadius: 3,
+    padding: '10px 14px',
+    marginBottom: 14,
+    fontSize: '.78rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
+    fontFamily: '"Droid Arabic Kufi","Noto Kufi Arabic",serif',
+};
+
+const checkLabelStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 5,
+    cursor: 'pointer',
+    userSelect: 'none',
+};
+
+const quickBtnStyle = (color) => ({
+    padding: '5px 14px',
+    background: `${color}12`,
+    border: `1.5px solid ${color}40`,
+    borderRadius: 2,
+    color,
+    fontFamily: '"Droid Arabic Kufi","Noto Kufi Arabic",serif',
+    fontSize: '.7rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+});
+
+const pageBtn = (disabled, active = false) => ({
+    width: 30,
+    height: 30,
+    border: active ? '1.5px solid #0865a8' : '1.5px solid #d0d3d8',
+    borderRadius: 2,
+    background: active ? '#0865a8' : '#fff',
+    color: active ? '#fff' : disabled ? '#d0d3d8' : '#374151',
+    fontWeight: 700,
+    fontSize: '.78rem',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.4 : 1,
+});
