@@ -17,14 +17,19 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import HistoryIcon from '@mui/icons-material/History';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import { getAdminEmails } from '../pages/admin/SettingsTab'; // ← single source of truth
 import { SignedIn, SignedOut, SignInButton, UserButton, useUser } from '@clerk/clerk-react';
 import AuthSync from '../components/AuthSync.jsx';
 
-const ADMIN_EMAILS = ['yasminamaged22@gmail.com', 'abeer.naguib@gmail.com', 'amrshamy91@gmail.com', 'abdelmawla1642@gmail.com', 'mostafa.awaad@gmail.com','samiryousri96@gmail.com']; // ← عدّلها
 
 const RECENT_SEARCHES_KEY = 'recentSearches';
 const MAX_RECENT_SEARCHES = 5;
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
+
+// ── Helper: check if a user email is in the live admin list ─────────────────
+function checkIsAdmin(emailAddress) {
+    return getAdminEmails().includes((emailAddress || '').toLowerCase());
+}
 
 const Navbar = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
@@ -49,10 +54,44 @@ const Navbar = () => {
     const [selectedCatId, setSelectedCatId] = useState(null);
     const [openSub, setOpenSub] = useState(null);
     const [openTopic, setOpenTopic] = useState(null);
+
+    // ── Reactive isAdmin state ───────────────────────────────────────────────
+    // Stored as state (not a derived variable) so it can update when:
+    //   a) the user signs in/out
+    //   b) an admin is added/removed via SettingsTab in the SAME tab
+    //      (triggered via a custom 'adminListUpdated' event we dispatch)
+    //   c) localStorage changes from ANOTHER tab
+    //      (triggered via the native 'storage' event)
     const { user } = useUser();
-    const isAdmin = ADMIN_EMAILS.includes(
-        (user?.primaryEmailAddress?.emailAddress || '').toLowerCase()
-    );
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    useEffect(() => {
+        // Compute on user change
+        setIsAdmin(checkIsAdmin(user?.primaryEmailAddress?.emailAddress));
+    }, [user]);
+
+    useEffect(() => {
+        // Re-compute whenever localStorage is changed from another browser tab
+        const handleStorage = (e) => {
+            if (e.key === 'icemt_admin_emails') {
+                setIsAdmin(checkIsAdmin(user?.primaryEmailAddress?.emailAddress));
+            }
+        };
+        // Re-compute when SettingsTab changes the list in THIS tab.
+        // SettingsTab should dispatch: window.dispatchEvent(new Event('adminListUpdated'))
+        // after every saveAdminEmails() call. See note below.
+        const handleAdminListUpdated = () => {
+            setIsAdmin(checkIsAdmin(user?.primaryEmailAddress?.emailAddress));
+        };
+
+        window.addEventListener('storage', handleStorage);
+        window.addEventListener('adminListUpdated', handleAdminListUpdated);
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+            window.removeEventListener('adminListUpdated', handleAdminListUpdated);
+        };
+    }, [user]);
+    // ── ─────────────────────────────────────────────────────────────────────
 
     const navigate = useNavigate();
     const theme = useTheme();
@@ -286,8 +325,7 @@ const Navbar = () => {
                     py: 0.5,
                     top: 0,
                     zIndex: 1100,
-                    height:70
-                    
+                    height: 70
                 }}
             >
                 <Toolbar sx={{ justifyContent: 'space-between', display: 'flex', px: { xs: 1, md: 4 } }}>
@@ -448,7 +486,7 @@ const Navbar = () => {
                                     </div>
                                 </div>
 
-                                {/* ✅ Admin button — Desktop — visible only to admin emails when signed in */}
+                                {/* Admin button — Desktop — reactive to localStorage changes */}
                                 {isAdmin && (
                                     <Link to="/admin" className="admin-nav-btn">
                                         <AdminPanelSettingsIcon sx={{ fontSize: 12 }} />
@@ -458,7 +496,7 @@ const Navbar = () => {
                             </Stack>
                         )}
 
-                        {/* My Courses icon — shown only when signed in */}
+                        {/* My Courses icon */}
                         <SignedIn>
                             <IconButton
                                 className="my-courses-nav-btn"
@@ -486,7 +524,7 @@ const Navbar = () => {
 
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <SignedOut>
-                                <SignInButton mode="modal"  appearance={{ variables: { colorPrimary: '#0865a8', colorText: '#000000', colorBackground: '#ffffff', fontFamily: '"Droid Arabic Kufi",serif', borderRadius: '12px' }, elements: { card: { direction: 'ltr', textAlign: 'left', backgroundColor: '#ffffff', border: '1px solid #0865a8', boxShadow: '0 15px 40px rgba(0,0,0,0.08)' }, headerTitle: { textAlign: 'center', color: '#0865a8', fontWeight: '700' }, headerSubtitle: { textAlign: 'center', color: '#000000' }, formFieldLabel: { textAlign: 'left', color: '#000000', fontWeight: '600' }, formFieldInput: { textAlign: 'left', borderRadius: '8px', border: '1px solid #0865a8' }, formButtonPrimary: { backgroundColor: '#0865a8', color: '#ffffff', fontWeight: '600', '&:hover': { backgroundColor: '#f57c00' } }, footerAction: { textAlign: 'left' }, footerActionLink: { color: '#f57c00', fontWeight: '600' } } }}>
+                                <SignInButton mode="modal" appearance={{ variables: { colorPrimary: '#0865a8', colorText: '#000000', colorBackground: '#ffffff', fontFamily: '"Droid Arabic Kufi",serif', borderRadius: '12px' }, elements: { card: { direction: 'ltr', textAlign: 'left', backgroundColor: '#ffffff', border: '1px solid #0865a8', boxShadow: '0 15px 40px rgba(0,0,0,0.08)' }, headerTitle: { textAlign: 'center', color: '#0865a8', fontWeight: '700' }, headerSubtitle: { textAlign: 'center', color: '#000000' }, formFieldLabel: { textAlign: 'left', color: '#000000', fontWeight: '600' }, formFieldInput: { textAlign: 'left', borderRadius: '8px', border: '1px solid #0865a8' }, formButtonPrimary: { backgroundColor: '#0865a8', color: '#ffffff', fontWeight: '600', '&:hover': { backgroundColor: '#f57c00' } }, footerAction: { textAlign: 'left' }, footerActionLink: { color: '#f57c00', fontWeight: '600' } } }}>
                                     <Button variant="contained" size="small" sx={{ fontFamily: '"Droid Arabic Kufi",serif', fontSize: '0.8rem', bgcolor: '#0865a8', color: '#ffffff', px: 1, py: 0.5, borderRadius: 5, textTransform: 'none', fontWeight: 600, boxShadow: '0 4px 12px rgba(8,101,168,0.25)', minWidth: 'auto', '&:hover': { bgcolor: '#f57c00', boxShadow: '0 6px 18px rgba(245,124,0,0.35)' } }}>تسجيل دخول</Button>
                                 </SignInButton>
                             </SignedOut>
@@ -552,7 +590,7 @@ const Navbar = () => {
                         </Collapse>
                         <Divider sx={{ my: 2, bgcolor: '#0865a8', height: 2 }} />
 
-                        {/* My Courses in mobile drawer — only shown when signed in */}
+                        {/* My Courses — mobile drawer */}
                         <SignedIn>
                             <ListItemButton component={Link} to="/my-courses" onClick={toggleDrawer(false)} sx={{ borderRadius: 1, mb: 0.5, bgcolor: 'rgba(8,101,168,0.05)', '&:hover': { bgcolor: 'rgba(8,101,168,0.12)' } }}>
                                 <MenuBookIcon sx={{ color: '#0865a8', mr: 1, fontSize: 20 }} />
@@ -561,7 +599,7 @@ const Navbar = () => {
                             <Divider sx={{ my: 2, bgcolor: '#0865a8', height: 2 }} />
                         </SignedIn>
 
-                        {/* ✅ Admin button — Mobile Drawer — visible only to admin emails when signed in */}
+                        {/* Admin button — Mobile — reactive to localStorage changes */}
                         {isAdmin && (
                             <>
                                 <ListItemButton

@@ -8,11 +8,11 @@ export const ADMIN_STYLES = `
     font-family: ${T.font};
     background: ${T.white};
     overflow-x: hidden;
-    /* Reduce this calculation */
-    margin-top: 20px; 
+    margin-top: 20px;
     display: flex;
-    /* Adjust min-height to match the new margin */
-    min-height: calc(100vh - 2px); 
+    align-items: stretch;
+    /* make root itself at least full viewport */
+    min-height: calc(100vh - 20px);
 }
 
     /* ── Keyframes ── */
@@ -25,15 +25,18 @@ export const ADMIN_STYLES = `
 
     /* ── Sidebar ── */
     .adm-sidebar {
-        width: 220px; flex-shrink: 0;
-        background: ${T.blueDark};
-        display: flex; flex-direction: column;
-        position: sticky; top: 0;
-        height: 100vh;        
-        overflow: hidden; z-index: 200;
-        box-shadow: -4px 0 24px rgba(4,68,120,0.35);
-        border-left: 3px solid ${T.orange};
-    }
+    width: 220px; flex-shrink: 0;
+    background: ${T.blueDark};
+    display: flex; flex-direction: column;
+    position: sticky; top: 0;
+    /* CHANGE height to min-height */
+    min-height: 100vh;
+    height: auto;
+    overflow: hidden; z-index: 200;
+    box-shadow: -4px 0 24px rgba(4,68,120,0.35);
+    border-left: 3px solid ${T.orange};
+    align-self: stretch;
+}
     .adm-sidebar::before {
         content: ''; position: absolute; inset: 0;
         background-image:
@@ -339,7 +342,10 @@ export const ADMIN_STYLES = `
 
     /* ── Responsive ── */
     @media(max-width:1100px){
-        .adm-sidebar { width:54px; }
+        .adm-sidebar { 
+        width: 54px;
+        min-height: 100vh; /* add this */
+    }
         .adm-sb-title,.adm-su-info,.adm-nav-label,.adm-nav-badge,.adm-sidebar-footer,.adm-nav-txt { display:none; }
         .adm-sidebar-brand { padding:12px; justify-content:center; }
         .adm-sidebar-user  { padding:10px; justify-content:center; }
@@ -461,27 +467,29 @@ export const ADMIN_STYLES = `
 
     /* ── Lecturers layout ── */
     .lec-layout {
-        display: flex;
-        gap: clamp(10px, 1.5vw, 18px);
-        align-items: flex-start;
-    }
+    display: flex;
+    gap: clamp(10px, 1.5vw, 18px);
+    align-items: stretch;
+}
 
     /* ── Left panel (list) ── */
     .lec-panel {
-        width: clamp(230px,26vw,290px);
-        flex-shrink: 0;
-        background: #ffffff;
-        border-radius: 3px;
-        border: 1.5px solid #d0d3d8;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        max-height: 100vh;
-        position: sticky;
-        top: 16px;
-        overflow: hidden;
-    }
+    width: clamp(230px,26vw,290px);
+    flex-shrink: 0;
+    background: #ffffff;
+    border-radius: 3px;
+    border: 1.5px solid #d0d3d8;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    height: 100vh and max-height: 100vh */
+    //position: sticky;
+    top: 16px;
+    /* ADD these: */
+    height: fit-content;
+    max-height: calc(100vh - 32px);
+    overflow: hidden;
+}
     .lec-panel-hdr {
         display: flex; align-items: center; justify-content: space-between;
         padding: 14px 14px 10px; border-bottom: 1.5px solid #f0f1f2;
@@ -502,7 +510,13 @@ export const ADMIN_STYLES = `
     .lec-search-wrap { flex-shrink:0; padding:10px 10px 6px; min-width:unset!important; }
     .lec-search-wrap input { font-size:.76rem!important; }
     .lec-search-clear { position:absolute; left:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:#6b7280; font-size:1rem; line-height:1; padding:2px; }
-    .lec-list { flex:1; overflow-y:auto; padding:6px 8px 10px; }
+    .lec-list { 
+        flex: 1; 
+        overflow-y: auto; 
+        padding: 6px 8px 10px;
+        /* ADD: */
+        min-height: 0;  /* critical for flex children to scroll */
+    }    
     .lec-list::-webkit-scrollbar { width:4px; }
     .lec-list::-webkit-scrollbar-thumb { background:#d0d3d8; border-radius:2px; }
 

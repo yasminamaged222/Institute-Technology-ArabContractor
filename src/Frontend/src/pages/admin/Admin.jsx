@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 
-import { ADMIN_EMAILS, API_BASE, API_HOST, ITEMS_PER_PAGE, T } from '../../components/admin/constants';
+import { API_BASE, API_HOST, ITEMS_PER_PAGE, T } from '../../components/admin/constants';
 import { injectAdminStyles } from '../../components/admin/styles';
 import { fmtDate, toStatusKey } from '../../components/admin/helpers';
 import { normalizeUser, normalizeCourse, normalizeRefund } from '../../components/admin/normalizers';
@@ -22,11 +22,11 @@ import RefundsTab from '../../components/admin/tabs/RefundsTab';
 import CertUploadModal from '../../components/admin/modals/CertUploadModal';
 import RefundDetailModal from '../../components/admin/modals/RefundDetailModal';
 import RefundActionModal from '../../components/admin/modals/RefundActionModal';
-import LecturersTab from './mohadren';  // ← ADD
+import LecturersTab from './mohadren';
 import NewsTab from './NewsTab';
-import BooksTab from './BooksTab'; // ← ADDED
-import PlanworkTab from './PlanworkTab'; // ← ADD
-
+import BooksTab from './BooksTab';
+import PlanworkTab from './PlanworkTab';
+import SettingsTab, { getAdminEmails } from './SettingsTab'; // ← single source of truth
 
 const TABS = [
     { id: 'users', label: 'المستخدمون', icon: '👤' },
@@ -35,12 +35,11 @@ const TABS = [
     { id: 'certificates', label: 'الشهادات', icon: '📜' },
     { id: 'refunds', label: 'المستردات', icon: '💳' },
     { id: 'financial', label: 'المالية', icon: '💰' },
-    { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },  // ← ADD
+    { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },
     { id: 'news', label: 'الأخبار', icon: '📰' },
-    { id: 'books', label: 'الكتب', icon: '📖' }, // ← ADDED
-    { id: 'planwork', label: 'خطة العمل', icon: '📋' }, // ← ADD
-
-
+    { id: 'books', label: 'الكتب', icon: '📖' },
+    { id: 'planwork', label: 'خطة العمل', icon: '📋' },
+    { id: 'settings', label: 'الإعدادات', icon: '⚙️' },
 ];
 
 const AdminDashboard = () => {
@@ -90,14 +89,16 @@ const AdminDashboard = () => {
     const [refundActionError, setRefundActionError] = useState('');
     const [bankResultBanner, setBankResultBanner] = useState(null);
 
-    // ── Search / filter (users+courses tab) ──
+    // ── Search / filter (users + courses tab) ──
     const [searchQuery, setSearchQuery] = useState('');
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
-    // -- Books state --
+
+    // ── Books state ──
     const [booksData, setBooksData] = useState([]);
     const [booksPage, setBooksPage] = useState(1);
     const [booksSearch, setBooksSearch] = useState('');
+
     // ── Pagination ──
     const [usersPage, setUsersPage] = useState(1);
     const [coursesPage, setCoursesPage] = useState(1);
@@ -107,16 +108,16 @@ const AdminDashboard = () => {
 
     // ── Effects ──
     useEffect(() => { injectAdminStyles(); }, []);
-    useEffect(() => {
-        setUsersPage(1); setCoursesPage(1); setBooksPage(1); setExpandedRow(null); }, [activeTab]);
+    useEffect(() => { setUsersPage(1); setCoursesPage(1); setBooksPage(1); setExpandedRow(null); }, [activeTab]);
     useEffect(() => { setUsersPage(1); setExpandedRow(null); }, [searchQuery, dateFrom, dateTo]);
     useEffect(() => { setAttPage(1); }, [attCourseFilter, attUserSearch]);
     useEffect(() => { setCertPage(1); }, [certSearch, certStatusFilter]);
     useEffect(() => { setRefundPage(1); }, [refundSearch, refundStatusFilter]);
 
+    // ── Auth guard — uses live list from localStorage ──
     useEffect(() => {
         if (!isLoaded || !user) return;
-        if (!ADMIN_EMAILS.includes((user.primaryEmailAddress?.emailAddress || '').toLowerCase()))
+        if (!getAdminEmails().includes((user.primaryEmailAddress?.emailAddress || '').toLowerCase()))
             navigate('/');
     }, [isLoaded, user, navigate]);
 
@@ -136,6 +137,7 @@ const AdminDashboard = () => {
         return fetch(url, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {}, body: formData });
     }, [getToken]);
 
+    // ── Books loader ──
     const loadBooks = useCallback(async () => {
         try {
             const res = await authFetch(`${API_BASE}/Admin/books`);
@@ -143,14 +145,11 @@ const AdminDashboard = () => {
                 const data = await res.json();
                 setBooksData(Array.isArray(data) ? data : data.result || []);
             }
-        } catch (err) {
-            console.error("Failed to load books:", err);
-        }
+        } catch (err) { console.error('Failed to load books:', err); }
     }, [authFetch]);
 
-    useEffect(() => {
-        if (activeTab === 'books') loadBooks();
-    }, [activeTab, loadBooks]);
+    useEffect(() => { if (activeTab === 'books') loadBooks(); }, [activeTab, loadBooks]);
+
     // ── Load main data ──
     useEffect(() => {
         const load = async () => {
@@ -179,7 +178,7 @@ const AdminDashboard = () => {
     }, [isLoaded, user, authFetch]);
 
     useEffect(() => { if (activeTab === 'refunds') fetchRefunds(refundStatusFilter); }, [activeTab, refundStatusFilter]); // eslint-disable-line
-    useEffect(() => { if (activeTab === 'certificates') refreshCertificates(); }, [activeTab]); // eslint-disable-line
+    useEffect(() => { if (activeTab === 'certificates') refreshCertificates(); }, [activeTab]);                      // eslint-disable-line
 
     // ── Attendance helpers ──
     const seedAttendance = useCallback((users) => {
@@ -335,12 +334,22 @@ const AdminDashboard = () => {
     };
 
     // ── Derived data ──
-    const inRange = d => { if (!dateFrom && !dateTo) return true; if (!d) return false; const dt = new Date(d); if (isNaN(dt)) return false; if (dateFrom && dt < new Date(dateFrom)) return false; if (dateTo) { const e = new Date(dateTo); e.setDate(e.getDate() + 1); if (dt >= e) return false; } return true; };
+    const inRange = d => {
+        if (!dateFrom && !dateTo) return true;
+        if (!d) return false;
+        const dt = new Date(d); if (isNaN(dt)) return false;
+        if (dateFrom && dt < new Date(dateFrom)) return false;
+        if (dateTo) { const e = new Date(dateTo); e.setDate(e.getDate() + 1); if (dt >= e) return false; }
+        return true;
+    };
     const q = searchQuery.toLowerCase();
     const filteredUsers = usersData.map(u => ({ ...u, enrolledCourses: u.enrolledCourses.filter(c => inRange(c.date)) })).filter(u => { const m = `${u.firstName} ${u.lastName} ${u.email} ${u.username}`.toLowerCase().includes(q); return (dateFrom || dateTo) ? m && u.enrolledCourses.length > 0 : m; });
     const filteredCourses = coursesData.map(c => ({ ...c, enrolledUsers: c.enrolledUsers.filter(u => inRange(u.date)) })).filter(c => { const m = `${c.title} ${c.category}`.toLowerCase().includes(q); return (dateFrom || dateTo) ? m && c.enrolledUsers.length > 0 : m; });
 
-    const attRows = usersData.flatMap(u => u.enrolledCourses.filter(c => c.enrollmentId != null).map(c => ({ user: u, course: c }))).filter(r => (attCourseFilter === 'all' || r.course.id === Number(attCourseFilter)) && `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username}`.toLowerCase().includes(attUserSearch.toLowerCase()));
+    const attRows = usersData.flatMap(u => u.enrolledCourses.filter(c => c.enrollmentId != null).map(c => ({ user: u, course: c }))).filter(r =>
+        (attCourseFilter === 'all' || r.course.id === Number(attCourseFilter)) &&
+        `${r.user.firstName} ${r.user.lastName} ${r.user.email} ${r.user.username}`.toLowerCase().includes(attUserSearch.toLowerCase())
+    );
 
     const certsByUser = {};
     Object.values(certificates).forEach(ce => { if (!ce || ce.userId == null) return; const uid = Number(ce.userId); (certsByUser[uid] = certsByUser[uid] || []).push(ce); });
@@ -363,7 +372,14 @@ const AdminDashboard = () => {
 
     const totalCerts = (() => { const seen = new Set(); Object.values(certificates).forEach(v => { if (v) seen.add(v.certId ?? Math.random()); }); return seen.size; })();
     const gs = (fields, fb) => { if (!apiStats) return fb; for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; } return fb; };
-    const displayStats = { users: gs(['usersCount'], usersData.length), courses: gs(['planworksCount'], coursesData.length), enrollments: gs(['enrollmentsCount'], usersData.reduce((s, u) => s + u.enrolledCourses.length, 0)), attended: gs(['attendanceCount'], attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length), certificates: gs(['certificatesCount'], totalCerts), refundsPending: gs(['refundsCount'], refunds.filter(r => r.status === 'Pending').length) };
+    const displayStats = {
+        users: gs(['usersCount'], usersData.length),
+        courses: gs(['planworksCount'], coursesData.length),
+        enrollments: gs(['enrollmentsCount'], usersData.reduce((s, u) => s + u.enrolledCourses.length, 0)),
+        attended: gs(['attendanceCount'], attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length),
+        certificates: gs(['certificatesCount'], totalCerts),
+        refundsPending: gs(['refundsCount'], refunds.filter(r => r.status === 'Pending').length),
+    };
 
     const refundSearch_q = refundSearch.toLowerCase();
     const filteredRefunds = refunds.filter(r => {
@@ -383,7 +399,8 @@ const AdminDashboard = () => {
             </div>
         </div>
     );
-    if (!ADMIN_EMAILS.includes((user.primaryEmailAddress?.emailAddress || '').toLowerCase())) return null;
+    // ← live check against localStorage list
+    if (!getAdminEmails().includes((user.primaryEmailAddress?.emailAddress || '').toLowerCase())) return null;
 
     return (
         <>
@@ -525,23 +542,16 @@ const AdminDashboard = () => {
                             />
                         )}
 
-                        {/* ── Financial Tab ── */}
                         {activeTab === 'financial' && (
                             <FinancialTab
                                 usersData={usersData}
                                 coursesData={coursesData}
-                                authFetch={authFetch}
-                                API_BASE={API_BASE}
-                                API_HOST={API_HOST}
                             />
                         )}
 
-                        {activeTab === 'lecturers' && (
-                            <LecturersTab />
-                        )}
+                        {activeTab === 'lecturers' && <LecturersTab />}
 
-                        {activeTab === 'news' &&(
-                            <NewsTab />)}
+                        {activeTab === 'news' && <NewsTab />}
 
                         {activeTab === 'books' && (
                             <BooksTab
@@ -556,14 +566,12 @@ const AdminDashboard = () => {
                             />
                         )}
 
-                        {activeTab === 'planwork' && (
-                            <PlanworkTab />
-                        )}
-                        {activeTab === 'online' && (
-                            <OnlineTab
-                                data={coursesData}   // reuse planworks data
-                                authFetch={authFetch}
-                                API_BASE={API_BASE}
+                        {activeTab === 'planwork' && <PlanworkTab />}
+
+                        {/* ── Settings Tab ── */}
+                        {activeTab === 'settings' && (
+                            <SettingsTab
+                                currentUserEmail={user?.primaryEmailAddress?.emailAddress || ''}
                             />
                         )}
                     </div>
