@@ -342,6 +342,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.NewsDate)
                 .HasColumnType("datetime")
                 .HasColumnName("news_date");
+            entity.Property(e => e.ShowFlag)
+      .HasColumnName("show_flag")
+      .HasDefaultValue(true);
         });
 
         modelBuilder.Entity<ErrorDesc>(entity =>
