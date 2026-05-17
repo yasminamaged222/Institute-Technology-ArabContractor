@@ -293,49 +293,68 @@ export default function CheckoutPage() {
     }, [isSignedIn, getToken]);
 
     // Mastercard global callbacks
-  useEffect(() => {
-    window.completeCallbackReact = async (resultIndicator) => {
-        if (resultIndicator === successIndicatorRef.current) {
-            try {
-                const token = await getTokenRef.current();
-                await fetch(
-                    `${API_BASE}/api/checkout/result?orderId=${orderIdRef.current}&transactionRef=${resultIndicator}`,
-                    {
-                        method: "GET",
-                        headers: { Authorization: `Bearer ${token}` }
-                    }
-                );
-            } catch (_) { }
+    useEffect(() => {
+        // ✅ لو المستخدم رجع بالـ Back من صفحة الدفع، وقف الـ loading فوراً
+        const handlePageShow = (event) => {
+            if (event.persisted) {
+                setLoading(false);
+            }
+        };
 
-            localStorage.removeItem("cartItems");
-            window.dispatchEvent(new Event("cartUpdated"));
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                setLoading(false);
+            }
+        };
 
-            navigate(`/payment-return?orderId=${orderIdRef.current}&resultIndicator=${resultIndicator}`);
-        } else {
+        window.addEventListener('pageshow', handlePageShow);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        window.completeCallbackReact = async (resultIndicator) => {
+            if (resultIndicator === successIndicatorRef.current) {
+                try {
+                    const token = await getTokenRef.current();
+                    await fetch(
+                        `${API_BASE}/api/checkout/result?orderId=${orderIdRef.current}&transactionRef=${resultIndicator}`,
+                        {
+                            method: "GET",
+                            headers: { Authorization: `Bearer ${token}` }
+                        }
+                    );
+                } catch (_) { }
+
+                localStorage.removeItem("cartItems");
+                window.dispatchEvent(new Event("cartUpdated"));
+
+                navigate(`/payment-return?orderId=${orderIdRef.current}&resultIndicator=${resultIndicator}`);
+            } else {
+                setLoading(false);
+                setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
+            }
+        };
+
+        window.errorCallbackReact = (err) => {
             setLoading(false);
-            setError("فشل التحقق من الدفع. يرجى التواصل مع الدعم الفني.");
-        }
-    };
+            setError(
+                "حدث خطأ أثناء الدفع: " +
+                (err?.error?.explanation || "يرجى المحاولة مرة أخرى.")
+            );
+        };
 
-    window.errorCallbackReact = (err) => {
-        setLoading(false);
-        setError(
-            "حدث خطأ أثناء الدفع: " +
-            (err?.error?.explanation || "يرجى المحاولة مرة أخرى.")
-        );
-    };
+        window.cancelCallbackReact = () => {
+            setLoading(false);
+            setError("تم إلغاء عملية الدفع.");
+        };
 
-    window.cancelCallbackReact = () => {
-        setLoading(false);
-        setError("تم إلغاء عملية الدفع.");
-    };
+        return () => {
+            window.removeEventListener('pageshow', handlePageShow);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            delete window.completeCallbackReact;
+            delete window.errorCallbackReact;
+            delete window.cancelCallbackReact;
+        };
+    }, []);
 
-    return () => {
-        delete window.completeCallbackReact;
-        delete window.errorCallbackReact;
-        delete window.cancelCallbackReact;
-    };
-}, []);
     const subtotal = cartItems.reduce((sum, item) => sum + (item.currentPrice ?? 0) * (item.quantity || 1), 0);
     const totalOriginalPrice = cartItems.reduce((sum, item) => sum + (item.originalPrice ?? item.currentPrice ?? 0) * (item.quantity || 1), 0);
     const totalDiscount = totalOriginalPrice - subtotal;

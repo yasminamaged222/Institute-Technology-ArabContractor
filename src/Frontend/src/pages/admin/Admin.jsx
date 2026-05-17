@@ -351,11 +351,38 @@ const AdminDashboard = () => {
     const certRows = usersData.flatMap(u => u.enrolledCourses.map(c => {
         const mc = coursesData.find(cd => cd.title === c.title || cd.title === c._titleRaw);
         const planworkId = c.id ?? mc?.id ?? null;
-        const userCerts = certsByUser[Number(u.id)] ?? [];
-        const titleMatch = userCerts.find(ce => { const cd = coursesData.find(x => Number(x.id) === Number(ce.planworkId)); return cd && (cd.title === c.title || cd.title === c._titleRaw); });
-        const certKey = planworkId != null ? `${Number(u.id)}-${Number(planworkId)}` : (titleMatch ? `${Number(u.id)}-${Number(titleMatch.planworkId)}` : `${u.id}-unknown`);
-        const altKey = titleMatch ? `${Number(u.id)}-${Number(titleMatch.planworkId)}` : null;
-        return { user: u, course: c, certKey, altKey, enrollmentId: c.enrollmentId, userId: u.id, planworkId: planworkId ?? titleMatch?.planworkId ?? null };
+
+        // 1. HELP DEBUG: Look at your console to see what keys exist on 'u' (e.g. databaseId, dbId, internalId)
+        console.log("Debug User Object Keys:", u);
+
+        // 2. Safely extract the structural integer ID. Check common database naming variations.
+        const numericUserId = u.databaseId ?? u.dbId ?? u.userId ?? u.internalId ?? (!isNaN(Number(u.id)) ? Number(u.id) : null);
+
+        // 3. Map certificates safely using the numerical ID lookup matrix
+        const userCerts = numericUserId ? (certsByUser[numericUserId] ?? []) : [];
+
+        const titleMatch = userCerts.find(ce => {
+            const cd = coursesData.find(x => Number(x.id) === Number(ce.planworkId));
+            return cd && (cd.title === c.title || cd.title === c._titleRaw);
+        });
+
+        // 4. Build unique layout keys without letting 'NaN' slip into strings
+        const certKey = planworkId != null && numericUserId
+            ? `${numericUserId}-${Number(planworkId)}`
+            : (titleMatch && numericUserId ? `${numericUserId}-${Number(titleMatch.planworkId)}` : `${u.id}-unknown`);
+
+        const altKey = titleMatch && numericUserId ? `${numericUserId}-${Number(titleMatch.planworkId)}` : null;
+
+        // 5. Explicitly pass numericUserId down to ensure viewCert hits the API with an integer path parameter
+        return {
+            user: u,
+            course: c,
+            certKey,
+            altKey,
+            enrollmentId: c.enrollmentId,
+            userId: numericUserId, // This MUST evaluate to an integer (e.g., 12)
+            planworkId: planworkId ?? titleMatch?.planworkId ?? null
+        };
     })).filter(r => {
         const hasCert = !!(certificates[r.certKey] ?? (r.altKey ? certificates[r.altKey] : undefined));
         const isAtt = !!attendance[String(r.enrollmentId)];
@@ -363,7 +390,6 @@ const AdminDashboard = () => {
         const matchStatus = certStatusFilter === 'all' ? true : certStatusFilter === 'uploaded' ? hasCert : certStatusFilter === 'pending' ? (!hasCert && isAtt) : !isAtt;
         return matchSearch && matchStatus;
     });
-
     const totalCerts = (() => { const seen = new Set(); Object.values(certificates).forEach(v => { if (v) seen.add(v.certId ?? Math.random()); }); return seen.size; })();
     const gs = (fields, fb) => { if (!apiStats) return fb; for (const f of fields) { if (apiStats[f] != null) return apiStats[f]; } return fb; };
     const displayStats = { users: gs(['usersCount'], usersData.length), courses: gs(['planworksCount'], coursesData.length), enrollments: gs(['enrollmentsCount'], usersData.reduce((s, u) => s + u.enrolledCourses.length, 0)), attended: gs(['attendanceCount'], attRows.filter(r => !!attendance[String(r.course.enrollmentId)]).length), certificates: gs(['certificatesCount'], totalCerts), refundsPending: gs(['refundsCount'], refunds.filter(r => r.status === 'Pending').length) };
