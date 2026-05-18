@@ -674,7 +674,7 @@ export default function Home() {
                         </div>
                         <div className="about-txt-wrap" ref={aboutTxtRef}>
                             <Eyebrow>نبذة عامة</Eyebrow>
-                            <SplitTitle>رائد في التدريب<br />الهندسي والإداري والحرفي</SplitTitle>
+                            <SplitTitle>رائد في التدريب<br />الهندسي والإداري والمالي و الحرفي</SplitTitle>
                             <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
                             <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: C.g7, lineHeight: 2, marginBottom: 18, textAlign: 'justify' }}>
                                 أول شركة مقاولات في الشرق الأوسط تُنشئ معهدًا للتدريب منذ أكثر من 45 عامًا. نُعِدّ أجيالًا متميزة في التشييد والإدارة والتقنية، ونخدم الوزارات والهيئات والقطاع الخاص بمعايير الجودة الدولية.

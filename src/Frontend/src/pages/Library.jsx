@@ -211,7 +211,7 @@ export default function ModernLibrary() {
             </section>
 
             {/* ══ SEARCH (moved here – right after Books) ══ */}
-            <LibrarySearchSection isTiny={isTiny} isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop} />
+            {/* <LibrarySearchSection isTiny={isTiny} isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop} /> */}
 
             {/* ══ SUBSCRIPTION ══ */}
             <section style={sectionStyle('white')}>
