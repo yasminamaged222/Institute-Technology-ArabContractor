@@ -107,7 +107,49 @@ const craftItems = [
     { Icon: SchoolIcon, title: 'التعليم الفني', text: 'بروتوكول تعاون مع وزارة التربية لتطوير الثانويات الصناعية وكوادرها.', link: '/technical-education' },
     { Icon: AssignmentTurnedInIcon, title: 'الاختبارات والتقييم', text: 'اختبارات سيكومترية وتقييمات تخصصية في اللغة والحاسب والهندسة.', link: '/tests' },
 ];
-
+const TeamsIcon = ({ size = 42 }) => (
+    <svg width={size} height={size} viewBox="0 0 2228.833 2073.333" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1554.637,777.5h575.713c54.391,0,98.483,44.092,98.483,98.483v524.398
+            c0,199.901-162.001,361.902-361.902,361.902h-1.78c-199.901,0.001-361.902-162-361.902-361.901
+            V828.971C1504.249,800.544,1526.211,777.5,1554.637,777.5z" fill="#5059C9" />
+        <circle cx="1943.75" cy="440.583" r="233.25" fill="#5059C9" />
+        <circle cx="1218.083" cy="336.917" r="309.083" fill="#7B83EB" />
+        <path d="M1667.323,777.5H717.01c-53.743,1.33-96.257,45.931-94.927,99.675v598.105
+            c-7.825,322.069,247.353,590.279,569.422,598.104c322.069-7.825,577.247-276.035,569.422-598.104
+            V877.174C1762.257,823.431,1720.906,777.5,1667.323,777.5z" fill="#7B83EB" />
+        <path opacity="0.1" d="M1244,777.5v838.145c-0.258,38.435-23.549,72.964-59.09,87.598
+            c-11.316,4.787-23.478,7.254-35.765,7.257H667.613c-6.738-17.105-12.958-34.21-18.142-51.833
+            c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1244z"/>
+        <path opacity="0.2" d="M1192.167,777.5v889.978c-0.002,12.287-2.47,24.449-7.257,35.765
+            c-14.634,35.541-49.163,58.833-87.598,59.09H691.975c-8.812-17.105-17.105-34.21-24.362-51.833
+            c-7.257-17.623-12.958-34.21-18.142-51.833c-17.654-57.884-26.601-117.851-26.578-178.167V877.174
+            c-1.33-53.744,41.185-98.345,94.927-99.674H1192.167z"/>
+        <path opacity="0.2" d="M1192.167,777.5v786.312c-0.395,52.223-42.704,94.531-94.927,94.927H649.833
+            c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1192.167z"/>
+        <path opacity="0.2" d="M1140.333,777.5v786.312c-0.395,52.223-42.704,94.531-94.927,94.927H649.833
+            c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1140.333z"/>
+        <path opacity="0.1" d="M1244,509.522v163.275c-8.812,0.518-17.105,1.037-25.917,1.037
+            c-8.812,0-17.105-0.518-25.917-1.037c-17.496-1.161-34.848-3.937-51.833-8.293
+            c-104.963-26.655-191.679-98.609-234.603-196.003c-7.704-17.517-13.554-35.787-17.472-54.499h258.925
+            C1201.827,414.866,1243.764,457.252,1244,509.522z"/>
+        <path opacity="0.2" d="M1192.167,561.355v111.442c-17.496-1.161-34.848-3.937-51.833-8.293
+            c-104.963-26.655-191.679-98.609-234.603-196.003h191.509C1149.722,468.866,1191.917,510.8,1192.167,561.355z"/>
+        <path opacity="0.2" d="M1192.167,561.355v111.442c-17.496-1.161-34.848-3.937-51.833-8.293
+            c-104.963-26.655-191.679-98.609-234.603-196.003h191.509C1149.722,468.866,1191.917,510.8,1192.167,561.355z"/>
+        <path opacity="0.2" d="M1140.333,561.355v103.148c-104.963-26.655-191.679-98.609-234.603-196.003h139.676
+            C1097.888,468.866,1140.083,510.8,1140.333,561.355z"/>
+        <linearGradient id="teams_grad" x1="198.099" y1="1683.0726" x2="942.2344" y2="394.2607"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#5a62c3" />
+            <stop offset="0.5" stopColor="#4d55bd" />
+            <stop offset="1" stopColor="#3940ab" />
+        </linearGradient>
+        <path fill="url(#teams_grad)" d="M95.01,468.5h950.323c52.473,0,95.01,42.538,95.01,95.01v950.323
+            c0,52.473-42.538,95.01-95.01,95.01H95.01C42.538,1608.843,0,1566.305,0,1513.833V563.51
+            C0,511.038,42.538,468.5,95.01,468.5z"/>
+        <path d="M820.211,828.193H630.241v517.297H509.211V828.193H320.123V727.844H820.211V828.193z" fill="#ffffff" />
+    </svg>
+);
 // ─── STATS ────────────────────────────────────────────────────────────────────
 const FOUNDING_YEAR = 1978;
 function buildStats(apiStats) {
@@ -602,7 +644,6 @@ export default function Home() {
                     ))}
                 </Swiper>
             </section>
-
             {/* 2 ─ STATS ─────────────────────────────────────────────────────── */}
             <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}` }}>
                 <div className="W">
@@ -629,37 +670,6 @@ export default function Home() {
                     </div>
                 </div>
             </div>
-
-            {/* 3 ─ FEATURES ──────────────────────────────────────────────────── */}
-            <section style={{ background: C.w }} ref={featRef}>
-                <div className="W" style={{ paddingTop: 'clamp(48px,6vw,80px)' }}>
-                    <div style={{ textAlign: 'center', marginBottom: 36 }}>
-                        <Eyebrow center>ما يميزنا</Eyebrow>
-                        <SplitTitle center>لماذا المعهد؟</SplitTitle>
-                        <div style={{ width: 56, height: 3, background: C.o, margin: '16px auto 24px', borderRadius: 2 }} />
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <ArrowBtn to="/overview">تعرف على المزيد</ArrowBtn>
-                        </div>
-                    </div>
-                </div>
-                <div className="W feat-grid" style={{ paddingBottom: 'clamp(48px,6vw,80px)' }}>
-                    {features.map((f, i) => (
-                        <div key={i} className="feat-card" ref={el => featCards.current[i] = el}>
-                            <div className="feat-num">{f.num}</div>
-                            <div style={{ marginBottom: 16 }}><img src={f.icon} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} /></div>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.4, marginBottom: 10 }}>{f.title}</h3>
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', color: C.g5, lineHeight: 1.85, marginBottom: 22 }}>{f.subtitle}</p>
-                            <Link to={f.link} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 2, transition: 'gap .2s' }}
-                                onMouseEnter={e => e.currentTarget.style.gap = '10px'}
-                                onMouseLeave={e => e.currentTarget.style.gap = '6px'}>
-                                استعرض <NorthEastIcon sx={{ fontSize: 13 }} />
-                            </Link>
-                        </div>
-                    ))}
-                </div>
-                <div style={{ height: 4, background: `linear-gradient(90deg,${C.o},${C.b})` }} />
-            </section>
-
             {/* 4 ─ ABOUT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={aboutRef}>
                 <div className="W">
@@ -692,6 +702,78 @@ export default function Home() {
                             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                 <SolidBtn to="/overview" orange>تعرف على المعهد</SolidBtn>
                                 <Link to="/mission" className="ob-outline">الرؤية والرسالة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></Link>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 2b ─ ONLINE TRAINING TEASER ──────────────────────────────── */}
+            <section className="S" style={{ background: C.b, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
+                <div style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(8,101,168,.12)', pointerEvents: 'none' }} />
+                <div className="W" style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(28px,5vw,72px)', alignItems: 'center' }}
+                        className="ab-split">
+                        {/* Left: text */}
+                        <div>
+                            <Eyebrow light>تدريب بلا حدود</Eyebrow>
+                            <SplitTitle light>التدريب عن بُعد<br />( أونلاين )</SplitTitle>
+                            <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
+                            <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: 'rgba(255,255,255,.65)', lineHeight: 2, marginBottom: 24 }}>
+                                برامج تدريبية مباشرة (Live) عبر Microsoft Teams، تُتيح لك الحضور من أي مكان داخل مصر أو خارجها مع الحفاظ على التفاعل الفوري مع المدرب وجودة المحتوى.
+                            </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+                                {[
+                                    { icon: '🎥', text: 'بث مباشر Live' },
+                                    { icon: '💬', text: 'تفاعل فوري' },
+                                    { icon: '📍', text: 'من أي مكان' },
+                                    { icon: '🎓', text: 'شهادة معتمدة' },
+                                ].map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8 }}>
+                                        <span style={{ fontSize: '1.1rem' }}>{item.icon}</span>
+                                        <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>{item.text}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <SolidBtn to="/online-training" orange>اكتشف التدريب الأونلاين <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
+                        </div>
+                        {/* Right: visual card */}
+                        <div style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 16, padding: 'clamp(20px,3vw,36px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            {/* Platform badge */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(8,101,168,.25)', border: '1px solid rgba(8,101,168,.4)', borderRadius: 10 }}>
+                                <div style={{
+                                    width: 44,
+                                    height: 44,
+                                    borderRadius: 12,
+                                    background: 'rgba(255,255,255,.08)',
+                                    border: '1px solid rgba(255,255,255,.15)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0
+                                }}>
+                                    <TeamsIcon size={24} />
+                                </div>                                <div>
+                                    <div style={{ fontFamily: F, fontSize: '.78rem', fontWeight: 900, color: C.w, lineHeight: 1.4 }}>Microsoft Teams</div>
+                                    <div style={{ fontFamily: F, fontSize: '.66rem', color: 'rgba(255,255,255,.5)', marginTop: 2 }}>منصة التدريب الرسمية</div>
+                                </div>
+                            </div>
+                            {/* Programs list */}
+                            {[
+                                'برنامج إدارة المشاريع الاحترافية (PMP)',
+                                'القيادة التنفيذية',
+                                'عقود الفيديك',
+                                'أساليب تحليل المشكلات واتخاذ القرارات',
+                                'برامج السلامة والجودة',
+                            ].map((prog, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.o, flexShrink: 0 }} />
+                                    <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', color: 'rgba(255,255,255,.7)', lineHeight: 1.6 }}>{prog}</span>
+                                </div>
+                            ))}
+                            <div style={{ marginTop: 4, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,.08)' }}>
+                                <ArrowBtn to="/online-training#programs" inv>عرض جميع البرامج</ArrowBtn>
                             </div>
                         </div>
                     </div>

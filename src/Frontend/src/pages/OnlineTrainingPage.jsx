@@ -12,6 +12,9 @@ import {
     FaHeadset,
     FaCheckCircle,
 } from 'react-icons/fa';
+import { useLocation } from "react-router-dom";
+
+
 
 /* ─────────────────────────────────────────
    Microsoft Teams SVG Icon
@@ -503,10 +506,22 @@ export default function OnlineTrainingPage() {
             description: 'وفى اطار حرص الشركة لتزويد العاملين بها بالمعرفة الكاملة بأسس السلامة والصحة المهنية ومتطلبات الجودة بالشركة فقد حرصت على ضرورة حضور المهندسين المرشحين للترقى لبرنامجى السلامة والجودة مما يتيح للمهندسين الحاضرين لتلك البرامج التعامل مع متطلبات السلامة من حيث (مهمات الحماية الشخصية – دليل و خطة السلامة والصحة المهنية للمشروعات - خطة الاستجابة للطوارئ والحريق - تصاريح الاعمال الخطرة - تحليل مؤشرات الحوادث والاصابات والامراض المهنية - تقييم المخاطر - ترتيب ونظافة مواقع العمل) وايضا لتحقيق اعلى جودة من حيث (التعريفات الهامة والتطور التاريخى للجودة - المواصفات الدولية الأيزو) ويتم تنفيذها ايضا عن بعد',
         },
     ];
+    const location = useLocation();
 
     useEffect(() => {
         document.title = 'التدريب عن بعد ( اونلاين ) - المعهد التكنولوجي لهندسة التشييد والإدارة';
-    }, []);
+
+        if (location.hash) {
+            const id = location.hash.replace('#', '');
+            const el = document.getElementById(id);
+
+            if (el) {
+                setTimeout(() => {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+    }, [location]);
 
     return (
         <>
@@ -686,8 +701,8 @@ export default function OnlineTrainingPage() {
                 </section>
 
                 {/* ── PROGRAMS ── */}
-                <section className="ot-section-gray">
-                    <div className="ot-section-inner">
+                <section className="ot-section-gray" id="programs">
+                    <div className="ot-section-inner" id="programs">
                         <h2 className="ot-section-heading">أمثلة فعلية على <span>البرامج التدريبية عن بعد</span></h2>
                         <div className="ot-heading-bar" />
                         <div className="ot-programs-list">
