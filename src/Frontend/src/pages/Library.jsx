@@ -4,55 +4,66 @@ import { BookOpen, Check, Search, Calendar, Tag, ChevronLeft, ChevronRight, Spar
 export default function ModernLibrary() {
     const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
     const [scrollProgress, setScrollProgress] = useState(0);
-    const [galleryOpen, setGalleryOpen] = useState(false);
-    const [activeGalleryIdx, setActiveGalleryIdx] = useState(0);
 
     useEffect(() => {
         document.title = 'المكتبة - المعهد التكنولوجي لهندسة التشييد والإدارة';
+    }, []);
+
+    // Scroll to hash anchor on mount (e.g. /library#embassy)
+    useEffect(() => {
+        const hash = window.location.hash;
+        if (!hash) return;
+        const id = hash.replace('#', '');
+        const attempt = (tries = 0) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (tries < 10) {
+                setTimeout(() => attempt(tries + 1), 150);
+            }
+        };
+        attempt();
     }, []);
 
     useEffect(() => {
         const handleResize = () => setWindowWidth(window.innerWidth);
         const handleScroll = () => {
             const total = document.documentElement.scrollHeight - window.innerHeight;
-            setScrollProgress((window.scrollY / total) * 100);
+            if (total > 0) setScrollProgress((window.scrollY / total) * 100);
         };
         window.addEventListener('resize', handleResize);
         window.addEventListener('scroll', handleScroll);
-        return () => { window.removeEventListener('resize', handleResize); window.removeEventListener('scroll', handleScroll); };
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            window.removeEventListener('scroll', handleScroll);
+        };
     }, []);
 
+    // Responsive breakpoints
+    const isTiny = windowWidth < 400;
     const isMobile = windowWidth <= 640;
-    const isTablet = windowWidth <= 1024 && windowWidth > 640;
+    const isTablet = windowWidth > 640 && windowWidth <= 1024;
+    const isDesktop = windowWidth > 1024;
 
     const stats = [
         { icon: BookOpen, label: 'كتاب متاح', value: '4200+', color: '#0865a8' },
         { icon: TrendingUp, label: 'مجال علمي', value: '23', color: '#f57c00' },
         { icon: Clock, label: 'مادة علمية', value: '2500+', color: '#0865a8' },
-        { icon: Award, label: 'سنوات خبرة', value: '55+', color: '#f57c00' }
+        { icon: Award, label: 'سنوات خبرة', value: '55+', color: '#f57c00' },
     ];
 
     const features = [
         { text: "تضم المكتبة أكثر من 4200 كتاب في جميع مجالات العلوم الهندسية (مدنية – معمارية – ميكانيكا – كهرباء – صحي – مساحة – طرق – مائية) إلى جانب العلوم الأخرى (الإدارة – الاقتصاد – القانون – المحاسبة – السلامة والصحة المهنية – البيئة – الحاسب الآلي).", color: '#0865a8' },
         { text: "تحتوي المكتبة على أكثر من 2500 مادة علمية متخصصة تغطي 23 مجالاً وفق مصفوفة المجالات التدريبية، تم إعدادها من قبل خبراء الشركة بهدف نقل الخبرات المختلفة إلى جميع العاملين.", color: '#f57c00' },
         { text: "جميع كتب المكتبة مصنفة وفقاً لتصنيف ديوي العشري العالمي، مع قاعدة بيانات متكاملة تتيح أنظمة البحث والاسترجاع لجميع المستفيدين.", color: '#0865a8' },
-        { text: "تصدر المكتبة أدلة علمية متخصصة يُعدّها المتخصصون في مجالات الهندسة المدنية والعمارة والميكانيكا والمساحة والهندسة الصحية والمهارات الإدارية والمالية.", color: '#f57c00' }
+        { text: "تصدر المكتبة أدلة علمية متخصصة يُعدّها المتخصصون في مجالات الهندسة المدنية والعمارة والميكانيكا والمساحة والهندسة الصحية والمهارات الإدارية والمالية.", color: '#f57c00' },
     ];
 
     const platforms = [
         { name: 'Le Moniteur', icon: Globe, desc: 'منصة الإنشاء والبناء الفرنسية' },
         { name: 'Global Tenders', icon: TrendingUp, desc: 'منصة المناقصات العالمية' },
         { name: 'Construct Africa', icon: Building, desc: 'منصة التشييد الأفريقية' },
-        { name: 'بوابة قوانين الشرق', icon: BookOpen, desc: '5 منظومات قانونية متخصصة لـ 3 إدارات' }
-    ];
-
-    const embassyServices = [
-        { title: 'مستودع الأصول الرقمية DAR', value: '509,089', unit: 'وعاء رقمي', icon: '🗄️', desc: 'يشمل كافة التخصصات العلمية في شتى فروع المعرفة البشرية' },
-        { title: 'أرشيف الصحافة المصرية', value: '17,500,000', unit: 'مقالة صحفية', icon: '📰', desc: 'باللغات العربية والإنجليزية والفرنسية على مدار 67 عاماً (1950–2017)' },
-        { title: 'صور ووثائق تاريخية', value: '2,052', unit: 'صورة', icon: '🖼️', desc: 'وثائق وصور تاريخية نادرة' },
-        { title: 'ملفات صوتية', value: '2,447', unit: 'ملف', icon: '🎧', desc: 'فيديوهات وتسجيلات صوتية متخصصة' },
-        { title: 'الخرائط الرقمية', value: '2,777', unit: 'خريطة', icon: '🗺️', desc: 'خرائط من مختلف العصور' },
-        { title: 'ذاكرة مصر المعاصرة', value: '1805–1981', unit: 'فترة تاريخية', icon: '🏛️', desc: 'من عهد محمد علي حتى نهاية عصر الرئيس السادات' }
+        { name: 'بوابة قوانين الشرق', icon: BookOpen, desc: '5 منظومات قانونية متخصصة لـ 3 إدارات' },
     ];
 
     const subscriptionInfo = [
@@ -65,11 +76,7 @@ export default function ModernLibrary() {
     const books = [
         { title: "Capture and reuse of project knowledge in construction", publisher: "Willy-Blackwell", image: "https://www.arabcont.com/icemt/assets/images/Book01.jpg", url: "https://online.fliphtml5.com/cvhml/vzfl/#p=1", color: '#0865a8' },
         { title: "ICE manual of highway design and management", publisher: "Second Edition", image: "https://www.arabcont.com/icemt/assets/images/Book02.jpg", url: "https://online.fliphtml5.com/cvhml/qzxx/#p=1", color: '#f57c00' },
-        { title: "Construction Dewatering and Groundwater Control", publisher: "Third Edition", image: "https://www.arabcont.com/icemt/assets/images/Book03.jpg", url: "https://online.fliphtml5.com/cvhml/wdbx/#p=1", color: '#0865a8' }
-    ];
-
-    const galleryImages = [
-        { src: "https://www.arabcont.com/icemt/assets/images/library-02.jpg", caption: "مبنى المعهد التكنولوجي لهندسة التشييد والإدارة" },
+        { title: "Construction Dewatering and Groundwater Control", publisher: "Third Edition", image: "https://www.arabcont.com/icemt/assets/images/Book03.jpg", url: "https://online.fliphtml5.com/cvhml/wdbx/#p=1", color: '#0865a8' },
     ];
 
     const embassyGoals = [
@@ -78,59 +85,66 @@ export default function ModernLibrary() {
         'تنظيم ورش عمل تفاعلية في مجالات علمية وأدبية وفنية',
         'ربط المكتبة بالتدريب وتطوير المنظومة التدريبية',
         'تزويد المتدربين بأحدث الكتب والمراجع العلمية',
-        'البث المباشر للفعاليات والمؤتمرات من مكتبة الإسكندرية'
+        'البث المباشر للفعاليات والمؤتمرات من مكتبة الإسكندرية',
     ];
 
-    const sectionStyle = (bg = 'white') => ({ padding: isMobile ? '40px 16px' : '80px 32px', background: bg });
-    const containerStyle = { maxWidth: '1400px', margin: '0 auto' };
-    const sectionHeaderStyle = { textAlign: 'center', marginBottom: '48px' };
-    const sectionTitleStyle = { fontSize: isMobile ? '28px' : '38px', fontWeight: '800', color: '#000', marginBottom: '12px' };
-    const sectionSubStyle = { fontSize: '17px', color: '#6b7280' };
-    const cardBase = { background: 'white', borderRadius: '20px', border: '2px solid #e5e7eb', padding: '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' };
+    /* ─── layout helpers ─────────────────────────────────────────── */
+    const pad = isTiny ? '28px 10px' : isMobile ? '40px 14px' : isTablet ? '60px 24px' : '80px 40px';
+    const containerStyle = { maxWidth: '1400px', margin: '0 auto', width: '100%' };
+    const sectionStyle = (bg = 'white') => ({ padding: pad, background: bg, boxSizing: 'border-box' });
+    const sectionHeaderStyle = { textAlign: 'center', marginBottom: isMobile ? '28px' : '48px' };
+    const sectionTitleStyle = { fontSize: isTiny ? '22px' : isMobile ? '26px' : isTablet ? '32px' : '38px', fontWeight: '800', color: '#000', marginBottom: '10px', lineHeight: 1.2 };
+    const sectionSubStyle = { fontSize: isMobile ? '14px' : '17px', color: '#6b7280' };
+    const cardBase = { background: 'white', borderRadius: isMobile ? '14px' : '20px', border: '2px solid #e5e7eb', padding: isTiny ? '14px' : isMobile ? '18px' : '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', boxSizing: 'border-box' };
+
+    /* ─── grid helpers ───────────────────────────────────────────── */
+    const cols = (tiny, mob, tab, desk) =>
+        isTiny ? tiny : isMobile ? mob : isTablet ? tab : desk;
 
     return (
-        <div style={{ minHeight: '100vh', background: 'white', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' }}>
+        <div style={{ minHeight: '100vh', background: 'white', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl', overflowX: 'hidden' }}>
+
             {/* Progress bar */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: '#e5e7eb', zIndex: 9999 }}>
                 <div style={{ height: '100%', background: 'linear-gradient(to right, #f57c00, #0865a8)', width: `${scrollProgress}%`, transition: 'width 0.3s ease' }} />
             </div>
 
             {/* Nav */}
-            <div style={{ position: 'fixed', top: 4, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem' }}>
+            <div style={{ position: 'fixed', top: 4, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: isMobile ? '8px 12px' : '8px 20px', boxSizing: 'border-box' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: isTiny ? '13px' : '1rem' }}>
                     <a href="/" style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}>الصفحة الرئيسية</a>
                     <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
                     <span style={{ color: '#374151' }}>المكتبة</span>
                 </div>
             </div>
 
-            {/* Hero */}
-            <section style={{ ...sectionStyle('white'), paddingTop: isMobile ? '80px' : '120px', textAlign: 'center' }}>
+            {/* ══ HERO ══ */}
+            <section style={{ ...sectionStyle('white'), paddingTop: isMobile ? '72px' : '120px', textAlign: 'center' }}>
                 <div style={containerStyle}>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '100px', height: '100px', background: 'linear-gradient(135deg, #0865a8, #f57c00)', borderRadius: '28px', marginBottom: '28px', boxShadow: '0 16px 48px rgba(8,101,168,0.35)' }}>
-                        <BookOpen style={{ width: '48px', height: '48px', color: 'white' }} />
+                    <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: isMobile ? '72px' : '100px', height: isMobile ? '72px' : '100px', background: 'linear-gradient(135deg, #0865a8, #f57c00)', borderRadius: isMobile ? '20px' : '28px', marginBottom: '20px', boxShadow: '0 16px 48px rgba(8,101,168,0.35)' }}>
+                        <BookOpen style={{ width: isMobile ? '34px' : '48px', height: isMobile ? '34px' : '48px', color: 'white' }} />
                     </div>
-                    <h1 style={{ fontSize: isMobile ? '36px' : '60px', fontWeight: '800', color: '#000', marginBottom: '16px' }}>المكتبة الرئيسية</h1>
-                    <div style={{ width: '180px', height: '5px', background: '#e5e7eb', borderRadius: '999px', margin: '0 auto 24px', overflow: 'hidden' }}>
+                    <h1 style={{ fontSize: isTiny ? '28px' : isMobile ? '36px' : isTablet ? '48px' : '60px', fontWeight: '800', color: '#000', marginBottom: '14px', lineHeight: 1.15 }}>المكتبة الرئيسية</h1>
+                    <div style={{ width: isMobile ? '120px' : '180px', height: '5px', background: '#e5e7eb', borderRadius: '999px', margin: '0 auto 20px', overflow: 'hidden' }}>
                         <div style={{ width: '40%', height: '100%', background: 'linear-gradient(90deg, #0865a8, #f57c00)', borderRadius: '999px', animation: 'slide 2s infinite ease-in-out' }} />
                     </div>
-                    <p style={{ fontSize: isMobile ? '15px' : '19px', color: '#6b7280' }}>مكتبة متخصصة في التشييد والبناء • تأسست 1970 • سفارة معرفة مكتبة الإسكندرية</p>
+                    <p style={{ fontSize: isTiny ? '13px' : isMobile ? '14px' : '19px', color: '#6b7280', lineHeight: 1.7 }}>مكتبة متخصصة في التشييد والبناء • تأسست 1970 • سفارة معرفة مكتبة الإسكندرية</p>
                 </div>
             </section>
 
-            {/* Stats */}
+            {/* ══ STATS ══ */}
             <section style={sectionStyle('#f9fafb')}>
                 <div style={containerStyle}>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols('2', '2', '4', '4')}, 1fr)`, gap: isTiny ? '10px' : isMobile ? '14px' : '20px' }}>
                         {stats.map((s, i) => {
                             const Icon = s.icon;
                             return (
-                                <div key={i} style={{ ...cardBase, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '12px' }}>
-                                    <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Icon size={26} color="white" />
+                                <div key={i} style={{ ...cardBase, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '10px' }}>
+                                    <div style={{ width: isTiny ? '40px' : '56px', height: isTiny ? '40px' : '56px', borderRadius: '14px', background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Icon size={isTiny ? 18 : 26} color="white" />
                                     </div>
-                                    <div style={{ fontSize: isMobile ? '26px' : '32px', fontWeight: '800', color: '#000' }}>{s.value}</div>
-                                    <div style={{ fontSize: '14px', color: '#6b7280' }}>{s.label}</div>
+                                    <div style={{ fontSize: isTiny ? '20px' : isMobile ? '24px' : '32px', fontWeight: '800', color: '#000' }}>{s.value}</div>
+                                    <div style={{ fontSize: isTiny ? '11px' : '13px', color: '#6b7280' }}>{s.label}</div>
                                 </div>
                             );
                         })}
@@ -138,78 +152,96 @@ export default function ModernLibrary() {
                 </div>
             </section>
 
-            {/* About */}
+            {/* ══ ABOUT ══ */}
             <section style={sectionStyle('white')}>
                 <div style={containerStyle}>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile || isTablet ? '1fr' : '1fr 1fr', gap: '48px', alignItems: 'center' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', '1fr', '1fr 1fr'), gap: isMobile ? '28px' : '48px', alignItems: 'center' }}>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 18px', border: '2px solid #0865a8', borderRadius: '999px', color: '#0865a8', fontSize: '14px', marginBottom: '20px' }}>
-                                <Sparkles size={15} /> نبذة عن المكتبة
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 16px', border: '2px solid #0865a8', borderRadius: '999px', color: '#0865a8', fontSize: isTiny ? '12px' : '14px', marginBottom: '16px' }}>
+                                <Sparkles size={14} /> نبذة عن المكتبة
                             </div>
                             <h2 style={sectionTitleStyle}>مكتبة متخصصة منذ 1970</h2>
-                            <p style={{ fontSize: isMobile ? '15px' : '17px', color: '#4b5563', lineHeight: '1.9', marginBottom: '28px' }}>
+                            <p style={{ fontSize: isTiny ? '13px' : isMobile ? '14px' : '17px', color: '#4b5563', lineHeight: '1.9', marginBottom: '22px' }}>
                                 تأسست المكتبة الرئيسية للمعهد عام 1970، وهي مكتبة متخصصة في مجال التشييد والبناء، إيماناً من شركة المقاولون العرب بأهمية القراءة والاطلاع المستمر ومعرفة كل ما هو حديث في سوق العمل. تقدم خدماتها للمجتمع الداخلي والخارجي على حد سواء.
                             </p>
                             {['محتوى محدث باستمرار', 'تغطية شاملة لجميع التخصصات', 'وصول سهل وسريع للمعلومات'].map((t, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', border: `2px solid ${i % 2 === 0 ? '#0865a8' : '#f57c00'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Check size={18} color={i % 2 === 0 ? '#0865a8' : '#f57c00'} />
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                                    <div style={{ width: isTiny ? '28px' : '36px', height: isTiny ? '28px' : '36px', borderRadius: '10px', border: `2px solid ${i % 2 === 0 ? '#0865a8' : '#f57c00'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Check size={isTiny ? 14 : 18} color={i % 2 === 0 ? '#0865a8' : '#f57c00'} />
                                     </div>
-                                    <span style={{ color: '#000', fontSize: '15px' }}>{t}</span>
+                                    <span style={{ color: '#000', fontSize: isTiny ? '13px' : '15px' }}>{t}</span>
                                 </div>
                             ))}
                         </div>
                         <div style={{ borderRadius: '20px', overflow: 'hidden', border: '3px solid #e5e7eb', boxShadow: '0 20px 40px rgba(0,0,0,0.08)' }}>
-                            <img src="https://www.arabcont.com/icemt/assets/images/library-02.jpg" alt="المكتبة" style={{ width: '100%', height: isMobile ? '260px' : '380px', objectFit: 'cover', display: 'block' }} />
+                            <img src="https://www.arabcont.com/icemt/assets/images/library-02.jpg" alt="المكتبة" style={{ width: '100%', height: isTiny ? '200px' : isMobile ? '240px' : '380px', objectFit: 'cover', display: 'block' }} />
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Features */}
+            {/* ══ FEATURES ══ */}
             <section style={sectionStyle('#f9fafb')}>
                 <div style={containerStyle}>
                     <div style={sectionHeaderStyle}>
                         <h2 style={sectionTitleStyle}>مميزات المكتبة</h2>
                         <p style={sectionSubStyle}>اكتشف ما يميز مكتبتنا</p>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '24px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: isTiny ? '12px' : '20px' }}>
                         {features.map((f, i) => (
-                            <FeatureCard key={i} feature={f} index={i} />
+                            <FeatureCard key={i} feature={f} index={i} isTiny={isTiny} isMobile={isMobile} />
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* Subscription */}
+            {/* ══ BOOKS (moved here – right after Features) ══ */}
+            <section style={sectionStyle('white')}>
+                <div style={containerStyle}>
+                    <div style={sectionHeaderStyle}>
+                        <h2 style={sectionTitleStyle}>أمثلة من الكتب</h2>
+                        <p style={sectionSubStyle}>تصفح مجموعة مختارة من أفضل الكتب</p>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(3,1fr)'), gap: isTiny ? '14px' : isMobile ? '18px' : '28px' }}>
+                        {books.map((book, i) => (
+                            <BookCard key={i} book={book} onClick={() => window.open(book.url, '_blank')} isMobile={isMobile} isTiny={isTiny} />
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ══ SEARCH (moved here – right after Books) ══ */}
+            <LibrarySearchSection isTiny={isTiny} isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop} />
+
+            {/* ══ SUBSCRIPTION ══ */}
             <section style={sectionStyle('white')}>
                 <div style={containerStyle}>
                     <div style={sectionHeaderStyle}>
                         <h2 style={sectionTitleStyle}>خدمات واشتراكات المكتبة</h2>
                         <p style={sectionSubStyle}>خدمات متنوعة للعاملين والباحثين</p>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr 1fr', '1fr 1fr', 'repeat(4,1fr)', 'repeat(4,1fr)'), gap: isTiny ? '10px' : '16px', marginBottom: '32px' }}>
                         {subscriptionInfo.map((s, i) => (
                             <div key={i} style={{ ...cardBase, textAlign: 'center' }}>
-                                <div style={{ fontSize: isMobile ? '18px' : '22px', fontWeight: '800', color: s.color, marginBottom: '8px' }}>{s.value}</div>
-                                <div style={{ fontSize: '13px', color: '#6b7280' }}>{s.label}</div>
+                                <div style={{ fontSize: isTiny ? '15px' : isMobile ? '17px' : '22px', fontWeight: '800', color: s.color, marginBottom: '6px' }}>{s.value}</div>
+                                <div style={{ fontSize: isTiny ? '11px' : '13px', color: '#6b7280' }}>{s.label}</div>
                             </div>
                         ))}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(3,1fr)'), gap: isTiny ? '12px' : '18px' }}>
                         {[
                             { title: 'خدمة البحث والاسترجاع', desc: 'البحث في قاعدة البيانات عن الكتب العلمية وفق احتياجات المستفيد من خلال استمارة خدمات المستفيدين.', icon: Search },
                             { title: 'خدمة الاستعارة والاطلاع', desc: 'استعارة حتى 3 كتب لمدة 15 يوماً للعاملين، والاطلاع داخل المكتبة لجميع المشتركين.', icon: BookOpen },
-                            { title: 'الاستفسارات والتصوير', desc: 'الرد على الاستفسارات عبر الهاتف أو البريد الإلكتروني Library@arabcont.com وخدمة التصوير بحد 20 صفحة.', icon: Users }
+                            { title: 'الاستفسارات والتصوير', desc: 'الرد على الاستفسارات عبر الهاتف أو البريد الإلكتروني Library@arabcont.com وخدمة التصوير بحد 20 صفحة.', icon: Users },
                         ].map((s, i) => {
                             const Icon = s.icon;
                             return (
                                 <div key={i} style={{ ...cardBase, textAlign: 'right' }}>
-                                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: i % 2 === 0 ? '#0865a8' : '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '14px', marginRight: 'auto', marginLeft: 0 }}>
-                                        <Icon size={22} color="white" />
+                                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: i % 2 === 0 ? '#0865a8' : '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
+                                        <Icon size={20} color="white" />
                                     </div>
-                                    <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#000', marginBottom: '8px' }}>{s.title}</h3>
-                                    <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.7' }}>{s.desc}</p>
+                                    <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#000', marginBottom: '6px' }}>{s.title}</h3>
+                                    <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.7' }}>{s.desc}</p>
                                 </div>
                             );
                         })}
@@ -217,24 +249,24 @@ export default function ModernLibrary() {
                 </div>
             </section>
 
-            {/* Platforms */}
+            {/* ══ PLATFORMS ══ */}
             <section style={sectionStyle('#f9fafb')}>
                 <div style={containerStyle}>
                     <div style={sectionHeaderStyle}>
                         <h2 style={sectionTitleStyle}>المنصات والمواقع الإلكترونية</h2>
                         <p style={sectionSubStyle}>اشتراكات في منصات علمية متخصصة</p>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '20px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: isTiny ? '12px' : '18px' }}>
                         {platforms.map((p, i) => {
                             const Icon = p.icon;
                             return (
-                                <div key={i} style={{ ...cardBase, display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                                    <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: i % 2 === 0 ? 'rgba(8,101,168,0.1)' : 'rgba(245,124,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Icon size={22} color={i % 2 === 0 ? '#0865a8' : '#f57c00'} />
+                                <div key={i} style={{ ...cardBase, display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+                                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: i % 2 === 0 ? 'rgba(8,101,168,0.1)' : 'rgba(245,124,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Icon size={20} color={i % 2 === 0 ? '#0865a8' : '#f57c00'} />
                                     </div>
                                     <div>
-                                        <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#000', marginBottom: '4px' }}>{p.name}</h3>
-                                        <p style={{ fontSize: '14px', color: '#6b7280' }}>{p.desc}</p>
+                                        <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#000', marginBottom: '4px' }}>{p.name}</h3>
+                                        <p style={{ fontSize: isTiny ? '12px' : '13px', color: '#6b7280' }}>{p.desc}</p>
                                     </div>
                                 </div>
                             );
@@ -243,141 +275,135 @@ export default function ModernLibrary() {
                 </div>
             </section>
 
-            {/* Knowledge Embassy Section */}
-            <section style={{ ...sectionStyle('white'), borderTop: '4px solid #0865a8' }}>
+            {/* ══ KNOWLEDGE EMBASSY ══ */}
+            <section id="embassy" style={{ ...sectionStyle('white'), borderTop: '4px solid #0865a8' }}>
                 <div style={containerStyle}>
 
-                    {/* 1. تعريف سفارة المعرفة */}
                     <div style={sectionHeaderStyle}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '10px 22px', background: 'linear-gradient(135deg, #0865a8, #f57c00)', borderRadius: '999px', color: 'white', fontSize: '14px', fontWeight: '700', marginBottom: '20px' }}>
-                            <Star size={16} /> أول سفارة معرفة لشركة مقاولات في مصر
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 18px', background: 'linear-gradient(135deg, #0865a8, #f57c00)', borderRadius: '999px', color: 'white', fontSize: isTiny ? '11px' : '13px', fontWeight: '700', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                            <Star size={14} /> أول سفارة معرفة لشركة مقاولات في مصر
                         </div>
                         <h2 style={sectionTitleStyle}>سفارة المعرفة — مكتبة الإسكندرية</h2>
                     </div>
 
-                    {/* تعريف */}
-                    <div style={{ ...cardBase, marginBottom: '32px', borderRight: '5px solid #0865a8', textAlign: 'right' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0865a8', marginBottom: '12px' }}>تعريف سفارة المعرفة</h3>
-                        <p style={{ fontSize: '15px', color: '#374151', lineHeight: '1.9' }}>
+                    {/* Definition */}
+                    <div style={{ ...cardBase, marginBottom: '24px', borderRight: '5px solid #0865a8', textAlign: 'right' }}>
+                        <h3 style={{ fontSize: isTiny ? '14px' : '17px', fontWeight: '700', color: '#0865a8', marginBottom: '10px' }}>تعريف سفارة المعرفة</h3>
+                        <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151', lineHeight: '1.9' }}>
                             تسعى مكتبة الإسكندرية الجديدة إلى استعادة روح الانفتاح والبحث التي ميّزت المكتبة القديمة، فهي ليست مكتبة فحسب، بل مجمع ثقافي يقوم على نشر العلم والمعرفة. وتتلخص رسالتها في أن تكون مركزاً للتميز في إنتاج ونشر المعرفة، ومكاناً للتفاعل بين الشعوب والحضارات.
                         </p>
                     </div>
 
-                    {/* 2. مفهوم سفارات المعرفة */}
-                    <div style={{ ...cardBase, marginBottom: '32px', borderRight: '5px solid #f57c00', textAlign: 'right' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#f57c00', marginBottom: '12px' }}>مفهوم سفارات المعرفة</h3>
-                        <p style={{ fontSize: '15px', color: '#374151', lineHeight: '1.9', marginBottom: '16px' }}>
+                    {/* Concept */}
+                    <div style={{ ...cardBase, marginBottom: '24px', borderRight: '5px solid #f57c00', textAlign: 'right' }}>
+                        <h3 style={{ fontSize: isTiny ? '14px' : '17px', fontWeight: '700', color: '#f57c00', marginBottom: '10px' }}>مفهوم سفارات المعرفة</h3>
+                        <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151', lineHeight: '1.9', marginBottom: '14px' }}>
                             في عام <strong>2014</strong> جاء التفكير في إنشاء سفارات لمكتبة الإسكندرية في جميع المحافظات، حتى تتمكن المكتبة من تخطي البُعد الجغرافي والتوسع لتوصيل خدماتها إلى أكبر عدد ممكن من المستفيدين.
                         </p>
-                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                            <div style={{ background: 'rgba(8,101,168,0.08)', border: '2px solid rgba(8,101,168,0.2)', borderRadius: '14px', padding: '14px 22px', textAlign: 'center' }}>
-                                <div style={{ fontSize: '28px', fontWeight: '800', color: '#0865a8' }}>24</div>
-                                <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>سفارة معرفة حالياً</div>
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            <div style={{ background: 'rgba(8,101,168,0.08)', border: '2px solid rgba(8,101,168,0.2)', borderRadius: '14px', padding: '12px 18px', textAlign: 'center', minWidth: '90px' }}>
+                                <div style={{ fontSize: isTiny ? '22px' : '28px', fontWeight: '800', color: '#0865a8' }}>24</div>
+                                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '3px' }}>سفارة معرفة حالياً</div>
                             </div>
-                            <div style={{ background: 'rgba(245,124,0,0.08)', border: '2px solid rgba(245,124,0,0.2)', borderRadius: '14px', padding: '14px 22px', textAlign: 'center' }}>
-                                <div style={{ fontSize: '28px', fontWeight: '800', color: '#f57c00' }}>2014</div>
-                                <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '4px' }}>سنة التأسيس</div>
+                            <div style={{ background: 'rgba(245,124,0,0.08)', border: '2px solid rgba(245,124,0,0.2)', borderRadius: '14px', padding: '12px 18px', textAlign: 'center', minWidth: '90px' }}>
+                                <div style={{ fontSize: isTiny ? '22px' : '28px', fontWeight: '800', color: '#f57c00' }}>2014</div>
+                                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '3px' }}>سنة التأسيس</div>
                             </div>
-                            <div style={{ background: 'rgba(0,0,0,0.05)', border: '2px solid rgba(0,0,0,0.1)', borderRadius: '14px', padding: '14px 22px', textAlign: 'center', flex: 1, minWidth: '180px' }}>
-                                <div style={{ fontSize: '14px', fontWeight: '700', color: '#000', lineHeight: '1.5' }}>سفارة المعرفة للمكتبة الرئيسية لشركة المقاولون العرب هي <span style={{ color: '#0865a8' }}>أول سفارة معرفة لإحدى كبرى شركات المقاولات</span></div>
+                            <div style={{ background: 'rgba(0,0,0,0.04)', border: '2px solid rgba(0,0,0,0.1)', borderRadius: '14px', padding: '12px 18px', flex: 1, minWidth: '180px', textAlign: 'center' }}>
+                                <div style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#000', lineHeight: '1.5' }}>سفارة المعرفة للمكتبة الرئيسية لشركة المقاولون العرب هي <span style={{ color: '#0865a8' }}>أول سفارة معرفة لإحدى كبرى شركات المقاولات</span></div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 3. أهداف سفارات المعرفة */}
-                    <div style={{ ...cardBase, marginBottom: '32px', background: 'rgba(8,101,168,0.02)', border: '2px solid rgba(8,101,168,0.12)' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#0865a8', marginBottom: '20px', textAlign: 'center' }}>أهداف سفارات المعرفة ودورها داخل مكتبة المعهد</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '12px' }}>
+                    {/* Goals */}
+                    <div style={{ ...cardBase, marginBottom: '24px', background: 'rgba(8,101,168,0.02)', border: '2px solid rgba(8,101,168,0.12)' }}>
+                        <h3 style={{ fontSize: isTiny ? '14px' : '17px', fontWeight: '700', color: '#0865a8', marginBottom: '18px', textAlign: 'center' }}>أهداف سفارات المعرفة ودورها داخل مكتبة المعهد</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: '10px' }}>
                             {embassyGoals.map((g, i) => (
-                                <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                                    <div style={{ width: '26px', height: '26px', borderRadius: '8px', background: i % 2 === 0 ? '#0865a8' : '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                                        <Check size={13} color="white" />
+                                <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                                    <div style={{ width: '24px', height: '24px', borderRadius: '7px', background: i % 2 === 0 ? '#0865a8' : '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                                        <Check size={12} color="white" />
                                     </div>
-                                    <span style={{ fontSize: '14px', color: '#1a1a1a', lineHeight: '1.75' }}>{g}</span>
+                                    <span style={{ fontSize: isTiny ? '12px' : '14px', color: '#1a1a1a', lineHeight: '1.75' }}>{g}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
 
                     {/* Gallery */}
-                    <InaugurationGallery isMobile={isMobile} />
+                    <InaugurationGallery isMobile={isMobile} isTiny={isTiny} />
 
-                    {/* 4. الخدمات المعرفية — موقع سفارة المعرفة الرقمي */}
-                    <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '8px' }}>الخدمات المعرفية التي تقدمها سفارة المعرفة بالمعهد</h3>
-                    <p style={{ fontSize: '15px', color: '#6b7280', textAlign: 'center', marginBottom: '28px' }}>يضم موقع سفارة المعرفة الرقمي لمكتبة الإسكندرية الأقسام الآتية</p>
+                    {/* Digital services heading */}
+                    <h3 style={{ fontSize: isTiny ? '16px' : '20px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '6px' }}>الخدمات المعرفية التي تقدمها سفارة المعرفة بالمعهد</h3>
+                    <p style={{ fontSize: isTiny ? '13px' : '15px', color: '#6b7280', textAlign: 'center', marginBottom: '24px' }}>يضم موقع سفارة المعرفة الرقمي لمكتبة الإسكندرية الأقسام الآتية</p>
 
                     {/* DAR */}
-                    <div style={{ ...cardBase, marginBottom: '20px', borderTop: '4px solid #0865a8', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '10px' }}>
-                            <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#0865a8', margin: 0 }}>مستودع الأصول الرقمية DAR</h4>
-                            <span style={{ fontSize: '22px', fontWeight: '800', color: '#0865a8', background: 'rgba(8,101,168,0.08)', padding: '4px 14px', borderRadius: '10px' }}>509,089 وعاء رقمي</span>
+                    <div style={{ ...cardBase, marginBottom: '18px', borderTop: '4px solid #0865a8', textAlign: 'right' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
+                            <h4 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#0865a8', margin: 0 }}>مستودع الأصول الرقمية DAR</h4>
+                            <span style={{ fontSize: isTiny ? '16px' : '20px', fontWeight: '800', color: '#0865a8', background: 'rgba(8,101,168,0.08)', padding: '3px 12px', borderRadius: '10px' }}>509,089 وعاء رقمي</span>
                         </div>
-                        <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.8', marginBottom: '14px' }}>يضم هذا المستودع الرقمي وعاءً رقمياً يشمل كافة التخصصات العلمية في شتى فروع المعرفة البشرية، بالإضافة إلى:</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: '12px' }}>
+                        <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.8', marginBottom: '12px' }}>يضم هذا المستودع الرقمي وعاءً رقمياً يشمل كافة التخصصات العلمية في شتى فروع المعرفة البشرية، بالإضافة إلى:</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: cols('1fr 1fr', '1fr 1fr', 'repeat(4,1fr)', 'repeat(4,1fr)'), gap: '10px' }}>
                             {[
                                 { label: 'صور ووثائق تاريخية', value: '2,052 صورة' },
                                 { label: 'ملفات صوتية', value: '2,447 ملف' },
                                 { label: 'كتب صوتية', value: '17 كتاب' },
                                 { label: 'خرائط رقمية', value: '2,777 خريطة' },
                             ].map((item, i) => (
-                                <div key={i} style={{ background: 'rgba(8,101,168,0.06)', borderRadius: '12px', padding: '12px', textAlign: 'center' }}>
-                                    <div style={{ fontSize: '16px', fontWeight: '800', color: '#0865a8', marginBottom: '4px' }}>{item.value}</div>
-                                    <div style={{ fontSize: '12px', color: '#6b7280' }}>{item.label}</div>
+                                <div key={i} style={{ background: 'rgba(8,101,168,0.06)', borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
+                                    <div style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '800', color: '#0865a8', marginBottom: '3px' }}>{item.value}</div>
+                                    <div style={{ fontSize: isTiny ? '11px' : '12px', color: '#6b7280' }}>{item.label}</div>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* ذاكرة مصر + وصف مصر + الأرشيفات */}
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '20px', marginBottom: '20px' }}>
-                        <div style={{ ...cardBase, borderTop: '4px solid #f57c00', textAlign: 'right' }}>
-                            <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#f57c00', marginBottom: '8px' }}>ذاكرة مصر المعاصرة</h4>
-                            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.8' }}>إتاحة كافة المعلومات التاريخية الهامة لمصر منذ تولي محمد علي حكم مصر سنة <strong>1805</strong> وحتى نهاية عصر الرئيس الراحل محمد أنور السادات سنة <strong>1981</strong>.</p>
-                        </div>
-                        <div style={{ ...cardBase, borderTop: '4px solid #0865a8', textAlign: 'right' }}>
-                            <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#0865a8', marginBottom: '8px' }}>كتاب وصف مصر</h4>
-                            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.8' }}>من أعظم الكتب التاريخية في عهد الحملة الفرنسية — <strong>20 جزءاً</strong>: منها <strong>11 جزء</strong> رسومات وخرائط، و<strong>9 أجزاء</strong> تصف مصر باللغة الفرنسية.</p>
-                        </div>
-                        <div style={{ ...cardBase, borderTop: '4px solid #f57c00', textAlign: 'right' }}>
-                            <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#f57c00', marginBottom: '8px' }}>الأرشيف الرقمي للرئيس جمال عبد الناصر</h4>
-                            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.8' }}>كافة المعلومات التاريخية بأشكالها المختلفة من كتب ومقالات ورسائل ومذكرات وصور وفيديوهات في فترة رئاسة الرئيس جمال عبد الناصر.</p>
-                        </div>
-                        <div style={{ ...cardBase, borderTop: '4px solid #0865a8', textAlign: 'right' }}>
-                            <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#0865a8', marginBottom: '8px' }}>الأرشيف الرقمي للرئيس محمد أنور السادات</h4>
-                            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.8' }}>كافة المعلومات التاريخية وأفلام تسجيلية وملفات صوتية ومقتطفات من نصر حرب أكتوبر ومعلومات موثقة في فترة رئاسته.</p>
-                        </div>
+                    {/* Historical archives grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: '16px', marginBottom: '16px' }}>
+                        {[
+                            { title: 'ذاكرة مصر المعاصرة', color: '#f57c00', text: 'إتاحة كافة المعلومات التاريخية الهامة لمصر منذ تولي محمد علي حكم مصر سنة 1805 وحتى نهاية عصر الرئيس الراحل محمد أنور السادات سنة 1981.' },
+                            { title: 'كتاب وصف مصر', color: '#0865a8', text: 'من أعظم الكتب التاريخية في عهد الحملة الفرنسية — 20 جزءاً: منها 11 جزء رسومات وخرائط، و9 أجزاء تصف مصر باللغة الفرنسية.' },
+                            { title: 'الأرشيف الرقمي للرئيس جمال عبد الناصر', color: '#f57c00', text: 'كافة المعلومات التاريخية بأشكالها المختلفة من كتب ومقالات ورسائل ومذكرات وصور وفيديوهات في فترة رئاسة الرئيس جمال عبد الناصر.' },
+                            { title: 'الأرشيف الرقمي للرئيس محمد أنور السادات', color: '#0865a8', text: 'كافة المعلومات التاريخية وأفلام تسجيلية وملفات صوتية ومقتطفات من نصر حرب أكتوبر ومعلومات موثقة في فترة رئاسته.' },
+                        ].map((item, i) => (
+                            <div key={i} style={{ ...cardBase, borderTop: `4px solid ${item.color}`, textAlign: 'right' }}>
+                                <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: item.color, marginBottom: '8px' }}>{item.title}</h4>
+                                <p style={{ fontSize: isTiny ? '11px' : '13px', color: '#4b5563', lineHeight: '1.8' }}>{item.text}</p>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* أرشيف الصحافة + أرشيف الإنترنت */}
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                    {/* Press archive + internet archive */}
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: '16px', marginBottom: '24px' }}>
                         <div style={{ ...cardBase, borderRight: '5px solid #f57c00', textAlign: 'right' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-                                <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#f57c00', margin: 0 }}>أرشيف الصحافة المصرية</h4>
-                                <span style={{ fontSize: '13px', fontWeight: '800', color: '#f57c00', background: 'rgba(245,124,0,0.1)', padding: '3px 10px', borderRadius: '8px' }}>17,500,000 مقالة</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                                <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#f57c00', margin: 0 }}>أرشيف الصحافة المصرية</h4>
+                                <span style={{ fontSize: '12px', fontWeight: '800', color: '#f57c00', background: 'rgba(245,124,0,0.1)', padding: '2px 8px', borderRadius: '8px' }}>17,500,000 مقالة</span>
                             </div>
-                            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.8' }}>مقالات صحفية رقمية باللغات العربية والإنجليزية والفرنسية على مدار <strong>67 عاماً</strong> من <strong>1950</strong> حتى <strong>2017</strong>، تعكس الحياة السياسية والثقافية والاقتصادية.</p>
+                            <p style={{ fontSize: isTiny ? '11px' : '13px', color: '#4b5563', lineHeight: '1.8' }}>مقالات صحفية رقمية باللغات العربية والإنجليزية والفرنسية على مدار 67 عاماً من 1950 حتى 2017.</p>
                         </div>
                         <div style={{ ...cardBase, borderRight: '5px solid #0865a8', textAlign: 'right' }}>
-                            <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#0865a8', marginBottom: '8px' }}>أرشيف صفحات الإنترنت</h4>
-                            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.8' }}>أرشيف شامل يضم صوراً لكافة صفحات المواقع وتطورها وتغيُّر شكلها ومحتوياتها عبر الزمن، ليكون بمثابة تاريخ لشكل صفحات الإنترنت.</p>
+                            <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#0865a8', marginBottom: '8px' }}>أرشيف صفحات الإنترنت</h4>
+                            <p style={{ fontSize: isTiny ? '11px' : '13px', color: '#4b5563', lineHeight: '1.8' }}>أرشيف شامل يضم صوراً لكافة صفحات المواقع وتطورها وتغيُّر شكلها ومحتوياتها عبر الزمن.</p>
                         </div>
                     </div>
 
-                    {/* 5. الفئات المستفيدة وآليات الاستفادة */}
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '20px' }}>
+                    {/* Beneficiaries */}
+                    <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: '16px' }}>
                         <div style={{ ...cardBase, textAlign: 'right' }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0865a8', marginBottom: '16px' }}>الفئات المستفيدة من سفارة المعرفة</h3>
+                            <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#0865a8', marginBottom: '14px' }}>الفئات المستفيدة من سفارة المعرفة</h3>
                             {['موظفو الشركة', 'طلبة الجامعات', 'الباحثون لرسائل الماجستير والدكتوراه (داخل وخارج الشركة)'].map((f, i) => (
-                                <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
+                                <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: i % 2 === 0 ? '#0865a8' : '#f57c00', flexShrink: 0 }} />
-                                    <span style={{ fontSize: '14px', color: '#374151' }}>{f}</span>
+                                    <span style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151' }}>{f}</span>
                                 </div>
                             ))}
                         </div>
                         <div style={{ ...cardBase, textAlign: 'right' }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#f57c00', marginBottom: '16px' }}>آليات الاستفادة من سفارة المعرفة</h3>
-                            <p style={{ fontSize: '14px', color: '#4b5563', lineHeight: '1.85' }}>
-                                يتم حضور المستفيدين إلى مقر المكتبة الرئيسية مع تقديم كارنيه الاشتراك وتسجيل بياناتهم باستمارة خدمات المستفيدين، ثم يُوجَّهون من قبل مسؤول المكتبة للتدريب على استخدام أجهزة الحاسب الآلي الخاصة بالسفارة والمخصصة للبحث والاسترجاع عن المعلومات.
+                            <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#f57c00', marginBottom: '14px' }}>آليات الاستفادة من سفارة المعرفة</h3>
+                            <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.85' }}>
+                                يتم حضور المستفيدين إلى مقر المكتبة الرئيسية مع تقديم كارنيه الاشتراك وتسجيل بياناتهم باستمارة خدمات المستفيدين، ثم يُوجَّهون من قبل مسؤول المكتبة للتدريب على استخدام أجهزة الحاسب الآلي الخاصة بالسفارة.
                             </p>
                         </div>
                     </div>
@@ -385,93 +411,67 @@ export default function ModernLibrary() {
                 </div>
             </section>
 
-            {/* Books */}
-            <section style={sectionStyle('#f9fafb')}>
-                <div style={containerStyle}>
-                    <div style={sectionHeaderStyle}>
-                        <h2 style={sectionTitleStyle}>أمثلة من الكتب</h2>
-                        <p style={sectionSubStyle}>تصفح مجموعة مختارة من أفضل الكتب</p>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '28px' }}>
-                        {books.map((book, i) => (
-                            <BookCard key={i} book={book} onClick={() => window.open(book.url, '_blank')} isMobile={isMobile} />
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* Search Section */}
-            <LibrarySearchSection isMobile={isMobile} isTablet={isTablet} />
-
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap');
                 @keyframes slide { 0%{transform:translateX(-100%)} 100%{transform:translateX(350%)} }
-                @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+                @keyframes spin  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
                 input::placeholder{color:#9ca3af}
+                *{box-sizing:border-box}
+                img{max-width:100%}
             `}</style>
         </div>
     );
 }
 
-function FeatureCard({ feature, index }) {
+/* ─────────────────────────────────────────────────────────────── */
+function FeatureCard({ feature, index, isTiny, isMobile }) {
     const [hovered, setHovered] = useState(false);
     return (
         <div
-            style={{ borderRadius: '20px', border: `2px solid ${hovered ? feature.color : '#e5e7eb'}`, overflow: 'hidden', cursor: 'pointer', boxShadow: hovered ? `0 10px 28px ${feature.color}22` : '0 2px 6px rgba(0,0,0,0.04)', transition: 'all 0.4s ease', background: 'white', transform: hovered ? 'translateY(-6px)' : 'none' }}
+            style={{ borderRadius: '16px', border: `2px solid ${hovered ? feature.color : '#e5e7eb'}`, overflow: 'hidden', cursor: 'pointer', boxShadow: hovered ? `0 10px 28px ${feature.color}22` : '0 2px 6px rgba(0,0,0,0.04)', transition: 'all 0.4s ease', background: 'white', transform: hovered ? 'translateY(-4px)' : 'none' }}
             onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
         >
-            <div style={{ height: '5px', background: feature.color, width: hovered ? '100%' : '35%', transition: 'width 0.4s ease' }} />
-            <div style={{ padding: '24px 28px', display: 'flex', gap: '18px', alignItems: 'flex-start', direction: 'rtl' }}>
-                <div style={{ flexShrink: 0, width: '40px', height: '40px', borderRadius: '10px', background: hovered ? feature.color : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
-                    <span style={{ fontSize: '16px', fontWeight: '800', color: hovered ? 'white' : feature.color, transition: 'color 0.3s ease' }}>{index + 1}</span>
+            <div style={{ height: '4px', background: feature.color, width: hovered ? '100%' : '35%', transition: 'width 0.4s ease' }} />
+            <div style={{ padding: isTiny ? '14px' : isMobile ? '16px 18px' : '22px 26px', display: 'flex', gap: '14px', alignItems: 'flex-start', direction: 'rtl' }}>
+                <div style={{ flexShrink: 0, width: isTiny ? '30px' : '38px', height: isTiny ? '30px' : '38px', borderRadius: '10px', background: hovered ? feature.color : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
+                    <span style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '800', color: hovered ? 'white' : feature.color }}>{index + 1}</span>
                 </div>
-                <p style={{ fontSize: '15px', lineHeight: '1.85', color: '#1a1a1a', margin: 0, flex: 1, textAlign: 'right' }}>{feature.text}</p>
+                <p style={{ fontSize: isTiny ? '12px' : isMobile ? '13px' : '15px', lineHeight: '1.85', color: '#1a1a1a', margin: 0, flex: 1, textAlign: 'right' }}>{feature.text}</p>
             </div>
         </div>
     );
 }
 
-function BookCard({ book, onClick, isMobile }) {
+/* ─────────────────────────────────────────────────────────────── */
+function BookCard({ book, onClick, isMobile, isTiny }) {
     const [hovered, setHovered] = useState(false);
+    const imgH = isTiny ? '180px' : isMobile ? '220px' : '300px';
     return (
-        <div style={{ background: 'white', borderRadius: '20px', overflow: 'hidden', border: '2px solid #e5e7eb', cursor: 'pointer', transform: hovered ? 'translateY(-10px) scale(1.02)' : 'none', transition: 'all 0.4s ease', boxShadow: hovered ? `0 20px 40px rgba(0,0,0,0.1)` : '0 2px 8px rgba(0,0,0,0.04)' }} onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-            <div style={{ position: 'relative', height: '300px', overflow: 'hidden' }}>
+        <div style={{ background: 'white', borderRadius: '18px', overflow: 'hidden', border: '2px solid #e5e7eb', cursor: 'pointer', transform: hovered ? 'translateY(-8px) scale(1.02)' : 'none', transition: 'all 0.4s ease', boxShadow: hovered ? '0 20px 40px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.04)' }} onClick={onClick} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+            <div style={{ position: 'relative', height: imgH, overflow: 'hidden' }}>
                 <img src={book.image} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: hovered ? 'scale(1.08)' : 'scale(1)', transition: 'transform 0.5s ease' }} />
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: book.color, opacity: hovered ? 0.82 : 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: 'opacity 0.4s ease' }}>
-                    <Search size={32} color="white" />
-                    <div style={{ padding: '10px 28px', background: 'white', color: '#000', borderRadius: '999px', fontSize: '15px', fontWeight: '700' }}>اقرأ الآن</div>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: book.color, opacity: hovered ? 0.82 : 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'opacity 0.4s ease' }}>
+                    <Search size={28} color="white" />
+                    <div style={{ padding: '8px 22px', background: 'white', color: '#000', borderRadius: '999px', fontSize: '14px', fontWeight: '700' }}>اقرأ الآن</div>
                 </div>
-                <div style={{ position: 'absolute', top: '14px', right: '14px', padding: '6px 14px', background: book.color, borderRadius: '999px', color: 'white', fontSize: '12px', fontWeight: '700' }}>{book.publisher}</div>
+                <div style={{ position: 'absolute', top: '12px', right: '12px', padding: '4px 12px', background: book.color, borderRadius: '999px', color: 'white', fontSize: '11px', fontWeight: '700' }}>{book.publisher}</div>
             </div>
-            <div style={{ padding: '20px' }}>
-                <h3 style={{ fontSize: isMobile ? '15px' : '17px', fontWeight: '700', color: '#000', lineHeight: '1.45', marginBottom: '14px' }}>{book.title}</h3>
+            <div style={{ padding: isTiny ? '14px' : '18px' }}>
+                <h3 style={{ fontSize: isTiny ? '13px' : isMobile ? '14px' : '16px', fontWeight: '700', color: '#000', lineHeight: '1.45', marginBottom: '12px' }}>{book.title}</h3>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: book.color, fontWeight: '600' }}>تصفح الكتاب <ChevronLeft size={15} /></span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: book.color, fontWeight: '600' }}>تصفح الكتاب <ChevronLeft size={14} /></span>
                 </div>
             </div>
         </div>
     );
 }
 
-function InaugurationGallery({ isMobile }) {
-    const images = [
-        { src: '/images/library/IMG-20241012-WA0010.jpg', caption: 'افتتاح سفارة المعرفة - 1' },
-        { src: '/images/library/IMG-20241012-WA0011.jpg', caption: 'افتتاح سفارة المعرفة - 2' },
-        { src: '/images/library/IMG-20241012-WA0012.jpg', caption: 'افتتاح سفارة المعرفة - 3' },
-        { src: '/images/library/IMG-20241012-WA0013.jpg', caption: 'افتتاح سفارة المعرفة - 4' },
-        { src: '/images/library/IMG-20241012-WA0014.jpg', caption: 'افتتاح سفارة المعرفة - 5' },
-        { src: '/images/library/IMG-20241012-WA0015.jpg', caption: 'افتتاح سفارة المعرفة - 6' },
-        { src: '/images/library/IMG-20241012-WA0016.jpg', caption: 'افتتاح سفارة المعرفة - 7' },
-        { src: '/images/library/IMG-20241012-WA0017.jpg', caption: 'افتتاح سفارة المعرفة - 8' },
-        { src: '/images/library/IMG-20241012-WA0018.jpg', caption: 'افتتاح سفارة المعرفة - 9' },
-        { src: '/images/library/IMG-20241012-WA0019.jpg', caption: 'افتتاح سفارة المعرفة - 10' },
-        { src: '/images/library/IMG-20241012-WA0020.jpg', caption: 'افتتاح سفارة المعرفة - 11' },
-        { src: '/images/library/IMG-20241012-WA0021.jpg', caption: 'افتتاح سفارة المعرفة - 12' },
-        { src: '/images/library/IMG-20241012-WA0022.jpg', caption: 'افتتاح سفارة المعرفة - 13' },
-        { src: '/images/library/IMG-20241012-WA0023.jpg', caption: 'افتتاح سفارة المعرفة - 14' },
-        { src: '/images/library/IMG-20241012-WA0024.jpg', caption: 'افتتاح سفارة المعرفة - 15' },
-        { src: '/images/library/IMG-20241012-WA0025.jpg', caption: 'افتتاح سفارة المعرفة - 16' },
-    ];
+/* ─────────────────────────────────────────────────────────────── */
+function InaugurationGallery({ isMobile, isTiny }) {
+    const images = Array.from({ length: 16 }, (_, i) => ({
+        src: `/images/library/IMG-20241012-WA00${10 + i}.jpg`,
+        caption: `افتتاح سفارة المعرفة - ${i + 1}`,
+    }));
 
     const [current, setCurrent] = useState(0);
     const [imgError, setImgError] = useState({});
@@ -479,75 +479,62 @@ function InaugurationGallery({ isMobile }) {
     const prev = () => setCurrent(c => (c - 1 + images.length) % images.length);
     const next = () => setCurrent(c => (c + 1) % images.length);
 
+    const maxDots = isTiny ? 4 : isMobile ? 5 : 8;
     const visibleDots = () => {
-        const total = images.length;
-        const max = isMobile ? 5 : 8;
-        if (total <= max) return images.map((_, i) => i);
-        let start = Math.max(0, current - Math.floor(max / 2));
-        let end = start + max;
-        if (end > total) { end = total; start = Math.max(0, end - max); }
-        return images.slice(start, end).map((_, i) => start + i);
+        if (images.length <= maxDots) return images.map((_, i) => i);
+        let s = Math.max(0, current - Math.floor(maxDots / 2));
+        let e = s + maxDots;
+        if (e > images.length) { e = images.length; s = Math.max(0, e - maxDots); }
+        return images.slice(s, e).map((_, i) => s + i);
     };
 
     return (
-        <div style={{ marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '20px' }}>
+        <div style={{ marginBottom: '28px' }}>
+            <h3 style={{ fontSize: isTiny ? '15px' : '18px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '16px' }}>
                 صور افتتاح سفارة المعرفة بالمعهد
             </h3>
-
-            <div style={{ background: 'white', borderRadius: '20px', border: '2px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+            <div style={{ background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
                 {/* Main image */}
-                <div style={{ position: 'relative', width: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isMobile ? '220px' : '380px' }}>
+                <div style={{ position: 'relative', width: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isTiny ? '170px' : isMobile ? '220px' : '380px' }}>
                     {imgError[current] ? (
-                        <div style={{ width: '100%', height: '380px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', gap: '12px' }}>
-                            <BookOpen size={48} color="#d1d5db" />
-                            <span style={{ fontSize: '14px' }}>الصورة غير متاحة</span>
+                        <div style={{ width: '100%', height: isMobile ? '220px' : '380px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', gap: '10px' }}>
+                            <BookOpen size={40} color="#d1d5db" />
+                            <span style={{ fontSize: '13px' }}>الصورة غير متاحة</span>
                         </div>
                     ) : (
-                        <img
-                            key={current}
-                            src={images[current].src}
-                            alt={images[current].caption}
+                        <img key={current} src={images[current].src} alt={images[current].caption}
                             onError={() => setImgError(e => ({ ...e, [current]: true }))}
-                            style={{ width: '100%', height: 'auto', maxHeight: isMobile ? '320px' : '560px', objectFit: 'contain', display: 'block', transition: 'opacity 0.3s ease' }}
-                        />
+                            style={{ width: '100%', height: 'auto', maxHeight: isTiny ? '260px' : isMobile ? '360px' : '560px', objectFit: 'contain', display: 'block', transition: 'opacity 0.3s ease' }} />
                     )}
-
-                    {/* Prev / Next overlay buttons */}
-                    <button onClick={prev} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: '2px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none', zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', transition: 'all 0.2s' }}>
-                        <ChevronRight size={20} color="#0865a8" />
+                    <button onClick={prev} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', width: isTiny ? '32px' : '40px', height: isTiny ? '32px' : '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: '2px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none', zIndex: 2 }}>
+                        <ChevronRight size={isTiny ? 16 : 20} color="#0865a8" />
                     </button>
-                    <button onClick={next} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: '2px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none', zIndex: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.12)', transition: 'all 0.2s' }}>
-                        <ChevronLeft size={20} color="#0865a8" />
+                    <button onClick={next} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: isTiny ? '32px' : '40px', height: isTiny ? '32px' : '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: '2px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none', zIndex: 2 }}>
+                        <ChevronLeft size={isTiny ? 16 : 20} color="#0865a8" />
                     </button>
-
-                    {/* Counter badge */}
-                    <div style={{ position: 'absolute', bottom: '12px', left: '12px', background: 'rgba(0,0,0,0.55)', borderRadius: '20px', padding: '4px 12px', color: 'white', fontSize: '13px', fontWeight: '600', zIndex: 2 }}>
+                    <div style={{ position: 'absolute', bottom: '10px', left: '10px', background: 'rgba(0,0,0,0.55)', borderRadius: '20px', padding: '3px 10px', color: 'white', fontSize: '12px', fontWeight: '600', zIndex: 2 }}>
                         {current + 1} / {images.length}
                     </div>
                 </div>
 
                 {/* Caption */}
-                <div style={{ padding: '12px 20px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>
-                    <span style={{ fontSize: '14px', color: '#374151', fontWeight: '600' }}>{images[current].caption}</span>
+                <div style={{ padding: '10px 16px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>
+                    <span style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151', fontWeight: '600' }}>{images[current].caption}</span>
                 </div>
 
-                {/* Dots + thumbs row */}
-                <div style={{ padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
-                    {/* Dot indicators */}
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {/* Dots + thumbs */}
+                <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {visibleDots().map(i => (
-                            <button key={i} onClick={() => setCurrent(i)} style={{ width: i === current ? '24px' : '8px', height: '8px', borderRadius: '4px', background: i === current ? '#0865a8' : '#d1d5db', border: 'none', cursor: 'pointer', outline: 'none', transition: 'all 0.3s ease', padding: 0 }} />
+                            <button key={i} onClick={() => setCurrent(i)} style={{ width: i === current ? '22px' : '7px', height: '7px', borderRadius: '4px', background: i === current ? '#0865a8' : '#d1d5db', border: 'none', cursor: 'pointer', outline: 'none', transition: 'all 0.3s ease', padding: 0 }} />
                         ))}
                     </div>
-
-                    {/* Thumbnail strip */}
-                    <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', width: '100%', paddingBottom: '4px', justifyContent: isMobile ? 'flex-start' : 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', width: '100%', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' }}>
                         {images.map((img, i) => (
-                            <button key={i} onClick={() => setCurrent(i)} style={{ flexShrink: 0, width: isMobile ? '52px' : '64px', height: isMobile ? '40px' : '48px', borderRadius: '8px', overflow: 'hidden', border: i === current ? '2px solid #0865a8' : '2px solid #e5e7eb', cursor: 'pointer', padding: 0, outline: 'none', background: '#f3f4f6', transition: 'border-color 0.2s', opacity: i === current ? 1 : 0.65 }}>
+                            <button key={i} onClick={() => setCurrent(i)} style={{ flexShrink: 0, width: isTiny ? '44px' : isMobile ? '52px' : '64px', height: isTiny ? '34px' : isMobile ? '40px' : '48px', borderRadius: '7px', overflow: 'hidden', border: i === current ? '2px solid #0865a8' : '2px solid #e5e7eb', cursor: 'pointer', padding: 0, outline: 'none', background: '#f3f4f6', opacity: i === current ? 1 : 0.65, transition: 'all 0.2s' }}>
                                 {imgError[i] ? (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f3f4f6' }}>
-                                        <BookOpen size={14} color="#d1d5db" />
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <BookOpen size={12} color="#d1d5db" />
                                     </div>
                                 ) : (
                                     <img src={img.src} alt="" onError={() => setImgError(e => ({ ...e, [i]: true }))} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
@@ -561,7 +548,8 @@ function InaugurationGallery({ isMobile }) {
     );
 }
 
-function LibrarySearchSection({ isMobile, isTablet }) {
+/* ─────────────────────────────────────────────────────────────── */
+function LibrarySearchSection({ isTiny, isMobile, isTablet, isDesktop }) {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedYear, setSelectedYear] = useState('');
     const [searchText, setSearchText] = useState('');
@@ -601,7 +589,11 @@ function LibrarySearchSection({ isMobile, isTablet }) {
         return () => { cancelled = true; };
     }, []);
 
-    const categories = React.useMemo(() => [...new Set(booksDatabase.map(b => b.category))].map((c, i) => ({ id: c, name: c, icon: ['⚖️', '📜', '📋', '📐', '🏗️', '⚡', '🏛️', '💧', '🛣️', '🚰'][i % 10] })), [booksDatabase]);
+    const categories = React.useMemo(() =>
+        [...new Set(booksDatabase.map(b => b.category))].map((c, i) => ({
+            id: c, name: c, icon: ['⚖️', '📜', '📋', '📐', '🏗️', '⚡', '🏛️', '💧', '🛣️', '🚰'][i % 10],
+        })), [booksDatabase]);
+
     const availableYears = React.useMemo(() => {
         const src = selectedCategory ? booksDatabase.filter(b => b.category === selectedCategory) : booksDatabase;
         return [...new Set(src.map(b => b.year))].sort((a, b) => b.localeCompare(a));
@@ -615,22 +607,25 @@ function LibrarySearchSection({ isMobile, isTablet }) {
     });
 
     const totalPages = Math.ceil(filtered.length / booksPerPage);
-    const current = filtered.slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage);
+    const paginated = filtered.slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage);
     useEffect(() => setCurrentPage(1), [selectedCategory, selectedYear, searchText]);
 
-    const inputStyle = { width: '100%', padding: '14px 46px 14px 18px', fontSize: '15px', background: 'white', border: `2px solid ${focused ? '#0865a8' : '#e5e7eb'}`, borderRadius: '14px', color: '#000', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'border-color 0.3s' };
+    const inputStyle = { width: '100%', padding: isTiny ? '11px 40px 11px 12px' : '14px 46px 14px 18px', fontSize: isTiny ? '13px' : '15px', background: 'white', border: `2px solid ${focused ? '#0865a8' : '#e5e7eb'}`, borderRadius: '12px', color: '#000', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'border-color 0.3s' };
     const selectStyle = { ...inputStyle, cursor: 'pointer', appearance: 'none', border: '2px solid #e5e7eb' };
-    const iconPos = { position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', width: '18px', height: '18px', pointerEvents: 'none' };
+    const iconPos = { position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', width: '16px', height: '16px', pointerEvents: 'none' };
+
+    const gridCols = isTiny ? '1fr' : isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4,1fr)';
 
     return (
-        <section style={{ padding: '80px 32px', background: '#f9fafb' }}>
-            <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-                <div style={{ background: 'white', borderRadius: '28px', padding: isMobile ? '28px 20px' : '44px', border: '2px solid #e5e7eb', marginBottom: '40px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-                        <h2 style={{ fontSize: isMobile ? '26px' : '36px', fontWeight: '800', color: '#000', marginBottom: '8px' }}>ابحث في المكتبة</h2>
-                        <p style={{ fontSize: '16px', color: '#6b7280' }}>اعثر على الكتاب المناسب بسهولة</p>
+        <section style={{ padding: isTiny ? '32px 10px' : isMobile ? '40px 14px' : isTablet ? '60px 24px' : '80px 40px', background: '#f9fafb', boxSizing: 'border-box' }}>
+            <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
+                {/* Search box */}
+                <div style={{ background: 'white', borderRadius: '22px', padding: isTiny ? '20px 14px' : isMobile ? '24px 18px' : '40px', border: '2px solid #e5e7eb', marginBottom: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                    <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                        <h2 style={{ fontSize: isTiny ? '22px' : isMobile ? '26px' : '36px', fontWeight: '800', color: '#000', marginBottom: '6px' }}>ابحث في المكتبة</h2>
+                        <p style={{ fontSize: isTiny ? '13px' : '16px', color: '#6b7280' }}>اعثر على الكتاب المناسب بسهولة</p>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr', gap: '14px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isTiny || isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr', gap: '12px' }}>
                         <div style={{ position: 'relative' }}>
                             <input type="text" placeholder="ابحث عن كتاب أو مؤلف..." value={searchText} onChange={e => setSearchText(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={inputStyle} disabled={loading} />
                             <Search style={iconPos} />
@@ -651,36 +646,39 @@ function LibrarySearchSection({ isMobile, isTablet }) {
                         </div>
                     </div>
                     {!loading && !error && (
-                        <div style={{ marginTop: '24px', padding: '14px 20px', background: 'rgba(8,101,168,0.08)', border: '2px solid rgba(8,101,168,0.15)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: '#0865a8', fontSize: '15px', fontWeight: '600' }}>
-                            <Sparkles size={16} />
+                        <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(8,101,168,0.08)', border: '2px solid rgba(8,101,168,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#0865a8', fontSize: isTiny ? '13px' : '15px', fontWeight: '600', flexWrap: 'wrap' }}>
+                            <Sparkles size={15} />
                             {selectedCategory || selectedYear || searchText.trim() ? `تم العثور على ${filtered.length} نتيجة` : `عرض جميع الكتب (${filtered.length})`}
                         </div>
                     )}
                 </div>
 
+                {/* Results */}
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '80px 20px', background: 'white', borderRadius: '20px', border: '2px solid #e5e7eb' }}>
-                        <div style={{ width: '44px', height: '44px', border: '4px solid #e5e7eb', borderTop: '4px solid #0865a8', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 20px' }} />
-                        <p style={{ color: '#6b7280', fontSize: '17px' }}>جاري تحميل الكتب...</p>
+                    <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb' }}>
+                        <div style={{ width: '40px', height: '40px', border: '4px solid #e5e7eb', borderTop: '4px solid #0865a8', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                        <p style={{ color: '#6b7280', fontSize: '16px' }}>جاري تحميل الكتب...</p>
                     </div>
                 ) : error ? (
-                    <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '20px', border: '2px solid #e5e7eb' }}>
-                        <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
-                        <p style={{ color: '#ef4444', fontSize: '16px' }}>{error}</p>
+                    <div style={{ textAlign: 'center', padding: '50px 20px', background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb' }}>
+                        <div style={{ fontSize: '44px', marginBottom: '14px' }}>⚠️</div>
+                        <p style={{ color: '#ef4444', fontSize: '15px' }}>{error}</p>
                     </div>
                 ) : (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: '18px' }}>
-                            {current.map((book, i) => <SearchResultCard key={book.id} book={book} index={i} />)}
+                        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: isTiny ? '10px' : '16px' }}>
+                            {paginated.map((book, i) => <SearchResultCard key={book.id} book={book} isTiny={isTiny} />)}
                         </div>
                         {filtered.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '60px', background: 'white', borderRadius: '20px', border: '2px solid #e5e7eb', marginTop: '20px' }}>
-                                <div style={{ fontSize: '56px', marginBottom: '16px' }}>📚</div>
-                                <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#000', marginBottom: '8px' }}>لا توجد نتائج</h3>
+                            <div style={{ textAlign: 'center', padding: '50px 20px', background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb', marginTop: '16px' }}>
+                                <div style={{ fontSize: '48px', marginBottom: '14px' }}>📚</div>
+                                <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#000', marginBottom: '6px' }}>لا توجد نتائج</h3>
                                 <p style={{ color: '#6b7280' }}>جرب تغيير معايير البحث</p>
                             </div>
                         )}
-                        {filtered.length > 0 && totalPages > 1 && <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} isMobile={isMobile} />}
+                        {filtered.length > 0 && totalPages > 1 && (
+                            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} isTiny={isTiny} isMobile={isMobile} />
+                        )}
                     </>
                 )}
             </div>
@@ -688,49 +686,53 @@ function LibrarySearchSection({ isMobile, isTablet }) {
     );
 }
 
-function Pagination({ currentPage, totalPages, onPageChange, isMobile }) {
+/* ─────────────────────────────────────────────────────────────── */
+function Pagination({ currentPage, totalPages, onPageChange, isTiny, isMobile }) {
+    const max = isTiny ? 3 : isMobile ? 4 : 5;
     const pages = [];
-    const max = isMobile ? 3 : 5;
-    if (totalPages <= max + 2) { for (let i = 1; i <= totalPages; i++) pages.push(i); }
-    else {
+    if (totalPages <= max + 2) {
+        for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
         pages.push(1);
-        let s = Math.max(2, currentPage - Math.floor(max / 2)), e = Math.min(totalPages - 1, s + max - 1);
+        let s = Math.max(2, currentPage - Math.floor(max / 2));
+        let e = Math.min(totalPages - 1, s + max - 1);
         if (e === totalPages - 1) s = Math.max(2, e - max + 1);
         if (s > 2) pages.push('...');
         for (let i = s; i <= e; i++) pages.push(i);
         if (e < totalPages - 1) pages.push('...');
         pages.push(totalPages);
     }
-    const go = (p) => { onPageChange(p); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-    const btnBase = { background: 'white', border: '2px solid #e5e7eb', borderRadius: '12px', color: '#000', fontFamily: 'inherit', fontSize: '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s', outline: 'none' };
+    const go = p => { onPageChange(p); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    const btnBase = { background: 'white', border: '2px solid #e5e7eb', borderRadius: '10px', color: '#000', fontFamily: 'inherit', fontSize: isTiny ? '13px' : '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s', outline: 'none' };
+    const sz = isTiny ? '32px' : '38px';
     return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginTop: '40px', padding: '20px', background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb' }}>
-            <button onClick={() => currentPage > 1 && go(currentPage - 1)} disabled={currentPage === 1} style={{ ...btnBase, width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentPage === 1 ? 0.3 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}><ChevronRight size={18} /></button>
-            <div style={{ display: 'flex', gap: '8px' }}>
-                {pages.map((p, i) => p === '...' ? (
-                    <span key={`e${i}`} style={{ color: '#9ca3af', fontSize: '15px', padding: '0 6px' }}>...</span>
-                ) : (
-                    <button key={p} onClick={() => p !== currentPage && go(p)} style={{ ...btnBase, minWidth: '38px', height: '38px', padding: '0 10px', ...(p === currentPage ? { background: 'linear-gradient(135deg, #0865a8, #f57c00)', border: '2px solid transparent', color: 'white' } : {}) }}>{p}</button>
-                ))}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '32px', padding: '16px', background: 'white', borderRadius: '16px', border: '2px solid #e5e7eb', flexWrap: 'wrap' }}>
+            <button onClick={() => currentPage > 1 && go(currentPage - 1)} disabled={currentPage === 1} style={{ ...btnBase, width: sz, height: sz, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentPage === 1 ? 0.3 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}><ChevronRight size={16} /></button>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                {pages.map((p, i) => p === '...'
+                    ? <span key={`e${i}`} style={{ color: '#9ca3af', fontSize: '15px', padding: '0 4px' }}>...</span>
+                    : <button key={p} onClick={() => p !== currentPage && go(p)} style={{ ...btnBase, minWidth: sz, height: sz, padding: '0 8px', ...(p === currentPage ? { background: 'linear-gradient(135deg,#0865a8,#f57c00)', border: '2px solid transparent', color: 'white' } : {}) }}>{p}</button>
+                )}
             </div>
-            <button onClick={() => currentPage < totalPages && go(currentPage + 1)} disabled={currentPage === totalPages} style={{ ...btnBase, width: '38px', height: '38px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentPage === totalPages ? 0.3 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}><ChevronLeft size={18} /></button>
+            <button onClick={() => currentPage < totalPages && go(currentPage + 1)} disabled={currentPage === totalPages} style={{ ...btnBase, width: sz, height: sz, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentPage === totalPages ? 0.3 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}><ChevronLeft size={16} /></button>
         </div>
     );
 }
 
-function SearchResultCard({ book, index }) {
+/* ─────────────────────────────────────────────────────────────── */
+function SearchResultCard({ book, isTiny }) {
     const [hovered, setHovered] = useState(false);
     const colors = ['#0865a8', '#f57c00', '#000000'];
     const color = colors[book.category.length % colors.length];
     return (
-        <div style={{ background: 'white', borderRadius: '16px', border: `1.5px solid ${hovered ? color : '#e5e7eb'}`, padding: '18px', cursor: 'pointer', transform: hovered ? 'translateY(-5px)' : 'none', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative', overflow: 'hidden', boxShadow: hovered ? `0 8px 20px ${color}18` : '0 1px 4px rgba(0,0,0,0.04)' }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '4px', background: color, borderRadius: '0 16px 16px 0', opacity: hovered ? 1 : 0.2, transition: 'opacity 0.3s' }} />
-            <div style={{ display: 'inline-flex', alignSelf: 'flex-end', padding: '3px 9px', borderRadius: '20px', background: `${color}14`, border: `1px solid ${color}28`, color, fontSize: '11px', fontWeight: '700' }}>{book.category}</div>
-            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#111', lineHeight: '1.5', margin: 0, textAlign: 'right', flex: 1 }}>{book.title}</h4>
+        <div style={{ background: 'white', borderRadius: '14px', border: `1.5px solid ${hovered ? color : '#e5e7eb'}`, padding: isTiny ? '14px' : '18px', cursor: 'pointer', transform: hovered ? 'translateY(-4px)' : 'none', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', overflow: 'hidden', boxShadow: hovered ? `0 8px 20px ${color}18` : '0 1px 4px rgba(0,0,0,0.04)', boxSizing: 'border-box' }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '4px', background: color, borderRadius: '0 14px 14px 0', opacity: hovered ? 1 : 0.2, transition: 'opacity 0.3s' }} />
+            <div style={{ display: 'inline-flex', alignSelf: 'flex-end', padding: '2px 8px', borderRadius: '20px', background: `${color}14`, border: `1px solid ${color}28`, color, fontSize: isTiny ? '10px' : '11px', fontWeight: '700' }}>{book.category}</div>
+            <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#111', lineHeight: '1.5', margin: 0, textAlign: 'right', flex: 1 }}>{book.title}</h4>
             <div style={{ height: '1px', background: '#f0f0f0' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#9ca3af', flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.author}</span>
-                <span style={{ fontSize: '12px', color, fontWeight: '700', background: `${color}10`, padding: '2px 8px', borderRadius: '6px', flexShrink: 0 }}>{book.year}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: isTiny ? '11px' : '12px', color: '#9ca3af', flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.author}</span>
+                <span style={{ fontSize: isTiny ? '11px' : '12px', color, fontWeight: '700', background: `${color}10`, padding: '2px 7px', borderRadius: '6px', flexShrink: 0 }}>{book.year}</span>
             </div>
         </div>
     );
