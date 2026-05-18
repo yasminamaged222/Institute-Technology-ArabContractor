@@ -292,9 +292,45 @@ export default function CheckoutPage() {
         fetchCart();
     }, [isSignedIn, getToken]);
 
+    useEffect(() => {
+
+        // Prevent duplicate loading
+        if (document.getElementById("mastercard-script")) return;
+
+        const script = document.createElement("script");
+
+        script.id = "mastercard-script";
+
+        script.src =
+            "https://banquemisr.gateway.mastercard.com/static/checkout/checkout.min.js";
+
+        script.async = true;
+
+        script.setAttribute("data-error", "errorCallback");
+        script.setAttribute("data-cancel", "cancelCallback");
+        script.setAttribute("data-complete", "completeCallback");
+
+        document.body.appendChild(script);
+
+        return () => {
+            document.getElementById("mastercard-script")?.remove();
+        };
+
+    }, []);
     // Mastercard global callbacks
     useEffect(() => {
         // ✅ لو المستخدم رجع بالـ Back من صفحة الدفع، وقف الـ loading فوراً
+        window.completeCallback = (resultIndicator) => {
+            window.completeCallbackReact?.(resultIndicator);
+        };
+
+        window.errorCallback = (error) => {
+            window.errorCallbackReact?.(error);
+        };
+
+        window.cancelCallback = () => {
+            window.cancelCallbackReact?.();
+        };
         const handlePageShow = (event) => {
             if (event.persisted) {
                 setLoading(false);
