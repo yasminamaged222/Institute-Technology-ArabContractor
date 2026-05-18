@@ -246,11 +246,13 @@ export default function Home() {
     const craftRef = useRef(null);
     const craftCards = useRef([]);
     const libRef = useRef(null);
-    // Extra refs for new parallax layers
     const heroDecorRef = useRef(null);
     const statsOrangeBarRef = useRef(null);
     const onlineRef = useRef(null);
     const dlBgRef = useRef(null);
+
+    // ── track whether stats have been counted so we don't re-run after apiStats loads
+    const statsCounted = useRef(false);
 
     useEffect(() => { document.title = 'المعهد التكنولوجي — ICMET'; }, []);
 
@@ -263,6 +265,56 @@ export default function Home() {
             })
             .catch(() => setNewsLoading(false));
     }, []);
+
+    // ─── STATS COUNTER — runs on page load (not scroll) ──────────────────────
+    useEffect(() => {
+        if (statsCounted.current) return;
+        if (!statsRef.current) return;
+
+        const runCounters = () => {
+            if (statsCounted.current) return;
+            statsCounted.current = true;
+
+            const cells = statsRef.current?.querySelectorAll('.stat-cell');
+            if (cells) {
+                gsap.fromTo(cells,
+                    { opacity: 0, y: 50, rotateX: -20 },
+                    {
+                        opacity: 1, y: 0, rotateX: 0,
+                        duration: 0.9, ease: 'power3.out', stagger: 0.12,
+                        delay: 0.3,
+                    }
+                );
+            }
+
+            const counters = statsRef.current?.querySelectorAll('[data-count]');
+            if (counters) {
+                counters.forEach((el) => {
+                    const target = +el.getAttribute('data-count');
+                    const suffix = el.getAttribute('data-suffix') || '';
+                    const isYear = target > 1000 && suffix === '';
+                    const isLarge = target >= 1000 && !isYear;
+                    const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
+                    const obj = { val: startVal };
+
+                    // ✅ FIX: animate on page load with delay — no ScrollTrigger
+                    gsap.to(obj, {
+                        val: target,
+                        duration: isYear ? 1.6 : isLarge ? 2.4 : 2.0,
+                        ease: 'power2.out',
+                        delay: 0.5,
+                        onUpdate: () => {
+                            el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix;
+                        },
+                    });
+                });
+            }
+        };
+
+        // Small timeout to ensure DOM is rendered
+        const timer = setTimeout(runCounters, 100);
+        return () => clearTimeout(timer);
+    }, [apiStats]); // re-run when apiStats loads so updated numbers get counted
 
     // ─── MASTER GSAP EFFECT ──────────────────────────────────────────────────────
     useEffect(() => {
@@ -293,14 +345,12 @@ export default function Home() {
                 const bgLayers = heroRef.current.querySelectorAll('.hero-bg-layer');
                 const overlay = heroRef.current.querySelector('.hero-overlay');
 
-                // Background image moves at 40% of scroll speed (deep layer)
                 gsap.to(bgLayers, {
                     yPercent: 40,
                     ease: 'none',
                     scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true },
                 });
 
-                // Overlay darkens as you scroll (atmosphere deepens)
                 if (overlay) {
                     gsap.to(overlay, {
                         opacity: 0.75,
@@ -309,7 +359,6 @@ export default function Home() {
                     });
                 }
 
-                // Hero content floats up & fades — mid layer
                 if (heroInnerRef.current) {
                     gsap.to(heroInnerRef.current, {
                         yPercent: -28,
@@ -319,7 +368,6 @@ export default function Home() {
                     });
                 }
 
-                // Decorative scroll indicator fades and scales out
                 const scrollInd = heroRef.current.querySelector('.scroll-ind');
                 if (scrollInd) {
                     gsap.to(scrollInd, {
@@ -329,7 +377,6 @@ export default function Home() {
                     });
                 }
 
-                // Hero entrance: content slides up from below on page load
                 const heroContent = heroRef.current.querySelector('.hero-entrance');
                 if (heroContent) {
                     gsap.fromTo(heroContent.children,
@@ -340,47 +387,9 @@ export default function Home() {
             }
 
             // ═══════════════════════════════════════════════════════════════════════
-            // 2 ▸ STATS BAR — counter + slide-in cells
+            // 2 ▸ STATS BAR — orange accent bar parallax only (counters handled above)
             // ═══════════════════════════════════════════════════════════════════════
             if (statsRef.current) {
-                const cells = statsRef.current.querySelectorAll('.stat-cell');
-
-                // Stagger cells from bottom with slight rotation
-                gsap.fromTo(cells,
-                    { opacity: 0, y: 50, rotateX: -20 },
-                    {
-                        opacity: 1, y: 0, rotateX: 0,
-                        duration: 0.9, ease: 'power3.out', stagger: 0.12,
-                        scrollTrigger: { trigger: statsRef.current, start: 'top 88%', once: true },
-                    }
-                );
-
-                // Counters animate on scroll-enter
-                const counters = statsRef.current.querySelectorAll('[data-count]');
-                counters.forEach((el) => {
-                    const target = +el.getAttribute('data-count');
-                    const suffix = el.getAttribute('data-suffix') || '';
-                    const isYear = target > 1000 && suffix === '';
-                    const isLarge = target >= 1000 && !isYear;
-                    const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
-                    const obj = { val: startVal };
-
-                    ScrollTrigger.create({
-                        trigger: statsRef.current,
-                        start: 'top 85%',
-                        once: true,
-                        onEnter: () => {
-                            gsap.to(obj, {
-                                val: target,
-                                duration: isYear ? 1.6 : isLarge ? 2.4 : 2.0,
-                                ease: 'power2.out',
-                                onUpdate: () => { el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix; },
-                            });
-                        },
-                    });
-                });
-
-                // Orange accent bar parallax — slides slightly opposite to scroll
                 if (statsOrangeBarRef.current) {
                     gsap.to(statsOrangeBarRef.current, {
                         xPercent: -8,
@@ -399,7 +408,6 @@ export default function Home() {
                 const orangeSquare = aboutRef.current.querySelector('.about-orange-sq');
 
                 if (imgWrap) {
-                    // Image: scale from slightly zoomed + slide from right
                     gsap.fromTo(imgWrap,
                         { opacity: 0, scale: 0.88, x: 60, rotateY: 8 },
                         {
@@ -409,7 +417,6 @@ export default function Home() {
                         }
                     );
 
-                    // Orange square decorative corner: parallax drift
                     if (orangeSquare) {
                         gsap.to(orangeSquare, {
                             y: -30, x: 10,
@@ -418,7 +425,6 @@ export default function Home() {
                         });
                     }
 
-                    // Image subtle zoom on scroll (inner parallax effect)
                     const imgEl = imgWrap.querySelector('img');
                     if (imgEl) {
                         gsap.to(imgEl, {
@@ -430,7 +436,6 @@ export default function Home() {
                 }
 
                 if (txtWrap) {
-                    // Text children cascade with blur lift
                     gsap.fromTo(Array.from(txtWrap.children),
                         { opacity: 0, y: 44, filter: 'blur(4px)' },
                         {
@@ -465,7 +470,6 @@ export default function Home() {
                         }
                     );
                 }
-                // Subtle parallax on decorative circles
                 const circles = onlineRef.current.querySelectorAll('.online-circle');
                 circles.forEach((c, i) => {
                     gsap.to(c, {
@@ -480,7 +484,6 @@ export default function Home() {
             // 5 ▸ VISION — cascading card flip-reveal
             // ═══════════════════════════════════════════════════════════════════════
             if (visionRef.current && visionCards.current.length) {
-                // Section header parallax
                 const hdr = visionRef.current.querySelector('.vision-header');
                 if (hdr) {
                     gsap.fromTo(hdr,
@@ -497,7 +500,6 @@ export default function Home() {
                     });
                 }
 
-                // Cards: flip in from bottom with perspective
                 gsap.fromTo(visionCards.current,
                     { opacity: 0, y: 70, rotateX: -15, transformPerspective: 800 },
                     {
@@ -521,7 +523,6 @@ export default function Home() {
                         scrollTrigger: { trigger: dlRef.current, start: 'top 86%', once: true },
                     }
                 );
-                // bg subtle parallax
                 if (dlBgRef.current) {
                     gsap.to(dlBgRef.current, {
                         yPercent: -12,
@@ -552,7 +553,6 @@ export default function Home() {
                         scrollTrigger: { trigger: certRef.current, start: 'top 80%', once: true },
                     }
                 );
-                // Left orange bar parallax
                 const bar = certRef.current.querySelector('.cert-side-bar');
                 if (bar) {
                     gsap.to(bar, {
@@ -590,7 +590,6 @@ export default function Home() {
                             scrollTrigger: { trigger: schoolsRef.current, start: 'top 80%', once: true },
                         }
                     );
-                    // Subtle float on scroll
                     gsap.to(featured, {
                         yPercent: -6,
                         ease: 'none',
@@ -722,7 +721,6 @@ export default function Home() {
                             scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true },
                         }
                     );
-                    // Content inside visual moves at different parallax rate
                     const libInner = libVisual.querySelector('div[style]');
                     if (libInner) {
                         gsap.to(libInner, {
@@ -741,7 +739,6 @@ export default function Home() {
                             scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true },
                         }
                     );
-                    // Text children cascade
                     gsap.fromTo(Array.from(libContent.children),
                         { opacity: 0, y: 30 },
                         {
@@ -752,7 +749,6 @@ export default function Home() {
                     );
                 }
 
-                // Decorative circle parallax inside lib-visual
                 const libCircle = libRef.current.querySelector('.lib-deco-circle');
                 if (libCircle) {
                     gsap.to(libCircle, {
@@ -764,8 +760,7 @@ export default function Home() {
             }
 
             // ═══════════════════════════════════════════════════════════════════════
-            // 13 ▸ GLOBAL SECTION PARALLAX — background layers
-            //       Each dark section's BG gradient drifts at 20% scroll speed
+            // 13 ▸ GLOBAL SECTION PARALLAX
             // ═══════════════════════════════════════════════════════════════════════
             document.querySelectorAll('.section-parallax-bg').forEach(el => {
                 gsap.to(el, {
@@ -776,9 +771,8 @@ export default function Home() {
             });
 
             // ═══════════════════════════════════════════════════════════════════════
-            // 14 ▸ FLOATING DECORATIVE ELEMENTS — continuous idle animations
+            // 14 ▸ FLOATING DECORATIVE ELEMENTS
             // ═══════════════════════════════════════════════════════════════════════
-            // These run independently of scroll — gentle breathing effect
             document.querySelectorAll('.float-slow').forEach((el, i) => {
                 gsap.to(el, {
                     y: `+=${8 + i * 3}`, x: `+=${4 + i * 2}`, rotate: `+=${3 + i}`,
@@ -797,7 +791,8 @@ export default function Home() {
     }, []);
 
     return (
-        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w }}>
+        // ✅ FIX: removed top white space — paddingTop matches your navbar height (adjust if needed)
+        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w, paddingTop: -20, marginTop:-23 }}>
 
             {/* ── SCROLL PROGRESS BAR ──────────────────────────────────────────── */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999, background: C.g3 }}>
@@ -948,7 +943,8 @@ export default function Home() {
       `}</style>
 
             {/* ── 1 HERO ──────────────────────────────────────────────────────── */}
-            <section ref={heroRef} style={{ position: 'relative' }}>
+            {/* ✅ FIX: marginTop:0 ensures no white gap below navbar */}
+            <section ref={heroRef} style={{ position: 'relative', marginTop: 0 }}>
                 <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
                     autoplay={{ delay: 7000, disableOnInteraction: false }}
                     navigation pagination={{ clickable: true }} loop speed={800}>
@@ -983,14 +979,17 @@ export default function Home() {
             </section>
 
             {/* ── 2 STATS ─────────────────────────────────────────────────────── */}
+            {/* ✅ FIX: stat-cell opacity is still 0 in CSS but GSAP animates to 1 on page load */}
             <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}`, position: 'relative', overflow: 'hidden' }}>
-                {/* Parallax accent bar */}
                 <div ref={statsOrangeBarRef} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${C.o},${C.b},${C.o})`, opacity: 0.5 }} />
                 <div className="W">
                     <div className="stats-bar">
                         {buildStats(apiStats).map((s, i) => (
                             <div key={i} className="stat-cell">
-                                <div className="stat-counter" data-count={s.raw} data-suffix={s.suffix}
+                                <div
+                                    className="stat-counter"
+                                    data-count={s.raw}
+                                    data-suffix={s.suffix}
                                     style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>
                                     {s.raw.toLocaleString('en-US')}{s.suffix}
                                 </div>
@@ -1043,7 +1042,6 @@ export default function Home() {
             {/* ── 4 ONLINE TRAINING ───────────────────────────────────────────── */}
             <section ref={onlineRef} className="S" style={{ background: C.b, position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
-                {/* Parallax decorative circles */}
                 <div className="online-circle float-slow" style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(255,255,255,.08)', pointerEvents: 'none' }} />
                 <div className="online-circle float-slow" style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)', pointerEvents: 'none' }} />
                 <div className="W" style={{ position: 'relative', zIndex: 1 }}>
