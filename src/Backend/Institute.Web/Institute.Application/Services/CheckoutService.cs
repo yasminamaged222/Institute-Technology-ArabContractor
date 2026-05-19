@@ -65,6 +65,18 @@ namespace Institute.Application.Services
             if (cart == null || !cart.Items.Any())
                 throw new Exception("Cart is empty");
 
+            // ✅ لو في order pending موجود للـ user ده، ارجعه بدل ما تعمل واحد جديد
+            // ده بيحل مشكلة لما المستخدم يروح صفحة الدفع ويرجع تاني
+            var existingOrderSpec = new BaseSpecification<Order>(
+                o => o.UserId == userId && o.Status == OrderStatus.Pending);
+            existingOrderSpec.AddInclude(o => o.Items);
+            var existingOrder = (await _orderRepository.GetAllWithSpecAsync(existingOrderSpec))
+                .FirstOrDefault();
+
+            if (existingOrder != null)
+                return existingOrder;
+
+            // ✅ مفيش order pending — اعمل order جديد
             var total = cart.Items.Sum(i => i.Price);
 
             var order = new Order
@@ -100,8 +112,8 @@ namespace Institute.Application.Services
 
             await _paymentRepository.AddAsync(payment);
 
-            cart.IsCheckedOut = true;
-            _cartRepository.Update(cart);
+            // ✅ مش بنعمل cart.IsCheckedOut = true هنا
+            // الكارت يفضل موجود لحد ما الدفع يتأكد فعلاً في MarkOrderAsPaidAsync
 
             await _orderRepository.SaveChangesAsync();
 
@@ -137,6 +149,15 @@ namespace Institute.Application.Services
 
             order.Status = OrderStatus.Paid;
             _orderRepository.Update(order);
+
+            // ✅ هنا بس نعمل الكارت IsCheckedOut = true بعد تأكيد الدفع فعلاً
+            var cartSpec = new BaseSpecification<Cart>(c => c.UserId == order.UserId && !c.IsCheckedOut);
+            var cart = (await _cartRepository.GetAllWithSpecAsync(cartSpec)).FirstOrDefault();
+            if (cart != null)
+            {
+                cart.IsCheckedOut = true;
+                _cartRepository.Update(cart);
+            }
 
             foreach (var item in order.Items)
             {

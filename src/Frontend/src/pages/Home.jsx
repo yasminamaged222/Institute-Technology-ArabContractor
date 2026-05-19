@@ -108,7 +108,29 @@ const craftItems = [
     { Icon: AssignmentTurnedInIcon, title: 'الاختبارات والتقييم', text: 'اختبارات سيكومترية وتقييمات تخصصية في اللغة والحاسب والهندسة.', link: '/tests' },
 ];
 
-// ─── STATS ────────────────────────────────────────────────────────────────────
+const TeamsIcon = ({ size = 42 }) => (
+    <svg width={size} height={size} viewBox="0 0 2228.833 2073.333" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1554.637,777.5h575.713c54.391,0,98.483,44.092,98.483,98.483v524.398c0,199.901-162.001,361.902-361.902,361.902h-1.78c-199.901,0.001-361.902-162-361.902-361.901V828.971C1504.249,800.544,1526.211,777.5,1554.637,777.5z" fill="#5059C9" />
+        <circle cx="1943.75" cy="440.583" r="233.25" fill="#5059C9" />
+        <circle cx="1218.083" cy="336.917" r="309.083" fill="#7B83EB" />
+        <path d="M1667.323,777.5H717.01c-53.743,1.33-96.257,45.931-94.927,99.675v598.105c-7.825,322.069,247.353,590.279,569.422,598.104c322.069-7.825,577.247-276.035,569.422-598.104V877.174C1762.257,823.431,1720.906,777.5,1667.323,777.5z" fill="#7B83EB" />
+        <path opacity="0.1" d="M1244,777.5v838.145c-0.258,38.435-23.549,72.964-59.09,87.598c-11.316,4.787-23.478,7.254-35.765,7.257H667.613c-6.738-17.105-12.958-34.21-18.142-51.833c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1244z" />
+        <path opacity="0.2" d="M1192.167,777.5v889.978c-0.002,12.287-2.47,24.449-7.257,35.765c-14.634,35.541-49.163,58.833-87.598,59.09H691.975c-8.812-17.105-17.105-34.21-24.362-51.833c-7.257-17.623-12.958-34.21-18.142-51.833c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1192.167z" />
+        <path opacity="0.2" d="M1192.167,777.5v786.312c-0.395,52.223-42.704,94.531-94.927,94.927H649.833c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1192.167z" />
+        <path opacity="0.2" d="M1140.333,777.5v786.312c-0.395,52.223-42.704,94.531-94.927,94.927H649.833c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1140.333z" />
+        <path opacity="0.1" d="M1244,509.522v163.275c-8.812,0.518-17.105,1.037-25.917,1.037c-8.812,0-17.105-0.518-25.917-1.037c-17.496-1.161-34.848-3.937-51.833-8.293c-104.963-26.655-191.679-98.609-234.603-196.003c-7.704-17.517-13.554-35.787-17.472-54.499h258.925C1201.827,414.866,1243.764,457.252,1244,509.522z" />
+        <path opacity="0.2" d="M1192.167,561.355v111.442c-17.496-1.161-34.848-3.937-51.833-8.293c-104.963-26.655-191.679-98.609-234.603-196.003h191.509C1149.722,468.866,1191.917,510.8,1192.167,561.355z" />
+        <path opacity="0.2" d="M1192.167,561.355v111.442c-17.496-1.161-34.848-3.937-51.833-8.293c-104.963-26.655-191.679-98.609-234.603-196.003h191.509C1149.722,468.866,1191.917,510.8,1192.167,561.355z" />
+        <path opacity="0.2" d="M1140.333,561.355v103.148c-104.963-26.655-191.679-98.609-234.603-196.003h139.676C1097.888,468.866,1140.083,510.8,1140.333,561.355z" />
+        <linearGradient id="teams_grad" x1="198.099" y1="1683.0726" x2="942.2344" y2="394.2607" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#5a62c3" /><stop offset="0.5" stopColor="#4d55bd" /><stop offset="1" stopColor="#3940ab" />
+        </linearGradient>
+        <path fill="url(#teams_grad)" d="M95.01,468.5h950.323c52.473,0,95.01,42.538,95.01,95.01v950.323c0,52.473-42.538,95.01-95.01,95.01H95.01C42.538,1608.843,0,1566.305,0,1513.833V563.51C0,511.038,42.538,468.5,95.01,468.5z" />
+        <path d="M820.211,828.193H630.241v517.297H509.211V828.193H320.123V727.844H820.211V828.193z" fill="#ffffff" />
+    </svg>
+);
+
+// ─── STATS ─────────────────────────────────────────────────────────────────────
 const FOUNDING_YEAR = 1978;
 function buildStats(apiStats) {
     const currentYear = new Date().getFullYear();
@@ -140,7 +162,7 @@ const C = {
     g5: '#6b7280', g7: '#374151', g8: '#1f2937',
 };
 
-// ─── ATOMS ────────────────────────────────────────────────────────────────────
+// ─── ATOMS ─────────────────────────────────────────────────────────────────────
 const Eyebrow = ({ children, light, center }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, justifyContent: center ? 'center' : 'flex-start' }}>
         <div style={{ width: 32, height: 2, background: C.o }} />
@@ -189,11 +211,10 @@ const SolidBtn = ({ to, href, children, orange, small }) => {
     return <Link to={to} style={s} onMouseEnter={hover} onMouseLeave={leave}>{children}</Link>;
 };
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+// ─── MAIN ──────────────────────────────────────────────────────────────────────
 export default function Home() {
     const [newsItems, setNewsItems] = useState([]);
     const [newsLoading, setNewsLoading] = useState(true);
-    const [gsapReady, setGsapReady] = useState(false);
     const [apiStats, setApiStats] = useState(null);
 
     useEffect(() => {
@@ -225,6 +246,13 @@ export default function Home() {
     const craftRef = useRef(null);
     const craftCards = useRef([]);
     const libRef = useRef(null);
+    const heroDecorRef = useRef(null);
+    const statsOrangeBarRef = useRef(null);
+    const onlineRef = useRef(null);
+    const dlBgRef = useRef(null);
+
+    // ── track whether stats have been counted so we don't re-run after apiStats loads
+    const statsCounted = useRef(false);
 
     useEffect(() => { document.title = 'المعهد التكنولوجي — ICMET'; }, []);
 
@@ -238,13 +266,62 @@ export default function Home() {
             .catch(() => setNewsLoading(false));
     }, []);
 
+    // ─── STATS COUNTER — runs on page load (not scroll) ──────────────────────
+    useEffect(() => {
+        if (statsCounted.current) return;
+        if (!statsRef.current) return;
+
+        const runCounters = () => {
+            if (statsCounted.current) return;
+            statsCounted.current = true;
+
+            const cells = statsRef.current?.querySelectorAll('.stat-cell');
+            if (cells) {
+                gsap.fromTo(cells,
+                    { opacity: 0, y: 50, rotateX: -20 },
+                    {
+                        opacity: 1, y: 0, rotateX: 0,
+                        duration: 0.9, ease: 'power3.out', stagger: 0.12,
+                        delay: 0.3,
+                    }
+                );
+            }
+
+            const counters = statsRef.current?.querySelectorAll('[data-count]');
+            if (counters) {
+                counters.forEach((el) => {
+                    const target = +el.getAttribute('data-count');
+                    const suffix = el.getAttribute('data-suffix') || '';
+                    const isYear = target > 1000 && suffix === '';
+                    const isLarge = target >= 1000 && !isYear;
+                    const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
+                    const obj = { val: startVal };
+
+                    // ✅ FIX: animate on page load with delay — no ScrollTrigger
+                    gsap.to(obj, {
+                        val: target,
+                        duration: isYear ? 1.6 : isLarge ? 2.4 : 2.0,
+                        ease: 'power2.out',
+                        delay: 0.5,
+                        onUpdate: () => {
+                            el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix;
+                        },
+                    });
+                });
+            }
+        };
+
+        // Small timeout to ensure DOM is rendered
+        const timer = setTimeout(runCounters, 100);
+        return () => clearTimeout(timer);
+    }, [apiStats]); // re-run when apiStats loads so updated numbers get counted
+
+    // ─── MASTER GSAP EFFECT ──────────────────────────────────────────────────────
     useEffect(() => {
         const loadScript = (src) => new Promise((res, rej) => {
             if (document.querySelector(`script[src="${src}"]`)) return res();
             const s = document.createElement('script');
-            s.src = src;
-            s.onload = res;
-            s.onerror = rej;
+            s.src = src; s.onload = res; s.onerror = rej;
             document.head.appendChild(s);
         });
 
@@ -252,199 +329,472 @@ export default function Home() {
             loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'),
             loadScript('https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js'),
         ]).then(() => {
-            const { gsap } = window;
-            const { ScrollTrigger } = window;
+            const { gsap, ScrollTrigger } = window;
             gsap.registerPlugin(ScrollTrigger);
-            setGsapReady(true);
 
+            // ── Scroll progress bar ────────────────────────────────────────────────
             gsap.to(progressRef.current, {
                 scaleX: 1, ease: 'none',
-                scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: true },
+                scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 0.3 },
             });
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // 1 ▸ HERO — multi-layer parallax
+            // ═══════════════════════════════════════════════════════════════════════
             if (heroRef.current) {
-                gsap.to(heroRef.current.querySelectorAll('.hero-bg-layer'), {
-                    yPercent: 30, ease: 'none',
+                const bgLayers = heroRef.current.querySelectorAll('.hero-bg-layer');
+                const overlay = heroRef.current.querySelector('.hero-overlay');
+
+                gsap.to(bgLayers, {
+                    yPercent: 40,
+                    ease: 'none',
                     scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true },
                 });
-                gsap.to(heroInnerRef.current, {
-                    yPercent: -20, opacity: 0, ease: 'none',
-                    scrollTrigger: { trigger: heroRef.current, start: 'center top', end: 'bottom top', scrub: true },
-                });
+
+                if (overlay) {
+                    gsap.to(overlay, {
+                        opacity: 0.75,
+                        ease: 'none',
+                        scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '60% top', scrub: true },
+                    });
+                }
+
+                if (heroInnerRef.current) {
+                    gsap.to(heroInnerRef.current, {
+                        yPercent: -28,
+                        opacity: 0,
+                        ease: 'none',
+                        scrollTrigger: { trigger: heroRef.current, start: '25% top', end: 'bottom top', scrub: true },
+                    });
+                }
+
+                const scrollInd = heroRef.current.querySelector('.scroll-ind');
+                if (scrollInd) {
+                    gsap.to(scrollInd, {
+                        opacity: 0, scale: 0.5, yPercent: 30,
+                        ease: 'none',
+                        scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '30% top', scrub: true },
+                    });
+                }
+
+                const heroContent = heroRef.current.querySelector('.hero-entrance');
+                if (heroContent) {
+                    gsap.fromTo(heroContent.children,
+                        { opacity: 0, y: 60, filter: 'blur(8px)' },
+                        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.2, ease: 'power4.out', stagger: 0.12, delay: 0.3 }
+                    );
+                }
             }
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // 2 ▸ STATS BAR — orange accent bar parallax only (counters handled above)
+            // ═══════════════════════════════════════════════════════════════════════
             if (statsRef.current) {
-                // Make cells visible immediately
-                const cells = statsRef.current.querySelectorAll('.stat-cell');
-                cells.forEach(cell => { cell.style.opacity = '1'; cell.style.transform = 'translateY(0)'; });
+                if (statsOrangeBarRef.current) {
+                    gsap.to(statsOrangeBarRef.current, {
+                        xPercent: -8,
+                        ease: 'none',
+                        scrollTrigger: { trigger: statsRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
+                }
+            }
 
-                // Start counters immediately on load
-                const counters = statsRef.current.querySelectorAll('[data-count]');
-                counters.forEach((el) => {
-                    const target = +el.getAttribute('data-count');
-                    const suffix = el.getAttribute('data-suffix') || '';
-                    const isYear = target > 1000 && suffix === '';
-                    const isLarge = target >= 1000 && !isYear;
-                    const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
+            // ═══════════════════════════════════════════════════════════════════════
+            // 3 ▸ ABOUT — image pops in, text cascades
+            // ═══════════════════════════════════════════════════════════════════════
+            if (aboutRef.current) {
+                const imgWrap = aboutImgRef.current;
+                const txtWrap = aboutTxtRef.current;
+                const orangeSquare = aboutRef.current.querySelector('.about-orange-sq');
 
-                    const obj = { val: startVal };
-                    gsap.to(obj, {
-                        val: target,
-                        duration: isYear ? 1.4 : isLarge ? 2.2 : 1.8,
-                        ease: 'power2.out',
-                        onUpdate: () => {
-                            el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix;
-                        },
+                if (imgWrap) {
+                    gsap.fromTo(imgWrap,
+                        { opacity: 0, scale: 0.88, x: 60, rotateY: 8 },
+                        {
+                            opacity: 1, scale: 1, x: 0, rotateY: 0,
+                            duration: 1.3, ease: 'expo.out',
+                            scrollTrigger: { trigger: aboutRef.current, start: 'top 75%', once: true },
+                        }
+                    );
+
+                    if (orangeSquare) {
+                        gsap.to(orangeSquare, {
+                            y: -30, x: 10,
+                            ease: 'none',
+                            scrollTrigger: { trigger: aboutRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                        });
+                    }
+
+                    const imgEl = imgWrap.querySelector('img');
+                    if (imgEl) {
+                        gsap.to(imgEl, {
+                            scale: 1.08,
+                            ease: 'none',
+                            scrollTrigger: { trigger: aboutRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                        });
+                    }
+                }
+
+                if (txtWrap) {
+                    gsap.fromTo(Array.from(txtWrap.children),
+                        { opacity: 0, y: 44, filter: 'blur(4px)' },
+                        {
+                            opacity: 1, y: 0, filter: 'blur(0px)',
+                            duration: 0.9, ease: 'power3.out', stagger: 0.1,
+                            scrollTrigger: { trigger: aboutRef.current, start: 'top 72%', once: true },
+                        }
+                    );
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // 4 ▸ ONLINE TRAINING — horizontal slide-in split
+            // ═══════════════════════════════════════════════════════════════════════
+            if (onlineRef.current) {
+                const [left, right] = onlineRef.current.querySelectorAll('.online-col');
+                if (left) {
+                    gsap.fromTo(left,
+                        { opacity: 0, x: 80 },
+                        {
+                            opacity: 1, x: 0, duration: 1.1, ease: 'expo.out',
+                            scrollTrigger: { trigger: onlineRef.current, start: 'top 78%', once: true },
+                        }
+                    );
+                }
+                if (right) {
+                    gsap.fromTo(right,
+                        { opacity: 0, x: -80 },
+                        {
+                            opacity: 1, x: 0, duration: 1.1, ease: 'expo.out', delay: 0.15,
+                            scrollTrigger: { trigger: onlineRef.current, start: 'top 78%', once: true },
+                        }
+                    );
+                }
+                const circles = onlineRef.current.querySelectorAll('.online-circle');
+                circles.forEach((c, i) => {
+                    gsap.to(c, {
+                        y: i % 2 === 0 ? -40 : 40,
+                        ease: 'none',
+                        scrollTrigger: { trigger: onlineRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
                     });
                 });
             }
 
-            if (featCards.current.length) {
-                gsap.fromTo(featCards.current,
-                    { opacity: 0, y: 60, scale: 0.96 },
-                    {
-                        opacity: 1, y: 0, scale: 1, duration: 0.9, ease: 'power3.out', stagger: 0.14,
-                        scrollTrigger: { trigger: featRef.current, start: 'top 78%', once: true }
-                    }
-                );
-            }
+            // ═══════════════════════════════════════════════════════════════════════
+            // 5 ▸ VISION — cascading card flip-reveal
+            // ═══════════════════════════════════════════════════════════════════════
+            if (visionRef.current && visionCards.current.length) {
+                const hdr = visionRef.current.querySelector('.vision-header');
+                if (hdr) {
+                    gsap.fromTo(hdr,
+                        { opacity: 0, y: 50 },
+                        {
+                            opacity: 1, y: 0, duration: 1, ease: 'power3.out',
+                            scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true },
+                        }
+                    );
+                    gsap.to(hdr, {
+                        yPercent: -15,
+                        ease: 'none',
+                        scrollTrigger: { trigger: visionRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
+                }
 
-            if (aboutImgRef.current) {
-                gsap.fromTo(aboutImgRef.current,
-                    { opacity: 0, scale: 0.92, x: 40 },
-                    {
-                        opacity: 1, scale: 1, x: 0, duration: 1.1, ease: 'power3.out',
-                        scrollTrigger: { trigger: aboutRef.current, start: 'top 78%', once: true }
-                    }
-                );
-            }
-            if (aboutTxtRef.current) {
-                gsap.fromTo(aboutTxtRef.current.children,
-                    { opacity: 0, y: 36 },
-                    {
-                        opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.1,
-                        scrollTrigger: { trigger: aboutRef.current, start: 'top 75%', once: true }
-                    }
-                );
-            }
-
-            if (visionCards.current.length) {
                 gsap.fromTo(visionCards.current,
-                    { opacity: 0, y: 50, scale: 0.95 },
+                    { opacity: 0, y: 70, rotateX: -15, transformPerspective: 800 },
                     {
-                        opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'power3.out', stagger: 0.13,
-                        scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true }
+                        opacity: 1, y: 0, rotateX: 0,
+                        duration: 0.95, ease: 'power3.out', stagger: 0.14,
+                        scrollTrigger: { trigger: visionRef.current, start: 'top 78%', once: true },
                     }
                 );
             }
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // 6 ▸ DOWNLOADS — slide from left one by one
+            // ═══════════════════════════════════════════════════════════════════════
             if (dlRef.current) {
-                gsap.fromTo(dlRef.current.querySelectorAll('.dl-item'),
-                    { opacity: 0, x: -40 },
+                const items = dlRef.current.querySelectorAll('.dl-item');
+                gsap.fromTo(items,
+                    { opacity: 0, x: -60, scale: 0.94 },
                     {
-                        opacity: 1, x: 0, duration: 0.7, ease: 'power2.out', stagger: 0.12,
-                        scrollTrigger: { trigger: dlRef.current, start: 'top 85%', once: true }
+                        opacity: 1, x: 0, scale: 1,
+                        duration: 0.8, ease: 'expo.out', stagger: 0.14,
+                        scrollTrigger: { trigger: dlRef.current, start: 'top 86%', once: true },
                     }
                 );
+                if (dlBgRef.current) {
+                    gsap.to(dlBgRef.current, {
+                        yPercent: -12,
+                        ease: 'none',
+                        scrollTrigger: { trigger: dlRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
+                }
             }
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // 7 ▸ CERTIFICATIONS — fade reveal
+            // ═══════════════════════════════════════════════════════════════════════
             if (certRef.current) {
-                gsap.fromTo(certRef.current,
-                    { opacity: 0, y: 40 },
+                const header = certRef.current.querySelector('.cert-header');
+                if (header) {
+                    gsap.fromTo(header,
+                        { opacity: 0, y: 40 },
+                        {
+                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                            scrollTrigger: { trigger: certRef.current, start: 'top 82%', once: true },
+                        }
+                    );
+                }
+                gsap.fromTo(certRef.current.querySelector('.swiper'),
+                    { opacity: 0, y: 50 },
                     {
-                        opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-                        scrollTrigger: { trigger: certRef.current, start: 'top 80%', once: true }
+                        opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.15,
+                        scrollTrigger: { trigger: certRef.current, start: 'top 80%', once: true },
                     }
                 );
+                const bar = certRef.current.querySelector('.cert-side-bar');
+                if (bar) {
+                    gsap.to(bar, {
+                        scaleY: 1.3, transformOrigin: 'top center',
+                        ease: 'none',
+                        scrollTrigger: { trigger: certRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
+                }
             }
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // 8 ▸ TECH / SCHOOLS — featured card + grid stagger
+            // ═══════════════════════════════════════════════════════════════════════
+            if (techRef.current) {
+                const techHdr = techRef.current.querySelector('.tech-header');
+                if (techHdr) {
+                    gsap.fromTo(techHdr,
+                        { opacity: 0, y: 50 },
+                        {
+                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                            scrollTrigger: { trigger: techRef.current, start: 'top 80%', once: true },
+                        }
+                    );
+                }
+            }
             if (schoolsRef.current) {
                 const featured = schoolsRef.current.querySelector('.school-featured');
                 const cards = schoolsRef.current.querySelectorAll('.school-card');
+
                 if (featured) {
                     gsap.fromTo(featured,
-                        { opacity: 0, x: 40 },
+                        { opacity: 0, x: 60, scale: 0.96 },
                         {
-                            opacity: 1, x: 0, duration: 0.9, ease: 'power3.out',
-                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 80%', once: true }
+                            opacity: 1, x: 0, scale: 1, duration: 1.1, ease: 'expo.out',
+                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 80%', once: true },
                         }
                     );
+                    gsap.to(featured, {
+                        yPercent: -6,
+                        ease: 'none',
+                        scrollTrigger: { trigger: schoolsRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
                 }
+
                 if (cards.length) {
                     gsap.fromTo(cards,
-                        { opacity: 0, y: 40 },
+                        { opacity: 0, y: 60, scale: 0.95 },
                         {
-                            opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', stagger: 0.12, delay: 0.15,
-                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 78%', once: true }
+                            opacity: 1, y: 0, scale: 1,
+                            duration: 0.88, ease: 'power3.out', stagger: 0.13, delay: 0.18,
+                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 78%', once: true },
                         }
                     );
                 }
             }
 
-            if (protoCards.current.length) {
-                gsap.fromTo(protoCards.current,
-                    { opacity: 0, y: 44, scale: 0.96 },
-                    {
-                        opacity: 1, y: 0, scale: 1, duration: 0.8, ease: 'power3.out', stagger: 0.1,
-                        scrollTrigger: { trigger: protoRef.current, start: 'top 80%', once: true }
-                    }
-                );
+            // ═══════════════════════════════════════════════════════════════════════
+            // 9 ▸ PROTOCOLS — pop in with scale bounce
+            // ═══════════════════════════════════════════════════════════════════════
+            if (protoRef.current) {
+                const protoBg = protoRef.current.querySelector('.proto-bg-circle-1');
+                const protoBg2 = protoRef.current.querySelector('.proto-bg-circle-2');
+
+                if (protoBg) {
+                    gsap.to(protoBg, {
+                        x: 50, y: -60, rotate: 30,
+                        ease: 'none',
+                        scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
+                }
+                if (protoBg2) {
+                    gsap.to(protoBg2, {
+                        x: -40, y: 50, rotate: -20,
+                        ease: 'none',
+                        scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
+                }
+
+                const protoHeader = protoRef.current.querySelector('.proto-header');
+                if (protoHeader) {
+                    gsap.fromTo(protoHeader,
+                        { opacity: 0, y: 40 },
+                        {
+                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                            scrollTrigger: { trigger: protoRef.current, start: 'top 82%', once: true },
+                        }
+                    );
+                }
+
+                if (protoCards.current.length) {
+                    gsap.fromTo(protoCards.current,
+                        { opacity: 0, y: 60, scale: 0.9 },
+                        {
+                            opacity: 1, y: 0, scale: 1,
+                            duration: 0.85, ease: 'back.out(1.4)', stagger: 0.1,
+                            scrollTrigger: { trigger: protoRef.current, start: 'top 78%', once: true },
+                        }
+                    );
+                }
             }
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // 10 ▸ NEWS — slide up reveal
+            // ═══════════════════════════════════════════════════════════════════════
             if (newsRef.current) {
-                gsap.fromTo(newsRef.current,
-                    { opacity: 0, y: 30 },
-                    {
-                        opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
-                        scrollTrigger: { trigger: newsRef.current, start: 'top 82%', once: true }
-                    }
-                );
+                const newsHdr = newsRef.current.querySelector('.news-header');
+                if (newsHdr) {
+                    gsap.fromTo(newsHdr,
+                        { opacity: 0, y: 40 },
+                        {
+                            opacity: 1, y: 0, duration: 0.85, ease: 'power3.out',
+                            scrollTrigger: { trigger: newsRef.current, start: 'top 82%', once: true },
+                        }
+                    );
+                }
+                const newsSwiper = newsRef.current.querySelector('.news-swiper');
+                if (newsSwiper) {
+                    gsap.fromTo(newsSwiper,
+                        { opacity: 0, y: 50 },
+                        {
+                            opacity: 1, y: 0, duration: 1.0, ease: 'power3.out', delay: 0.12,
+                            scrollTrigger: { trigger: newsRef.current, start: 'top 80%', once: true },
+                        }
+                    );
+                }
             }
 
-            if (craftCards.current.length) {
-                gsap.fromTo(craftCards.current,
-                    { opacity: 0, y: 50 },
-                    {
-                        opacity: 1, y: 0, duration: 0.85, ease: 'power3.out', stagger: 0.14,
-                        scrollTrigger: { trigger: craftRef.current, start: 'top 80%', once: true }
-                    }
-                );
+            // ═══════════════════════════════════════════════════════════════════════
+            // 11 ▸ CRAFT — stagger with rotation
+            // ═══════════════════════════════════════════════════════════════════════
+            if (craftRef.current) {
+                const craftHdr = craftRef.current.querySelector('.craft-header');
+                if (craftHdr) {
+                    gsap.fromTo(craftHdr,
+                        { opacity: 0, y: 40 },
+                        {
+                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
+                            scrollTrigger: { trigger: craftRef.current, start: 'top 82%', once: true },
+                        }
+                    );
+                }
+                if (craftCards.current.length) {
+                    gsap.fromTo(craftCards.current,
+                        { opacity: 0, y: 70, rotate: 2 },
+                        {
+                            opacity: 1, y: 0, rotate: 0,
+                            duration: 0.9, ease: 'power3.out', stagger: 0.16,
+                            scrollTrigger: { trigger: craftRef.current, start: 'top 80%', once: true },
+                        }
+                    );
+                }
             }
 
+            // ═══════════════════════════════════════════════════════════════════════
+            // 12 ▸ LIBRARY — horizontal split reveal + inner parallax
+            // ═══════════════════════════════════════════════════════════════════════
             if (libRef.current) {
-                const [visual, content] = libRef.current.querySelectorAll('.lib-visual, .lib-content');
-                gsap.fromTo(visual, { opacity: 0, x: 60 },
-                    {
-                        opacity: 1, x: 0, duration: 1, ease: 'power3.out',
-                        scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
+                const libVisual = libRef.current.querySelector('.lib-visual');
+                const libContent = libRef.current.querySelector('.lib-content');
+
+                if (libVisual) {
+                    gsap.fromTo(libVisual,
+                        { opacity: 0, x: 80 },
+                        {
+                            opacity: 1, x: 0, duration: 1.2, ease: 'expo.out',
+                            scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true },
+                        }
+                    );
+                    const libInner = libVisual.querySelector('div[style]');
+                    if (libInner) {
+                        gsap.to(libInner, {
+                            y: -24,
+                            ease: 'none',
+                            scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                        });
                     }
-                );
-                gsap.fromTo(content, { opacity: 0, x: -60 },
-                    {
-                        opacity: 1, x: 0, duration: 1, ease: 'power3.out', delay: 0.15,
-                        scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true }
-                    }
-                );
+                }
+
+                if (libContent) {
+                    gsap.fromTo(libContent,
+                        { opacity: 0, x: -80 },
+                        {
+                            opacity: 1, x: 0, duration: 1.2, ease: 'expo.out', delay: 0.18,
+                            scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true },
+                        }
+                    );
+                    gsap.fromTo(Array.from(libContent.children),
+                        { opacity: 0, y: 30 },
+                        {
+                            opacity: 1, y: 0,
+                            duration: 0.75, ease: 'power2.out', stagger: 0.09, delay: 0.35,
+                            scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true },
+                        }
+                    );
+                }
+
+                const libCircle = libRef.current.querySelector('.lib-deco-circle');
+                if (libCircle) {
+                    gsap.to(libCircle, {
+                        y: -60, rotate: 25,
+                        ease: 'none',
+                        scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
+                    });
+                }
             }
 
-            if (techRef.current) {
-                gsap.fromTo(techRef.current.querySelector('.tech-header'),
-                    { opacity: 0, y: 30 },
-                    {
-                        opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
-                        scrollTrigger: { trigger: techRef.current, start: 'top 82%', once: true }
-                    }
-                );
-            }
+            // ═══════════════════════════════════════════════════════════════════════
+            // 13 ▸ GLOBAL SECTION PARALLAX
+            // ═══════════════════════════════════════════════════════════════════════
+            document.querySelectorAll('.section-parallax-bg').forEach(el => {
+                gsap.to(el, {
+                    yPercent: -20,
+                    ease: 'none',
+                    scrollTrigger: { trigger: el.closest('section') || el.parentElement, start: 'top bottom', end: 'bottom top', scrub: true },
+                });
+            });
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // 14 ▸ FLOATING DECORATIVE ELEMENTS
+            // ═══════════════════════════════════════════════════════════════════════
+            document.querySelectorAll('.float-slow').forEach((el, i) => {
+                gsap.to(el, {
+                    y: `+=${8 + i * 3}`, x: `+=${4 + i * 2}`, rotate: `+=${3 + i}`,
+                    duration: 4 + i * 0.8, ease: 'sine.inOut', yoyo: true, repeat: -1,
+                });
+            });
+            document.querySelectorAll('.float-fast').forEach((el, i) => {
+                gsap.to(el, {
+                    y: `+=${5}`, rotate: `+=${6}`,
+                    duration: 2.5 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1,
+                });
+            });
 
             return () => ScrollTrigger.getAll().forEach(t => t.kill());
         }).catch(err => console.warn('GSAP load failed:', err));
     }, []);
 
     return (
-        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w }}>
+        // ✅ FIX: removed top white space — paddingTop matches your navbar height (adjust if needed)
+        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w, paddingTop: -20, marginTop:-23 }}>
 
-            {/* ── SCROLL PROGRESS BAR ─────────────────────────────────────── */}
+            {/* ── SCROLL PROGRESS BAR ──────────────────────────────────────────── */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999, background: C.g3 }}>
                 <div ref={progressRef} style={{ height: '100%', background: `linear-gradient(90deg, ${C.o}, ${C.b})`, transformOrigin: 'left center', transform: 'scaleX(0)' }} />
             </div>
@@ -454,9 +804,11 @@ export default function Home() {
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
+        /* ── HERO ── */
         .hero-swiper{width:100%;height:clamp(300px,100vh,710px);}
         .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;overflow:hidden;}
         .hero-bg-layer{position:absolute;inset:-20% 0;will-change:transform;}
+        .hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(4,20,40,.82) 0%,rgba(4,20,40,.58) 60%,rgba(4,20,40,.28) 100%);transition:opacity .4s;}
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
           width:50px;height:50px;border-radius:50%;
           background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);
@@ -471,11 +823,13 @@ export default function Home() {
         .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
         .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:44px;}
 
+        /* ── STATS ── */
         .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);}
         @media(max-width:760px){.stats-bar{grid-template-columns:repeat(2,1fr);}}
-        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;}        
+        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;opacity:0;transform-origin:center bottom;}
         .stat-cell:last-child{border-left:none;}
 
+        /* ── FEATURES ── */
         .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.5vw,28px);}
         @media(max-width:780px){.feat-grid{grid-template-columns:1fr;}}
         .feat-card{
@@ -494,17 +848,22 @@ export default function Home() {
         .feat-num{font-family:${F};font-size:clamp(2.4rem,4vw,3.8rem);font-weight:900;color:${C.g3};line-height:1;margin-bottom:20px;letter-spacing:-2px;transition:color .3s;}
         .feat-card:hover .feat-num{color:${C.o};}
 
+        /* ── VISION ── */
         .vision-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,20px);}
         @media(max-width:500px){.vision-grid{grid-template-columns:1fr;}}
-        .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;opacity:0;}
+        .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;opacity:0;transform-origin:center bottom;}
         .vis-item:hover{border-color:${C.o};box-shadow:0 4px 24px rgba(245,124,0,.10);}
 
+        /* ── DOWNLOADS ── */
         .dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,2vw,16px);}
         @media(max-width:600px){.dl-grid{grid-template-columns:1fr;}}
+        .dl-item{opacity:0;}
 
+        /* ── CERTS ── */
         .cert-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:24px;color:${C.w};transition:background .25s,border-color .25s;height:100%;display:flex;flex-direction:column;gap:14px;}
         .cert-card:hover{background:rgba(255,255,255,.1);border-color:rgba(245,124,0,.4);}
 
+        /* ── PROTOCOLS ── */
         .proto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
         @media(max-width:900px){.proto-grid{grid-template-columns:repeat(2,1fr);}}
         @media(max-width:560px){.proto-grid{grid-template-columns:1fr;}}
@@ -513,6 +872,7 @@ export default function Home() {
         .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:linear-gradient(180deg,${C.o},${C.b});transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
         .proto-card:hover::after{transform:scaleY(1);}
 
+        /* ── SCHOOLS ── */
         .schools-layout{display:grid;grid-template-columns:minmax(0,280px) 1fr;gap:20px;align-items:stretch;}
         @media(max-width:960px){.schools-layout{grid-template-columns:1fr;}}
         .school-featured{border-radius:12px;border:2px solid ${C.b};background:linear-gradient(160deg,${C.b} 0%,${C.bd} 100%);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s,box-shadow .3s;opacity:0;}
@@ -523,9 +883,11 @@ export default function Home() {
         .school-card:hover{border-color:${C.b};transform:translateY(-5px);box-shadow:0 12px 32px rgba(8,101,168,.12);}
         .sc-meta{font-family:${F};font-size:.68rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
 
+        /* ── CRAFT ── */
         .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;opacity:0;}
         .craft-card:hover{border-color:${C.o};transform:translateY(-4px);}
 
+        /* ── NEWS ── */
         .news-card{overflow:hidden;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,transform .25s;height:100%;}
         .news-card:hover{border-color:${C.b};transform:translateY(-4px);}
         .news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{width:44px;height:44px;border-radius:50%;background:${C.w};border:1px solid ${C.g3};color:${C.b}!important;transition:all .25s;}
@@ -535,6 +897,15 @@ export default function Home() {
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
         @media(max-width:600px){.news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{display:none!important;}}
 
+        /* ── LIBRARY ── */
+        .lib-split{display:grid;grid-template-columns:1fr 1fr;min-height:clamp(260px,36vw,480px);}
+        @media(max-width:680px){.lib-split{grid-template-columns:1fr;min-height:unset;}}
+        .lib-visual{background:${C.o};display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);position:relative;overflow:hidden;opacity:0;}
+        .lib-content{padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);display:flex;flex-direction:column;justify-content:center;opacity:0;}
+        .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
+        .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
+
+        /* ── UTILITY ── */
         a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
         a.ob-outline:hover{background:${C.o};color:#fff;}
 
@@ -551,37 +922,41 @@ export default function Home() {
         .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
         .why-card:hover{border-color:${C.o};transform:translateY(-3px);}
 
-        .lib-split{display:grid;grid-template-columns:1fr 1fr;min-height:clamp(260px,36vw,480px);}
-        @media(max-width:680px){.lib-split{grid-template-columns:1fr;min-height:unset;}}
-        .lib-visual{background:${C.o};display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);position:relative;overflow:hidden;opacity:0;}
-        .lib-content{padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);display:flex;flex-direction:column;justify-content:center;opacity:0;}
-        .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
-        .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
-
-        .dl-item{opacity:0;}
-
-        @keyframes bounce{0%,100%{transform:translateY(0);}50%{transform:translateY(7px);}}
-        .scroll-ind{animation:bounce 2s ease-in-out infinite;}
-        @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
-
-        .about-img-wrap{opacity:0;}
+        /* ── ABOUT image clip ── */
+        .about-img-wrap{opacity:0;overflow:hidden;}
+        .about-img-wrap img{will-change:transform;}
         .about-txt-wrap>*{opacity:0;}
 
-        /* ── Force English numerals on stat counters ── */
+        /* ── SCROLL INDICATOR ── */
+        @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(7px);}}
+        .scroll-ind{animation:bounce 2s ease-in-out infinite;position:absolute;bottom:22px;left:50%;transform:translateX(-50%);zIndex:3;}
+
+        /* ── STAT counter English numerals ── */
         .stat-counter{font-variant-numeric:lining-nums;unicode-bidi:plaintext;direction:ltr;display:inline-block;}
+
+        @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
+
+        /* ── reduce motion ── */
+        @media(prefers-reduced-motion:reduce){
+          .hero-bg-layer,.lib-visual,.lib-content,.vis-item,.proto-card,.school-featured,.school-card,.craft-card,.dl-item,.stat-cell,.feat-card{opacity:1!important;transform:none!important;}
+        }
       `}</style>
 
-            {/* 1 ─ HERO ──────────────────────────────────────────────────────── */}
-            <section ref={heroRef} style={{ position: 'relative' }}>
+            {/* ── 1 HERO ──────────────────────────────────────────────────────── */}
+            {/* ✅ FIX: marginTop:0 ensures no white gap below navbar */}
+            <section ref={heroRef} style={{ position: 'relative', marginTop: 0 }}>
                 <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
                     autoplay={{ delay: 7000, disableOnInteraction: false }}
                     navigation pagination={{ clickable: true }} loop speed={800}>
                     {slides.map((sl, i) => (
                         <SwiperSlide key={i}>
                             <div className="hero-bg-layer" style={{ backgroundImage: `url(${sl.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(4,20,40,.82) 0%, rgba(4,20,40,.58) 60%, rgba(4,20,40,.28) 100%)' }} />
+                            <div className="hero-overlay" />
                             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
-                            <div ref={i === 0 ? heroInnerRef : null} style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
+                            <div
+                                ref={i === 0 ? heroInnerRef : null}
+                                className="hero-entrance"
+                                style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: F, fontSize: '.68rem', fontWeight: 700, letterSpacing: 2.5, textTransform: 'uppercase', color: C.o, marginBottom: 14 }}>
                                     <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
                                 </div>
@@ -593,7 +968,7 @@ export default function Home() {
                                     <ArrowBtn to="/overview" inv>تعرف على المعهد</ArrowBtn>
                                 </div>
                             </div>
-                            <div className="scroll-ind" style={{ position: 'absolute', bottom: 22, left: '50%', transform: 'translateX(-50%)', zIndex: 3 }}>
+                            <div className="scroll-ind">
                                 <div style={{ width: 22, height: 34, border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 11, display: 'flex', justifyContent: 'center', paddingTop: 5 }}>
                                     <div style={{ width: 3, height: 8, background: C.o, borderRadius: 2 }} />
                                 </div>
@@ -603,26 +978,22 @@ export default function Home() {
                 </Swiper>
             </section>
 
-            {/* 2 ─ STATS ─────────────────────────────────────────────────────── */}
-            <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}` }}>
+            {/* ── 2 STATS ─────────────────────────────────────────────────────── */}
+            {/* ✅ FIX: stat-cell opacity is still 0 in CSS but GSAP animates to 1 on page load */}
+            <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}`, position: 'relative', overflow: 'hidden' }}>
+                <div ref={statsOrangeBarRef} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${C.o},${C.b},${C.o})`, opacity: 0.5 }} />
                 <div className="W">
                     <div className="stats-bar">
                         {buildStats(apiStats).map((s, i) => (
                             <div key={i} className="stat-cell">
-                                {/* data-count drives the GSAP counter; initial display uses en-US numerals */}
                                 <div
                                     className="stat-counter"
                                     data-count={s.raw}
                                     data-suffix={s.suffix}
-                                    style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}
-                                >
+                                    style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>
                                     {s.raw.toLocaleString('en-US')}{s.suffix}
                                 </div>
-                                {s.sub && (
-                                    <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>
-                                        {s.sub}
-                                    </div>
-                                )}
+                                {s.sub && <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>{s.sub}</div>}
                                 <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
                             </div>
                         ))}
@@ -630,42 +1001,12 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* 3 ─ FEATURES ──────────────────────────────────────────────────── */}
-            <section style={{ background: C.w }} ref={featRef}>
-                <div className="W" style={{ paddingTop: 'clamp(48px,6vw,80px)' }}>
-                    <div style={{ textAlign: 'center', marginBottom: 36 }}>
-                        <Eyebrow center>ما يميزنا</Eyebrow>
-                        <SplitTitle center>لماذا المعهد؟</SplitTitle>
-                        <div style={{ width: 56, height: 3, background: C.o, margin: '16px auto 24px', borderRadius: 2 }} />
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <ArrowBtn to="/overview">تعرف على المزيد</ArrowBtn>
-                        </div>
-                    </div>
-                </div>
-                <div className="W feat-grid" style={{ paddingBottom: 'clamp(48px,6vw,80px)' }}>
-                    {features.map((f, i) => (
-                        <div key={i} className="feat-card" ref={el => featCards.current[i] = el}>
-                            <div className="feat-num">{f.num}</div>
-                            <div style={{ marginBottom: 16 }}><img src={f.icon} alt="" style={{ width: 44, height: 44, objectFit: 'contain' }} /></div>
-                            <h3 style={{ fontFamily: F, fontSize: 'clamp(.94rem,1.5vw,1.1rem)', fontWeight: 800, color: C.k, lineHeight: 1.4, marginBottom: 10 }}>{f.title}</h3>
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.1vw,.88rem)', color: C.g5, lineHeight: 1.85, marginBottom: 22 }}>{f.subtitle}</p>
-                            <Link to={f.link} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: F, fontSize: '.76rem', fontWeight: 700, color: C.b, textDecoration: 'none', borderBottom: `1px solid ${C.b}`, paddingBottom: 2, transition: 'gap .2s' }}
-                                onMouseEnter={e => e.currentTarget.style.gap = '10px'}
-                                onMouseLeave={e => e.currentTarget.style.gap = '6px'}>
-                                استعرض <NorthEastIcon sx={{ fontSize: 13 }} />
-                            </Link>
-                        </div>
-                    ))}
-                </div>
-                <div style={{ height: 4, background: `linear-gradient(90deg,${C.o},${C.b})` }} />
-            </section>
-
-            {/* 4 ─ ABOUT ─────────────────────────────────────────────────────── */}
+            {/* ── 3 ABOUT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={aboutRef}>
                 <div className="W">
                     <div className="ab-split">
                         <div className="about-img-wrap" ref={aboutImgRef} style={{ position: 'relative' }}>
-                            <div style={{ position: 'absolute', top: -12, right: -12, width: 52, height: 52, background: C.o, zIndex: 0 }} />
+                            <div className="about-orange-sq float-slow" style={{ position: 'absolute', top: -12, right: -12, width: 52, height: 52, background: C.o, zIndex: 0 }} />
                             <img src={logo} alt="المعهد" style={{ width: '100%', display: 'block', borderRadius: 8, aspectRatio: '4/3', objectFit: 'cover', position: 'relative', zIndex: 1 }} />
                             <div style={{ position: 'absolute', bottom: 20, left: 0, background: C.k, padding: '12px 18px', zIndex: 2, borderRadius: '0 8px 8px 0' }}>
                                 <div style={{ fontFamily: F, fontSize: 'clamp(1rem,1.8vw,1.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>1978</div>
@@ -674,7 +1015,7 @@ export default function Home() {
                         </div>
                         <div className="about-txt-wrap" ref={aboutTxtRef}>
                             <Eyebrow>نبذة عامة</Eyebrow>
-                            <SplitTitle>رائد في التدريب<br />الهندسي والإداري والحرفي</SplitTitle>
+                            <SplitTitle>رائد في التدريب<br />الهندسي والإداري والمالي و الحرفي</SplitTitle>
                             <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
                             <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: C.g7, lineHeight: 2, marginBottom: 18, textAlign: 'justify' }}>
                                 أول شركة مقاولات في الشرق الأوسط تُنشئ معهدًا للتدريب منذ أكثر من 45 عامًا. نُعِدّ أجيالًا متميزة في التشييد والإدارة والتقنية، ونخدم الوزارات والهيئات والقطاع الخاص بمعايير الجودة الدولية.
@@ -698,11 +1039,59 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 5 ─ VISION ────────────────────────────────────────────────────── */}
+            {/* ── 4 ONLINE TRAINING ───────────────────────────────────────────── */}
+            <section ref={onlineRef} className="S" style={{ background: C.b, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
+                <div className="online-circle float-slow" style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(255,255,255,.08)', pointerEvents: 'none' }} />
+                <div className="online-circle float-slow" style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)', pointerEvents: 'none' }} />
+                <div className="W" style={{ position: 'relative', zIndex: 1 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(28px,5vw,72px)', alignItems: 'center' }} className="ab-split">
+                        <div className="online-col">
+                            <Eyebrow light>تدريب بلا حدود</Eyebrow>
+                            <SplitTitle light>التدريب عن بُعد<br />( أونلاين )</SplitTitle>
+                            <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
+                            <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: 'rgba(255,255,255,.65)', lineHeight: 2, marginBottom: 24 }}>
+                                برامج تدريبية مباشرة (Live) عبر Microsoft Teams، تُتيح لك الحضور من أي مكان داخل مصر أو خارجها مع الحفاظ على التفاعل الفوري مع المدرب وجودة المحتوى.
+                            </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
+                                {[{ icon: '🎥', text: 'بث مباشر Live' }, { icon: '💬', text: 'تفاعل فوري' }, { icon: '📍', text: 'من أي مكان' }, { icon: '🎓', text: 'شهادة معتمدة' }].map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8 }}>
+                                        <span style={{ fontSize: '1.1rem' }}>{item.icon}</span>
+                                        <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>{item.text}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            <SolidBtn to="/online-training" orange>اكتشف التدريب الأونلاين <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
+                        </div>
+                        <div className="online-col" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 16, padding: 'clamp(20px,3vw,36px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(8,101,168,.25)', border: '1px solid rgba(8,101,168,.4)', borderRadius: 10 }}>
+                                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <TeamsIcon size={24} />
+                                </div>
+                                <div>
+                                    <div style={{ fontFamily: F, fontSize: '.78rem', fontWeight: 900, color: C.w, lineHeight: 1.4 }}>Microsoft Teams</div>
+                                    <div style={{ fontFamily: F, fontSize: '.66rem', color: 'rgba(255,255,255,.5)', marginTop: 2 }}>منصة التدريب الرسمية</div>
+                                </div>
+                            </div>
+                            {['برنامج إدارة المشاريع الاحترافية (PMP)', 'القيادة التنفيذية', 'عقود الفيديك', 'أساليب تحليل المشكلات واتخاذ القرارات', 'برامج السلامة والجودة'].map((prog, i) => (
+                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.o, flexShrink: 0 }} />
+                                    <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', color: 'rgba(255,255,255,.7)', lineHeight: 1.6 }}>{prog}</span>
+                                </div>
+                            ))}
+                            <div style={{ marginTop: 4, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,.08)' }}>
+                                <ArrowBtn to="/online-training#programs" inv>عرض جميع البرامج</ArrowBtn>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── 5 VISION ────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={visionRef}>
-                <div style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'linear-gradient(270deg,rgba(8,101,168,.12) 0%,transparent 100%)', pointerEvents: 'none' }} />
+                <div className="section-parallax-bg" style={{ position: 'absolute', top: 0, right: 0, width: '40%', height: '100%', background: 'linear-gradient(270deg,rgba(8,101,168,.12) 0%,transparent 100%)', pointerEvents: 'none' }} />
                 <div className="W">
-                    <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,48px)' }}>
+                    <div className="vision-header" style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,48px)' }}>
                         <Eyebrow center light>استراتيجيتنا</Eyebrow>
                         <SplitTitle light center>الرؤية والأهداف</SplitTitle>
                         <div style={{ width: 44, height: 3, background: C.o, margin: '20px auto 20px', borderRadius: 2 }} />
@@ -725,9 +1114,10 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 6 ─ DOWNLOADS ─────────────────────────────────────────────────── */}
-            <div ref={dlRef} style={{ background: C.b }}>
-                <div className="W" style={{ padding: 'clamp(28px,4vw,48px) clamp(16px,4vw,56px)' }}>
+            {/* ── 6 DOWNLOADS ─────────────────────────────────────────────────── */}
+            <div ref={dlRef} style={{ background: C.b, position: 'relative', overflow: 'hidden' }}>
+                <div ref={dlBgRef} className="section-parallax-bg" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(245,124,0,.08) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                <div className="W" style={{ padding: 'clamp(28px,4vw,48px) clamp(16px,4vw,56px)', position: 'relative', zIndex: 1 }}>
                     <div style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)' }}>
                         <Eyebrow center light>وثائق</Eyebrow>
                         <h3 style={{ fontFamily: F, fontSize: 'clamp(1.1rem,2vw,1.5rem)', fontWeight: 900, color: C.w, lineHeight: 1.5 }}>تحميل الملفات والتقارير</h3>
@@ -737,8 +1127,7 @@ export default function Home() {
                             <a key={i} className="dl-item" href={item.pdfUrl} target="_blank" rel="noopener noreferrer"
                                 style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 'clamp(16px,2.5vw,24px) clamp(12px,2vw,20px)', background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, textDecoration: 'none', color: C.w, textAlign: 'center', transition: 'background .2s,transform .2s' }}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,.13)'; e.currentTarget.style.transform = 'translateY(-3px)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.transform = ''; }}
-                            >
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,.07)'; e.currentTarget.style.transform = ''; }}>
                                 <div style={{ width: 52, height: 52, borderRadius: 8, background: 'rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                     <item.Icon sx={{ color: C.o, fontSize: '1.6rem' }} />
                                 </div>
@@ -753,7 +1142,7 @@ export default function Home() {
                 </div>
             </div>
 
-            {/* 7 ─ COURSES ───────────────────────────────────────────────────── */}
+            {/* ── 7 COURSES ────────────────────────────────────────────────────── */}
             <section style={{ background: C.w, paddingBottom: 24 }}>
                 <div className="W" style={{ paddingTop: 'clamp(48px,7vw,80px)' }}>
                     <div style={{ textAlign: 'center', marginBottom: 40 }}>
@@ -765,11 +1154,11 @@ export default function Home() {
                 <DynamicCoursesSection />
             </section>
 
-            {/* 8 ─ CERTIFICATIONS ────────────────────────────────────────────── */}
+            {/* ── 8 CERTIFICATIONS ─────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.k, position: 'relative', overflow: 'hidden' }} ref={certRef}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
+                <div className="cert-side-bar" style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
                 <div className="W">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
+                    <div className="cert-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
                         <div>
                             <Eyebrow light>اعتماداتنا</Eyebrow>
                             <SplitTitle light>الشهادات والاعتمادات</SplitTitle>
@@ -794,7 +1183,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 9 ─ SCHOOLS ────────────────────────────────────────────────────── */}
+            {/* ── 9 SCHOOLS ────────────────────────────────────────────────────── */}
             <section style={{ background: C.g1 }} ref={techRef}>
                 <div className="W" style={{ paddingTop: 'clamp(48px,7vw,80px)' }}>
                     <div className="tech-header" style={{ textAlign: 'center', marginBottom: 20 }}>
@@ -806,7 +1195,6 @@ export default function Home() {
                         </p>
                     </div>
                 </div>
-
                 <div className="W" style={{ paddingTop: 'clamp(36px,5vw,56px)', paddingBottom: 'clamp(48px,7vw,80px)' }} ref={schoolsRef}>
                     <div className="schools-layout">
                         <div className="school-featured">
@@ -815,35 +1203,22 @@ export default function Home() {
                                     <div style={{ width: 54, height: 54, borderRadius: 10, flexShrink: 0, background: 'rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <SchoolIcon sx={{ fontSize: 28, color: C.w }} />
                                     </div>
-                                    <span style={{ fontFamily: F, fontSize: '.6rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 10px', borderRadius: 20, background: 'rgba(255,255,255,.15)', color: C.w, border: '1px solid rgba(255,255,255,.25)' }}>
-                                        {makawlenSchool.tag}
-                                    </span>
+                                    <span style={{ fontFamily: F, fontSize: '.6rem', fontWeight: 700, letterSpacing: 1.2, padding: '3px 10px', borderRadius: 20, background: 'rgba(255,255,255,.15)', color: C.w, border: '1px solid rgba(255,255,255,.25)' }}>{makawlenSchool.tag}</span>
                                 </div>
-                                <h3 style={{ fontFamily: F, fontSize: 'clamp(.92rem,1.4vw,1.08rem)', fontWeight: 900, lineHeight: 1.5, color: C.w, margin: 0 }}>
-                                    {makawlenSchool.name}
-                                </h3>
+                                <h3 style={{ fontFamily: F, fontSize: 'clamp(.92rem,1.4vw,1.08rem)', fontWeight: 900, lineHeight: 1.5, color: C.w, margin: 0 }}>{makawlenSchool.name}</h3>
                             </div>
                             <div style={{ padding: '18px 20px 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1vw,.88rem)', color: 'rgba(255,255,255,.75)', lineHeight: 1.9, marginBottom: 20, flex: 1 }}>
-                                    {makawlenSchool.desc}
-                                </p>
+                                <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1vw,.88rem)', color: 'rgba(255,255,255,.75)', lineHeight: 1.9, marginBottom: 20, flex: 1 }}>{makawlenSchool.desc}</p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 22 }}>
-                                    {[
-                                        { Icon: LocationOnIcon, text: makawlenSchool.location },
-                                        { Icon: CalendarTodayIcon, text: makawlenSchool.schedule },
-                                        { Icon: GroupsIcon, text: 'متعدد التخصصات' },
-                                    ].map(({ Icon, text }, idx) => (
+                                    {[{ Icon: LocationOnIcon, text: makawlenSchool.location }, { Icon: CalendarTodayIcon, text: makawlenSchool.schedule }, { Icon: GroupsIcon, text: 'متعدد التخصصات' }].map(({ Icon, text }, idx) => (
                                         <span key={idx} style={{ fontFamily: F, fontSize: '.68rem', fontWeight: 700, color: 'rgba(255,255,255,.65)', display: 'flex', alignItems: 'center', gap: 6 }}>
                                             <Icon sx={{ fontSize: 14, color: 'rgba(255,255,255,.45)' }} />{text}
                                         </span>
                                     ))}
                                 </div>
-                                <SolidBtn to={makawlenSchool.link} orange small>
-                                    اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} />
-                                </SolidBtn>
+                                <SolidBtn to={makawlenSchool.link} orange small>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 10 }} /></SolidBtn>
                             </div>
                         </div>
-
                         <div className="schools-other-grid">
                             {otherSchools.map((sc, i) => (
                                 <div key={i} className="school-card">
@@ -852,9 +1227,7 @@ export default function Home() {
                                             <div style={{ width: 44, height: 44, borderRadius: 8, flexShrink: 0, background: 'rgba(8,101,168,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 <sc.IconComp sx={{ fontSize: 22, color: C.b }} />
                                             </div>
-                                            <span style={{ fontFamily: F, fontSize: '.58rem', fontWeight: 700, letterSpacing: 1, padding: '3px 8px', borderRadius: 20, background: 'rgba(8,101,168,.1)', color: C.b, border: '1px solid rgba(8,101,168,.2)' }}>
-                                                {sc.tag}
-                                            </span>
+                                            <span style={{ fontFamily: F, fontSize: '.58rem', fontWeight: 700, letterSpacing: 1, padding: '3px 8px', borderRadius: 20, background: 'rgba(8,101,168,.1)', color: C.b, border: '1px solid rgba(8,101,168,.2)' }}>{sc.tag}</span>
                                         </div>
                                         <h3 style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.05vw,.88rem)', fontWeight: 800, lineHeight: 1.5, color: C.k, margin: 0 }}>{sc.name}</h3>
                                     </div>
@@ -878,12 +1251,12 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 10 ─ PROTOCOLS ─────────────────────────────────────────────────── */}
+            {/* ── 10 PROTOCOLS ─────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.k2, position: 'relative', overflow: 'hidden' }} ref={protoRef}>
-                <div style={{ position: 'absolute', bottom: -80, left: -80, width: 340, height: 340, borderRadius: '50%', border: '1px solid rgba(8,101,168,.15)', pointerEvents: 'none' }} />
-                <div style={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(245,124,0,.1)', pointerEvents: 'none' }} />
+                <div className="proto-bg-circle-1 float-slow" style={{ position: 'absolute', bottom: -80, left: -80, width: 340, height: 340, borderRadius: '50%', border: '1px solid rgba(8,101,168,.15)', pointerEvents: 'none' }} />
+                <div className="proto-bg-circle-2 float-slow" style={{ position: 'absolute', top: -60, right: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(245,124,0,.1)', pointerEvents: 'none' }} />
                 <div className="W" style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 12 }}>
+                    <div className="proto-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16, marginBottom: 12 }}>
                         <div>
                             <Eyebrow light>شراكاتنا</Eyebrow>
                             <SplitTitle light size="sm">البروتوكولات والاتفاقيات</SplitTitle>
@@ -914,10 +1287,10 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 11 ─ NEWS ─────────────────────────────────────────────────────── */}
+            {/* ── 11 NEWS ──────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={newsRef}>
                 <div className="W">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
+                    <div className="news-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 'clamp(28px,4vw,44px)', flexWrap: 'wrap', gap: 16 }}>
                         <div>
                             <Eyebrow>أخبار</Eyebrow>
                             <SplitTitle size="sm">أحدث الأخبار</SplitTitle>
@@ -953,10 +1326,10 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 12 ─ CRAFT ─────────────────────────────────────────────────────── */}
+            {/* ── 12 CRAFT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.w, borderTop: `1px solid ${C.g3}` }} ref={craftRef}>
                 <div className="W">
-                    <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
+                    <div className="craft-header" style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
                         <Eyebrow center>خدمات متخصصة</Eyebrow>
                         <SplitTitle center size="sm">التدريب الحرفي والفني والتقييم</SplitTitle>
                         <div style={{ width: 48, height: 3, background: C.o, margin: '16px auto 0', borderRadius: 2 }} />
@@ -977,38 +1350,57 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* 13 ─ LIBRARY ──────────────────────────────────────────────────── */}
+            {/* ── 13 LIBRARY ───────────────────────────────────────────────────── */}
             <section style={{ background: C.k }} ref={libRef}>
                 <div className="lib-split">
-                    <div className="lib-visual">
-                        <div style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, right: -110, pointerEvents: 'none' }} />
-                        <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', width: '100%' }}>
-                            <LibraryBooksIcon sx={{ fontSize: 'clamp(36px,5.5vw,64px)', color: C.w, marginBottom: 10 }} />
-                            <div style={{ fontFamily: F, fontSize: 'clamp(.95rem,2vw,1.7rem)', fontWeight: 900, color: C.w, lineHeight: 1.3, marginBottom: 12 }}>المكتبة العلمية المتخصصة</div>
-                            <div style={{ width: 32, height: 2, background: 'rgba(255,255,255,.5)', margin: '0 auto 14px' }} />
-                            <div className="lib-tags">
-                                {['5,000+ كتاب', '200+ دورية', 'رقمية'].map((t, i) => (
-                                    <span key={i} className="lib-tag"><AutoStoriesIcon sx={{ fontSize: 11 }} /> {t}</span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
                     <div className="lib-content">
                         <Eyebrow light>المكتبة</Eyebrow>
                         <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 14 }}>
                             مرجعك العلمي الأشمل في علوم التشييد والإدارة
                         </h3>
-                        <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 28 }}>
-                            مفتوحة لجميع المتدربين والباحثين. تضم آلاف المراجع الهندسية والمالية والإدارية مع قواعد بيانات رقمية متكاملة.
+                        <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.92rem)', color: 'rgba(255,255,255,.6)', lineHeight: 1.9, marginBottom: 20 }}>
+                            مكتبة متخصصة تأسست عام 1970، تضم أكثر من 4200 كتاب في العلوم الهندسية والإدارية، مع قواعد بيانات رقمية متكاملة مفتوحة لجميع المتدربين والباحثين.
                         </p>
+                        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 28 }}>
+                            {[{ val: '4200+', lbl: 'كتاب' }, { val: '2500+', lbl: 'مادة علمية' }, { val: '23', lbl: 'مجال' }].map((s, i) => (
+                                <div key={i} style={{ background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '10px 18px', textAlign: 'center', flex: '1 1 70px' }}>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.9rem,1.5vw,1.2rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>{s.val}</div>
+                                    <div style={{ fontFamily: F, fontSize: '.62rem', color: 'rgba(255,255,255,.45)', marginTop: 4, letterSpacing: 1 }}>{s.lbl}</div>
+                                </div>
+                            ))}
+                        </div>
                         <div><SolidBtn to="/library" orange>زيارة المكتبة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn></div>
+                    </div>
+
+                    <div className="lib-visual" style={{ flexDirection: 'column', gap: 0, justifyContent: 'center', alignItems: 'flex-start', padding: 'clamp(28px,5vw,64px) clamp(20px,4vw,56px)' }}>
+                        <div className="lib-deco-circle float-slow" style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, left: -110, pointerEvents: 'none' }} />
+                        <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,.15)', border: '1px solid rgba(255,255,255,.25)', borderRadius: 20, padding: '5px 14px', marginBottom: 18 }}>
+                                <StarIcon sx={{ fontSize: 13, color: C.w }} />
+                                <span style={{ fontFamily: F, fontSize: '.62rem', fontWeight: 700, letterSpacing: 1.5, color: C.w, textTransform: 'uppercase' }}>أول سفارة لشركة مقاولات</span>
+                            </div>
+                            <div style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.65rem)', fontWeight: 900, color: C.w, lineHeight: 1.35, marginBottom: 8 }}>سفارة المعرفة</div>
+                            <div style={{ fontFamily: F, fontSize: 'clamp(.8rem,1.4vw,1.05rem)', fontWeight: 700, color: 'rgba(255,255,255,.75)', marginBottom: 16 }}>مكتبة الإسكندرية — بروتوكول تعاون</div>
+                            <div style={{ width: 36, height: 2, background: 'rgba(255,255,255,.5)', marginBottom: 18 }} />
+                            <p style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.9rem)', color: 'rgba(255,255,255,.8)', lineHeight: 1.9, marginBottom: 24 }}>
+                                بوابة رقمية تمنح المستفيدين وصولاً إلى أكثر من 509,000 وعاء رقمي، وأرشيف 17.5 مليون مقالة صحفية، وكنوز تاريخية ومعرفية لا محدودة.
+                            </p>
+                            <div className="lib-tags" style={{ justifyContent: 'flex-start', marginBottom: 24 }}>
+                                {['509,089 وعاء رقمي', '17.5M مقالة', '24 سفارة معرفة'].map((t, i) => (
+                                    <span key={i} className="lib-tag"><AutoStoriesIcon sx={{ fontSize: 11 }} /> {t}</span>
+                                ))}
+                            </div>
+                            <SolidBtn to="/library#embassy" style={{ background: 'rgba(255,255,255,.15)', border: '1.5px solid rgba(255,255,255,.35)' }}>
+                                اكتشف السفارة <ArrowForwardIosIcon sx={{ fontSize: 11 }} />
+                            </SolidBtn>
+                        </div>
                     </div>
                 </div>
             </section>
 
             <div style={{ height: 'clamp(48px,7vw,80px)', background: C.w }} />
 
-            {/* 14 ─ CUSTOMERS ────────────────────────────────────────────────── */}
+            {/* ── 14 CUSTOMERS ─────────────────────────────────────────────────── */}
             <div><CustomersSection /></div>
         </div>
     );

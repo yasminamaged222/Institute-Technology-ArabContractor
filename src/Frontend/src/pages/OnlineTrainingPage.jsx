@@ -12,7 +12,237 @@ import {
     FaHeadset,
     FaCheckCircle,
 } from 'react-icons/fa';
+import { useLocation } from "react-router-dom";
 
+
+
+/* ─────────────────────────────────────────
+   Microsoft Teams SVG Icon
+───────────────────────────────────────── */
+const TeamsIcon = ({ size = 42 }) => (
+    <svg width={size} height={size} viewBox="0 0 2228.833 2073.333" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1554.637,777.5h575.713c54.391,0,98.483,44.092,98.483,98.483v524.398
+            c0,199.901-162.001,361.902-361.902,361.902h-1.78c-199.901,0.001-361.902-162-361.902-361.901
+            V828.971C1504.249,800.544,1526.211,777.5,1554.637,777.5z" fill="#5059C9" />
+        <circle cx="1943.75" cy="440.583" r="233.25" fill="#5059C9" />
+        <circle cx="1218.083" cy="336.917" r="309.083" fill="#7B83EB" />
+        <path d="M1667.323,777.5H717.01c-53.743,1.33-96.257,45.931-94.927,99.675v598.105
+            c-7.825,322.069,247.353,590.279,569.422,598.104c322.069-7.825,577.247-276.035,569.422-598.104
+            V877.174C1762.257,823.431,1720.906,777.5,1667.323,777.5z" fill="#7B83EB" />
+        <path opacity="0.1" d="M1244,777.5v838.145c-0.258,38.435-23.549,72.964-59.09,87.598
+            c-11.316,4.787-23.478,7.254-35.765,7.257H667.613c-6.738-17.105-12.958-34.21-18.142-51.833
+            c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1244z"/>
+        <path opacity="0.2" d="M1192.167,777.5v889.978c-0.002,12.287-2.47,24.449-7.257,35.765
+            c-14.634,35.541-49.163,58.833-87.598,59.09H691.975c-8.812-17.105-17.105-34.21-24.362-51.833
+            c-7.257-17.623-12.958-34.21-18.142-51.833c-17.654-57.884-26.601-117.851-26.578-178.167V877.174
+            c-1.33-53.744,41.185-98.345,94.927-99.674H1192.167z"/>
+        <path opacity="0.2" d="M1192.167,777.5v786.312c-0.395,52.223-42.704,94.531-94.927,94.927H649.833
+            c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1192.167z"/>
+        <path opacity="0.2" d="M1140.333,777.5v786.312c-0.395,52.223-42.704,94.531-94.927,94.927H649.833
+            c-17.654-57.884-26.601-117.851-26.578-178.167V877.174c-1.33-53.744,41.185-98.345,94.927-99.674H1140.333z"/>
+        <path opacity="0.1" d="M1244,509.522v163.275c-8.812,0.518-17.105,1.037-25.917,1.037
+            c-8.812,0-17.105-0.518-25.917-1.037c-17.496-1.161-34.848-3.937-51.833-8.293
+            c-104.963-26.655-191.679-98.609-234.603-196.003c-7.704-17.517-13.554-35.787-17.472-54.499h258.925
+            C1201.827,414.866,1243.764,457.252,1244,509.522z"/>
+        <path opacity="0.2" d="M1192.167,561.355v111.442c-17.496-1.161-34.848-3.937-51.833-8.293
+            c-104.963-26.655-191.679-98.609-234.603-196.003h191.509C1149.722,468.866,1191.917,510.8,1192.167,561.355z"/>
+        <path opacity="0.2" d="M1192.167,561.355v111.442c-17.496-1.161-34.848-3.937-51.833-8.293
+            c-104.963-26.655-191.679-98.609-234.603-196.003h191.509C1149.722,468.866,1191.917,510.8,1192.167,561.355z"/>
+        <path opacity="0.2" d="M1140.333,561.355v103.148c-104.963-26.655-191.679-98.609-234.603-196.003h139.676
+            C1097.888,468.866,1140.083,510.8,1140.333,561.355z"/>
+        <linearGradient id="teams_grad" x1="198.099" y1="1683.0726" x2="942.2344" y2="394.2607"
+            gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#5a62c3" />
+            <stop offset="0.5" stopColor="#4d55bd" />
+            <stop offset="1" stopColor="#3940ab" />
+        </linearGradient>
+        <path fill="url(#teams_grad)" d="M95.01,468.5h950.323c52.473,0,95.01,42.538,95.01,95.01v950.323
+            c0,52.473-42.538,95.01-95.01,95.01H95.01C42.538,1608.843,0,1566.305,0,1513.833V563.51
+            C0,511.038,42.538,468.5,95.01,468.5z"/>
+        <path d="M820.211,828.193H630.241v517.297H509.211V828.193H320.123V727.844H820.211V828.193z" fill="#ffffff" />
+    </svg>
+);
+
+/* ─────────────────────────────────────────
+   Illustration 1 – Virtual Meeting (Section: آلية تنفيذ التدريب)
+───────────────────────────────────────── */
+const VirtualMeetingIllustration = () => (
+    <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 16 }}>
+        <defs>
+            <linearGradient id="vm_bg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#0a3d6b" />
+                <stop offset="100%" stopColor="#0865a8" />
+            </linearGradient>
+            <linearGradient id="vm_screen" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#1a4a7a" />
+                <stop offset="100%" stopColor="#0d3660" />
+            </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="700" height="320" fill="url(#vm_bg)" rx="16" />
+
+        {/* Decorative circles */}
+        <circle cx="620" cy="40" r="80" fill="white" fillOpacity="0.04" />
+        <circle cx="80" cy="280" r="60" fill="white" fillOpacity="0.04" />
+        <circle cx="350" cy="160" r="200" fill="white" fillOpacity="0.03" />
+
+        {/* ── Main Screen ── */}
+        <rect x="180" y="40" width="340" height="200" rx="12" fill="url(#vm_screen)" stroke="#1e6fbb" strokeWidth="2" />
+        {/* Screen header bar */}
+        <rect x="180" y="40" width="340" height="32" rx="12" fill="#0d3660" />
+        <rect x="180" y="58" width="340" height="14" fill="#0d3660" />
+        {/* Dots */}
+        <circle cx="200" cy="56" r="5" fill="#e53e3e" />
+        <circle cx="218" cy="56" r="5" fill="#f6ad55" />
+        <circle cx="236" cy="56" r="5" fill="#68d391" />
+        {/* Title bar text lines */}
+        <rect x="252" y="51" width="120" height="9" rx="4" fill="white" fillOpacity="0.2" />
+
+        {/* Video grid - 4 participants */}
+        <rect x="192" y="84" width="152" height="100" rx="8" fill="#0f4880" />
+        <rect x="356" y="84" width="152" height="100" rx="8" fill="#0f4880" />
+        <rect x="192" y="196" width="152" height="34" rx="8" fill="#0f4880" />
+        <rect x="356" y="196" width="152" height="34" rx="8" fill="#0f4880" />
+
+        {/* Avatar circles in video tiles */}
+        <circle cx="268" cy="128" r="24" fill="#1a6fbb" />
+        <circle cx="268" cy="116" r="10" fill="#4aa0e0" />
+        <path d="M244,150 Q268,138 292,150" fill="#4aa0e0" opacity="0.7" />
+
+        <circle cx="432" cy="128" r="24" fill="#c05621" />
+        <circle cx="432" cy="116" r="10" fill="#f57c00" />
+        <path d="M408,150 Q432,138 456,150" fill="#f57c00" opacity="0.7" />
+
+        {/* Bottom tiles - chat/mic indicators */}
+        <rect x="200" y="202" width="60" height="22" rx="5" fill="#1e5f96" />
+        <rect x="268" y="202" width="70" height="22" rx="5" fill="#1e5f96" />
+        <rect x="364" y="202" width="60" height="22" rx="5" fill="#1e5f96" />
+        <rect x="432" y="202" width="70" height="22" rx="5" fill="#1e5f96" />
+
+        {/* Screen bottom toolbar */}
+        <rect x="192" y="233" width="316" height="0" fill="none" />
+        {/* Toolbar icons row */}
+        {[220, 258, 296, 334, 372, 410, 448].map((x, i) => (
+            <circle key={i} cx={x} cy="243" r="10"
+                fill={i === 3 ? "#f57c00" : "white"}
+                fillOpacity={i === 3 ? 1 : 0.15} />
+        ))}
+
+        {/* Screen stand */}
+        <rect x="336" y="240" width="28" height="20" rx="3" fill="#0d3660" />
+        <rect x="316" y="258" width="68" height="6" rx="3" fill="#0d3660" />
+
+        {/* ── Left side person ── */}
+        <circle cx="100" cy="155" r="38" fill="#1a4a7a" />
+        <circle cx="100" cy="138" r="16" fill="#4aa0e0" />
+        <path d="M68,185 Q100,168 132,185" fill="#4aa0e0" opacity="0.8" />
+        {/* Laptop hint */}
+        <rect x="66" y="190" width="68" height="40" rx="6" fill="#0d3660" stroke="#1e6fbb" strokeWidth="1.5" />
+        <rect x="72" y="196" width="56" height="28" rx="3" fill="#0a3d6b" />
+        {/* Signal waves */}
+        <path d="M140,155 Q155,145 140,135" stroke="#f57c00" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path d="M145,160 Q165,148 145,128" stroke="#f57c00" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.7" />
+        <path d="M150,165 Q175,150 150,122" stroke="#f57c00" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.4" />
+
+        {/* ── Right side person ── */}
+        <circle cx="600" cy="155" r="38" fill="#1a4a7a" />
+        <circle cx="600" cy="138" r="16" fill="#f57c00" />
+        <path d="M568,185 Q600,168 632,185" fill="#f57c00" opacity="0.8" />
+        <rect x="566" y="190" width="68" height="40" rx="6" fill="#0d3660" stroke="#1e6fbb" strokeWidth="1.5" />
+        <rect x="572" y="196" width="56" height="28" rx="3" fill="#0a3d6b" />
+        {/* Signal waves */}
+        <path d="M560,155 Q545,145 560,135" stroke="#f57c00" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <path d="M555,160 Q535,148 555,128" stroke="#f57c00" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.7" />
+        <path d="M550,165 Q525,150 550,122" stroke="#f57c00" strokeWidth="1.5" fill="none" strokeLinecap="round" opacity="0.4" />
+
+        {/* ── Labels ── */}
+        <text x="350" y="295" textAnchor="middle" fill="white" fillOpacity="0.7"
+            fontSize="13" fontFamily="'Noto Kufi Arabic', serif">
+            جلسات تدريبية مباشرة عبر Microsoft Teams
+        </text>
+
+        {/* Teams logo badge */}
+        <rect x="314" y="273" width="72" height="8" rx="4" fill="white" fillOpacity="0.1" />
+    </svg>
+);
+
+/* ─────────────────────────────────────────
+   Illustration 2 – Online Features (Section: مميزات التدريب الأونلاين)
+───────────────────────────────────────── */
+const OnlineFeaturesIllustration = () => (
+    <svg viewBox="0 0 700 260" xmlns="http://www.w3.org/2000/svg" style={{ width: '100%', height: 'auto', display: 'block', borderRadius: 16 }}>
+        <defs>
+            <linearGradient id="of_bg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#f8fafc" />
+                <stop offset="100%" stopColor="#e8f4fd" />
+            </linearGradient>
+            <linearGradient id="of_card" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#0865a8" />
+                <stop offset="100%" stopColor="#0a3d6b" />
+            </linearGradient>
+        </defs>
+
+        <rect width="700" height="260" fill="url(#of_bg)" rx="16" />
+
+        {/* Subtle grid lines */}
+        {[100, 200, 300, 400, 500, 600].map(x => (
+            <line key={x} x1={x} y1="0" x2={x} y2="260" stroke="#0865a8" strokeOpacity="0.05" strokeWidth="1" />
+        ))}
+        {[65, 130, 195].map(y => (
+            <line key={y} x1="0" y1={y} x2="700" y2={y} stroke="#0865a8" strokeOpacity="0.05" strokeWidth="1" />
+        ))}
+
+        {/* ── 5 feature tiles ── */}
+        {[
+            { x: 30, icon: '🎥', label: 'بث\nمباشر', color: '#0865a8' },
+            { x: 165, icon: '💬', label: 'تفاعل\nفوري', color: '#f57c00' },
+            { x: 300, icon: '📍', label: 'من أي\nمكان', color: '#0865a8' },
+            { x: 435, icon: '📚', label: 'محتوى\nمحدّث', color: '#f57c00' },
+            { x: 570, icon: '🎧', label: 'دعم\nفني', color: '#0865a8' },
+        ].map((tile, i) => (
+            <g key={i}>
+                {/* Card shadow */}
+                <rect x={tile.x + 2} y="52" width="102" height="156" rx="14" fill={tile.color} fillOpacity="0.08" />
+                {/* Card */}
+                <rect x={tile.x} y="50" width="102" height="156" rx="14"
+                    fill="white" stroke={tile.color} strokeOpacity="0.2" strokeWidth="1.5" />
+                {/* Top accent bar */}
+                <rect x={tile.x} y="50" width="102" height="5" rx="14" fill={tile.color} />
+                <rect x={tile.x} y="53" width="102" height="4" fill={tile.color} />
+                {/* Icon circle */}
+                <circle cx={tile.x + 51} cy="105" r="28" fill={tile.color} fillOpacity="0.1" />
+                <text x={tile.x + 51} y="114" textAnchor="middle" fontSize="26">{tile.icon}</text>
+                {/* Label */}
+                {tile.label.split('\n').map((line, li) => (
+                    <text key={li} x={tile.x + 51} y={155 + li * 19}
+                        textAnchor="middle" fontSize="13" fontWeight="700"
+                        fill="#1e293b" fontFamily="'Noto Kufi Arabic', serif">
+                        {line}
+                    </text>
+                ))}
+            </g>
+        ))}
+
+        {/* Connecting arrows between cards */}
+        {[131, 266, 401, 536].map((x, i) => (
+            <g key={i}>
+                <line x1={x} y1="128" x2={x + 34} y2="128" stroke="#0865a8" strokeOpacity="0.3" strokeWidth="1.5" strokeDasharray="4,3" />
+                <polygon points={`${x + 34},124 ${x + 34},132 ${x + 40},128`} fill="#0865a8" fillOpacity="0.3" />
+            </g>
+        ))}
+
+        {/* Bottom label */}
+        <text x="350" y="232" textAnchor="middle" fill="#0865a8" fillOpacity="0.7"
+            fontSize="12" fontFamily="'Noto Kufi Arabic', serif">
+            ✦ مميزات التدريب الأونلاين بالمعهد التكنولوجي لهندسة التشييد والإدارة ✦
+        </text>
+    </svg>
+);
+
+/* ─────────────────────────────────────────
+   CSS
+───────────────────────────────────────── */
 const css = `
 .ot-page-root {
     min-height: 100vh;
@@ -141,7 +371,6 @@ const css = `
     width: 90px; height: 90px; border-radius: 20px;
     background: linear-gradient(135deg, #0865a8, #1a7abf);
     display: flex; align-items: center; justify-content: center;
-    font-size: 42px; font-weight: 900; color: #fff;
     box-shadow: 0 8px 24px rgba(8,101,168,0.3); flex-shrink: 0;
 }
 .ot-platform-name { font-size: clamp(18px,2vw,22px); font-weight: 900; color: #0865a8; margin: 0 0 16px; }
@@ -152,6 +381,13 @@ const css = `
 /* ── INFOGRAPHIC ── */
 .ot-infographic-wrapper { border-radius: 16px; overflow: hidden; box-shadow: 0 16px 48px rgba(0,0,0,0.14); }
 .ot-infographic-wrapper img { width: 100%; height: auto; display: block; }
+
+/* ── ILLUSTRATION WRAPPER ── */
+.ot-illustration-wrapper {
+    border-radius: 16px; overflow: hidden;
+    box-shadow: 0 8px 32px rgba(8,101,168,0.15);
+    margin-bottom: 28px;
+}
 
 /* ── FEATURES ── */
 .ot-features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
@@ -270,10 +506,22 @@ export default function OnlineTrainingPage() {
             description: 'وفى اطار حرص الشركة لتزويد العاملين بها بالمعرفة الكاملة بأسس السلامة والصحة المهنية ومتطلبات الجودة بالشركة فقد حرصت على ضرورة حضور المهندسين المرشحين للترقى لبرنامجى السلامة والجودة مما يتيح للمهندسين الحاضرين لتلك البرامج التعامل مع متطلبات السلامة من حيث (مهمات الحماية الشخصية – دليل و خطة السلامة والصحة المهنية للمشروعات - خطة الاستجابة للطوارئ والحريق - تصاريح الاعمال الخطرة - تحليل مؤشرات الحوادث والاصابات والامراض المهنية - تقييم المخاطر - ترتيب ونظافة مواقع العمل) وايضا لتحقيق اعلى جودة من حيث (التعريفات الهامة والتطور التاريخى للجودة - المواصفات الدولية الأيزو) ويتم تنفيذها ايضا عن بعد',
         },
     ];
+    const location = useLocation();
 
     useEffect(() => {
         document.title = 'التدريب عن بعد ( اونلاين ) - المعهد التكنولوجي لهندسة التشييد والإدارة';
-    }, []);
+
+        if (location.hash) {
+            const id = location.hash.replace('#', '');
+            const el = document.getElementById(id);
+
+            if (el) {
+                setTimeout(() => {
+                    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 100);
+            }
+        }
+    }, [location]);
 
     return (
         <>
@@ -374,6 +622,12 @@ export default function OnlineTrainingPage() {
                     <div className="ot-section-inner">
                         <h2 className="ot-section-heading">💻 <span>آلية تنفيذ التدريب</span></h2>
                         <div className="ot-heading-bar" />
+
+                        {/* 🖼️ IMAGE 1 – Virtual Meeting Illustration */}
+                        <div className="ot-illustration-wrapper">
+                            <VirtualMeetingIllustration />
+                        </div>
+
                         <p className="ot-body-p">
                             يتم تنفيذ البرامج التدريبية الأونلاين من خلال جلسات مباشرة (Live Sessions) يقودها مدربون
                             متخصصون، حيث يتم التفاعل مع المتدربين بشكل فوري من خلال الشرح، المناقشات، وورش العمل التطبيقية.
@@ -395,7 +649,10 @@ export default function OnlineTrainingPage() {
                         <div className="ot-heading-bar" />
                         <p className="ot-body-p">يعتمد المعهد على برنامج Microsoft Teams وذلك لما يوفره من بيئة تعليمية متكاملة تشمل:</p>
                         <div className="ot-platform-box">
-                            <div className="ot-platform-logo">T</div>
+                            {/* ✅ REPLACED: Teams SVG icon instead of text "T" */}
+                            <div className="ot-platform-logo">
+                                <TeamsIcon size={54} />
+                            </div>
                             <div>
                                 <p className="ot-platform-name">Microsoft Teams</p>
                                 <ul className="ot-platform-bullets">
@@ -426,6 +683,12 @@ export default function OnlineTrainingPage() {
                     <div className="ot-section-inner">
                         <h2 className="ot-section-heading">📌 مميزات <span>التدريب الأونلاين بالمعهد</span></h2>
                         <div className="ot-heading-bar" />
+
+                        {/* 🖼️ IMAGE 2 – Features Illustration */}
+                        <div className="ot-illustration-wrapper">
+                            <OnlineFeaturesIllustration />
+                        </div>
+
                         <div className="ot-features-grid">
                             {features.map((f, i) => (
                                 <div className="ot-feature-card" key={i}>
@@ -438,8 +701,8 @@ export default function OnlineTrainingPage() {
                 </section>
 
                 {/* ── PROGRAMS ── */}
-                <section className="ot-section-gray">
-                    <div className="ot-section-inner">
+                <section className="ot-section-gray" id="programs">
+                    <div className="ot-section-inner" id="programs">
                         <h2 className="ot-section-heading">أمثلة فعلية على <span>البرامج التدريبية عن بعد</span></h2>
                         <div className="ot-heading-bar" />
                         <div className="ot-programs-list">

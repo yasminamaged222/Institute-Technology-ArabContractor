@@ -21,35 +21,13 @@ export const T = {
 // ════════════════════════════════════════════════════════════════════════════
 // CONFIG
 // ════════════════════════════════════════════════════════════════════════════
-// ════════════════════════════════════════════════════════════════════════════
-// ADMIN EMAILS
-// Source of truth is localStorage (managed via SettingsTab).
-// Falls back to the hardcoded list below if nothing is stored yet.
-// Import getAdminEmails() anywhere you need the live list.
-// ════════════════════════════════════════════════════════════════════════════
-const _SUPER_ADMINS = [
+export const ADMIN_EMAILS = [
     'yasminamaged22@gmail.com',
     'abeer.naguib@gmail.com',
     'amrshamy91@gmail.com',
     'abdelmawla1642@gmail.com',
     'mostafa.awaad@gmail.com',
 ];
-const _STORAGE_KEY = 'icemt_admin_emails';
-
-export function getAdminEmails() {
-    try {
-        const stored = localStorage.getItem(_STORAGE_KEY);
-        if (stored) {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-    } catch (_) { }
-    return [..._SUPER_ADMINS];
-}
-
-// Kept for any code that still imports ADMIN_EMAILS directly —
-// reads from localStorage on every module evaluation.
-export const ADMIN_EMAILS = getAdminEmails();
 
 export const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 export const API_HOST = 'https://acwebsite-icmet-test.azurewebsites.net';
