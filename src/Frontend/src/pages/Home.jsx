@@ -251,7 +251,6 @@ export default function Home() {
     const onlineRef = useRef(null);
     const dlBgRef = useRef(null);
 
-    // ── track whether stats have been counted so we don't re-run after apiStats loads
     const statsCounted = useRef(false);
 
     useEffect(() => { document.title = 'المعهد التكنولوجي — ICMET'; }, []);
@@ -266,7 +265,6 @@ export default function Home() {
             .catch(() => setNewsLoading(false));
     }, []);
 
-    // ─── STATS COUNTER — runs on page load (not scroll) ──────────────────────
     useEffect(() => {
         if (statsCounted.current) return;
         if (!statsRef.current) return;
@@ -279,11 +277,7 @@ export default function Home() {
             if (cells) {
                 gsap.fromTo(cells,
                     { opacity: 0, y: 50, rotateX: -20 },
-                    {
-                        opacity: 1, y: 0, rotateX: 0,
-                        duration: 0.9, ease: 'power3.out', stagger: 0.12,
-                        delay: 0.3,
-                    }
+                    { opacity: 1, y: 0, rotateX: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12, delay: 0.3 }
                 );
             }
 
@@ -296,27 +290,21 @@ export default function Home() {
                     const isLarge = target >= 1000 && !isYear;
                     const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
                     const obj = { val: startVal };
-
-                    // ✅ FIX: animate on page load with delay — no ScrollTrigger
                     gsap.to(obj, {
                         val: target,
                         duration: isYear ? 1.6 : isLarge ? 2.4 : 2.0,
                         ease: 'power2.out',
                         delay: 0.5,
-                        onUpdate: () => {
-                            el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix;
-                        },
+                        onUpdate: () => { el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix; },
                     });
                 });
             }
         };
 
-        // Small timeout to ensure DOM is rendered
         const timer = setTimeout(runCounters, 100);
         return () => clearTimeout(timer);
-    }, [apiStats]); // re-run when apiStats loads so updated numbers get counted
+    }, [apiStats]);
 
-    // ─── MASTER GSAP EFFECT ──────────────────────────────────────────────────────
     useEffect(() => {
         const loadScript = (src) => new Promise((res, rej) => {
             if (document.querySelector(`script[src="${src}"]`)) return res();
@@ -332,458 +320,133 @@ export default function Home() {
             const { gsap, ScrollTrigger } = window;
             gsap.registerPlugin(ScrollTrigger);
 
-            // ── Scroll progress bar ────────────────────────────────────────────────
             gsap.to(progressRef.current, {
                 scaleX: 1, ease: 'none',
                 scrollTrigger: { trigger: document.body, start: 'top top', end: 'bottom bottom', scrub: 0.3 },
             });
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 1 ▸ HERO — multi-layer parallax
-            // ═══════════════════════════════════════════════════════════════════════
             if (heroRef.current) {
                 const bgLayers = heroRef.current.querySelectorAll('.hero-bg-layer');
                 const overlay = heroRef.current.querySelector('.hero-overlay');
-
-                gsap.to(bgLayers, {
-                    yPercent: 40,
-                    ease: 'none',
-                    scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true },
-                });
-
-                if (overlay) {
-                    gsap.to(overlay, {
-                        opacity: 0.75,
-                        ease: 'none',
-                        scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '60% top', scrub: true },
-                    });
-                }
-
-                if (heroInnerRef.current) {
-                    gsap.to(heroInnerRef.current, {
-                        yPercent: -28,
-                        opacity: 0,
-                        ease: 'none',
-                        scrollTrigger: { trigger: heroRef.current, start: '25% top', end: 'bottom top', scrub: true },
-                    });
-                }
-
+                gsap.to(bgLayers, { yPercent: 40, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true } });
+                if (overlay) gsap.to(overlay, { opacity: 0.75, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '60% top', scrub: true } });
+                if (heroInnerRef.current) gsap.to(heroInnerRef.current, { yPercent: -28, opacity: 0, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: '25% top', end: 'bottom top', scrub: true } });
                 const scrollInd = heroRef.current.querySelector('.scroll-ind');
-                if (scrollInd) {
-                    gsap.to(scrollInd, {
-                        opacity: 0, scale: 0.5, yPercent: 30,
-                        ease: 'none',
-                        scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '30% top', scrub: true },
-                    });
-                }
-
+                if (scrollInd) gsap.to(scrollInd, { opacity: 0, scale: 0.5, yPercent: 30, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '30% top', scrub: true } });
                 const heroContent = heroRef.current.querySelector('.hero-entrance');
-                if (heroContent) {
-                    gsap.fromTo(heroContent.children,
-                        { opacity: 0, y: 60, filter: 'blur(8px)' },
-                        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.2, ease: 'power4.out', stagger: 0.12, delay: 0.3 }
-                    );
-                }
+                if (heroContent) gsap.fromTo(heroContent.children, { opacity: 0, y: 60, filter: 'blur(8px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.2, ease: 'power4.out', stagger: 0.12, delay: 0.3 });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 2 ▸ STATS BAR — orange accent bar parallax only (counters handled above)
-            // ═══════════════════════════════════════════════════════════════════════
-            if (statsRef.current) {
-                if (statsOrangeBarRef.current) {
-                    gsap.to(statsOrangeBarRef.current, {
-                        xPercent: -8,
-                        ease: 'none',
-                        scrollTrigger: { trigger: statsRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
-                }
+            if (statsRef.current && statsOrangeBarRef.current) {
+                gsap.to(statsOrangeBarRef.current, { xPercent: -8, ease: 'none', scrollTrigger: { trigger: statsRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 3 ▸ ABOUT — image pops in, text cascades
-            // ═══════════════════════════════════════════════════════════════════════
             if (aboutRef.current) {
                 const imgWrap = aboutImgRef.current;
                 const txtWrap = aboutTxtRef.current;
                 const orangeSquare = aboutRef.current.querySelector('.about-orange-sq');
-
                 if (imgWrap) {
-                    gsap.fromTo(imgWrap,
-                        { opacity: 0, scale: 0.88, x: 60, rotateY: 8 },
-                        {
-                            opacity: 1, scale: 1, x: 0, rotateY: 0,
-                            duration: 1.3, ease: 'expo.out',
-                            scrollTrigger: { trigger: aboutRef.current, start: 'top 75%', once: true },
-                        }
-                    );
-
-                    if (orangeSquare) {
-                        gsap.to(orangeSquare, {
-                            y: -30, x: 10,
-                            ease: 'none',
-                            scrollTrigger: { trigger: aboutRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                        });
-                    }
-
+                    gsap.fromTo(imgWrap, { opacity: 0, scale: 0.88, x: 60, rotateY: 8 }, { opacity: 1, scale: 1, x: 0, rotateY: 0, duration: 1.3, ease: 'expo.out', scrollTrigger: { trigger: aboutRef.current, start: 'top 75%', once: true } });
+                    if (orangeSquare) gsap.to(orangeSquare, { y: -30, x: 10, ease: 'none', scrollTrigger: { trigger: aboutRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                     const imgEl = imgWrap.querySelector('img');
-                    if (imgEl) {
-                        gsap.to(imgEl, {
-                            scale: 1.08,
-                            ease: 'none',
-                            scrollTrigger: { trigger: aboutRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                        });
-                    }
+                    if (imgEl) gsap.to(imgEl, { scale: 1.08, ease: 'none', scrollTrigger: { trigger: aboutRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 }
-
-                if (txtWrap) {
-                    gsap.fromTo(Array.from(txtWrap.children),
-                        { opacity: 0, y: 44, filter: 'blur(4px)' },
-                        {
-                            opacity: 1, y: 0, filter: 'blur(0px)',
-                            duration: 0.9, ease: 'power3.out', stagger: 0.1,
-                            scrollTrigger: { trigger: aboutRef.current, start: 'top 72%', once: true },
-                        }
-                    );
-                }
+                if (txtWrap) gsap.fromTo(Array.from(txtWrap.children), { opacity: 0, y: 44, filter: 'blur(4px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.9, ease: 'power3.out', stagger: 0.1, scrollTrigger: { trigger: aboutRef.current, start: 'top 72%', once: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 4 ▸ ONLINE TRAINING — horizontal slide-in split
-            // ═══════════════════════════════════════════════════════════════════════
             if (onlineRef.current) {
-                const [left, right] = onlineRef.current.querySelectorAll('.online-col');
-                if (left) {
-                    gsap.fromTo(left,
-                        { opacity: 0, x: 80 },
-                        {
-                            opacity: 1, x: 0, duration: 1.1, ease: 'expo.out',
-                            scrollTrigger: { trigger: onlineRef.current, start: 'top 78%', once: true },
-                        }
-                    );
-                }
-                if (right) {
-                    gsap.fromTo(right,
-                        { opacity: 0, x: -80 },
-                        {
-                            opacity: 1, x: 0, duration: 1.1, ease: 'expo.out', delay: 0.15,
-                            scrollTrigger: { trigger: onlineRef.current, start: 'top 78%', once: true },
-                        }
-                    );
-                }
+                const cols = onlineRef.current.querySelectorAll('.online-col');
+                if (cols[0]) gsap.fromTo(cols[0], { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: onlineRef.current, start: 'top 78%', once: true } });
+                if (cols[1]) gsap.fromTo(cols[1], { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 1.1, ease: 'expo.out', delay: 0.15, scrollTrigger: { trigger: onlineRef.current, start: 'top 78%', once: true } });
                 const circles = onlineRef.current.querySelectorAll('.online-circle');
-                circles.forEach((c, i) => {
-                    gsap.to(c, {
-                        y: i % 2 === 0 ? -40 : 40,
-                        ease: 'none',
-                        scrollTrigger: { trigger: onlineRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
-                });
+                circles.forEach((c, i) => gsap.to(c, { y: i % 2 === 0 ? -40 : 40, ease: 'none', scrollTrigger: { trigger: onlineRef.current, start: 'top bottom', end: 'bottom top', scrub: true } }));
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 5 ▸ VISION — cascading card flip-reveal
-            // ═══════════════════════════════════════════════════════════════════════
             if (visionRef.current && visionCards.current.length) {
                 const hdr = visionRef.current.querySelector('.vision-header');
                 if (hdr) {
-                    gsap.fromTo(hdr,
-                        { opacity: 0, y: 50 },
-                        {
-                            opacity: 1, y: 0, duration: 1, ease: 'power3.out',
-                            scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true },
-                        }
-                    );
-                    gsap.to(hdr, {
-                        yPercent: -15,
-                        ease: 'none',
-                        scrollTrigger: { trigger: visionRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
+                    gsap.fromTo(hdr, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true } });
+                    gsap.to(hdr, { yPercent: -15, ease: 'none', scrollTrigger: { trigger: visionRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 }
-
-                gsap.fromTo(visionCards.current,
-                    { opacity: 0, y: 70, rotateX: -15, transformPerspective: 800 },
-                    {
-                        opacity: 1, y: 0, rotateX: 0,
-                        duration: 0.95, ease: 'power3.out', stagger: 0.14,
-                        scrollTrigger: { trigger: visionRef.current, start: 'top 78%', once: true },
-                    }
-                );
+                gsap.fromTo(visionCards.current, { opacity: 0, y: 70, rotateX: -15, transformPerspective: 800 }, { opacity: 1, y: 0, rotateX: 0, duration: 0.95, ease: 'power3.out', stagger: 0.14, scrollTrigger: { trigger: visionRef.current, start: 'top 78%', once: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 6 ▸ DOWNLOADS — slide from left one by one
-            // ═══════════════════════════════════════════════════════════════════════
             if (dlRef.current) {
                 const items = dlRef.current.querySelectorAll('.dl-item');
-                gsap.fromTo(items,
-                    { opacity: 0, x: -60, scale: 0.94 },
-                    {
-                        opacity: 1, x: 0, scale: 1,
-                        duration: 0.8, ease: 'expo.out', stagger: 0.14,
-                        scrollTrigger: { trigger: dlRef.current, start: 'top 86%', once: true },
-                    }
-                );
-                if (dlBgRef.current) {
-                    gsap.to(dlBgRef.current, {
-                        yPercent: -12,
-                        ease: 'none',
-                        scrollTrigger: { trigger: dlRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
-                }
+                gsap.fromTo(items, { opacity: 0, x: -60, scale: 0.94 }, { opacity: 1, x: 0, scale: 1, duration: 0.8, ease: 'expo.out', stagger: 0.14, scrollTrigger: { trigger: dlRef.current, start: 'top 86%', once: true } });
+                if (dlBgRef.current) gsap.to(dlBgRef.current, { yPercent: -12, ease: 'none', scrollTrigger: { trigger: dlRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 7 ▸ CERTIFICATIONS — fade reveal
-            // ═══════════════════════════════════════════════════════════════════════
             if (certRef.current) {
                 const header = certRef.current.querySelector('.cert-header');
-                if (header) {
-                    gsap.fromTo(header,
-                        { opacity: 0, y: 40 },
-                        {
-                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
-                            scrollTrigger: { trigger: certRef.current, start: 'top 82%', once: true },
-                        }
-                    );
-                }
-                gsap.fromTo(certRef.current.querySelector('.swiper'),
-                    { opacity: 0, y: 50 },
-                    {
-                        opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.15,
-                        scrollTrigger: { trigger: certRef.current, start: 'top 80%', once: true },
-                    }
-                );
+                if (header) gsap.fromTo(header, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: certRef.current, start: 'top 82%', once: true } });
+                gsap.fromTo(certRef.current.querySelector('.swiper'), { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.15, scrollTrigger: { trigger: certRef.current, start: 'top 80%', once: true } });
                 const bar = certRef.current.querySelector('.cert-side-bar');
-                if (bar) {
-                    gsap.to(bar, {
-                        scaleY: 1.3, transformOrigin: 'top center',
-                        ease: 'none',
-                        scrollTrigger: { trigger: certRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
-                }
+                if (bar) gsap.to(bar, { scaleY: 1.3, transformOrigin: 'top center', ease: 'none', scrollTrigger: { trigger: certRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 8 ▸ TECH / SCHOOLS — featured card + grid stagger
-            // ═══════════════════════════════════════════════════════════════════════
             if (techRef.current) {
                 const techHdr = techRef.current.querySelector('.tech-header');
-                if (techHdr) {
-                    gsap.fromTo(techHdr,
-                        { opacity: 0, y: 50 },
-                        {
-                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
-                            scrollTrigger: { trigger: techRef.current, start: 'top 80%', once: true },
-                        }
-                    );
-                }
+                if (techHdr) gsap.fromTo(techHdr, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: techRef.current, start: 'top 80%', once: true } });
             }
             if (schoolsRef.current) {
                 const featured = schoolsRef.current.querySelector('.school-featured');
                 const cards = schoolsRef.current.querySelectorAll('.school-card');
-
                 if (featured) {
-                    gsap.fromTo(featured,
-                        { opacity: 0, x: 60, scale: 0.96 },
-                        {
-                            opacity: 1, x: 0, scale: 1, duration: 1.1, ease: 'expo.out',
-                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 80%', once: true },
-                        }
-                    );
-                    gsap.to(featured, {
-                        yPercent: -6,
-                        ease: 'none',
-                        scrollTrigger: { trigger: schoolsRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
+                    gsap.fromTo(featured, { opacity: 0, x: 60, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: schoolsRef.current, start: 'top 80%', once: true } });
+                    gsap.to(featured, { yPercent: -6, ease: 'none', scrollTrigger: { trigger: schoolsRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 }
-
-                if (cards.length) {
-                    gsap.fromTo(cards,
-                        { opacity: 0, y: 60, scale: 0.95 },
-                        {
-                            opacity: 1, y: 0, scale: 1,
-                            duration: 0.88, ease: 'power3.out', stagger: 0.13, delay: 0.18,
-                            scrollTrigger: { trigger: schoolsRef.current, start: 'top 78%', once: true },
-                        }
-                    );
-                }
+                if (cards.length) gsap.fromTo(cards, { opacity: 0, y: 60, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.88, ease: 'power3.out', stagger: 0.13, delay: 0.18, scrollTrigger: { trigger: schoolsRef.current, start: 'top 78%', once: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 9 ▸ PROTOCOLS — pop in with scale bounce
-            // ═══════════════════════════════════════════════════════════════════════
             if (protoRef.current) {
                 const protoBg = protoRef.current.querySelector('.proto-bg-circle-1');
                 const protoBg2 = protoRef.current.querySelector('.proto-bg-circle-2');
-
-                if (protoBg) {
-                    gsap.to(protoBg, {
-                        x: 50, y: -60, rotate: 30,
-                        ease: 'none',
-                        scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
-                }
-                if (protoBg2) {
-                    gsap.to(protoBg2, {
-                        x: -40, y: 50, rotate: -20,
-                        ease: 'none',
-                        scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
-                }
-
+                if (protoBg) gsap.to(protoBg, { x: 50, y: -60, rotate: 30, ease: 'none', scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
+                if (protoBg2) gsap.to(protoBg2, { x: -40, y: 50, rotate: -20, ease: 'none', scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 const protoHeader = protoRef.current.querySelector('.proto-header');
-                if (protoHeader) {
-                    gsap.fromTo(protoHeader,
-                        { opacity: 0, y: 40 },
-                        {
-                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
-                            scrollTrigger: { trigger: protoRef.current, start: 'top 82%', once: true },
-                        }
-                    );
-                }
-
-                if (protoCards.current.length) {
-                    gsap.fromTo(protoCards.current,
-                        { opacity: 0, y: 60, scale: 0.9 },
-                        {
-                            opacity: 1, y: 0, scale: 1,
-                            duration: 0.85, ease: 'back.out(1.4)', stagger: 0.1,
-                            scrollTrigger: { trigger: protoRef.current, start: 'top 78%', once: true },
-                        }
-                    );
-                }
+                if (protoHeader) gsap.fromTo(protoHeader, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: protoRef.current, start: 'top 82%', once: true } });
+                if (protoCards.current.length) gsap.fromTo(protoCards.current, { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'back.out(1.4)', stagger: 0.1, scrollTrigger: { trigger: protoRef.current, start: 'top 78%', once: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 10 ▸ NEWS — slide up reveal
-            // ═══════════════════════════════════════════════════════════════════════
             if (newsRef.current) {
                 const newsHdr = newsRef.current.querySelector('.news-header');
-                if (newsHdr) {
-                    gsap.fromTo(newsHdr,
-                        { opacity: 0, y: 40 },
-                        {
-                            opacity: 1, y: 0, duration: 0.85, ease: 'power3.out',
-                            scrollTrigger: { trigger: newsRef.current, start: 'top 82%', once: true },
-                        }
-                    );
-                }
+                if (newsHdr) gsap.fromTo(newsHdr, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.85, ease: 'power3.out', scrollTrigger: { trigger: newsRef.current, start: 'top 82%', once: true } });
                 const newsSwiper = newsRef.current.querySelector('.news-swiper');
-                if (newsSwiper) {
-                    gsap.fromTo(newsSwiper,
-                        { opacity: 0, y: 50 },
-                        {
-                            opacity: 1, y: 0, duration: 1.0, ease: 'power3.out', delay: 0.12,
-                            scrollTrigger: { trigger: newsRef.current, start: 'top 80%', once: true },
-                        }
-                    );
-                }
+                if (newsSwiper) gsap.fromTo(newsSwiper, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out', delay: 0.12, scrollTrigger: { trigger: newsRef.current, start: 'top 80%', once: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 11 ▸ CRAFT — stagger with rotation
-            // ═══════════════════════════════════════════════════════════════════════
             if (craftRef.current) {
                 const craftHdr = craftRef.current.querySelector('.craft-header');
-                if (craftHdr) {
-                    gsap.fromTo(craftHdr,
-                        { opacity: 0, y: 40 },
-                        {
-                            opacity: 1, y: 0, duration: 0.9, ease: 'power3.out',
-                            scrollTrigger: { trigger: craftRef.current, start: 'top 82%', once: true },
-                        }
-                    );
-                }
-                if (craftCards.current.length) {
-                    gsap.fromTo(craftCards.current,
-                        { opacity: 0, y: 70, rotate: 2 },
-                        {
-                            opacity: 1, y: 0, rotate: 0,
-                            duration: 0.9, ease: 'power3.out', stagger: 0.16,
-                            scrollTrigger: { trigger: craftRef.current, start: 'top 80%', once: true },
-                        }
-                    );
-                }
+                if (craftHdr) gsap.fromTo(craftHdr, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: craftRef.current, start: 'top 82%', once: true } });
+                if (craftCards.current.length) gsap.fromTo(craftCards.current, { opacity: 0, y: 70, rotate: 2 }, { opacity: 1, y: 0, rotate: 0, duration: 0.9, ease: 'power3.out', stagger: 0.16, scrollTrigger: { trigger: craftRef.current, start: 'top 80%', once: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 12 ▸ LIBRARY — horizontal split reveal + inner parallax
-            // ═══════════════════════════════════════════════════════════════════════
             if (libRef.current) {
                 const libVisual = libRef.current.querySelector('.lib-visual');
                 const libContent = libRef.current.querySelector('.lib-content');
-
                 if (libVisual) {
-                    gsap.fromTo(libVisual,
-                        { opacity: 0, x: 80 },
-                        {
-                            opacity: 1, x: 0, duration: 1.2, ease: 'expo.out',
-                            scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true },
-                        }
-                    );
+                    gsap.fromTo(libVisual, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true } });
                     const libInner = libVisual.querySelector('div[style]');
-                    if (libInner) {
-                        gsap.to(libInner, {
-                            y: -24,
-                            ease: 'none',
-                            scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                        });
-                    }
+                    if (libInner) gsap.to(libInner, { y: -24, ease: 'none', scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 }
-
                 if (libContent) {
-                    gsap.fromTo(libContent,
-                        { opacity: 0, x: -80 },
-                        {
-                            opacity: 1, x: 0, duration: 1.2, ease: 'expo.out', delay: 0.18,
-                            scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true },
-                        }
-                    );
-                    gsap.fromTo(Array.from(libContent.children),
-                        { opacity: 0, y: 30 },
-                        {
-                            opacity: 1, y: 0,
-                            duration: 0.75, ease: 'power2.out', stagger: 0.09, delay: 0.35,
-                            scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true },
-                        }
-                    );
+                    gsap.fromTo(libContent, { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 1.2, ease: 'expo.out', delay: 0.18, scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true } });
+                    gsap.fromTo(Array.from(libContent.children), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', stagger: 0.09, delay: 0.35, scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true } });
                 }
-
                 const libCircle = libRef.current.querySelector('.lib-deco-circle');
-                if (libCircle) {
-                    gsap.to(libCircle, {
-                        y: -60, rotate: 25,
-                        ease: 'none',
-                        scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true },
-                    });
-                }
+                if (libCircle) gsap.to(libCircle, { y: -60, rotate: 25, ease: 'none', scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
             }
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 13 ▸ GLOBAL SECTION PARALLAX
-            // ═══════════════════════════════════════════════════════════════════════
             document.querySelectorAll('.section-parallax-bg').forEach(el => {
-                gsap.to(el, {
-                    yPercent: -20,
-                    ease: 'none',
-                    scrollTrigger: { trigger: el.closest('section') || el.parentElement, start: 'top bottom', end: 'bottom top', scrub: true },
-                });
+                gsap.to(el, { yPercent: -20, ease: 'none', scrollTrigger: { trigger: el.closest('section') || el.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } });
             });
 
-            // ═══════════════════════════════════════════════════════════════════════
-            // 14 ▸ FLOATING DECORATIVE ELEMENTS
-            // ═══════════════════════════════════════════════════════════════════════
             document.querySelectorAll('.float-slow').forEach((el, i) => {
-                gsap.to(el, {
-                    y: `+=${8 + i * 3}`, x: `+=${4 + i * 2}`, rotate: `+=${3 + i}`,
-                    duration: 4 + i * 0.8, ease: 'sine.inOut', yoyo: true, repeat: -1,
-                });
+                gsap.to(el, { y: `+=${8 + i * 3}`, x: `+=${4 + i * 2}`, rotate: `+=${3 + i}`, duration: 4 + i * 0.8, ease: 'sine.inOut', yoyo: true, repeat: -1 });
             });
             document.querySelectorAll('.float-fast').forEach((el, i) => {
-                gsap.to(el, {
-                    y: `+=${5}`, rotate: `+=${6}`,
-                    duration: 2.5 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1,
-                });
+                gsap.to(el, { y: `+=${5}`, rotate: `+=${6}`, duration: 2.5 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1 });
             });
 
             return () => ScrollTrigger.getAll().forEach(t => t.kill());
@@ -791,8 +454,7 @@ export default function Home() {
     }, []);
 
     return (
-        // ✅ FIX: removed top white space — paddingTop matches your navbar height (adjust if needed)
-        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w, paddingTop: -20, marginTop:-23 }}>
+        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w, paddingTop: -20, marginTop: -23 }}>
 
             {/* ── SCROLL PROGRESS BAR ──────────────────────────────────────────── */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999, background: C.g3 }}>
@@ -805,7 +467,7 @@ export default function Home() {
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
         /* ── HERO ── */
-        .hero-swiper{width:100%;height:clamp(300px,100vh,710px);}
+        .hero-swiper{width:100%;height:clamp(300px,100vh,688px);}
         .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;overflow:hidden;}
         .hero-bg-layer{position:absolute;inset:-20% 0;will-change:transform;}
         .hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(4,20,40,.82) 0%,rgba(4,20,40,.58) 60%,rgba(4,20,40,.28) 100%);transition:opacity .4s;}
@@ -905,6 +567,93 @@ export default function Home() {
         .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
         .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
 
+        /* ── ONLINE TRAINING — fully responsive ── */
+        .online-section{
+          position:relative;
+          overflow:hidden;
+          padding:clamp(40px,6vw,96px) clamp(16px,4vw,56px);
+        }
+        .online-layout{
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:clamp(28px,5vw,72px);
+          align-items:center;
+          max-width:1320px;
+          margin:0 auto;
+        }
+        /* tablet */
+        @media(max-width:900px){
+          .online-layout{
+            grid-template-columns:1fr;
+            gap:clamp(28px,4vw,48px);
+          }
+        }
+        /* mobile */
+        @media(max-width:480px){
+          .online-section{padding:32px 16px;}
+          .online-layout{gap:24px;}
+        }
+
+        .online-features-grid{
+          display:grid;
+          grid-template-columns:1fr 1fr;
+          gap:10px;
+          margin-bottom:28px;
+        }
+        @media(max-width:360px){
+          .online-features-grid{grid-template-columns:1fr;}
+        }
+
+        .online-feature-item{
+          display:flex;
+          align-items:center;
+          gap:10px;
+          padding:10px 14px;
+          background:rgba(255,255,255,.06);
+          border:1px solid rgba(255,255,255,.1);
+          border-radius:8px;
+          min-width:0;
+        }
+
+        .online-panel{
+          background:rgba(255,255,255,.05);
+          border:1px solid rgba(255,255,255,.1);
+          border-radius:16px;
+          padding:clamp(18px,3vw,36px);
+          display:flex;
+          flex-direction:column;
+          gap:18px;
+          width:100%;
+          min-width:0;
+        }
+
+        .online-teams-row{
+          display:flex;
+          align-items:center;
+          gap:12px;
+          padding:14px 18px;
+          background:rgba(8,101,168,.25);
+          border:1px solid rgba(8,101,168,.4);
+          border-radius:10px;
+          min-width:0;
+        }
+
+        .online-prog-item{
+          display:flex;
+          align-items:flex-start;
+          gap:10px;
+          min-width:0;
+        }
+
+        .online-prog-dot{
+          width:6px;
+          height:6px;
+          border-radius:50%;
+          background:${C.o};
+          flex-shrink:0;
+          margin-top:6px;
+        }
+
         /* ── UTILITY ── */
         a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
         a.ob-outline:hover{background:${C.o};color:#fff;}
@@ -943,7 +692,6 @@ export default function Home() {
       `}</style>
 
             {/* ── 1 HERO ──────────────────────────────────────────────────────── */}
-            {/* ✅ FIX: marginTop:0 ensures no white gap below navbar */}
             <section ref={heroRef} style={{ position: 'relative', marginTop: 0 }}>
                 <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
                     autoplay={{ delay: 7000, disableOnInteraction: false }}
@@ -979,8 +727,7 @@ export default function Home() {
             </section>
 
             {/* ── 2 STATS ─────────────────────────────────────────────────────── */}
-            {/* ✅ FIX: stat-cell opacity is still 0 in CSS but GSAP animates to 1 on page load */}
-            <div ref={statsRef} style={{ background: C.k, borderBottom: `3px solid ${C.o}`, position: 'relative', overflow: 'hidden' }}>
+            <div ref={statsRef} style={{ background: C.k, borderBottom: `4px solid ${C.o}`, position: 'relative', overflow: 'hidden' }}>
                 <div ref={statsOrangeBarRef} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${C.o},${C.b},${C.o})`, opacity: 0.5 }} />
                 <div className="W">
                     <div className="stats-bar">
@@ -1039,51 +786,95 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ── 4 ONLINE TRAINING ───────────────────────────────────────────── */}
-            <section ref={onlineRef} className="S" style={{ background: C.b, position: 'relative', overflow: 'hidden' }}>
+            {/* ── 4 ONLINE TRAINING — FULLY RESPONSIVE 300px → 2000px ─────────── */}
+            <section ref={onlineRef} className="online-section" style={{ background: C.b }}>
+                {/* left accent bar */}
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
+
+                {/* decorative circles */}
                 <div className="online-circle float-slow" style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(255,255,255,.08)', pointerEvents: 'none' }} />
                 <div className="online-circle float-slow" style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)', pointerEvents: 'none' }} />
-                <div className="W" style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(28px,5vw,72px)', alignItems: 'center' }} className="ab-split">
-                        <div className="online-col">
-                            <Eyebrow light>تدريب بلا حدود</Eyebrow>
-                            <SplitTitle light>التدريب عن بُعد<br />( أونلاين )</SplitTitle>
-                            <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
-                            <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: 'rgba(255,255,255,.65)', lineHeight: 2, marginBottom: 24 }}>
-                                برامج تدريبية مباشرة (Live) عبر Microsoft Teams، تُتيح لك الحضور من أي مكان داخل مصر أو خارجها مع الحفاظ على التفاعل الفوري مع المدرب وجودة المحتوى.
-                            </p>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 28 }}>
-                                {[{ icon: '🎥', text: 'بث مباشر Live' }, { icon: '💬', text: 'تفاعل فوري' }, { icon: '📍', text: 'من أي مكان' }, { icon: '🎓', text: 'شهادة معتمدة' }].map((item, i) => (
-                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 8 }}>
-                                        <span style={{ fontSize: '1.1rem' }}>{item.icon}</span>
-                                        <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', fontWeight: 700, color: 'rgba(255,255,255,.85)' }}>{item.text}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <SolidBtn to="/online-training" orange>اكتشف التدريب الأونلاين <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
-                        </div>
-                        <div className="online-col" style={{ background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 16, padding: 'clamp(20px,3vw,36px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(8,101,168,.25)', border: '1px solid rgba(8,101,168,.4)', borderRadius: 10 }}>
-                                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                    <TeamsIcon size={24} />
-                                </div>
-                                <div>
-                                    <div style={{ fontFamily: F, fontSize: '.78rem', fontWeight: 900, color: C.w, lineHeight: 1.4 }}>Microsoft Teams</div>
-                                    <div style={{ fontFamily: F, fontSize: '.66rem', color: 'rgba(255,255,255,.5)', marginTop: 2 }}>منصة التدريب الرسمية</div>
-                                </div>
-                            </div>
-                            {['برنامج إدارة المشاريع الاحترافية (PMP)', 'القيادة التنفيذية', 'عقود الفيديك', 'أساليب تحليل المشكلات واتخاذ القرارات', 'برامج السلامة والجودة'].map((prog, i) => (
-                                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.o, flexShrink: 0 }} />
-                                    <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', color: 'rgba(255,255,255,.7)', lineHeight: 1.6 }}>{prog}</span>
+
+                <div className="online-layout">
+
+                    {/* ── Left column: text content ── */}
+                    <div className="online-col">
+                        <Eyebrow light>تدريب بلا حدود</Eyebrow>
+                        <SplitTitle light>التدريب عن بُعد<br />( أونلاين )</SplitTitle>
+                        <div style={{ width: 44, height: 3, background: C.o, margin: '16px 0 18px' }} />
+                        <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: 'rgba(255,255,255,.65)', lineHeight: 2, marginBottom: 24 }}>
+                            برامج تدريبية مباشرة (Live) عبر Microsoft Teams، تُتيح لك الحضور من أي مكان داخل مصر أو خارجها مع الحفاظ على التفاعل الفوري مع المدرب وجودة المحتوى.
+                        </p>
+
+                        <div className="online-features-grid">
+                            {[
+                                { icon: '🎥', text: 'بث مباشر Live' },
+                                { icon: '💬', text: 'تفاعل فوري' },
+                                { icon: '📍', text: 'من أي مكان' },
+                                { icon: '🎓', text: 'شهادة معتمدة' }
+                            ].map((item, i) => (
+                                <div key={i} className="online-feature-item">
+                                    <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{item.icon}</span>
+                                    <span style={{ fontFamily: F, fontSize: 'clamp(.7rem,1vw,.82rem)', fontWeight: 700, color: 'rgba(255,255,255,.85)', lineHeight: 1.4 }}>{item.text}</span>
                                 </div>
                             ))}
-                            <div style={{ marginTop: 4, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,.08)' }}>
+                        </div>
+
+                        <SolidBtn to="/online-training" orange>
+                            اكتشف التدريب الأونلاين <ArrowForwardIosIcon sx={{ fontSize: 11 }} />
+                        </SolidBtn>
+                    </div>
+
+                    {/* ── Right column: panel ── */}
+                    <div className="online-col">
+                        <div className="online-panel">
+
+                            {/* Teams badge */}
+                            <div className="online-teams-row">
+                                <div style={{
+                                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                                    background: 'rgba(255,255,255,.08)',
+                                    border: '1px solid rgba(255,255,255,.15)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
+                                    <TeamsIcon size={24} />
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.88rem)', fontWeight: 900, color: C.w, lineHeight: 1.4 }}>
+                                        Microsoft Teams
+                                    </div>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.62rem,.9vw,.7rem)', color: 'rgba(255,255,255,.5)', marginTop: 2 }}>
+                                        منصة التدريب الرسمية
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Program list */}
+                            {[
+                                'برنامج إدارة المشاريع الاحترافية (PMP)',
+                                'القيادة التنفيذية',
+                                'عقود الفيديك',
+                                'أساليب تحليل المشكلات واتخاذ القرارات',
+                                'برامج السلامة والجودة'
+                            ].map((prog, i) => (
+                                <div key={i} className="online-prog-item">
+                                    <div className="online-prog-dot" />
+                                    <span style={{
+                                        fontFamily: F,
+                                        fontSize: 'clamp(.72rem,1vw,.85rem)',
+                                        color: 'rgba(255,255,255,.75)',
+                                        lineHeight: 1.7,
+                                        wordBreak: 'break-word'
+                                    }}>{prog}</span>
+                                </div>
+                            ))}
+
+                            <div style={{ paddingTop: 4, borderTop: '1px solid rgba(255,255,255,.08)' }}>
                                 <ArrowBtn to="/online-training#programs" inv>عرض جميع البرامج</ArrowBtn>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
 
