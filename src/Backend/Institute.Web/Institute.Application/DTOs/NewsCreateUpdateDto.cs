@@ -8,6 +8,7 @@ namespace Institute.Application.DTOs
         public string Title { get; set; }
         public string Details { get; set; }
         public DateTime Date { get; set; } = DateTime.UtcNow;
+        public bool? ShowFlag { get; set; }
 
         // ✅ بدل Image (مفرد) → Images (جمع)
         public List<IFormFile>? Images { get; set; }

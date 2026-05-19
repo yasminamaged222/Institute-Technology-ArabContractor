@@ -10,10 +10,12 @@ namespace Institute.Domain.specifications.NewsSpec
     public class NewsWithMainPicSpec : BaseSpecification<Dailynews>
     {
         public NewsWithMainPicSpec(NewsSpecParams newsParams)
-            : base(x =>
+            : base((x =>
+                (!newsParams.ShowFlag.HasValue ||
+                x.ShowFlag == newsParams.ShowFlag.Value) &&
                 (!newsParams.Year.HasValue ||
-                 (x.NewsDate.HasValue &&
-                  x.NewsDate.Value.Year == newsParams.Year)))
+                (x.NewsDate.HasValue &&
+                 x.NewsDate.Value.Year == newsParams.Year))))
         {
             AddInclude(x => x.NewsPics);
 

@@ -37,7 +37,8 @@ namespace Institute.Application.Services
                 ATitel = dto.Title,
                 ADetails = dto.Details,
                 NewsDate = dto.Date,
-                Approved = true
+                Approved = true,
+                ShowFlag = true
             };
 
             await _newsRepo.AddAsync(entity);
@@ -60,7 +61,7 @@ namespace Institute.Application.Services
             entity.ATitel = dto.Title;
             entity.ADetails = dto.Details;
             entity.NewsDate = dto.Date;
-
+            entity.ShowFlag = dto.ShowFlag;
             _newsRepo.Update(entity);
             await _newsRepo.SaveChangesAsync();
 
@@ -176,7 +177,8 @@ namespace Institute.Application.Services
                 Date = entity.NewsDate ?? DateTime.UtcNow,
                 // ✅ بيرجع اسم الملف بس — الـ Controller هو اللي يبني الـ URL
                 ImageUrl = blobNames.FirstOrDefault(),
-                ImageUrls = blobNames
+                ImageUrls = blobNames,
+                ShowFlag = entity.ShowFlag
             };
         }
     }
