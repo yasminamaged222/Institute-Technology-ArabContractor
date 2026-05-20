@@ -59,8 +59,9 @@ const Navbar = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('lg'));
     const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const aboutLinks = ['نبذة عامة', 'الرؤية والأهداف', 'الشهادات والاعتمادات', 'فريق العمل', 'قائمة المحاضرين', 'التدريب الأونلاين', 'الخطة التدريبية', 'التقرير الشهرى', 'مكتبة الصور والفيديوهات', 'البروتوكولات والإتفاقيات', 'عملاؤنا'];
-    const aboutLinkPaths = { 'نبذة عامة': '/overview', 'الرؤية والأهداف': '/mission', 'الشهادات والاعتمادات': '/certifications', 'فريق العمل': '/team', 'قائمة المحاضرين': '/instructors', 'الخطة التدريبية': '/pdf/ICEMT_Plan_Training.pdf', 'التقرير الشهرى': '/pdf/ICEMT_Monthly_Activity.pdf', 'مكتبة الصور والفيديوهات': '/gallery', 'البروتوكولات والإتفاقيات': '/protocols', 'عملاؤنا': '/customers', 'التدريب الأونلاين': '/online-training' };    const serviceLinks = [{ title: 'التدريب الحرفى', path: '/vocational-training' }, { title: 'التعليم الفنى', path: '/technical-education' }, { title: 'الإختبارات', path: '/tests' }, { title: 'مجلس قادة المستقبل', path: '/future-leaders' }];
+    const aboutLinks = ['نبذة عامة', 'الرؤية والأهداف', 'الشهادات والاعتمادات', 'فريق العمل', 'قائمة المحاضرين', 'التدريب الأونلاين','برنامج اعداد مهندس مكتب فني ','الخطة التدريبية', 'التقرير الشهرى', 'مكتبة الصور والفيديوهات', 'البروتوكولات والإتفاقيات', 'عملاؤنا'];
+    const aboutLinkPaths = { 'نبذة عامة': '/overview', 'الرؤية والأهداف': '/mission', 'الشهادات والاعتمادات': '/certifications', 'فريق العمل': '/team', 'قائمة المحاضرين': '/instructors', 'الخطة التدريبية': '/pdf/ICEMT_Plan_Training.pdf', 'التقرير الشهرى': '/pdf/ICEMT_Monthly_Activity.pdf', 'مكتبة الصور والفيديوهات': '/gallery', 'البروتوكولات والإتفاقيات': '/protocols', 'عملاؤنا': '/customers', 'التدريب الأونلاين': '/online-training', 'برنامج اعداد مهندس مكتب فني ':'/cea-program' };
+    const serviceLinks = [{ title: 'التدريب الحرفى', path: '/vocational-training' }, { title: 'التعليم الفنى', path: '/technical-education' }, { title: 'الإختبارات', path: '/tests' }, { title: 'مجلس قادة المستقبل', path: '/future-leaders' }];
 
     const updateCartCount = () => {
         try {
