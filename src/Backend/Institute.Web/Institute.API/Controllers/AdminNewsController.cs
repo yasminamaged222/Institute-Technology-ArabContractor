@@ -4,15 +4,16 @@ using Institute.API.Helpers;
 using Institute.Application.DTOs;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
-using Institute.Application.Security;
 using Institute.Domain.Entities;
 using Institute.Domain.specifications.NewsSpec;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Institute.API.Controllers
 {
     [Route("api/admin/[controller]")]
     [ApiController]
+    [Authorize] // ✅ حماية كل الـ endpoints
     public class AdminNewsController : ControllerBase
     {
         private readonly IReadOnlyService<Dailynews> _newsService;
@@ -35,7 +36,7 @@ namespace Institute.API.Controllers
         // ── GET ALL ─────────────────────────────
         [HttpGet("getAllNews")]
         public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews(
-    [FromQuery] NewsSpecParams newsParams)
+            [FromQuery] NewsSpecParams newsParams)
         {
             var spec = new NewsWithMainPicSpec(newsParams);
             var news = await _repo.GetAllWithSpecAsync(spec);
@@ -46,10 +47,9 @@ namespace Institute.API.Controllers
                 Title = x.ATitel,
                 PublishedAt = x.NewsDate ?? DateTime.UtcNow,
                 ImageUrl = BuildImageUrl(
-                        x.NewsPics?
-                        .OrderBy(p => p.PicPeriorty)
-                        .FirstOrDefault()?.ImageName
-            )
+                    x.NewsPics?
+                     .OrderBy(p => p.PicPeriorty)
+                     .FirstOrDefault()?.ImageName)
             }).ToList();
 
             var countSpec = new NewsWithFiltersForCountSpec(newsParams);
@@ -67,13 +67,13 @@ namespace Institute.API.Controllers
         public async Task<IActionResult> GetNewsById(int id)
         {
             if (id <= 0)
-                return BadRequest("Invalid news id");
+                return BadRequest(new { message = "Invalid news id" });
 
             var spec = new NewsWithDetailsSpec(id);
             var news = await _newsService.GetEntityWithSpec(spec);
 
             if (news == null)
-                return NotFound();
+                return NotFound(new { message = "الخبر غير موجود" });
 
             return Ok(new NewsDetailsDto
             {
@@ -81,15 +81,22 @@ namespace Institute.API.Controllers
                 Title = news.ATitel,
                 Details = news.ADetails,
                 PublishedAt = news.NewsDate ?? DateTime.UtcNow,
+
+                // الصورة الرئيسية
                 ImageUrl = BuildImageUrl(
-                        news.NewsPics?
+                    news.NewsPics?
                         .OrderBy(p => p.PicPeriorty)
                         .FirstOrDefault()?.ImageName),
 
-                // ✅ زيادة — كل الصور مرتبة
-                ImageUrls = news.NewsPics?
+                // ✅ كل الصور مع PicId علشان الـ frontend يعرف يبعت الصح في الـ delete
+                Images = news.NewsPics?
                     .OrderBy(p => p.PicPeriorty)
-                    .Select(p => BuildImageUrl(p.ImageName))
+                    .Select(p => new NewsImageDto
+                    {
+                        PicId = p.PicId,
+                        ImageUrl = BuildImageUrl(p.ImageName),
+                        IsMain = p.StartUpPic ?? false
+                    })
                     .ToList()
             });
         }
@@ -100,7 +107,6 @@ namespace Institute.API.Controllers
         {
             var result = await _newsWriteService.CreateAsync(dto);
 
-            // ✅ زيادة — بناء الـ URL بعد ما الـ Service يرجع اسم الملف بس
             result.ImageUrl = BuildImageUrl(result.ImageUrl);
             result.ImageUrls = result.ImageUrls?.Select(u => BuildImageUrl(u)).ToList();
 
@@ -117,28 +123,45 @@ namespace Institute.API.Controllers
             var result = await _newsWriteService.UpdateAsync(id, dto);
 
             if (result == null)
-                return NotFound();
+                return NotFound(new { message = "الخبر غير موجود" });
 
-            // ✅ زيادة — بناء الـ URL بعد ما الـ Service يرجع اسم الملف بس
             result.ImageUrl = BuildImageUrl(result.ImageUrl);
             result.ImageUrls = result.ImageUrls?.Select(u => BuildImageUrl(u)).ToList();
 
             return Ok(result);
         }
 
-        // ── DELETE ───────────────────────────────
+        // ── DELETE NEWS ───────────────────────────
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
+            if (id <= 0)
+                return BadRequest(new { message = "Invalid id" });
+
             var result = await _newsWriteService.DeleteAsync(id);
 
             if (!result)
-                return NotFound();
+                return NotFound(new { message = "الخبر غير موجود" });
 
-            return Ok(new { message = "Deleted successfully" });
+            return Ok(new { message = "تم حذف الخبر بنجاح" });
         }
 
-        // ── BUILD URL (SAFE) ─────────────────────────
+        // ── DELETE SINGLE IMAGE ───────────────────
+        [HttpDelete("{newsId}/images/{picId}")]
+        public async Task<IActionResult> DeleteImage(int newsId, int picId)
+        {
+            if (newsId <= 0 || picId <= 0)
+                return BadRequest(new { message = "Invalid id" });
+
+            var result = await _newsWriteService.DeleteImageAsync(newsId, picId);
+
+            if (!result)
+                return NotFound(new { message = "الصورة غير موجودة أو لا تنتمي لهذا الخبر" });
+
+            return Ok(new { message = "تم حذف الصورة بنجاح" });
+        }
+
+        // ── BUILD URL ────────────────────────────
         private string? BuildImageUrl(string? blobName)
         {
             if (string.IsNullOrWhiteSpace(blobName))

@@ -65,10 +65,8 @@ namespace Institute.Application.Services
             _newsRepo.Update(entity);
             await _newsRepo.SaveChangesAsync();
 
-            // ✅ لو في صور جديدة — رفعهم بس من غير ما نمسح القديمة
             if (dto.Images != null && dto.Images.Any())
             {
-                // ✅ أول priority للصور الجديدة بعد آخر واحدة موجودة
                 var lastPriority = (await _picRepo.GetAllAsync())
                     .Where(p => p.NewsId == id)
                     .OrderByDescending(p => p.PicPeriorty)
@@ -82,7 +80,7 @@ namespace Institute.Application.Services
             return ToDto(entity, blobNames);
         }
 
-        // ── DELETE ───────────────────────────────
+        // ── DELETE NEWS ───────────────────────────
         public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _newsRepo.GetByIdAsync(id);
@@ -92,8 +90,14 @@ namespace Institute.Application.Services
                 .Where(p => p.NewsId == id)
                 .ToList();
 
+            // امسح كل الصور من Azure أولاً
             foreach (var pic in pics)
+            {
+                if (!string.IsNullOrWhiteSpace(pic.ImageName))
+                    await _blobStorage.DeleteFileAsync(pic.ImageName, Container, Folder);
+
                 _picRepo.Delete(pic);
+            }
 
             if (pics.Any())
                 await _picRepo.SaveChangesAsync();
@@ -104,7 +108,43 @@ namespace Institute.Application.Services
             return true;
         }
 
-        // ── UPLOAD MULTIPLE IMAGES ────────────────────────
+        // ── DELETE SINGLE IMAGE ───────────────────
+        public async Task<bool> DeleteImageAsync(int newsId, int picId)
+        {
+            // تأكد إن الصورة موجودة وتابعة لنفس الخبر
+            var pic = (await _picRepo.GetAllAsync())
+                .FirstOrDefault(p => p.PicId == picId && p.NewsId == newsId);
+
+            if (pic == null) return false;
+
+            // امسح من Azure Blob Storage
+            if (!string.IsNullOrWhiteSpace(pic.ImageName))
+                await _blobStorage.DeleteFileAsync(pic.ImageName, Container, Folder);
+
+            // امسح من الـ DB
+            _picRepo.Delete(pic);
+            await _picRepo.SaveChangesAsync();
+
+            // ✅ أعد ترتيب الـ Priority للصور الباقية
+            var remaining = (await _picRepo.GetAllAsync())
+                .Where(p => p.NewsId == newsId)
+                .OrderBy(p => p.PicPeriorty)
+                .ToList();
+
+            for (int i = 0; i < remaining.Count; i++)
+            {
+                remaining[i].PicPeriorty = i + 1;
+                remaining[i].StartUpPic = (i == 0); // الأولى دايماً هي الرئيسية
+                _picRepo.Update(remaining[i]);
+            }
+
+            if (remaining.Any())
+                await _picRepo.SaveChangesAsync();
+
+            return true;
+        }
+
+        // ── UPLOAD MULTIPLE IMAGES ────────────────
         private async Task UploadAndSavePicsAsync(
             int newsId,
             List<IFormFile> images,
@@ -115,15 +155,12 @@ namespace Institute.Application.Services
             foreach (var image in images)
             {
                 var blobPath = await _blobStorage.UploadFileAsync(image, Container, Folder);
-
-                // ✅ حفظ اسم الملف بس في الـ DB بدون المسار
                 var fileName = Path.GetFileName(blobPath);
 
                 await _picRepo.AddAsync(new NewsPic
                 {
                     NewsId = newsId,
                     ImageName = fileName,
-                    // ✅ أول صورة في الـ Create بس هي الرئيسية
                     StartUpPic = priority == 1,
                     PicPeriorty = priority++
                 });
@@ -132,7 +169,7 @@ namespace Institute.Application.Services
             await _picRepo.SaveChangesAsync();
         }
 
-        // ── GET ALL EXISTING BLOB NAMES ───────────────────
+        // ── GET ALL EXISTING BLOB NAMES ───────────
         private async Task<List<string?>> GetExistingBlobNames(int newsId)
         {
             return (await _picRepo.GetAllAsync())
@@ -142,29 +179,17 @@ namespace Institute.Application.Services
                 .ToList();
         }
 
-        // ── GET BLOB NAME (موجودة — مش بنمسحها) ──────────
-        private async Task<string?> GetExistingBlobName(int newsId)
-        {
-            var pic = (await _picRepo.GetAllAsync())
-                .Where(p => p.NewsId == newsId)
-                .OrderBy(p => p.PicPeriorty)
-                .FirstOrDefault();
-
-            return pic?.ImageName;
-        }
-
-        // ── Get URL (safe) ────────────────
+        // ── GET URL ───────────────────────────────
         private string? GetImageUrl(string? blobName)
         {
             if (string.IsNullOrWhiteSpace(blobName))
                 return null;
 
             var baseUrl = _config["AzureStorage:BaseUrl"];
-
             return $"{baseUrl?.TrimEnd('/')}/news/{blobName.TrimStart('/')}";
         }
 
-        // ── DTO ───────────────────────────────
+        // ── TO DTO ────────────────────────────────
         private NewsCreateUpdateDto ToDto(
             Dailynews entity,
             List<string?> blobNames)
@@ -175,7 +200,6 @@ namespace Institute.Application.Services
                 Title = entity.ATitel,
                 Details = entity.ADetails,
                 Date = entity.NewsDate ?? DateTime.UtcNow,
-                // ✅ بيرجع اسم الملف بس — الـ Controller هو اللي يبني الـ URL
                 ImageUrl = blobNames.FirstOrDefault(),
                 ImageUrls = blobNames,
                 ShowFlag = entity.ShowFlag
