@@ -42,7 +42,6 @@ import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
-// CHANGE 1: removed CEA program slide
 const slides = [
     { title: 'خدمات تدريبية مميزة', subtitle: 'التشييد والإدارة', tag: 'برامج تدريبية', link: '/training-methods', image: '/images/banner6.jpg' },
     { title: 'ورش الميكانيكا والكهرباء', subtitle: 'تأهيل الكوادر الهندسية', tag: 'تدريب تقني', link: '/shobra', image: '/images/banner3.jpg' },
@@ -142,7 +141,6 @@ function buildStats(apiStats) {
         { raw: yearsExp, suffix: '+', sub: `${FOUNDING_YEAR}–${currentYear}`, l: 'عامًا من الخبرة', noComma: false },
         { raw: traineesPerYear, suffix: '+', sub: null, l: 'متدرب سنويًا', noComma: false },
         { raw: programs, suffix: '+', sub: null, l: 'برنامج تدريبي', noComma: false },
-        // CHANGE 3: noComma:true for founding year so it never gets thousand-separator
         { raw: FOUNDING_YEAR, suffix: '', sub: null, l: 'سنة التأسيس', noComma: true },
     ];
 }
@@ -298,7 +296,6 @@ export default function Home() {
                         ease: 'power2.out',
                         delay: 0.5,
                         onUpdate: () => {
-                            // CHANGE 3: use plain string for year, locale string for others
                             const rounded = Math.round(obj.val);
                             el.textContent = noComma
                                 ? String(rounded) + suffix
@@ -474,7 +471,6 @@ export default function Home() {
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
-        /* ── HERO — CHANGE 2: fully responsive bg cover, no crop ── */
         .hero-swiper{width:100%;height:clamp(420px,100svh,780px);}
         .hero-swiper .swiper-slide{
           display:flex;align-items:center;justify-content:center;overflow:hidden;
@@ -484,12 +480,10 @@ export default function Home() {
           position:absolute;
           inset:0;
           will-change:transform;
-          /* Always cover the full slide — no crop on any screen */
           background-size:cover!important;
           background-position:center center!important;
           background-repeat:no-repeat!important;
         }
-        /* Parallax extends the layer so the gsap yPercent shift stays in-bounds */
         .hero-bg-layer{
           top:-15%;bottom:-15%;left:0;right:0;
           height:130%;
@@ -508,17 +502,28 @@ export default function Home() {
         .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;}
         .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
         .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:44px;}
-        /* Small screens: tighten nav buttons */
         @media(max-width:480px){
           .hero-swiper .swiper-button-prev{right:12px!important;}
           .hero-swiper .swiper-button-next{left:12px!important;}
           .hero-swiper{height:clamp(380px,100svh,600px);}
         }
 
-        /* ── STATS ── */
-        .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);}
-        @media(max-width:760px){.stats-bar{grid-template-columns:repeat(2,1fr);}}
-        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;opacity:0;transform-origin:center bottom;}
+        /* ══════════════════════════════════════════════════════════════
+           STATS BAR — always 4 columns from 300px to 2000px
+           Font sizes scale via clamp() so nothing wraps or overflows
+        ══════════════════════════════════════════════════════════════ */
+        .stats-bar{
+          display:grid;
+          grid-template-columns:repeat(4,1fr);
+        }
+        .stat-cell{
+          padding:clamp(10px,2.2vw,36px) clamp(4px,1vw,28px);
+          border-left:1px solid rgba(255,255,255,.1);
+          text-align:center;
+          opacity:0;
+          transform-origin:center bottom;
+          min-width:0;
+        }
         .stat-cell:last-child{border-left:none;}
 
         /* ── FEATURES ── */
@@ -589,12 +594,11 @@ export default function Home() {
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
         @media(max-width:600px){.news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{display:none!important;}}
 
-        /* ── LIBRARY — CHANGE 5: stack vertically, full-width image on mobile ── */
+        /* ── LIBRARY ── */
         .lib-split{
           display:grid;
           grid-template-columns:1fr 1fr;
         }
-        /* Below 860px: stack content on top, visual (image) below */
         @media(max-width:860px){
           .lib-split{
             grid-template-columns:1fr;
@@ -606,11 +610,9 @@ export default function Home() {
           .lib-content{
             padding:clamp(28px,5vw,48px) clamp(20px,4vw,40px)!important;
           }
-          /* lib-tags wrap nicely on small screens */
           .lib-tags{flex-wrap:wrap;gap:6px!important;}
           .lib-tag{font-size:.58rem!important;}
         }
-        /* Very small screens */
         @media(max-width:380px){
           .lib-visual{min-height:200px;}
           .lib-tags{display:none;}
@@ -620,7 +622,7 @@ export default function Home() {
         .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
         .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
 
-        /* ── ONLINE TRAINING — fully responsive ── */
+        /* ── ONLINE TRAINING ── */
         .online-section{
           position:relative;
           overflow:hidden;
@@ -645,7 +647,6 @@ export default function Home() {
           .online-layout{gap:24px;}
         }
 
-        /* CHANGE 4: online image */
         .online-img-wrap{
           width:100%;
           border-radius:16px;
@@ -663,7 +664,6 @@ export default function Home() {
           transition:transform .6s ease;
         }
         .online-img-wrap:hover img{transform:scale(1.04);}
-        /* overlay badge on the image */
         .online-img-badge{
           position:absolute;
           bottom:14px;
@@ -782,7 +782,6 @@ export default function Home() {
                     navigation pagination={{ clickable: true }} loop speed={800}>
                     {slides.map((sl, i) => (
                         <SwiperSlide key={i}>
-                            {/* CHANGE 2: use inline style backgroundImage so cover/center always applies */}
                             <div
                                 className="hero-bg-layer"
                                 style={{
@@ -828,12 +827,17 @@ export default function Home() {
                                     data-count={s.raw}
                                     data-suffix={s.suffix}
                                     data-no-comma={s.noComma ? 'true' : 'false'}
-                                    style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>
-                                    {/* CHANGE 3: initial render also respects noComma */}
+                                    style={{
+                                        fontFamily: F,
+                                        fontSize: 'clamp(0.72rem,2.6vw,2.4rem)',
+                                        fontWeight: 900,
+                                        color: C.o,
+                                        lineHeight: 1,
+                                    }}>
                                     {s.noComma ? String(s.raw) : s.raw.toLocaleString('en-US')}{s.suffix}
                                 </div>
-                                {s.sub && <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>{s.sub}</div>}
-                                <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
+                                {s.sub && <div style={{ fontFamily: F, fontSize: 'clamp(0.42rem,0.9vw,.65rem)', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>{s.sub}</div>}
+                                <div style={{ fontFamily: F, fontSize: 'clamp(0.45rem,1vw,.7rem)', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
                             </div>
                         ))}
                     </div>
@@ -880,16 +884,11 @@ export default function Home() {
 
             {/* ── 4 ONLINE TRAINING ────────────────────────────────────────────── */}
             <section ref={onlineRef} className="online-section" style={{ background: C.b }}>
-                {/* left accent bar */}
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
-
-                {/* decorative circles */}
                 <div className="online-circle float-slow" style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(255,255,255,.08)', pointerEvents: 'none' }} />
                 <div className="online-circle float-slow" style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)', pointerEvents: 'none' }} />
 
                 <div className="online-layout">
-
-                    {/* ── Left column: text content ── */}
                     <div className="online-col">
                         <Eyebrow light>تدريب بلا حدود</Eyebrow>
                         <SplitTitle light>التدريب عن بُعد<br />( أونلاين )</SplitTitle>
@@ -897,7 +896,6 @@ export default function Home() {
                         <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: 'rgba(255,255,255,.65)', lineHeight: 2, marginBottom: 24 }}>
                             برامج تدريبية مباشرة (Live) عبر Microsoft Teams، تُتيح لك الحضور من أي مكان داخل مصر أو خارجها مع الحفاظ على التفاعل الفوري مع المدرب وجودة المحتوى.
                         </p>
-
                         <div className="online-features-grid">
                             {[
                                 { icon: '🎥', text: 'بث مباشر Live' },
@@ -911,26 +909,20 @@ export default function Home() {
                                 </div>
                             ))}
                         </div>
-
                         <SolidBtn to="/online-training" orange>
                             اكتشف التدريب الأونلاين <ArrowForwardIosIcon sx={{ fontSize: 11 }} />
                         </SolidBtn>
                     </div>
 
-                    {/* ── Right column: CHANGE 4 — image + panel ── */}
                     <div className="online-col" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-                        {/* Image */}
                         <div className="online-img-wrap">
                             <img
                                 src="/images/2.jpeg"
                                 alt="التدريب الأونلاين"
                                 onError={e => {
-                                    // fallback to a placeholder if image not found
                                     e.target.src = 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?w=800&q=80';
                                 }}
                             />
-                            {/* Badge overlay */}
                             <div className="online-img-badge">
                                 <TeamsIcon size={28} />
                                 <div>
@@ -940,7 +932,6 @@ export default function Home() {
                             </div>
                         </div>
 
-                        {/* Program list panel */}
                         <div className="online-panel">
                             {[
                                 'برنامج إدارة المشاريع الاحترافية (PMP)',
@@ -960,13 +951,11 @@ export default function Home() {
                                     }}>{prog}</span>
                                 </div>
                             ))}
-
                             <div style={{ paddingTop: 4, borderTop: '1px solid rgba(255,255,255,.08)' }}>
                                 <ArrowBtn to="/online-training#programs" inv>عرض جميع البرامج</ArrowBtn>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </section>
 
@@ -1236,7 +1225,6 @@ export default function Home() {
             {/* ── 13 LIBRARY ───────────────────────────────────────────────────── */}
             <section style={{ background: C.k }} ref={libRef}>
                 <div className="lib-split">
-                    {/* CHANGE 5: content first so on mobile it appears above the orange panel */}
                     <div className="lib-content">
                         <Eyebrow light>المكتبة</Eyebrow>
                         <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 14 }}>
