@@ -259,12 +259,19 @@ const Team = () => {
         <div className="team-root">
 
             {/* ══ FIXED OVERVIEW BAR ══════════════════ */}
-            <div className="top-100 fixed left-0 z-50 w-full border-b border-gray-300 bg-[#f5f5f5] px-5 py-2">
-                <div className="text-center">
-                    <span className="text-base" style={{ fontFamily: T.font }}>
-                        <a href="/" className="bc-link ml-3 text-gray-700" style={{ fontWeight: 700, textDecoration: 'none', color: T.gray700 }}>
-                            الصفحة الرئيسية
-                        </a>
+            <div style={{
+                position: 'fixed',
+                top: 70,
+                zIndex: 40,
+                width: '100%',
+                borderBottom: `1px solid ${T.gray300}`,
+                backgroundColor: '#f5f5f5',
+                padding: '8px 16px',
+                fontFamily: T.font,
+            }}>
+                <div style={{ textAlign: 'center' }}>
+                    <span>
+                        <a href="/" style={{ fontWeight: 700, textDecoration: 'none', color: T.gray700, marginLeft: '12px' }}>الصفحة الرئيسية</a>
                         <span style={{ color: T.gray500, margin: '0 6px' }}> - </span>
                         <span style={{ color: T.gray700, marginRight: '12px' }}>فريق العمل</span>
                     </span>
