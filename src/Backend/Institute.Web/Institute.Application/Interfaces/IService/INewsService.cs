@@ -8,5 +8,6 @@ namespace Institute.Application.Interfaces.IService
         Task<NewsCreateUpdateDto> CreateAsync(NewsCreateUpdateDto dto);
         Task<NewsCreateUpdateDto?> UpdateAsync(int id, NewsCreateUpdateDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<bool> DeleteImageAsync(int newsId, int picId);
     }
 }

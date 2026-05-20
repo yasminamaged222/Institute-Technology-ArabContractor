@@ -13,5 +13,14 @@ namespace Institute.Application.Interfaces.IService
             IFormFile file,
             string containerName,
             string folderName);
+        //to delete specific file from blob storage
+
+        Task DeleteFileAsync(        // ← أضف ده
+            string fileName,
+            string containerName,
+            string folderName);
     }
+
+
+     
 }

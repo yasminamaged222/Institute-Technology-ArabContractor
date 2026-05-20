@@ -51,6 +51,17 @@ namespace Institute.Application.Services
 
             return originalFileName; // 🔥 مهم جدًا
         }
+        public async Task DeleteFileAsync(
+           string fileName,
+           string containerName,
+           string folderName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) return;
+
+            var containerClient = new BlobContainerClient(_connectionString, containerName);
+            var blobClient = containerClient.GetBlobClient($"{folderName}/{fileName}");
+            await blobClient.DeleteIfExistsAsync();
+        }
 
 
 
