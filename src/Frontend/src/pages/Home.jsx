@@ -142,7 +142,7 @@ function buildStats(apiStats) {
         { raw: yearsExp, suffix: '+', sub: `${FOUNDING_YEAR}–${currentYear}`, l: 'عامًا من الخبرة' },
         { raw: traineesPerYear, suffix: '+', sub: null, l: 'متدرب سنويًا' },
         { raw: programs, suffix: '+', sub: null, l: 'برنامج تدريبي' },
-        { raw: FOUNDING_YEAR, suffix: '', sub: null, l: 'سنة التأسيس', noFormat: true },
+        { raw: FOUNDING_YEAR, suffix: '', sub: null, l: 'سنة التأسيس' },
     ];
 }
 
@@ -204,7 +204,6 @@ const SolidBtn = ({ to, href, children, orange, small }) => {
         background: orange ? C.o : C.b,
         padding: small ? '8px 20px' : 'clamp(10px,1.3vw,13px) clamp(22px,3vw,34px)',
         borderRadius: 8, transition: 'transform .2s, opacity .2s',
-        whiteSpace: 'nowrap',
     };
     const hover = e => { e.currentTarget.style.opacity = '.85'; e.currentTarget.style.transform = 'translateY(-1px)'; };
     const leave = e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = ''; };
@@ -277,8 +276,8 @@ export default function Home() {
             const cells = statsRef.current?.querySelectorAll('.stat-cell');
             if (cells) {
                 gsap.fromTo(cells,
-                    { opacity: 0, y: 30 },
-                    { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12, delay: 0.3 }
+                    { opacity: 0, y: 50, rotateX: -20 },
+                    { opacity: 1, y: 0, rotateX: 0, duration: 0.9, ease: 'power3.out', stagger: 0.12, delay: 0.3 }
                 );
             }
 
@@ -296,7 +295,7 @@ export default function Home() {
                         duration: isYear ? 1.6 : isLarge ? 2.4 : 2.0,
                         ease: 'power2.out',
                         delay: 0.5,
-                        onUpdate: () => { const v = Math.round(obj.val); el.textContent = (isYear ? String(v) : v.toLocaleString('en-US')) + suffix; },
+                        onUpdate: () => { el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix; },
                     });
                 });
             }
@@ -329,11 +328,17 @@ export default function Home() {
             if (heroRef.current) {
                 const bgLayers = heroRef.current.querySelectorAll('.hero-bg-layer');
                 const overlay = heroRef.current.querySelector('.hero-overlay');
-                gsap.to(bgLayers, { yPercent: 20, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true } });
+                gsap.to(bgLayers, { yPercent: 40, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true } });
                 if (overlay) gsap.to(overlay, { opacity: 0.75, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '60% top', scrub: true } });
-                if (heroInnerRef.current) gsap.to(heroInnerRef.current, { yPercent: -20, opacity: 0, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: '30% top', end: '75% top', scrub: true } });
+                if (heroInnerRef.current) gsap.to(heroInnerRef.current, { yPercent: -28, opacity: 0, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: '25% top', end: 'bottom top', scrub: true } });
+                const scrollInd = heroRef.current.querySelector('.scroll-ind');
+                if (scrollInd) gsap.to(scrollInd, { opacity: 0, scale: 0.5, yPercent: 30, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '30% top', scrub: true } });
                 const heroContent = heroRef.current.querySelector('.hero-entrance');
                 if (heroContent) gsap.fromTo(heroContent.children, { opacity: 0, y: 60, filter: 'blur(8px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.2, ease: 'power4.out', stagger: 0.12, delay: 0.3 });
+            }
+
+            if (statsRef.current && statsOrangeBarRef.current) {
+                gsap.to(statsOrangeBarRef.current, { xPercent: -8, ease: 'none', scrollTrigger: { trigger: statsRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
             }
 
             if (aboutRef.current) {
@@ -361,6 +366,7 @@ export default function Home() {
                 const hdr = visionRef.current.querySelector('.vision-header');
                 if (hdr) {
                     gsap.fromTo(hdr, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', scrollTrigger: { trigger: visionRef.current, start: 'top 80%', once: true } });
+                    gsap.to(hdr, { yPercent: -15, ease: 'none', scrollTrigger: { trigger: visionRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 }
                 gsap.fromTo(visionCards.current, { opacity: 0, y: 70, rotateX: -15, transformPerspective: 800 }, { opacity: 1, y: 0, rotateX: 0, duration: 0.95, ease: 'power3.out', stagger: 0.14, scrollTrigger: { trigger: visionRef.current, start: 'top 78%', once: true } });
             }
@@ -375,6 +381,8 @@ export default function Home() {
                 const header = certRef.current.querySelector('.cert-header');
                 if (header) gsap.fromTo(header, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: certRef.current, start: 'top 82%', once: true } });
                 gsap.fromTo(certRef.current.querySelector('.swiper'), { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.15, scrollTrigger: { trigger: certRef.current, start: 'top 80%', once: true } });
+                const bar = certRef.current.querySelector('.cert-side-bar');
+                if (bar) gsap.to(bar, { scaleY: 1.3, transformOrigin: 'top center', ease: 'none', scrollTrigger: { trigger: certRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
             }
 
             if (techRef.current) {
@@ -386,11 +394,16 @@ export default function Home() {
                 const cards = schoolsRef.current.querySelectorAll('.school-card');
                 if (featured) {
                     gsap.fromTo(featured, { opacity: 0, x: 60, scale: 0.96 }, { opacity: 1, x: 0, scale: 1, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: schoolsRef.current, start: 'top 80%', once: true } });
+                    gsap.to(featured, { yPercent: -6, ease: 'none', scrollTrigger: { trigger: schoolsRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 }
                 if (cards.length) gsap.fromTo(cards, { opacity: 0, y: 60, scale: 0.95 }, { opacity: 1, y: 0, scale: 1, duration: 0.88, ease: 'power3.out', stagger: 0.13, delay: 0.18, scrollTrigger: { trigger: schoolsRef.current, start: 'top 78%', once: true } });
             }
 
             if (protoRef.current) {
+                const protoBg = protoRef.current.querySelector('.proto-bg-circle-1');
+                const protoBg2 = protoRef.current.querySelector('.proto-bg-circle-2');
+                if (protoBg) gsap.to(protoBg, { x: 50, y: -60, rotate: 30, ease: 'none', scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
+                if (protoBg2) gsap.to(protoBg2, { x: -40, y: 50, rotate: -20, ease: 'none', scrollTrigger: { trigger: protoRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
                 const protoHeader = protoRef.current.querySelector('.proto-header');
                 if (protoHeader) gsap.fromTo(protoHeader, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out', scrollTrigger: { trigger: protoRef.current, start: 'top 82%', once: true } });
                 if (protoCards.current.length) gsap.fromTo(protoCards.current, { opacity: 0, y: 60, scale: 0.9 }, { opacity: 1, y: 0, scale: 1, duration: 0.85, ease: 'back.out(1.4)', stagger: 0.1, scrollTrigger: { trigger: protoRef.current, start: 'top 78%', once: true } });
@@ -399,6 +412,8 @@ export default function Home() {
             if (newsRef.current) {
                 const newsHdr = newsRef.current.querySelector('.news-header');
                 if (newsHdr) gsap.fromTo(newsHdr, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.85, ease: 'power3.out', scrollTrigger: { trigger: newsRef.current, start: 'top 82%', once: true } });
+                const newsSwiper = newsRef.current.querySelector('.news-swiper');
+                if (newsSwiper) gsap.fromTo(newsSwiper, { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out', delay: 0.12, scrollTrigger: { trigger: newsRef.current, start: 'top 80%', once: true } });
             }
 
             if (craftRef.current) {
@@ -410,15 +425,28 @@ export default function Home() {
             if (libRef.current) {
                 const libVisual = libRef.current.querySelector('.lib-visual');
                 const libContent = libRef.current.querySelector('.lib-content');
-                if (libVisual) gsap.fromTo(libVisual, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true } });
+                if (libVisual) {
+                    gsap.fromTo(libVisual, { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 1.2, ease: 'expo.out', scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true } });
+                    const libInner = libVisual.querySelector('div[style]');
+                    if (libInner) gsap.to(libInner, { y: -24, ease: 'none', scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
+                }
                 if (libContent) {
                     gsap.fromTo(libContent, { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 1.2, ease: 'expo.out', delay: 0.18, scrollTrigger: { trigger: libRef.current, start: 'top 82%', once: true } });
                     gsap.fromTo(Array.from(libContent.children), { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.75, ease: 'power2.out', stagger: 0.09, delay: 0.35, scrollTrigger: { trigger: libRef.current, start: 'top 80%', once: true } });
                 }
+                const libCircle = libRef.current.querySelector('.lib-deco-circle');
+                if (libCircle) gsap.to(libCircle, { y: -60, rotate: 25, ease: 'none', scrollTrigger: { trigger: libRef.current, start: 'top bottom', end: 'bottom top', scrub: true } });
             }
+
+            document.querySelectorAll('.section-parallax-bg').forEach(el => {
+                gsap.to(el, { yPercent: -20, ease: 'none', scrollTrigger: { trigger: el.closest('section') || el.parentElement, start: 'top bottom', end: 'bottom top', scrub: true } });
+            });
 
             document.querySelectorAll('.float-slow').forEach((el, i) => {
                 gsap.to(el, { y: `+=${8 + i * 3}`, x: `+=${4 + i * 2}`, rotate: `+=${3 + i}`, duration: 4 + i * 0.8, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+            });
+            document.querySelectorAll('.float-fast').forEach((el, i) => {
+                gsap.to(el, { y: `+=${5}`, rotate: `+=${6}`, duration: 2.5 + i * 0.5, ease: 'sine.inOut', yoyo: true, repeat: -1 });
             });
 
             return () => ScrollTrigger.getAll().forEach(t => t.kill());
@@ -426,10 +454,10 @@ export default function Home() {
     }, []);
 
     return (
-        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w, paddingTop: 0, marginTop: 0 }}>
+        <div dir="rtl" style={{ fontFamily: F, overflowX: 'hidden', background: C.w, paddingTop: -20, marginTop: -23 }}>
 
             {/* ── SCROLL PROGRESS BAR ──────────────────────────────────────────── */}
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999, background: 'transparent' }}>
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 3, zIndex: 9999, background: C.g3 }}>
                 <div ref={progressRef} style={{ height: '100%', background: `linear-gradient(90deg, ${C.o}, ${C.b})`, transformOrigin: 'left center', transform: 'scaleX(0)' }} />
             </div>
 
@@ -438,243 +466,30 @@ export default function Home() {
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
-        /* ═══════════════════════════════════════════════════════════════
-           HERO SECTION — unified block: swiper + stats bar
-           Full responsive from 300px → 2000px
-        ═══════════════════════════════════════════════════════════════ */
+        /* ── HERO ── */
+        .hero-swiper{width:100%;height:clamp(300px,100vh,688px);}
+        .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;overflow:hidden;}
+        .hero-bg-layer{position:absolute;inset:-20% 0;will-change:transform;}
+        .hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(4,20,40,.82) 0%,rgba(4,20,40,.58) 60%,rgba(4,20,40,.28) 100%);transition:opacity .4s;}
+        .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
+          width:50px;height:50px;border-radius:50%;
+          background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);
+          color:#fff!important;top:90%!important;transform:translateY(-50%);
+          transition:background .25s,border-color .25s,transform .25s;backdrop-filter:blur(6px);
+        }
+        .hero-swiper .swiper-button-prev{right:60px!important;left:auto!important;}
+        .hero-swiper .swiper-button-next{left:60px!important;right:auto!important;}
+        .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:20px!important;font-weight:500;}
+        .hero-swiper .swiper-button-prev:hover,.hero-swiper .swiper-button-next:hover{background:${C.o};border-color:${C.o};transform:translateY(-50%) scale(1.08);}
+        .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;}
+        .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
+        .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:44px;}
 
-        /* Outer wrapper — dark background so stats bar blends */
-        .hero-section {
-          position: relative;
-          width: 100%;
-          overflow: visible;
-          display: flex;
-          flex-direction: column;
-          margin-top: -1px;           /* Pulls it up */
-          padding-top: 0 !important;
-          margin-bottom: 0;
-        }
-
-        /* ── HERO SWIPER ── */
-        /* 
-          Key fix: use aspect-ratio to keep image proportions at any width.
-          We clamp the min height so it never collapses below 280px,
-          and cap at 660px on huge screens.
-          The image fills 100% of the slide with object-fit:cover — no cuts, no gaps.
-        */
-        .hero-swiper {
-          width: 100%;
-          /* 
-            aspect-ratio drives height from width.
-            16:9 = 56.25vw, clamped to never be less than 280px or more than 660px.
-            On very wide screens (>1170px) 56.25vw > 660px so max kicks in.
-          */
-          height: clamp(280px, 56.25vw, 665px);
-          display: block;
-          /* Make sure swiper itself has no extra spacing */
-          line-height: 0;
-        }
-
-        /* Each slide: fill the swiper, center content */
-        .hero-swiper .swiper-slide {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-
-        /* Background image — covers the entire slide, no gap/cut */
-        .hero-bg-layer {
-          position: absolute;
-          /* 
-            Extend slightly vertically for parallax travel.
-            -10% top/bottom = 20% extra height available for parallax.
-          */
-          top: -10%;
-          bottom: -10%;
-          left: 0;
-          right: 0;
-          background-size: cover !important;
-          background-position: center center !important;
-          background-repeat: no-repeat !important;
-          will-change: transform;
-          pointer-events: none;
-        }
-
-        /* Dark radial overlay */
-        .hero-overlay {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(
-            ellipse 80% 70% at 50% 50%,
-            rgba(4,20,40,.82) 0%,
-            rgba(4,20,40,.58) 60%,
-            rgba(4,20,40,.28) 100%
-          );
-          pointer-events: none;
-          z-index: 1;
-        }
-
-        /* Gradient fade at bottom — blends slide into stats bar */
-        .hero-bottom-fade {
-          position: absolute;
-          bottom: 0; left: 0; right: 0;
-          height: clamp(60px, 12vw, 140px);
-          background: linear-gradient(0deg, rgba(10,10,10,1) 0%, transparent 100%);
-          pointer-events: none;
-          z-index: 2;
-        }
-
-        /* Slide text content */
-        .hero-slide-content {
-          position: relative;
-          z-index: 3;
-          width: 100%;
-          max-width: min(680px, 90vw);
-          text-align: center;
-          padding: 0 clamp(12px, 4vw, 40px);
-          /* 
-            Push content up from the bottom so it doesn't overlap 
-            nav arrows and pagination dots. 
-          */
-          padding-bottom: clamp(70px, 12vw, 130px);
-        }
-
-        /* Hero headline — fluid type, no wrapping issues */
-        .hero-h1 {
-          font-family: ${F};
-          font-weight: 900;
-          font-size: clamp(1.1rem, 4.2vw, 3.2rem);
-          color: #fff;
-          line-height: 1.4;
-          letter-spacing: -0.02em;
-          margin-bottom: clamp(16px, 2.5vw, 28px);
-          word-break: break-word;
-        }
-
-        /* Hero CTA buttons row — wraps cleanly on small screens */
-        .hero-btns {
-          display: flex;
-          gap: clamp(8px, 1.5vw, 12px);
-          flex-wrap: wrap;
-          align-items: center;
-          justify-content: center;
-        }
-
-        /* ── NAVIGATION ARROWS ── */
-        .hero-swiper .swiper-button-prev,
-        .hero-swiper .swiper-button-next {
-          width: clamp(32px, 5vw, 48px) !important;
-          height: clamp(32px, 5vw, 48px) !important;
-          border-radius: 50%;
-          background: rgba(255,255,255,.15);
-          border: 1.5px solid rgba(255,255,255,.35);
-          color: #fff !important;
-          /* 
-            Position at bottom of swiper, above pagination dots.
-            Use bottom positioning relative to the swiper, not fixed.
-          */
-          top: auto !important;
-          bottom: clamp(38px, 7vw, 70px) !important;
-          transform: none !important;
-          backdrop-filter: blur(6px);
-          z-index: 10;
-          transition: background .25s, border-color .25s, transform .2s;
-        }
-        .hero-swiper .swiper-button-prev {
-          right: clamp(10px, 3vw, 36px) !important;
-          left: auto !important;
-        }
-        .hero-swiper .swiper-button-next {
-          left: clamp(10px, 3vw, 36px) !important;
-          right: auto !important;
-        }
-        .hero-swiper .swiper-button-prev::after,
-        .hero-swiper .swiper-button-next::after {
-          font-size: clamp(10px, 1.8vw, 16px) !important;
-          font-weight: 700;
-        }
-        .hero-swiper .swiper-button-prev:hover,
-        .hero-swiper .swiper-button-next:hover {
-          background: ${C.o} !important;
-          border-color: ${C.o} !important;
-          transform: scale(1.08) !important;
-        }
-        /* Hide arrows on very narrow screens — swipe gesture suffices */
-        @media (max-width: 380px) {
-          .hero-swiper .swiper-button-prev,
-          .hero-swiper .swiper-button-next { display: none !important; }
-        }
-
-        /* ── PAGINATION DOTS ── */
-        .hero-swiper .swiper-pagination {
-          bottom: clamp(14px, 3vw, 26px) !important;
-          display: flex !important;
-          gap: 5px;
-          justify-content: center;
-          width: 100% !important;
-          left: 0 !important;
-          z-index: 10;
-        }
-        .hero-swiper .swiper-pagination-bullet {
-          background: rgba(255,255,255,.35);
-          opacity: 1;
-          width: clamp(14px, 2.5vw, 28px);
-          height: 3px;
-          border-radius: 0;
-          transition: all .3s;
-          flex-shrink: 0;
-        }
-        .hero-swiper .swiper-pagination-bullet-active {
-          background: ${C.o};
-          width: clamp(24px, 4.5vw, 48px);
-        }
-
-        /* ── STATS BAR ──
-          Directly below the swiper inside .hero-section.
-          NOT position:fixed. Flows normally in the document.
-        ── */
-        .stats-bar-wrap {
-          width: 100%;
-          background: #0a0a0a;
-          border-bottom: 4px solid #f57c00;
-          position: relative;
-          overflow: hidden;
-          display: block;
-          margin: 0;          /* ← add this */
-          padding: 0;         /* ← add this */
-        }
-
-        .stats-bar {
-          display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          max-width: 1320px;
-          margin: 0 auto;
-          padding: 0 clamp(8px, 3vw, 40px);
-        }
-
-        /* 2 columns on tablet/mobile */
-        @media (max-width: 700px) {
-          .stats-bar { grid-template-columns: repeat(2, 1fr); }
-        }
-
-        .stat-cell {
-          padding: clamp(16px, 2.8vw, 36px) clamp(8px, 2vw, 24px);
-          border-left: 1px solid rgba(255,255,255,.1);
-          text-align: center;
-          opacity: 0;
-        }
-        .stat-cell:last-child { border-left: none; }
-
-        /* Remove border from 2nd cell when in 2-col layout */
-        @media (max-width: 700px) {
-          .stat-cell:nth-child(2) { border-left: none; }
-          .stat-cell:nth-child(3),
-          .stat-cell:nth-child(4) { border-top: 1px solid rgba(255,255,255,.1); }
-        }
+        /* ── STATS ── */
+        .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);}
+        @media(max-width:760px){.stats-bar{grid-template-columns:repeat(2,1fr);}}
+        .stat-cell{padding:clamp(20px,3.5vw,36px) clamp(16px,2.5vw,28px);border-left:1px solid rgba(255,255,255,.1);text-align:center;opacity:0;transform-origin:center bottom;}
+        .stat-cell:last-child{border-left:none;}
 
         /* ── FEATURES ── */
         .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.5vw,28px);}
@@ -752,7 +567,7 @@ export default function Home() {
         .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
         .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
 
-        /* ── ONLINE TRAINING ── */
+        /* ── ONLINE TRAINING — fully responsive ── */
         .online-section{
           position:relative;
           overflow:hidden;
@@ -766,46 +581,78 @@ export default function Home() {
           max-width:1320px;
           margin:0 auto;
         }
+        /* tablet */
         @media(max-width:900px){
-          .online-layout{grid-template-columns:1fr;gap:clamp(28px,4vw,48px);}
+          .online-layout{
+            grid-template-columns:1fr;
+            gap:clamp(28px,4vw,48px);
+          }
         }
+        /* mobile */
         @media(max-width:480px){
           .online-section{padding:32px 16px;}
           .online-layout{gap:24px;}
         }
+
         .online-features-grid{
           display:grid;
           grid-template-columns:1fr 1fr;
           gap:10px;
           margin-bottom:28px;
         }
-        @media(max-width:360px){.online-features-grid{grid-template-columns:1fr;}}
+        @media(max-width:360px){
+          .online-features-grid{grid-template-columns:1fr;}
+        }
+
         .online-feature-item{
-          display:flex;align-items:center;gap:10px;
+          display:flex;
+          align-items:center;
+          gap:10px;
           padding:10px 14px;
           background:rgba(255,255,255,.06);
           border:1px solid rgba(255,255,255,.1);
           border-radius:8px;
           min-width:0;
         }
+
         .online-panel{
           background:rgba(255,255,255,.05);
           border:1px solid rgba(255,255,255,.1);
           border-radius:16px;
           padding:clamp(18px,3vw,36px);
-          display:flex;flex-direction:column;gap:18px;
-          width:100%;min-width:0;
+          display:flex;
+          flex-direction:column;
+          gap:18px;
+          width:100%;
+          min-width:0;
         }
+
         .online-teams-row{
-          display:flex;align-items:center;gap:12px;
+          display:flex;
+          align-items:center;
+          gap:12px;
           padding:14px 18px;
           background:rgba(8,101,168,.25);
           border:1px solid rgba(8,101,168,.4);
           border-radius:10px;
           min-width:0;
         }
-        .online-prog-item{display:flex;align-items:flex-start;gap:10px;min-width:0;}
-        .online-prog-dot{width:6px;height:6px;border-radius:50%;background:${C.o};flex-shrink:0;margin-top:6px;}
+
+        .online-prog-item{
+          display:flex;
+          align-items:flex-start;
+          gap:10px;
+          min-width:0;
+        }
+
+        .online-prog-dot{
+          width:6px;
+          height:6px;
+          border-radius:50%;
+          background:${C.o};
+          flex-shrink:0;
+          margin-top:6px;
+        }
 
         /* ── UTILITY ── */
         a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
@@ -824,104 +671,65 @@ export default function Home() {
         .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
         .why-card:hover{border-color:${C.o};transform:translateY(-3px);}
 
-        /* About image clip */
+        /* ── ABOUT image clip ── */
         .about-img-wrap{opacity:0;overflow:hidden;}
         .about-img-wrap img{will-change:transform;}
         .about-txt-wrap>*{opacity:0;}
 
-        /* Stat counter English numerals */
+        /* ── SCROLL INDICATOR ── */
+        @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(7px);}}
+        .scroll-ind{animation:bounce 2s ease-in-out infinite;position:absolute;bottom:22px;left:50%;transform:translateX(-50%);zIndex:3;}
+
+        /* ── STAT counter English numerals ── */
         .stat-counter{font-variant-numeric:lining-nums;unicode-bidi:plaintext;direction:ltr;display:inline-block;}
 
-        /* Reduce motion */
+        @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
+
+        /* ── reduce motion ── */
         @media(prefers-reduced-motion:reduce){
           .hero-bg-layer,.lib-visual,.lib-content,.vis-item,.proto-card,.school-featured,.school-card,.craft-card,.dl-item,.stat-cell,.feat-card{opacity:1!important;transform:none!important;}
         }
       `}</style>
 
-            {/* ══════════════════════════════════════════════════════════════════
-                SECTION 1: HERO + STATS — one unified block
-            ══════════════════════════════════════════════════════════════════ */}
-            <div className="hero-section" ref={heroRef}>
-
-                {/* ── Hero Swiper ── */}
-                <Swiper
-                    className="hero-swiper"
-                    modules={[Autoplay, Navigation, Pagination]}
+            {/* ── 1 HERO ──────────────────────────────────────────────────────── */}
+            <section ref={heroRef} style={{ position: 'relative', marginTop: 0 }}>
+                <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
                     autoplay={{ delay: 7000, disableOnInteraction: false }}
-                    navigation
-                    pagination={{ clickable: true }}
-                    loop
-                    speed={800}
-                >
+                    navigation pagination={{ clickable: true }} loop speed={800}>
                     {slides.map((sl, i) => (
                         <SwiperSlide key={i}>
-                            {/* Background image — fills slide fully */}
-                            <div
-                                className="hero-bg-layer"
-                                style={{ backgroundImage: `url(${sl.image})` }}
-                            />
-                            {/* Radial dark overlay */}
+                            <div className="hero-bg-layer" style={{ backgroundImage: `url(${sl.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                             <div className="hero-overlay" />
-                            {/* Bottom fade into stats */}
-                            <div className="hero-bottom-fade" />
-
-                            {/* Slide content */}
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
                             <div
                                 ref={i === 0 ? heroInnerRef : null}
-                                className="hero-slide-content hero-entrance"
-                            >
-                                {/* Tag pill */}
-                                <div style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                                    fontFamily: F, fontSize: '.68rem', fontWeight: 700,
-                                    letterSpacing: 2.5, textTransform: 'uppercase',
-                                    color: C.o, marginBottom: 10
-                                }}>
-                                    <div style={{ width: 20, height: 2, background: C.o }} />
-                                    {sl.tag}
-                                    <div style={{ width: 20, height: 2, background: C.o }} />
+                                className="hero-entrance"
+                                style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: F, fontSize: '.68rem', fontWeight: 700, letterSpacing: 2.5, textTransform: 'uppercase', color: C.o, marginBottom: 14 }}>
+                                    <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
                                 </div>
-
-                                {/* Subtitle */}
-                                <p style={{
-                                    fontFamily: F, fontSize: 'clamp(.72rem,1.2vw,.88rem)',
-                                    color: 'rgba(255,255,255,.55)', marginBottom: 8, fontWeight: 600
-                                }}>{sl.subtitle}</p>
-
-                                {/* Main title */}
-                                <h1 className="hero-h1">{sl.title}</h1>
-
-                                {/* Divider */}
-                                <div style={{
-                                    width: 48, height: 3, background: C.o,
-                                    margin: '0 auto clamp(16px,2.5vw,28px)', borderRadius: 2
-                                }} />
-
-                                {/* CTA buttons */}
-                                <div className="hero-btns">
-                                    <SolidBtn to={sl.link} orange>
-                                        اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} />
-                                    </SolidBtn>
+                                <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.9rem)', color: 'rgba(255,255,255,.55)', marginBottom: 10, fontWeight: 600 }}>{sl.subtitle}</p>
+                                <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.7rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.3, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
+                                <div style={{ width: 56, height: 3, background: C.o, margin: '0 auto 28px', borderRadius: 2 }} />
+                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+                                    <SolidBtn to={sl.link} orange>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
                                     <ArrowBtn to="/overview" inv>تعرف على المعهد</ArrowBtn>
+                                </div>
+                            </div>
+                            <div className="scroll-ind">
+                                <div style={{ width: 22, height: 34, border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 11, display: 'flex', justifyContent: 'center', paddingTop: 5 }}>
+                                    <div style={{ width: 3, height: 8, background: C.o, borderRadius: 2 }} />
                                 </div>
                             </div>
                         </SwiperSlide>
                     ))}
                 </Swiper>
+            </section>
 
-                {/* ── Stats Bar — flows directly below the swiper ── */}
-                <div className="stats-bar-wrap" ref={statsRef}>
-                    {/* Subtle accent line at very bottom */}
-                    <div
-                        ref={statsOrangeBarRef}
-                        style={{
-                            position: 'absolute', bottom: 0, left: 0, right: 0,
-                            height: 2,
-                            background: `linear-gradient(90deg,${C.o},${C.b},${C.o})`,
-                            opacity: 0.45,
-                            pointerEvents: 'none',
-                        }}
-                    />
+            {/* ── 2 STATS ─────────────────────────────────────────────────────── */}
+            <div ref={statsRef} style={{ background: C.k, borderBottom: `4px solid ${C.o}`, position: 'relative', overflow: 'hidden' }}>
+                <div ref={statsOrangeBarRef} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${C.o},${C.b},${C.o})`, opacity: 0.5 }} />
+                <div className="W">
                     <div className="stats-bar">
                         {buildStats(apiStats).map((s, i) => (
                             <div key={i} className="stat-cell">
@@ -929,33 +737,16 @@ export default function Home() {
                                     className="stat-counter"
                                     data-count={s.raw}
                                     data-suffix={s.suffix}
-                                    style={{
-                                        fontFamily: F,
-                                        fontSize: 'clamp(1.3rem,3vw,2.4rem)',
-                                        fontWeight: 900,
-                                        color: C.o,
-                                        lineHeight: 1,
-                                    }}
-                                >
-                                    {(s.noFormat ? String(s.raw) : s.raw.toLocaleString('en-US'))}{s.suffix}
+                                    style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>
+                                    {s.raw.toLocaleString('en-US')}{s.suffix}
                                 </div>
-                                {s.sub && (
-                                    <div style={{
-                                        fontFamily: F, fontSize: '.62rem',
-                                        color: 'rgba(255,255,255,.35)', marginTop: 2,
-                                        fontWeight: 600, letterSpacing: 1,
-                                    }}>{s.sub}</div>
-                                )}
-                                <div style={{
-                                    fontFamily: F, fontSize: 'clamp(.58rem,.9vw,.7rem)',
-                                    color: 'rgba(255,255,255,.45)', marginTop: 5,
-                                    letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700,
-                                }}>{s.l}</div>
+                                {s.sub && <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>{s.sub}</div>}
+                                <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
                             </div>
                         ))}
                     </div>
                 </div>
-            </div>{/* end .hero-section */}
+            </div>
 
             {/* ── 3 ABOUT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={aboutRef}>
@@ -995,12 +786,18 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ── 4 ONLINE TRAINING ─────────────────────────────────────────── */}
+            {/* ── 4 ONLINE TRAINING — FULLY RESPONSIVE 300px → 2000px ─────────── */}
             <section ref={onlineRef} className="online-section" style={{ background: C.b }}>
+                {/* left accent bar */}
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
+
+                {/* decorative circles */}
                 <div className="online-circle float-slow" style={{ position: 'absolute', top: -80, right: -80, width: 320, height: 320, borderRadius: '50%', border: '1px solid rgba(255,255,255,.08)', pointerEvents: 'none' }} />
                 <div className="online-circle float-slow" style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', border: '1px solid rgba(255,255,255,.05)', pointerEvents: 'none' }} />
+
                 <div className="online-layout">
+
+                    {/* ── Left column: text content ── */}
                     <div className="online-col">
                         <Eyebrow light>تدريب بلا حدود</Eyebrow>
                         <SplitTitle light>التدريب عن بُعد<br />( أونلاين )</SplitTitle>
@@ -1008,6 +805,7 @@ export default function Home() {
                         <p style={{ fontFamily: F, fontSize: 'clamp(.86rem,1.25vw,1rem)', color: 'rgba(255,255,255,.65)', lineHeight: 2, marginBottom: 24 }}>
                             برامج تدريبية مباشرة (Live) عبر Microsoft Teams، تُتيح لك الحضور من أي مكان داخل مصر أو خارجها مع الحفاظ على التفاعل الفوري مع المدرب وجودة المحتوى.
                         </p>
+
                         <div className="online-features-grid">
                             {[
                                 { icon: '🎥', text: 'بث مباشر Live' },
@@ -1021,21 +819,37 @@ export default function Home() {
                                 </div>
                             ))}
                         </div>
+
                         <SolidBtn to="/online-training" orange>
                             اكتشف التدريب الأونلاين <ArrowForwardIosIcon sx={{ fontSize: 11 }} />
                         </SolidBtn>
                     </div>
+
+                    {/* ── Right column: panel ── */}
                     <div className="online-col">
                         <div className="online-panel">
+
+                            {/* Teams badge */}
                             <div className="online-teams-row">
-                                <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{
+                                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                                    background: 'rgba(255,255,255,.08)',
+                                    border: '1px solid rgba(255,255,255,.15)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}>
                                     <TeamsIcon size={24} />
                                 </div>
                                 <div style={{ minWidth: 0 }}>
-                                    <div style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.88rem)', fontWeight: 900, color: C.w, lineHeight: 1.4 }}>Microsoft Teams</div>
-                                    <div style={{ fontFamily: F, fontSize: 'clamp(.62rem,.9vw,.7rem)', color: 'rgba(255,255,255,.5)', marginTop: 2 }}>منصة التدريب الرسمية</div>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.88rem)', fontWeight: 900, color: C.w, lineHeight: 1.4 }}>
+                                        Microsoft Teams
+                                    </div>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.62rem,.9vw,.7rem)', color: 'rgba(255,255,255,.5)', marginTop: 2 }}>
+                                        منصة التدريب الرسمية
+                                    </div>
                                 </div>
                             </div>
+
+                            {/* Program list */}
                             {[
                                 'برنامج إدارة المشاريع الاحترافية (PMP)',
                                 'القيادة التنفيذية',
@@ -1045,14 +859,22 @@ export default function Home() {
                             ].map((prog, i) => (
                                 <div key={i} className="online-prog-item">
                                     <div className="online-prog-dot" />
-                                    <span style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.85rem)', color: 'rgba(255,255,255,.75)', lineHeight: 1.7, wordBreak: 'break-word' }}>{prog}</span>
+                                    <span style={{
+                                        fontFamily: F,
+                                        fontSize: 'clamp(.72rem,1vw,.85rem)',
+                                        color: 'rgba(255,255,255,.75)',
+                                        lineHeight: 1.7,
+                                        wordBreak: 'break-word'
+                                    }}>{prog}</span>
                                 </div>
                             ))}
+
                             <div style={{ paddingTop: 4, borderTop: '1px solid rgba(255,255,255,.08)' }}>
                                 <ArrowBtn to="/online-training#programs" inv>عرض جميع البرامج</ArrowBtn>
                             </div>
                         </div>
                     </div>
+
                 </div>
             </section>
 
@@ -1085,7 +907,7 @@ export default function Home() {
 
             {/* ── 6 DOWNLOADS ─────────────────────────────────────────────────── */}
             <div ref={dlRef} style={{ background: C.b, position: 'relative', overflow: 'hidden' }}>
-                <div ref={dlBgRef} style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(245,124,0,.08) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                <div ref={dlBgRef} className="section-parallax-bg" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 20% 50%, rgba(245,124,0,.08) 0%, transparent 60%)', pointerEvents: 'none' }} />
                 <div className="W" style={{ padding: 'clamp(28px,4vw,48px) clamp(16px,4vw,56px)', position: 'relative', zIndex: 1 }}>
                     <div style={{ textAlign: 'center', marginBottom: 'clamp(20px,3vw,32px)' }}>
                         <Eyebrow center light>وثائق</Eyebrow>
@@ -1340,6 +1162,7 @@ export default function Home() {
                         </div>
                         <div><SolidBtn to="/library" orange>زيارة المكتبة <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn></div>
                     </div>
+
                     <div className="lib-visual" style={{ flexDirection: 'column', gap: 0, justifyContent: 'center', alignItems: 'flex-start', padding: 'clamp(28px,5vw,64px) clamp(20px,4vw,56px)' }}>
                         <div className="lib-deco-circle float-slow" style={{ position: 'absolute', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(255,255,255,.12)', top: -110, left: -110, pointerEvents: 'none' }} />
                         <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
