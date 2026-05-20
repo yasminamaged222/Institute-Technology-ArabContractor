@@ -31,9 +31,9 @@ const CustomersPage = () => {
             </div>
 
             {/* PAGE CONTENT */}
-            <div className="pb-25 container mx-auto px-9 pt-[200px] sm:px-9 sm:pt-[220px] md:pt-[240px] lg:px-16">
+            <div className="container mx-auto px-9 pt-[110px] pb-24 sm:px-9 lg:px-16">
                 {/* Header */}
-                <div className="mb-16 mt-12 text-center sm:mt-16 md:mt-20">
+                <div className="mb-16 text-center">
                     <h3 className="mb-2 text-3xl font-bold text-[#0865a8] md:text-4xl">
                         عملاؤنا
                     </h3>
