@@ -42,11 +42,11 @@ import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
+// CHANGE 1: removed CEA program slide
 const slides = [
     { title: 'خدمات تدريبية مميزة', subtitle: 'التشييد والإدارة', tag: 'برامج تدريبية', link: '/training-methods', image: '/images/banner6.jpg' },
     { title: 'ورش الميكانيكا والكهرباء', subtitle: 'تأهيل الكوادر الهندسية', tag: 'تدريب تقني', link: '/shobra', image: '/images/banner3.jpg' },
     { title: 'التدريب في موقع العمل', subtitle: 'تدريب ميداني احترافي', tag: 'ميداني', link: '/onsite-training', image: '/images/banner4.jpg' },
-    { title: 'برنامج التدريب المهني في الهندسة التجارية المتميز', subtitle: 'الهندسة التجارية', tag: 'CEA', link: '/cea-program', image: '/images/banner8.jpg' },
     { title: 'مدرسة المقاولون العرب الفنية', subtitle: 'جيل مهني متميز', tag: 'تعليم فني', link: '/Technical_Schools', image: '/images/banner7.jpg' },
 ];
 
@@ -139,10 +139,11 @@ function buildStats(apiStats) {
     const traineesPerYear = gs(['enrollmentsCount', 'usersCount'], 12000);
     const programs = gs(['planworksCount', 'coursesCount'], 200);
     return [
-        { raw: yearsExp, suffix: '+', sub: `${FOUNDING_YEAR}–${currentYear}`, l: 'عامًا من الخبرة' },
-        { raw: traineesPerYear, suffix: '+', sub: null, l: 'متدرب سنويًا' },
-        { raw: programs, suffix: '+', sub: null, l: 'برنامج تدريبي' },
-        { raw: FOUNDING_YEAR, suffix: '', sub: null, l: 'سنة التأسيس' },
+        { raw: yearsExp, suffix: '+', sub: `${FOUNDING_YEAR}–${currentYear}`, l: 'عامًا من الخبرة', noComma: false },
+        { raw: traineesPerYear, suffix: '+', sub: null, l: 'متدرب سنويًا', noComma: false },
+        { raw: programs, suffix: '+', sub: null, l: 'برنامج تدريبي', noComma: false },
+        // CHANGE 3: noComma:true for founding year so it never gets thousand-separator
+        { raw: FOUNDING_YEAR, suffix: '', sub: null, l: 'سنة التأسيس', noComma: true },
     ];
 }
 
@@ -286,7 +287,8 @@ export default function Home() {
                 counters.forEach((el) => {
                     const target = +el.getAttribute('data-count');
                     const suffix = el.getAttribute('data-suffix') || '';
-                    const isYear = target > 1000 && suffix === '';
+                    const noComma = el.getAttribute('data-no-comma') === 'true';
+                    const isYear = noComma;
                     const isLarge = target >= 1000 && !isYear;
                     const startVal = isYear ? target - 40 : isLarge ? Math.round(target * 0.3) : 0;
                     const obj = { val: startVal };
@@ -295,7 +297,13 @@ export default function Home() {
                         duration: isYear ? 1.6 : isLarge ? 2.4 : 2.0,
                         ease: 'power2.out',
                         delay: 0.5,
-                        onUpdate: () => { el.textContent = Math.round(obj.val).toLocaleString('en-US') + suffix; },
+                        onUpdate: () => {
+                            // CHANGE 3: use plain string for year, locale string for others
+                            const rounded = Math.round(obj.val);
+                            el.textContent = noComma
+                                ? String(rounded) + suffix
+                                : rounded.toLocaleString('en-US') + suffix;
+                        },
                     });
                 });
             }
@@ -466,10 +474,26 @@ export default function Home() {
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
-        /* ── HERO ── */
-        .hero-swiper{width:100%;height:clamp(300px,100vh,688px);}
-        .hero-swiper .swiper-slide{display:flex;align-items:center;justify-content:center;overflow:hidden;}
-        .hero-bg-layer{position:absolute;inset:-20% 0;will-change:transform;}
+        /* ── HERO — CHANGE 2: fully responsive bg cover, no crop ── */
+        .hero-swiper{width:100%;height:clamp(420px,100svh,780px);}
+        .hero-swiper .swiper-slide{
+          display:flex;align-items:center;justify-content:center;overflow:hidden;
+          position:relative;
+        }
+        .hero-bg-layer{
+          position:absolute;
+          inset:0;
+          will-change:transform;
+          /* Always cover the full slide — no crop on any screen */
+          background-size:cover!important;
+          background-position:center center!important;
+          background-repeat:no-repeat!important;
+        }
+        /* Parallax extends the layer so the gsap yPercent shift stays in-bounds */
+        .hero-bg-layer{
+          top:-15%;bottom:-15%;left:0;right:0;
+          height:130%;
+        }
         .hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(4,20,40,.82) 0%,rgba(4,20,40,.58) 60%,rgba(4,20,40,.28) 100%);transition:opacity .4s;}
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
           width:50px;height:50px;border-radius:50%;
@@ -484,6 +508,12 @@ export default function Home() {
         .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;}
         .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
         .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:44px;}
+        /* Small screens: tighten nav buttons */
+        @media(max-width:480px){
+          .hero-swiper .swiper-button-prev{right:12px!important;}
+          .hero-swiper .swiper-button-next{left:12px!important;}
+          .hero-swiper{height:clamp(380px,100svh,600px);}
+        }
 
         /* ── STATS ── */
         .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);}
@@ -559,9 +589,32 @@ export default function Home() {
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
         @media(max-width:600px){.news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{display:none!important;}}
 
-        /* ── LIBRARY ── */
-        .lib-split{display:grid;grid-template-columns:1fr 1fr;min-height:clamp(260px,36vw,480px);}
-        @media(max-width:680px){.lib-split{grid-template-columns:1fr;min-height:unset;}}
+        /* ── LIBRARY — CHANGE 5: stack vertically, full-width image on mobile ── */
+        .lib-split{
+          display:grid;
+          grid-template-columns:1fr 1fr;
+        }
+        /* Below 860px: stack content on top, visual (image) below */
+        @media(max-width:860px){
+          .lib-split{
+            grid-template-columns:1fr;
+          }
+          .lib-visual{
+            min-height:260px;
+            padding:clamp(28px,5vw,48px) clamp(20px,4vw,40px)!important;
+          }
+          .lib-content{
+            padding:clamp(28px,5vw,48px) clamp(20px,4vw,40px)!important;
+          }
+          /* lib-tags wrap nicely on small screens */
+          .lib-tags{flex-wrap:wrap;gap:6px!important;}
+          .lib-tag{font-size:.58rem!important;}
+        }
+        /* Very small screens */
+        @media(max-width:380px){
+          .lib-visual{min-height:200px;}
+          .lib-tags{display:none;}
+        }
         .lib-visual{background:${C.o};display:flex;align-items:center;justify-content:center;padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);position:relative;overflow:hidden;opacity:0;}
         .lib-content{padding:clamp(28px,5vw,64px) clamp(20px,4vw,56px);display:flex;flex-direction:column;justify-content:center;opacity:0;}
         .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
@@ -577,21 +630,52 @@ export default function Home() {
           display:grid;
           grid-template-columns:1fr 1fr;
           gap:clamp(28px,5vw,72px);
-          align-items:center;
+          align-items:start;
           max-width:1320px;
           margin:0 auto;
         }
-        /* tablet */
         @media(max-width:900px){
           .online-layout{
             grid-template-columns:1fr;
             gap:clamp(28px,4vw,48px);
           }
         }
-        /* mobile */
         @media(max-width:480px){
           .online-section{padding:32px 16px;}
           .online-layout{gap:24px;}
+        }
+
+        /* CHANGE 4: online image */
+        .online-img-wrap{
+          width:100%;
+          border-radius:16px;
+          overflow:hidden;
+          position:relative;
+          aspect-ratio:16/10;
+          box-shadow:0 20px 60px rgba(0,0,0,.35);
+          border:2px solid rgba(255,255,255,.15);
+          flex-shrink:0;
+        }
+        .online-img-wrap img{
+          width:100%;height:100%;
+          object-fit:cover;
+          display:block;
+          transition:transform .6s ease;
+        }
+        .online-img-wrap:hover img{transform:scale(1.04);}
+        /* overlay badge on the image */
+        .online-img-badge{
+          position:absolute;
+          bottom:14px;
+          right:14px;
+          background:rgba(8,101,168,.88);
+          backdrop-filter:blur(8px);
+          border:1px solid rgba(255,255,255,.2);
+          border-radius:10px;
+          padding:10px 14px;
+          display:flex;
+          align-items:center;
+          gap:10px;
         }
 
         .online-features-grid{
@@ -683,7 +767,7 @@ export default function Home() {
         /* ── STAT counter English numerals ── */
         .stat-counter{font-variant-numeric:lining-nums;unicode-bidi:plaintext;direction:ltr;display:inline-block;}
 
-        @media(max-width:480px){.hero-h1{font-size:1.4rem!important;}}
+        @media(max-width:480px){.hero-h1{font-size:clamp(1.2rem,5.5vw,1.7rem)!important;}}
 
         /* ── reduce motion ── */
         @media(prefers-reduced-motion:reduce){
@@ -698,7 +782,13 @@ export default function Home() {
                     navigation pagination={{ clickable: true }} loop speed={800}>
                     {slides.map((sl, i) => (
                         <SwiperSlide key={i}>
-                            <div className="hero-bg-layer" style={{ backgroundImage: `url(${sl.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                            {/* CHANGE 2: use inline style backgroundImage so cover/center always applies */}
+                            <div
+                                className="hero-bg-layer"
+                                style={{
+                                    backgroundImage: `url(${sl.image})`,
+                                }}
+                            />
                             <div className="hero-overlay" />
                             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
                             <div
@@ -709,7 +799,7 @@ export default function Home() {
                                     <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
                                 </div>
                                 <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.9rem)', color: 'rgba(255,255,255,.55)', marginBottom: 10, fontWeight: 600 }}>{sl.subtitle}</p>
-                                <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.7rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.3, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
+                                <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.5rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.3, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
                                 <div style={{ width: 56, height: 3, background: C.o, margin: '0 auto 28px', borderRadius: 2 }} />
                                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
                                     <SolidBtn to={sl.link} orange>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
@@ -737,8 +827,10 @@ export default function Home() {
                                     className="stat-counter"
                                     data-count={s.raw}
                                     data-suffix={s.suffix}
+                                    data-no-comma={s.noComma ? 'true' : 'false'}
                                     style={{ fontFamily: F, fontSize: 'clamp(1.6rem,3.2vw,2.4rem)', fontWeight: 900, color: C.o, lineHeight: 1 }}>
-                                    {s.raw.toLocaleString('en-US')}{s.suffix}
+                                    {/* CHANGE 3: initial render also respects noComma */}
+                                    {s.noComma ? String(s.raw) : s.raw.toLocaleString('en-US')}{s.suffix}
                                 </div>
                                 {s.sub && <div style={{ fontFamily: F, fontSize: '.65rem', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>{s.sub}</div>}
                                 <div style={{ fontFamily: F, fontSize: '.7rem', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
@@ -786,7 +878,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* ── 4 ONLINE TRAINING — FULLY RESPONSIVE 300px → 2000px ─────────── */}
+            {/* ── 4 ONLINE TRAINING ────────────────────────────────────────────── */}
             <section ref={onlineRef} className="online-section" style={{ background: C.b }}>
                 {/* left accent bar */}
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: C.o }} />
@@ -825,31 +917,31 @@ export default function Home() {
                         </SolidBtn>
                     </div>
 
-                    {/* ── Right column: panel ── */}
-                    <div className="online-col">
-                        <div className="online-panel">
+                    {/* ── Right column: CHANGE 4 — image + panel ── */}
+                    <div className="online-col" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-                            {/* Teams badge */}
-                            <div className="online-teams-row">
-                                <div style={{
-                                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                                    background: 'rgba(255,255,255,.08)',
-                                    border: '1px solid rgba(255,255,255,.15)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}>
-                                    <TeamsIcon size={24} />
-                                </div>
-                                <div style={{ minWidth: 0 }}>
-                                    <div style={{ fontFamily: F, fontSize: 'clamp(.76rem,1.1vw,.88rem)', fontWeight: 900, color: C.w, lineHeight: 1.4 }}>
-                                        Microsoft Teams
-                                    </div>
-                                    <div style={{ fontFamily: F, fontSize: 'clamp(.62rem,.9vw,.7rem)', color: 'rgba(255,255,255,.5)', marginTop: 2 }}>
-                                        منصة التدريب الرسمية
-                                    </div>
+                        {/* Image */}
+                        <div className="online-img-wrap">
+                            <img
+                                src="/images/2.jpeg"
+                                alt="التدريب الأونلاين"
+                                onError={e => {
+                                    // fallback to a placeholder if image not found
+                                    e.target.src = 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?w=800&q=80';
+                                }}
+                            />
+                            {/* Badge overlay */}
+                            <div className="online-img-badge">
+                                <TeamsIcon size={28} />
+                                <div>
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(.72rem,1vw,.82rem)', fontWeight: 900, color: C.w, lineHeight: 1.3 }}>Microsoft Teams</div>
+                                    <div style={{ fontFamily: F, fontSize: '.62rem', color: 'rgba(255,255,255,.6)', marginTop: 1 }}>منصة التدريب الرسمية</div>
                                 </div>
                             </div>
+                        </div>
 
-                            {/* Program list */}
+                        {/* Program list panel */}
+                        <div className="online-panel">
                             {[
                                 'برنامج إدارة المشاريع الاحترافية (PMP)',
                                 'القيادة التنفيذية',
@@ -1144,6 +1236,7 @@ export default function Home() {
             {/* ── 13 LIBRARY ───────────────────────────────────────────────────── */}
             <section style={{ background: C.k }} ref={libRef}>
                 <div className="lib-split">
+                    {/* CHANGE 5: content first so on mobile it appears above the orange panel */}
                     <div className="lib-content">
                         <Eyebrow light>المكتبة</Eyebrow>
                         <h3 style={{ fontFamily: F, fontSize: 'clamp(1rem,2vw,1.6rem)', fontWeight: 900, color: C.w, lineHeight: 1.4, marginBottom: 14 }}>
