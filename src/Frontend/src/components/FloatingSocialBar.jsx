@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import YouTubeIcon from '@mui/icons-material/YouTube';
-import GoogleIcon from '@mui/icons-material/Google';
 import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsappIcon from '@mui/icons-material/WhatsApp';
 
@@ -61,28 +60,6 @@ const FloatingSocialBar = () => {
           <YouTubeIcon fontSize="large" />
         </IconButton>
       </Tooltip>
-
-      <Tooltip title="تابعنا على جوجل" placement="right">
-        <IconButton
-          component="a"
-                  href="https://acwebsite-icmet-test.azurewebsites.net/" // أو رابط Google Business
-          target="_blank"
-          sx={{
-            bgcolor: 'white',
-            color: '#4285F4',
-            boxShadow: 3,
-            width: 50,
-            height: 50,
-            '&:hover': {
-              bgcolor: '#4285F4',
-              color: 'white',
-            },
-          }}
-        >
-          <GoogleIcon fontSize="large" />
-        </IconButton>
-      </Tooltip>
-
           <Tooltip title="تواصل معنا على واتساب" placement="right">
               <IconButton
                   component="a"
