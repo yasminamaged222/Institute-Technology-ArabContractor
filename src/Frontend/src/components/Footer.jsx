@@ -17,6 +17,9 @@ import TwitterIcon from '@mui/icons-material/Twitter';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Link } from 'react-router-dom';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import YouTubeIcon from '@mui/icons-material/YouTube';
+
 
 const Footer = () => {
     const sectionDivider = {
@@ -349,7 +352,6 @@ const Footer = () => {
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                             {[
-                                { text: 'الرئيسية', path: '/' },
                                 { text: 'عن المعهد', path: '/overview' },
                                 { text: 'الأخبار', path: '/news' },
                                 { text: 'اتصل بنا', path: '/contact' }
@@ -419,7 +421,7 @@ const Footer = () => {
                                 mb: 1
                             }}
                         >
-                            جميع الحقوق محفوظة 2025 © المعهد التكنولوجي لهندسة التشييد والإدارة
+                            جميع الحقوق محفوظة 2026 © المعهد التكنولوجي لهندسة التشييد والإدارة
                         </Typography>
                         <Typography
                             variant="body2"
@@ -469,6 +471,46 @@ const Footer = () => {
                         >
                             <FacebookIcon fontSize="small" />
                         </IconButton>
+                        <IconButton
+                            size="small"
+                            sx={{
+                                color: 'white',
+                                bgcolor: 'rgba(255,255,255,0.1)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: '#FF0000',
+                                    transform: 'translateY(-3px)',
+                                    boxShadow: '0 4px 12px rgba(255, 0, 0, 0.4)'
+                                }
+                            }}
+                            href="https://youtube.com/@ac-icemt?si=dS7CixRAX08votqw"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <YouTubeIcon fontSize="small" />
+                        </IconButton>
+                        {/* WhatsApp */}
+                        <IconButton
+                            size="small"
+                            sx={{
+                                color: 'white',
+                                bgcolor: 'rgba(255,255,255,0.1)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    color: 'white',
+                                    bgcolor: '#25D366',
+                                    transform: 'translateY(-3px)',
+                                    boxShadow: '0 4px 12px rgba(37, 211, 102, 0.4)'
+                                }
+                            }}
+                            href="https://wa.me/201109754459"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <WhatsAppIcon fontSize="small" />
+                        </IconButton>
+
                     </Box>
 
                 </Box>
