@@ -917,7 +917,7 @@ export default function Home() {
                     <div className="online-col" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div className="online-img-wrap">
                             <img
-                                src="/images/2.jpeg"
+                                src="/images/online/1.jpeg"
                                 alt="التدريب الأونلاين"
                                 onError={e => {
                                     e.target.src = 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?w=800&q=80';
