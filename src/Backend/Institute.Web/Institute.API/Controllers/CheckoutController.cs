@@ -116,6 +116,7 @@ namespace Institute.API.Controllers
                     sessionId = checkoutResponse.Data.SessionId,
                     successIndicator = checkoutResponse.Data.SuccessIndicator,
                     orderId = checkoutResponse.Data.OrderId,
+                    amount = order.TotalAmount,  // ✅ أضف ده
                     checkoutJsUrl = checkoutResponse.Data.CheckoutJsUrl
                 }
             });
@@ -269,6 +270,6 @@ namespace Institute.API.Controllers
             });
         }
 
-        
+
     }
 }
