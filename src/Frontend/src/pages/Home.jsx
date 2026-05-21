@@ -467,14 +467,60 @@ export default function Home() {
             </div>
 
             <style>{`
+        /* ─── NAV OFFSET VARIABLE ──────────────────────────────────────────
+           --nav-h  = actual navbar height (70px)
+           --mt-fix = the negative marginTop applied to the root div (23px)
+           Together they give the exact above-fold height so no gap appears.
+        ───────────────────────────────────────────────────────────────── */
+        :root {
+          --nav-h:  70px;
+          --mt-fix: 23px;
+        }
+
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
-        .hero-swiper{width:100%;height:clamp(420px,100svh,780px);}
+        /* ── ABOVE-THE-FOLD WRAPPER ────────────────────────────────────────
+           Hero + Stats together fill exactly one viewport below the navbar.
+           Uses dvh so mobile browser chrome is accounted for.
+           Falls back gracefully when dvh is unsupported (older browsers).
+        ────────────────────────────────────────────────────────────────── */
+        .above-fold-wrap {
+          display: flex;
+          flex-direction: column;
+          /* Subtract navbar height, then add back the negative-margin offset
+             so the wrapper ends exactly at the viewport bottom — no gap.     */
+          height: calc(100vh  - var(--nav-h) + var(--mt-fix));
+          height: calc(100dvh - var(--nav-h) + var(--mt-fix));
+          min-height: 480px; /* safety floor on very short screens */
+        }
+
+        /* Hero fills all leftover space after the stats bar claims its slice */
+        .above-fold-wrap .hero-swiper-outer {
+          flex: 1 1 0;
+          min-height: 0;    /* allow flex child to shrink below its content */
+          overflow: hidden;
+          position: relative;
+        }
+
+        /* Stats bar: natural height, never grows, never shrinks */
+        .above-fold-wrap .stats-bar-outer {
+          flex: 0 0 auto;
+        }
+
+        /* ── HERO SWIPER ──────────────────────────────────────────────────
+           Height is now 100% of its flex parent (.hero-swiper-outer)
+           so it no longer needs a viewport-based clamp.
+        ───────────────────────────────────────────────────────────────── */
+        .hero-swiper {
+          width: 100%;
+          height: 100%;   /* fills .hero-swiper-outer */
+        }
         .hero-swiper .swiper-slide{
           display:flex;align-items:center;justify-content:center;overflow:hidden;
           position:relative;
+          height: 100%;
         }
         .hero-bg-layer{
           position:absolute;
@@ -505,7 +551,6 @@ export default function Home() {
         @media(max-width:480px){
           .hero-swiper .swiper-button-prev{right:12px!important;}
           .hero-swiper .swiper-button-next{left:12px!important;}
-          .hero-swiper{height:clamp(380px,100svh,600px);}
         }
 
         /* ══════════════════════════════════════════════════════════════
@@ -775,74 +820,80 @@ export default function Home() {
         }
       `}</style>
 
-            {/* ── 1 HERO ──────────────────────────────────────────────────────── */}
-            <section ref={heroRef} style={{ position: 'relative', marginTop: 0 }}>
-                <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
-                    autoplay={{ delay: 7000, disableOnInteraction: false }}
-                    navigation pagination={{ clickable: true }} loop speed={800}>
-                    {slides.map((sl, i) => (
-                        <SwiperSlide key={i}>
-                            <div
-                                className="hero-bg-layer"
-                                style={{
-                                    backgroundImage: `url(${sl.image})`,
-                                }}
-                            />
-                            <div className="hero-overlay" />
-                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
-                            <div
-                                ref={i === 0 ? heroInnerRef : null}
-                                className="hero-entrance"
-                                style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: F, fontSize: '.68rem', fontWeight: 700, letterSpacing: 2.5, textTransform: 'uppercase', color: C.o, marginBottom: 14 }}>
-                                    <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
-                                </div>
-                                <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.9rem)', color: 'rgba(255,255,255,.55)', marginBottom: 10, fontWeight: 600 }}>{sl.subtitle}</p>
-                                <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.5rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.3, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
-                                <div style={{ width: 56, height: 3, background: C.o, margin: '0 auto 28px', borderRadius: 2 }} />
-                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
-                                    <SolidBtn to={sl.link} orange>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
-                                    <ArrowBtn to="/overview" inv>تعرف على المعهد</ArrowBtn>
-                                </div>
-                            </div>
-                            <div className="scroll-ind">
-                                <div style={{ width: 22, height: 34, border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 11, display: 'flex', justifyContent: 'center', paddingTop: 5 }}>
-                                    <div style={{ width: 3, height: 8, background: C.o, borderRadius: 2 }} />
-                                </div>
-                            </div>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
-            </section>
+            {/* ═══════════════════════════════════════════════════════════════════
+                ABOVE-THE-FOLD: Hero + Stats together = 100dvh - navbar
+            ════════════════════════════════════════════════════════════════════ */}
+            <div className="above-fold-wrap">
 
-            {/* ── 2 STATS ─────────────────────────────────────────────────────── */}
-            <div ref={statsRef} style={{ background: C.k, borderBottom: `4px solid ${C.o}`, position: 'relative', overflow: 'hidden' }}>
-                <div ref={statsOrangeBarRef} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${C.o},${C.b},${C.o})`, opacity: 0.5 }} />
-                <div className="W">
-                    <div className="stats-bar">
-                        {buildStats(apiStats).map((s, i) => (
-                            <div key={i} className="stat-cell">
+                {/* ── 1 HERO ────────────────────────────────────────────────────── */}
+                <section ref={heroRef} className="hero-swiper-outer">
+                    <Swiper className="hero-swiper" modules={[Autoplay, Navigation, Pagination]}
+                        autoplay={{ delay: 7000, disableOnInteraction: false }}
+                        navigation pagination={{ clickable: true }} loop speed={800}
+                        style={{ height: '100%' }}>
+                        {slides.map((sl, i) => (
+                            <SwiperSlide key={i}>
                                 <div
-                                    className="stat-counter"
-                                    data-count={s.raw}
-                                    data-suffix={s.suffix}
-                                    data-no-comma={s.noComma ? 'true' : 'false'}
-                                    style={{
-                                        fontFamily: F,
-                                        fontSize: 'clamp(0.72rem,2.6vw,2.4rem)',
-                                        fontWeight: 900,
-                                        color: C.o,
-                                        lineHeight: 1,
-                                    }}>
-                                    {s.noComma ? String(s.raw) : s.raw.toLocaleString('en-US')}{s.suffix}
+                                    className="hero-bg-layer"
+                                    style={{ backgroundImage: `url(${sl.image})` }}
+                                />
+                                <div className="hero-overlay" />
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
+                                <div
+                                    ref={i === 0 ? heroInnerRef : null}
+                                    className="hero-entrance"
+                                    style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 700, textAlign: 'center', padding: '0 clamp(16px,5vw,56px)', paddingBottom: 'clamp(48px,6vh,80px)' }}>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontFamily: F, fontSize: '.68rem', fontWeight: 700, letterSpacing: 2.5, textTransform: 'uppercase', color: C.o, marginBottom: 14 }}>
+                                        <div style={{ width: 24, height: 2, background: C.o }} />{sl.tag}<div style={{ width: 24, height: 2, background: C.o }} />
+                                    </div>
+                                    <p style={{ fontFamily: F, fontSize: 'clamp(.78rem,1.2vw,.9rem)', color: 'rgba(255,255,255,.55)', marginBottom: 10, fontWeight: 600 }}>{sl.subtitle}</p>
+                                    <h1 className="hero-h1" style={{ fontFamily: F, fontWeight: 900, fontSize: 'clamp(1.5rem,4.5vw,3.8rem)', color: C.w, lineHeight: 1.3, letterSpacing: '-0.02em', marginBottom: 28 }}>{sl.title}</h1>
+                                    <div style={{ width: 56, height: 3, background: C.o, margin: '0 auto 28px', borderRadius: 2 }} />
+                                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+                                        <SolidBtn to={sl.link} orange>اقرأ المزيد <ArrowForwardIosIcon sx={{ fontSize: 11 }} /></SolidBtn>
+                                        <ArrowBtn to="/overview" inv>تعرف على المعهد</ArrowBtn>
+                                    </div>
                                 </div>
-                                {s.sub && <div style={{ fontFamily: F, fontSize: 'clamp(0.42rem,0.9vw,.65rem)', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>{s.sub}</div>}
-                                <div style={{ fontFamily: F, fontSize: 'clamp(0.45rem,1vw,.7rem)', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
-                            </div>
+                                <div className="scroll-ind">
+                                    <div style={{ width: 22, height: 34, border: '1.5px solid rgba(255,255,255,.3)', borderRadius: 11, display: 'flex', justifyContent: 'center', paddingTop: 5 }}>
+                                        <div style={{ width: 3, height: 8, background: C.o, borderRadius: 2 }} />
+                                    </div>
+                                </div>
+                            </SwiperSlide>
                         ))}
+                    </Swiper>
+                </section>
+
+                {/* ── 2 STATS ───────────────────────────────────────────────────── */}
+                <div className="stats-bar-outer" ref={statsRef} style={{ background: C.k, borderBottom: `4px solid ${C.o}`, position: 'relative', overflow: 'hidden' }}>
+                    <div ref={statsOrangeBarRef} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${C.o},${C.b},${C.o})`, opacity: 0.5 }} />
+                    <div className="W">
+                        <div className="stats-bar">
+                            {buildStats(apiStats).map((s, i) => (
+                                <div key={i} className="stat-cell">
+                                    <div
+                                        className="stat-counter"
+                                        data-count={s.raw}
+                                        data-suffix={s.suffix}
+                                        data-no-comma={s.noComma ? 'true' : 'false'}
+                                        style={{
+                                            fontFamily: F,
+                                            fontSize: 'clamp(0.72rem,2.6vw,2.4rem)',
+                                            fontWeight: 900,
+                                            color: C.o,
+                                            lineHeight: 1,
+                                        }}>
+                                        {s.noComma ? String(s.raw) : s.raw.toLocaleString('en-US')}{s.suffix}
+                                    </div>
+                                    {s.sub && <div style={{ fontFamily: F, fontSize: 'clamp(0.42rem,0.9vw,.65rem)', color: 'rgba(255,255,255,.35)', marginTop: 2, fontWeight: 600, letterSpacing: 1 }}>{s.sub}</div>}
+                                    <div style={{ fontFamily: F, fontSize: 'clamp(0.45rem,1vw,.7rem)', color: 'rgba(255,255,255,.45)', marginTop: 6, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 700 }}>{s.l}</div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
+
+            </div>{/* /above-fold-wrap */}
 
             {/* ── 3 ABOUT ─────────────────────────────────────────────────────── */}
             <section className="S" style={{ background: C.g1 }} ref={aboutRef}>
@@ -917,7 +968,7 @@ export default function Home() {
                     <div className="online-col" style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                         <div className="online-img-wrap">
                             <img
-                                src="/images/2.jpeg"
+                                src="/images/online/1.jpeg"
                                 alt="التدريب الأونلاين"
                                 onError={e => {
                                     e.target.src = 'https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?w=800&q=80';

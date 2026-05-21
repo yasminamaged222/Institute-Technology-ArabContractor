@@ -273,24 +273,65 @@ const News = () => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedYear, setSelectedYear] = useState('2025');
+
+    // ── years: null = still loading, [] = failed/empty → fallback used
+    const [years, setYears] = useState(null);
+    const [selectedYear, setSelectedYear] = useState(null);
+
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
 
     const scrollRef = useRef(null);
-
-    const years = ['2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016', '2015'];
-
     const sectionInner = { maxWidth: 'min(1280px,94vw)', margin: '0 auto' };
 
+    /* ── Inject styles & set page title ── */
     useEffect(() => {
         injectStyles();
         document.title = 'الأخبار - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
+    /* ── 1. Fetch available years from API.
+            Falls back to auto-generating years from 2015 → current year
+            if the endpoint doesn't exist or returns nothing useful. ── */
+    useEffect(() => {
+        const currentYear = new Date().getFullYear();
+
+        // Helper: build fallback list (currentYear → 2015, descending)
+        const buildFallback = () => {
+            const list = [];
+            for (let y = currentYear; y >= 2015; y--) list.push(String(y));
+            return list;
+        };
+
+        fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getNewsYears')
+            .then(r => { if (!r.ok) throw new Error('no years endpoint'); return r.json(); })
+            .then(data => {
+                // Accept array of numbers or strings, sort descending
+                const raw = Array.isArray(data) ? data : (data.years ?? data.data ?? []);
+                const sorted = raw
+                    .map(y => String(y))
+                    .filter(y => /^\d{4}$/.test(y))
+                    .sort((a, b) => Number(b) - Number(a));
+
+                const list = sorted.length > 0 ? sorted : buildFallback();
+                setYears(list);
+                setSelectedYear(list[0]); // always the most recent
+            })
+            .catch(() => {
+                const list = buildFallback();
+                setYears(list);
+                setSelectedYear(list[0]); // always the most recent (current year)
+            });
+    }, []);
+
+    /* ── Reset to page 1 whenever year changes ── */
     useEffect(() => { setCurrentPage(1); }, [selectedYear]);
 
+    /* ── 2. Fetch news for the selected year + page ── */
     useEffect(() => {
+        // Don't fetch until we have a year
+        if (!selectedYear) return;
+
         setLoading(true);
         setError(null);
 
@@ -314,6 +355,9 @@ const News = () => {
         setCurrentPage(page);
         window.scrollTo({ top: 300, behavior: 'smooth' });
     };
+
+    /* ── While years haven't loaded yet, show nothing (or a brief skeleton) ── */
+    const yearsReady = years !== null && selectedYear !== null;
 
     return (
         <div className="nw-root">
@@ -393,15 +437,27 @@ const News = () => {
                 <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 'min(900px,90vw)', display: 'flex', alignItems: 'center', gap: 'clamp(8px,1.5vw,14px)' }}>
                     <button className="nw-arrow" onClick={() => handleScroll('right')}>«</button>
                     <div ref={scrollRef} className="nw-scroller" style={{ flex: 1 }}>
-                        {years.map(year => (
-                            <button
-                                key={year}
-                                className={`nw-year-pill${selectedYear === year ? ' nw-year-pill--active' : ''}`}
-                                onClick={() => setSelectedYear(year)}
-                            >
-                                {year}
-                            </button>
-                        ))}
+                        {yearsReady
+                            ? years.map(year => (
+                                <button
+                                    key={year}
+                                    className={`nw-year-pill${selectedYear === year ? ' nw-year-pill--active' : ''}`}
+                                    onClick={() => setSelectedYear(year)}
+                                >
+                                    {year}
+                                </button>
+                            ))
+                            /* Skeleton pills while years load */
+                            : Array.from({ length: 6 }).map((_, i) => (
+                                <div key={i} style={{
+                                    width: 'clamp(52px,7vw,72px)',
+                                    height: 'clamp(30px,4vw,42px)',
+                                    borderRadius: '2px',
+                                    background: 'rgba(255,255,255,0.08)',
+                                    flexShrink: 0,
+                                }} />
+                            ))
+                        }
                     </div>
                     <button className="nw-arrow" onClick={() => handleScroll('left')}>»</button>
                 </div>

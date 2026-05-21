@@ -9,18 +9,14 @@ export default function ModernLibrary() {
         document.title = 'المكتبة - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
-    // Scroll to hash anchor on mount (e.g. /library#embassy)
     useEffect(() => {
         const hash = window.location.hash;
         if (!hash) return;
         const id = hash.replace('#', '');
         const attempt = (tries = 0) => {
             const el = document.getElementById(id);
-            if (el) {
-                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else if (tries < 10) {
-                setTimeout(() => attempt(tries + 1), 150);
-            }
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            else if (tries < 10) setTimeout(() => attempt(tries + 1), 150);
         };
         attempt();
     }, []);
@@ -33,13 +29,9 @@ export default function ModernLibrary() {
         };
         window.addEventListener('resize', handleResize);
         window.addEventListener('scroll', handleScroll);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-            window.removeEventListener('scroll', handleScroll);
-        };
+        return () => { window.removeEventListener('resize', handleResize); window.removeEventListener('scroll', handleScroll); };
     }, []);
 
-    // Responsive breakpoints
     const isTiny = windowWidth < 400;
     const isMobile = windowWidth <= 640;
     const isTablet = windowWidth > 640 && windowWidth <= 1024;
@@ -88,7 +80,13 @@ export default function ModernLibrary() {
         'البث المباشر للفعاليات والمؤتمرات من مكتبة الإسكندرية',
     ];
 
-    /* ─── layout helpers ─────────────────────────────────────────── */
+    // ── Embassy definition images (horizontal scroll) ──
+    const embassyDefImages = [
+        { src: '/images/library/im1.jpeg' },
+        { src: '/images/library/im2.jpeg' },
+        { src: '/images/library/im3.jpeg' },
+    ];
+
     const pad = isTiny ? '28px 10px' : isMobile ? '40px 14px' : isTablet ? '60px 24px' : '80px 40px';
     const containerStyle = { maxWidth: '1400px', margin: '0 auto', width: '100%' };
     const sectionStyle = (bg = 'white') => ({ padding: pad, background: bg, boxSizing: 'border-box' });
@@ -96,10 +94,7 @@ export default function ModernLibrary() {
     const sectionTitleStyle = { fontSize: isTiny ? '22px' : isMobile ? '26px' : isTablet ? '32px' : '38px', fontWeight: '800', color: '#000', marginBottom: '10px', lineHeight: 1.2 };
     const sectionSubStyle = { fontSize: isMobile ? '14px' : '17px', color: '#6b7280' };
     const cardBase = { background: 'white', borderRadius: isMobile ? '14px' : '20px', border: '2px solid #e5e7eb', padding: isTiny ? '14px' : isMobile ? '18px' : '24px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', boxSizing: 'border-box' };
-
-    /* ─── grid helpers ───────────────────────────────────────────── */
-    const cols = (tiny, mob, tab, desk) =>
-        isTiny ? tiny : isMobile ? mob : isTablet ? tab : desk;
+    const cols = (tiny, mob, tab, desk) => isTiny ? tiny : isMobile ? mob : isTablet ? tab : desk;
 
     return (
         <div style={{ minHeight: '100vh', background: 'white', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl', overflowX: 'hidden' }}>
@@ -128,7 +123,10 @@ export default function ModernLibrary() {
                     <div style={{ width: isMobile ? '120px' : '180px', height: '5px', background: '#e5e7eb', borderRadius: '999px', margin: '0 auto 20px', overflow: 'hidden' }}>
                         <div style={{ width: '40%', height: '100%', background: 'linear-gradient(90deg, #0865a8, #f57c00)', borderRadius: '999px', animation: 'slide 2s infinite ease-in-out' }} />
                     </div>
-                    <p style={{ fontSize: isTiny ? '13px' : isMobile ? '14px' : '19px', color: '#6b7280', lineHeight: 1.7 }}>مكتبة متخصصة في التشييد والبناء • تأسست 1970 • سفارة معرفة مكتبة الإسكندرية</p>
+                    {/* ── UPDATED: larger subtitle font ── */}
+                    <p style={{ fontSize: isTiny ? '15px' : isMobile ? '17px' : isTablet ? '20px' : '22px', color: '#6b7280', lineHeight: 1.7 }}>
+                        مكتبة متخصصة في التشييد والبناء • تأسست 1970 • سفارة معرفة مكتبة الإسكندرية
+                    </p>
                 </div>
             </section>
 
@@ -144,7 +142,7 @@ export default function ModernLibrary() {
                                         <Icon size={isTiny ? 18 : 26} color="white" />
                                     </div>
                                     <div style={{ fontSize: isTiny ? '20px' : isMobile ? '24px' : '32px', fontWeight: '800', color: '#000' }}>{s.value}</div>
-                                    <div style={{ fontSize: isTiny ? '11px' : '13px', color: '#6b7280' }}>{s.label}</div>
+                                    <div style={{ fontSize: isTiny ? '13px' : '15px', color: '#6b7280' }}>{s.label}</div>
                                 </div>
                             );
                         })}
@@ -157,11 +155,11 @@ export default function ModernLibrary() {
                 <div style={containerStyle}>
                     <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', '1fr', '1fr 1fr'), gap: isMobile ? '28px' : '48px', alignItems: 'center' }}>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 16px', border: '2px solid #0865a8', borderRadius: '999px', color: '#0865a8', fontSize: isTiny ? '12px' : '14px', marginBottom: '16px' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '7px 16px', border: '2px solid #0865a8', borderRadius: '999px', color: '#0865a8', fontSize: isTiny ? '13px' : '15px', marginBottom: '16px' }}>
                                 <Sparkles size={14} /> نبذة عن المكتبة
                             </div>
                             <h2 style={sectionTitleStyle}>مكتبة متخصصة منذ 1970</h2>
-                            <p style={{ fontSize: isTiny ? '13px' : isMobile ? '14px' : '17px', color: '#4b5563', lineHeight: '1.9', marginBottom: '22px' }}>
+                            <p style={{ fontSize: isTiny ? '14px' : isMobile ? '15px' : '17px', color: '#4b5563', lineHeight: '1.9', marginBottom: '22px' }}>
                                 تأسست المكتبة الرئيسية للمعهد عام 1970، وهي مكتبة متخصصة في مجال التشييد والبناء، إيماناً من شركة المقاولون العرب بأهمية القراءة والاطلاع المستمر ومعرفة كل ما هو حديث في سوق العمل. تقدم خدماتها للمجتمع الداخلي والخارجي على حد سواء.
                             </p>
                             {['محتوى محدث باستمرار', 'تغطية شاملة لجميع التخصصات', 'وصول سهل وسريع للمعلومات'].map((t, i) => (
@@ -169,7 +167,7 @@ export default function ModernLibrary() {
                                     <div style={{ width: isTiny ? '28px' : '36px', height: isTiny ? '28px' : '36px', borderRadius: '10px', border: `2px solid ${i % 2 === 0 ? '#0865a8' : '#f57c00'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         <Check size={isTiny ? 14 : 18} color={i % 2 === 0 ? '#0865a8' : '#f57c00'} />
                                     </div>
-                                    <span style={{ color: '#000', fontSize: isTiny ? '13px' : '15px' }}>{t}</span>
+                                    <span style={{ color: '#000', fontSize: isTiny ? '14px' : '16px' }}>{t}</span>
                                 </div>
                             ))}
                         </div>
@@ -188,14 +186,12 @@ export default function ModernLibrary() {
                         <p style={sectionSubStyle}>اكتشف ما يميز مكتبتنا</p>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: isTiny ? '12px' : '20px' }}>
-                        {features.map((f, i) => (
-                            <FeatureCard key={i} feature={f} index={i} isTiny={isTiny} isMobile={isMobile} />
-                        ))}
+                        {features.map((f, i) => <FeatureCard key={i} feature={f} index={i} isTiny={isTiny} isMobile={isMobile} />)}
                     </div>
                 </div>
             </section>
 
-            {/* ══ BOOKS (moved here – right after Features) ══ */}
+            {/* ══ BOOKS ══ */}
             <section style={sectionStyle('white')}>
                 <div style={containerStyle}>
                     <div style={sectionHeaderStyle}>
@@ -203,15 +199,10 @@ export default function ModernLibrary() {
                         <p style={sectionSubStyle}>تصفح مجموعة مختارة من أفضل الكتب</p>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(3,1fr)'), gap: isTiny ? '14px' : isMobile ? '18px' : '28px' }}>
-                        {books.map((book, i) => (
-                            <BookCard key={i} book={book} onClick={() => window.open(book.url, '_blank')} isMobile={isMobile} isTiny={isTiny} />
-                        ))}
+                        {books.map((book, i) => <BookCard key={i} book={book} onClick={() => window.open(book.url, '_blank')} isMobile={isMobile} isTiny={isTiny} />)}
                     </div>
                 </div>
             </section>
-
-            {/* ══ SEARCH (moved here – right after Books) ══ */}
-            {/* <LibrarySearchSection isTiny={isTiny} isMobile={isMobile} isTablet={isTablet} isDesktop={isDesktop} /> */}
 
             {/* ══ SUBSCRIPTION ══ */}
             <section style={sectionStyle('white')}>
@@ -224,7 +215,7 @@ export default function ModernLibrary() {
                         {subscriptionInfo.map((s, i) => (
                             <div key={i} style={{ ...cardBase, textAlign: 'center' }}>
                                 <div style={{ fontSize: isTiny ? '15px' : isMobile ? '17px' : '22px', fontWeight: '800', color: s.color, marginBottom: '6px' }}>{s.value}</div>
-                                <div style={{ fontSize: isTiny ? '11px' : '13px', color: '#6b7280' }}>{s.label}</div>
+                                <div style={{ fontSize: isTiny ? '12px' : '14px', color: '#6b7280' }}>{s.label}</div>
                             </div>
                         ))}
                     </div>
@@ -240,8 +231,8 @@ export default function ModernLibrary() {
                                     <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: i % 2 === 0 ? '#0865a8' : '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '12px' }}>
                                         <Icon size={20} color="white" />
                                     </div>
-                                    <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#000', marginBottom: '6px' }}>{s.title}</h3>
-                                    <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.7' }}>{s.desc}</p>
+                                    <h3 style={{ fontSize: isTiny ? '14px' : '16px', fontWeight: '700', color: '#000', marginBottom: '6px' }}>{s.title}</h3>
+                                    <p style={{ fontSize: isTiny ? '13px' : '15px', color: '#4b5563', lineHeight: '1.7' }}>{s.desc}</p>
                                 </div>
                             );
                         })}
@@ -265,8 +256,8 @@ export default function ModernLibrary() {
                                         <Icon size={20} color={i % 2 === 0 ? '#0865a8' : '#f57c00'} />
                                     </div>
                                     <div>
-                                        <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#000', marginBottom: '4px' }}>{p.name}</h3>
-                                        <p style={{ fontSize: isTiny ? '12px' : '13px', color: '#6b7280' }}>{p.desc}</p>
+                                        <h3 style={{ fontSize: isTiny ? '14px' : '16px', fontWeight: '700', color: '#000', marginBottom: '4px' }}>{p.name}</h3>
+                                        <p style={{ fontSize: isTiny ? '13px' : '14px', color: '#6b7280' }}>{p.desc}</p>
                                     </div>
                                 </div>
                             );
@@ -280,51 +271,60 @@ export default function ModernLibrary() {
                 <div style={containerStyle}>
 
                     <div style={sectionHeaderStyle}>
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 18px', background: 'linear-gradient(135deg, #0865a8, #f57c00)', borderRadius: '999px', color: 'white', fontSize: isTiny ? '11px' : '13px', fontWeight: '700', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 18px', background: 'linear-gradient(135deg, #0865a8, #f57c00)', borderRadius: '999px', color: 'white', fontSize: isTiny ? '12px' : '14px', fontWeight: '700', marginBottom: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
                             <Star size={14} /> أول سفارة معرفة لشركة مقاولات في مصر
                         </div>
                         <h2 style={sectionTitleStyle}>سفارة المعرفة — مكتبة الإسكندرية</h2>
                     </div>
 
                     {/* Definition */}
-                    <div style={{ ...cardBase, marginBottom: '24px', borderRight: '5px solid #0865a8', textAlign: 'right' }}>
-                        <h3 style={{ fontSize: isTiny ? '14px' : '17px', fontWeight: '700', color: '#0865a8', marginBottom: '10px' }}>تعريف سفارة المعرفة</h3>
-                        <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151', lineHeight: '1.9' }}>
+                    <div style={{ ...cardBase, marginBottom: '20px', borderRight: '5px solid #0865a8', textAlign: 'right' }}>
+                        <h3 style={{ fontSize: isTiny ? '15px' : '18px', fontWeight: '700', color: '#0865a8', marginBottom: '10px' }}>تعريف سفارة المعرفة</h3>
+                        <p style={{ fontSize: isTiny ? '13px' : '15px', color: '#374151', lineHeight: '1.9' }}>
                             تسعى مكتبة الإسكندرية الجديدة إلى استعادة روح الانفتاح والبحث التي ميّزت المكتبة القديمة، فهي ليست مكتبة فحسب، بل مجمع ثقافي يقوم على نشر العلم والمعرفة. وتتلخص رسالتها في أن تكون مركزاً للتميز في إنتاج ونشر المعرفة، ومكاناً للتفاعل بين الشعوب والحضارات.
                         </p>
                     </div>
 
+                    {/* ── NEW: Embassy definition image scroll strip ── */}
+                    <div style={{ marginBottom: '24px' }}>
+                        <div style={{ display: 'flex', gap: isTiny ? '10px' : '14px', overflowX: 'auto', paddingBottom: '10px', WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}>
+                            {embassyDefImages.map((img, i) => (
+                                <EmbassyDefImage key={i} img={img} isTiny={isTiny} isMobile={isMobile} />
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Concept */}
                     <div style={{ ...cardBase, marginBottom: '24px', borderRight: '5px solid #f57c00', textAlign: 'right' }}>
-                        <h3 style={{ fontSize: isTiny ? '14px' : '17px', fontWeight: '700', color: '#f57c00', marginBottom: '10px' }}>مفهوم سفارات المعرفة</h3>
-                        <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151', lineHeight: '1.9', marginBottom: '14px' }}>
+                        <h3 style={{ fontSize: isTiny ? '15px' : '18px', fontWeight: '700', color: '#f57c00', marginBottom: '10px' }}>مفهوم سفارات المعرفة</h3>
+                        <p style={{ fontSize: isTiny ? '13px' : '15px', color: '#374151', lineHeight: '1.9', marginBottom: '14px' }}>
                             في عام <strong>2014</strong> جاء التفكير في إنشاء سفارات لمكتبة الإسكندرية في جميع المحافظات، حتى تتمكن المكتبة من تخطي البُعد الجغرافي والتوسع لتوصيل خدماتها إلى أكبر عدد ممكن من المستفيدين.
                         </p>
                         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                             <div style={{ background: 'rgba(8,101,168,0.08)', border: '2px solid rgba(8,101,168,0.2)', borderRadius: '14px', padding: '12px 18px', textAlign: 'center', minWidth: '90px' }}>
                                 <div style={{ fontSize: isTiny ? '22px' : '28px', fontWeight: '800', color: '#0865a8' }}>24</div>
-                                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '3px' }}>سفارة معرفة حالياً</div>
+                                <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '3px' }}>سفارة معرفة حالياً</div>
                             </div>
                             <div style={{ background: 'rgba(245,124,0,0.08)', border: '2px solid rgba(245,124,0,0.2)', borderRadius: '14px', padding: '12px 18px', textAlign: 'center', minWidth: '90px' }}>
                                 <div style={{ fontSize: isTiny ? '22px' : '28px', fontWeight: '800', color: '#f57c00' }}>2014</div>
-                                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '3px' }}>سنة التأسيس</div>
+                                <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '3px' }}>سنة التأسيس</div>
                             </div>
                             <div style={{ background: 'rgba(0,0,0,0.04)', border: '2px solid rgba(0,0,0,0.1)', borderRadius: '14px', padding: '12px 18px', flex: 1, minWidth: '180px', textAlign: 'center' }}>
-                                <div style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#000', lineHeight: '1.5' }}>سفارة المعرفة للمكتبة الرئيسية لشركة المقاولون العرب هي <span style={{ color: '#0865a8' }}>أول سفارة معرفة لإحدى كبرى شركات المقاولات</span></div>
+                                <div style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#000', lineHeight: '1.5' }}>سفارة المعرفة للمكتبة الرئيسية لشركة المقاولون العرب هي <span style={{ color: '#0865a8' }}>أول سفارة معرفة لإحدى كبرى شركات المقاولات</span></div>
                             </div>
                         </div>
                     </div>
 
                     {/* Goals */}
                     <div style={{ ...cardBase, marginBottom: '24px', background: 'rgba(8,101,168,0.02)', border: '2px solid rgba(8,101,168,0.12)' }}>
-                        <h3 style={{ fontSize: isTiny ? '14px' : '17px', fontWeight: '700', color: '#0865a8', marginBottom: '18px', textAlign: 'center' }}>أهداف سفارات المعرفة ودورها داخل مكتبة المعهد</h3>
+                        <h3 style={{ fontSize: isTiny ? '15px' : '18px', fontWeight: '700', color: '#0865a8', marginBottom: '18px', textAlign: 'center' }}>أهداف سفارات المعرفة ودورها داخل مكتبة المعهد</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: '10px' }}>
                             {embassyGoals.map((g, i) => (
                                 <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
                                     <div style={{ width: '24px', height: '24px', borderRadius: '7px', background: i % 2 === 0 ? '#0865a8' : '#f57c00', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
                                         <Check size={12} color="white" />
                                     </div>
-                                    <span style={{ fontSize: isTiny ? '12px' : '14px', color: '#1a1a1a', lineHeight: '1.75' }}>{g}</span>
+                                    <span style={{ fontSize: isTiny ? '13px' : '15px', color: '#1a1a1a', lineHeight: '1.75' }}>{g}</span>
                                 </div>
                             ))}
                         </div>
@@ -334,16 +334,16 @@ export default function ModernLibrary() {
                     <InaugurationGallery isMobile={isMobile} isTiny={isTiny} />
 
                     {/* Digital services heading */}
-                    <h3 style={{ fontSize: isTiny ? '16px' : '20px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '6px' }}>الخدمات المعرفية التي تقدمها سفارة المعرفة بالمعهد</h3>
-                    <p style={{ fontSize: isTiny ? '13px' : '15px', color: '#6b7280', textAlign: 'center', marginBottom: '24px' }}>يضم موقع سفارة المعرفة الرقمي لمكتبة الإسكندرية الأقسام الآتية</p>
+                    <h3 style={{ fontSize: isTiny ? '17px' : '22px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '6px' }}>الخدمات المعرفية التي تقدمها سفارة المعرفة بالمعهد</h3>
+                    <p style={{ fontSize: isTiny ? '14px' : '16px', color: '#6b7280', textAlign: 'center', marginBottom: '24px' }}>يضم موقع سفارة المعرفة الرقمي لمكتبة الإسكندرية الأقسام الآتية</p>
 
                     {/* DAR */}
                     <div style={{ ...cardBase, marginBottom: '18px', borderTop: '4px solid #0865a8', textAlign: 'right' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '10px' }}>
-                            <h4 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#0865a8', margin: 0 }}>مستودع الأصول الرقمية DAR</h4>
+                            <h4 style={{ fontSize: isTiny ? '14px' : '16px', fontWeight: '700', color: '#0865a8', margin: 0 }}>مستودع الأصول الرقمية DAR</h4>
                             <span style={{ fontSize: isTiny ? '16px' : '20px', fontWeight: '800', color: '#0865a8', background: 'rgba(8,101,168,0.08)', padding: '3px 12px', borderRadius: '10px' }}>509,089 وعاء رقمي</span>
                         </div>
-                        <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.8', marginBottom: '12px' }}>يضم هذا المستودع الرقمي وعاءً رقمياً يشمل كافة التخصصات العلمية في شتى فروع المعرفة البشرية، بالإضافة إلى:</p>
+                        <p style={{ fontSize: isTiny ? '13px' : '15px', color: '#4b5563', lineHeight: '1.8', marginBottom: '12px' }}>يضم هذا المستودع الرقمي وعاءً رقمياً يشمل كافة التخصصات العلمية في شتى فروع المعرفة البشرية، بالإضافة إلى:</p>
                         <div style={{ display: 'grid', gridTemplateColumns: cols('1fr 1fr', '1fr 1fr', 'repeat(4,1fr)', 'repeat(4,1fr)'), gap: '10px' }}>
                             {[
                                 { label: 'صور ووثائق تاريخية', value: '2,052 صورة' },
@@ -352,8 +352,8 @@ export default function ModernLibrary() {
                                 { label: 'خرائط رقمية', value: '2,777 خريطة' },
                             ].map((item, i) => (
                                 <div key={i} style={{ background: 'rgba(8,101,168,0.06)', borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
-                                    <div style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '800', color: '#0865a8', marginBottom: '3px' }}>{item.value}</div>
-                                    <div style={{ fontSize: isTiny ? '11px' : '12px', color: '#6b7280' }}>{item.label}</div>
+                                    <div style={{ fontSize: isTiny ? '14px' : '16px', fontWeight: '800', color: '#0865a8', marginBottom: '3px' }}>{item.value}</div>
+                                    <div style={{ fontSize: isTiny ? '12px' : '13px', color: '#6b7280' }}>{item.label}</div>
                                 </div>
                             ))}
                         </div>
@@ -368,8 +368,8 @@ export default function ModernLibrary() {
                             { title: 'الأرشيف الرقمي للرئيس محمد أنور السادات', color: '#0865a8', text: 'كافة المعلومات التاريخية وأفلام تسجيلية وملفات صوتية ومقتطفات من نصر حرب أكتوبر ومعلومات موثقة في فترة رئاسته.' },
                         ].map((item, i) => (
                             <div key={i} style={{ ...cardBase, borderTop: `4px solid ${item.color}`, textAlign: 'right' }}>
-                                <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: item.color, marginBottom: '8px' }}>{item.title}</h4>
-                                <p style={{ fontSize: isTiny ? '11px' : '13px', color: '#4b5563', lineHeight: '1.8' }}>{item.text}</p>
+                                <h4 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: item.color, marginBottom: '8px' }}>{item.title}</h4>
+                                <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.8' }}>{item.text}</p>
                             </div>
                         ))}
                     </div>
@@ -378,31 +378,31 @@ export default function ModernLibrary() {
                     <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: '16px', marginBottom: '24px' }}>
                         <div style={{ ...cardBase, borderRight: '5px solid #f57c00', textAlign: 'right' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
-                                <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#f57c00', margin: 0 }}>أرشيف الصحافة المصرية</h4>
-                                <span style={{ fontSize: '12px', fontWeight: '800', color: '#f57c00', background: 'rgba(245,124,0,0.1)', padding: '2px 8px', borderRadius: '8px' }}>17,500,000 مقالة</span>
+                                <h4 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#f57c00', margin: 0 }}>أرشيف الصحافة المصرية</h4>
+                                <span style={{ fontSize: '13px', fontWeight: '800', color: '#f57c00', background: 'rgba(245,124,0,0.1)', padding: '2px 8px', borderRadius: '8px' }}>17,500,000 مقالة</span>
                             </div>
-                            <p style={{ fontSize: isTiny ? '11px' : '13px', color: '#4b5563', lineHeight: '1.8' }}>مقالات صحفية رقمية باللغات العربية والإنجليزية والفرنسية على مدار 67 عاماً من 1950 حتى 2017.</p>
+                            <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.8' }}>مقالات صحفية رقمية باللغات العربية والإنجليزية والفرنسية على مدار 67 عاماً من 1950 حتى 2017.</p>
                         </div>
                         <div style={{ ...cardBase, borderRight: '5px solid #0865a8', textAlign: 'right' }}>
-                            <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#0865a8', marginBottom: '8px' }}>أرشيف صفحات الإنترنت</h4>
-                            <p style={{ fontSize: isTiny ? '11px' : '13px', color: '#4b5563', lineHeight: '1.8' }}>أرشيف شامل يضم صوراً لكافة صفحات المواقع وتطورها وتغيُّر شكلها ومحتوياتها عبر الزمن.</p>
+                            <h4 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#0865a8', marginBottom: '8px' }}>أرشيف صفحات الإنترنت</h4>
+                            <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.8' }}>أرشيف شامل يضم صوراً لكافة صفحات المواقع وتطورها وتغيُّر شكلها ومحتوياتها عبر الزمن.</p>
                         </div>
                     </div>
 
                     {/* Beneficiaries */}
                     <div style={{ display: 'grid', gridTemplateColumns: cols('1fr', '1fr', 'repeat(2,1fr)', 'repeat(2,1fr)'), gap: '16px' }}>
                         <div style={{ ...cardBase, textAlign: 'right' }}>
-                            <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#0865a8', marginBottom: '14px' }}>الفئات المستفيدة من سفارة المعرفة</h3>
+                            <h3 style={{ fontSize: isTiny ? '14px' : '16px', fontWeight: '700', color: '#0865a8', marginBottom: '14px' }}>الفئات المستفيدة من سفارة المعرفة</h3>
                             {['موظفو الشركة', 'طلبة الجامعات', 'الباحثون لرسائل الماجستير والدكتوراه (داخل وخارج الشركة)'].map((f, i) => (
                                 <div key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '8px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: i % 2 === 0 ? '#0865a8' : '#f57c00', flexShrink: 0 }} />
-                                    <span style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151' }}>{f}</span>
+                                    <span style={{ fontSize: isTiny ? '13px' : '15px', color: '#374151' }}>{f}</span>
                                 </div>
                             ))}
                         </div>
                         <div style={{ ...cardBase, textAlign: 'right' }}>
-                            <h3 style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '700', color: '#f57c00', marginBottom: '14px' }}>آليات الاستفادة من سفارة المعرفة</h3>
-                            <p style={{ fontSize: isTiny ? '12px' : '14px', color: '#4b5563', lineHeight: '1.85' }}>
+                            <h3 style={{ fontSize: isTiny ? '14px' : '16px', fontWeight: '700', color: '#f57c00', marginBottom: '14px' }}>آليات الاستفادة من سفارة المعرفة</h3>
+                            <p style={{ fontSize: isTiny ? '13px' : '15px', color: '#4b5563', lineHeight: '1.85' }}>
                                 يتم حضور المستفيدين إلى مقر المكتبة الرئيسية مع تقديم كارنيه الاشتراك وتسجيل بياناتهم باستمارة خدمات المستفيدين، ثم يُوجَّهون من قبل مسؤول المكتبة للتدريب على استخدام أجهزة الحاسب الآلي الخاصة بالسفارة.
                             </p>
                         </div>
@@ -418,25 +418,52 @@ export default function ModernLibrary() {
                 input::placeholder{color:#9ca3af}
                 *{box-sizing:border-box}
                 img{max-width:100%}
+                ::-webkit-scrollbar{height:4px}
+                ::-webkit-scrollbar-track{background:#f1f1f1;border-radius:4px}
+                ::-webkit-scrollbar-thumb{background:#0865a8;border-radius:4px}
             `}</style>
         </div>
     );
 }
 
+/* ── Embassy definition image card (horizontal scroll strip) ── */
+function EmbassyDefImage({ img, isTiny, isMobile }) {
+    const [err, setErr] = useState(false);
+    const w = isTiny ? '200px' : isMobile ? '240px' : '300px';
+    const h = isTiny ? '140px' : isMobile ? '170px' : '210px';
+    return (
+        <div style={{ flexShrink: 0, width: w, scrollSnapAlign: 'start', borderRadius: '14px', overflow: 'hidden', border: '2px solid #e5e7eb', boxShadow: '0 2px 10px rgba(0,0,0,0.07)' }}>
+            {err ? (
+                <div style={{ width: '100%', height: h, background: '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#9ca3af' }}>
+                    <BookOpen size={28} color="#d1d5db" />
+                    <span style={{ fontSize: '12px' }}>الصورة غير متاحة</span>
+                </div>
+            ) : (
+                <img src={img.src} alt={img.caption} onError={() => setErr(true)}
+                    style={{ width: '100%', height: h, objectFit: 'cover', display: 'block' }} />
+            )}
+            <div style={{ padding: '8px 12px', background: 'white', textAlign: 'center' }}>
+                <span style={{ fontSize: isTiny ? '11px' : '13px', color: '#374151', fontWeight: '600' }}>{img.caption}</span>
+            </div>
+        </div>
+    );
+}
+
+/* ── BookOpen needed in EmbassyDefImage ── */
+const { BookOpen: _BO } = { BookOpen };
+
 /* ─────────────────────────────────────────────────────────────── */
 function FeatureCard({ feature, index, isTiny, isMobile }) {
     const [hovered, setHovered] = useState(false);
     return (
-        <div
-            style={{ borderRadius: '16px', border: `2px solid ${hovered ? feature.color : '#e5e7eb'}`, overflow: 'hidden', cursor: 'pointer', boxShadow: hovered ? `0 10px 28px ${feature.color}22` : '0 2px 6px rgba(0,0,0,0.04)', transition: 'all 0.4s ease', background: 'white', transform: hovered ? 'translateY(-4px)' : 'none' }}
-            onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
-        >
+        <div style={{ borderRadius: '16px', border: `2px solid ${hovered ? feature.color : '#e5e7eb'}`, overflow: 'hidden', cursor: 'pointer', boxShadow: hovered ? `0 10px 28px ${feature.color}22` : '0 2px 6px rgba(0,0,0,0.04)', transition: 'all 0.4s ease', background: 'white', transform: hovered ? 'translateY(-4px)' : 'none' }}
+            onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
             <div style={{ height: '4px', background: feature.color, width: hovered ? '100%' : '35%', transition: 'width 0.4s ease' }} />
             <div style={{ padding: isTiny ? '14px' : isMobile ? '16px 18px' : '22px 26px', display: 'flex', gap: '14px', alignItems: 'flex-start', direction: 'rtl' }}>
                 <div style={{ flexShrink: 0, width: isTiny ? '30px' : '38px', height: isTiny ? '30px' : '38px', borderRadius: '10px', background: hovered ? feature.color : '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}>
                     <span style={{ fontSize: isTiny ? '13px' : '15px', fontWeight: '800', color: hovered ? 'white' : feature.color }}>{index + 1}</span>
                 </div>
-                <p style={{ fontSize: isTiny ? '12px' : isMobile ? '13px' : '15px', lineHeight: '1.85', color: '#1a1a1a', margin: 0, flex: 1, textAlign: 'right' }}>{feature.text}</p>
+                <p style={{ fontSize: isTiny ? '13px' : isMobile ? '14px' : '16px', lineHeight: '1.85', color: '#1a1a1a', margin: 0, flex: 1, textAlign: 'right' }}>{feature.text}</p>
             </div>
         </div>
     );
@@ -454,12 +481,12 @@ function BookCard({ book, onClick, isMobile, isTiny }) {
                     <Search size={28} color="white" />
                     <div style={{ padding: '8px 22px', background: 'white', color: '#000', borderRadius: '999px', fontSize: '14px', fontWeight: '700' }}>اقرأ الآن</div>
                 </div>
-                <div style={{ position: 'absolute', top: '12px', right: '12px', padding: '4px 12px', background: book.color, borderRadius: '999px', color: 'white', fontSize: '11px', fontWeight: '700' }}>{book.publisher}</div>
+                <div style={{ position: 'absolute', top: '12px', right: '12px', padding: '4px 12px', background: book.color, borderRadius: '999px', color: 'white', fontSize: '12px', fontWeight: '700' }}>{book.publisher}</div>
             </div>
             <div style={{ padding: isTiny ? '14px' : '18px' }}>
                 <h3 style={{ fontSize: isTiny ? '13px' : isMobile ? '14px' : '16px', fontWeight: '700', color: '#000', lineHeight: '1.45', marginBottom: '12px' }}>{book.title}</h3>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: book.color, fontWeight: '600' }}>تصفح الكتاب <ChevronLeft size={14} /></span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '14px', color: book.color, fontWeight: '600' }}>تصفح الكتاب <ChevronLeft size={14} /></span>
                 </div>
             </div>
         </div>
@@ -475,10 +502,8 @@ function InaugurationGallery({ isMobile, isTiny }) {
 
     const [current, setCurrent] = useState(0);
     const [imgError, setImgError] = useState({});
-
     const prev = () => setCurrent(c => (c - 1 + images.length) % images.length);
     const next = () => setCurrent(c => (c + 1) % images.length);
-
     const maxDots = isTiny ? 4 : isMobile ? 5 : 8;
     const visibleDots = () => {
         if (images.length <= maxDots) return images.map((_, i) => i);
@@ -490,11 +515,8 @@ function InaugurationGallery({ isMobile, isTiny }) {
 
     return (
         <div style={{ marginBottom: '28px' }}>
-            <h3 style={{ fontSize: isTiny ? '15px' : '18px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '16px' }}>
-                صور افتتاح سفارة المعرفة بالمعهد
-            </h3>
+            <h3 style={{ fontSize: isTiny ? '16px' : '20px', fontWeight: '700', color: '#000', textAlign: 'center', marginBottom: '16px' }}>صور افتتاح سفارة المعرفة بالمعهد</h3>
             <div style={{ background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
-                {/* Main image */}
                 <div style={{ position: 'relative', width: '100%', background: '#111', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: isTiny ? '170px' : isMobile ? '220px' : '380px' }}>
                     {imgError[current] ? (
                         <div style={{ width: '100%', height: isMobile ? '220px' : '380px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', gap: '10px' }}>
@@ -512,17 +534,13 @@ function InaugurationGallery({ isMobile, isTiny }) {
                     <button onClick={next} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: isTiny ? '32px' : '40px', height: isTiny ? '32px' : '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)', border: '2px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', outline: 'none', zIndex: 2 }}>
                         <ChevronLeft size={isTiny ? 16 : 20} color="#0865a8" />
                     </button>
-                    <div style={{ position: 'absolute', bottom: '10px', left: '10px', background: 'rgba(0,0,0,0.55)', borderRadius: '20px', padding: '3px 10px', color: 'white', fontSize: '12px', fontWeight: '600', zIndex: 2 }}>
+                    <div style={{ position: 'absolute', bottom: '10px', left: '10px', background: 'rgba(0,0,0,0.55)', borderRadius: '20px', padding: '3px 10px', color: 'white', fontSize: '13px', fontWeight: '600', zIndex: 2 }}>
                         {current + 1} / {images.length}
                     </div>
                 </div>
-
-                {/* Caption */}
                 <div style={{ padding: '10px 16px', borderBottom: '1px solid #f0f0f0', textAlign: 'center' }}>
-                    <span style={{ fontSize: isTiny ? '12px' : '14px', color: '#374151', fontWeight: '600' }}>{images[current].caption}</span>
+                    <span style={{ fontSize: isTiny ? '13px' : '15px', color: '#374151', fontWeight: '600' }}>{images[current].caption}</span>
                 </div>
-
-                {/* Dots + thumbs */}
                 <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '5px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {visibleDots().map(i => (
@@ -543,196 +561,6 @@ function InaugurationGallery({ isMobile, isTiny }) {
                         ))}
                     </div>
                 </div>
-            </div>
-        </div>
-    );
-}
-
-/* ─────────────────────────────────────────────────────────────── */
-function LibrarySearchSection({ isTiny, isMobile, isTablet, isDesktop }) {
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [selectedYear, setSelectedYear] = useState('');
-    const [searchText, setSearchText] = useState('');
-    const [focused, setFocused] = useState(false);
-    const [booksDatabase, setBooksDatabase] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const booksPerPage = 12;
-
-    useEffect(() => {
-        let cancelled = false;
-        const fetchAll = async () => {
-            try {
-                setLoading(true);
-                const first = await fetch('https://acwebsite-icmet-test.azurewebsites.net/api/book/getAllBooks?pageIndex=1');
-                if (!first.ok) throw new Error('Failed');
-                const fd = await first.json();
-                const total = fd.totalPages || 1;
-                let items = [...(fd.data || [])];
-                if (total > 1) {
-                    const pages = await Promise.all(Array.from({ length: total - 1 }, (_, i) =>
-                        fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/book/getAllBooks?pageIndex=${i + 2}`).then(r => r.json())
-                    ));
-                    pages.forEach(p => { items = items.concat(p.data || []); });
-                }
-                if (cancelled) return;
-                setBooksDatabase(items.map((b, i) => {
-                    let year = '2000';
-                    if (b.bookDate) { const m = b.bookDate.match(/\.000(\d{4})$/); if (m) year = m[1]; }
-                    return { id: i + 1, category: b.typeName || 'غير مصنف', year, title: b.bookName || 'عنوان غير متوفر', author: b.author || 'مؤلف غير معروف' };
-                }));
-                setLoading(false);
-            } catch (e) { if (!cancelled) { setError(e.message); setLoading(false); } }
-        };
-        fetchAll();
-        return () => { cancelled = true; };
-    }, []);
-
-    const categories = React.useMemo(() =>
-        [...new Set(booksDatabase.map(b => b.category))].map((c, i) => ({
-            id: c, name: c, icon: ['⚖️', '📜', '📋', '📐', '🏗️', '⚡', '🏛️', '💧', '🛣️', '🚰'][i % 10],
-        })), [booksDatabase]);
-
-    const availableYears = React.useMemo(() => {
-        const src = selectedCategory ? booksDatabase.filter(b => b.category === selectedCategory) : booksDatabase;
-        return [...new Set(src.map(b => b.year))].sort((a, b) => b.localeCompare(a));
-    }, [selectedCategory, booksDatabase]);
-
-    const filtered = booksDatabase.filter(b => {
-        const mc = !selectedCategory || b.category === selectedCategory;
-        const my = !selectedYear || b.year === selectedYear;
-        const ms = !searchText.trim() || b.title.toLowerCase().includes(searchText.toLowerCase()) || b.author.toLowerCase().includes(searchText.toLowerCase());
-        return mc && my && ms;
-    });
-
-    const totalPages = Math.ceil(filtered.length / booksPerPage);
-    const paginated = filtered.slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage);
-    useEffect(() => setCurrentPage(1), [selectedCategory, selectedYear, searchText]);
-
-    const inputStyle = { width: '100%', padding: isTiny ? '11px 40px 11px 12px' : '14px 46px 14px 18px', fontSize: isTiny ? '13px' : '15px', background: 'white', border: `2px solid ${focused ? '#0865a8' : '#e5e7eb'}`, borderRadius: '12px', color: '#000', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box', transition: 'border-color 0.3s' };
-    const selectStyle = { ...inputStyle, cursor: 'pointer', appearance: 'none', border: '2px solid #e5e7eb' };
-    const iconPos = { position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', width: '16px', height: '16px', pointerEvents: 'none' };
-
-    const gridCols = isTiny ? '1fr' : isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(4,1fr)';
-
-    return (
-        <section style={{ padding: isTiny ? '32px 10px' : isMobile ? '40px 14px' : isTablet ? '60px 24px' : '80px 40px', background: '#f9fafb', boxSizing: 'border-box' }}>
-            <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%' }}>
-                {/* Search box */}
-                <div style={{ background: 'white', borderRadius: '22px', padding: isTiny ? '20px 14px' : isMobile ? '24px 18px' : '40px', border: '2px solid #e5e7eb', marginBottom: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                        <h2 style={{ fontSize: isTiny ? '22px' : isMobile ? '26px' : '36px', fontWeight: '800', color: '#000', marginBottom: '6px' }}>ابحث في المكتبة</h2>
-                        <p style={{ fontSize: isTiny ? '13px' : '16px', color: '#6b7280' }}>اعثر على الكتاب المناسب بسهولة</p>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: isTiny || isMobile ? '1fr' : isTablet ? '1fr 1fr' : '2fr 1fr 1fr', gap: '12px' }}>
-                        <div style={{ position: 'relative' }}>
-                            <input type="text" placeholder="ابحث عن كتاب أو مؤلف..." value={searchText} onChange={e => setSearchText(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} style={inputStyle} disabled={loading} />
-                            <Search style={iconPos} />
-                        </div>
-                        <div style={{ position: 'relative' }}>
-                            <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)} style={selectStyle} disabled={loading}>
-                                <option value="">التصنيف</option>
-                                {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-                            </select>
-                            <Tag style={iconPos} />
-                        </div>
-                        <div style={{ position: 'relative' }}>
-                            <select value={selectedYear} onChange={e => setSelectedYear(e.target.value)} style={selectStyle} disabled={loading}>
-                                <option value="">السنة</option>
-                                {availableYears.map(y => <option key={y} value={y}>{y}</option>)}
-                            </select>
-                            <Calendar style={iconPos} />
-                        </div>
-                    </div>
-                    {!loading && !error && (
-                        <div style={{ marginTop: '20px', padding: '12px 16px', background: 'rgba(8,101,168,0.08)', border: '2px solid rgba(8,101,168,0.15)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#0865a8', fontSize: isTiny ? '13px' : '15px', fontWeight: '600', flexWrap: 'wrap' }}>
-                            <Sparkles size={15} />
-                            {selectedCategory || selectedYear || searchText.trim() ? `تم العثور على ${filtered.length} نتيجة` : `عرض جميع الكتب (${filtered.length})`}
-                        </div>
-                    )}
-                </div>
-
-                {/* Results */}
-                {loading ? (
-                    <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb' }}>
-                        <div style={{ width: '40px', height: '40px', border: '4px solid #e5e7eb', borderTop: '4px solid #0865a8', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
-                        <p style={{ color: '#6b7280', fontSize: '16px' }}>جاري تحميل الكتب...</p>
-                    </div>
-                ) : error ? (
-                    <div style={{ textAlign: 'center', padding: '50px 20px', background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb' }}>
-                        <div style={{ fontSize: '44px', marginBottom: '14px' }}>⚠️</div>
-                        <p style={{ color: '#ef4444', fontSize: '15px' }}>{error}</p>
-                    </div>
-                ) : (
-                    <>
-                        <div style={{ display: 'grid', gridTemplateColumns: gridCols, gap: isTiny ? '10px' : '16px' }}>
-                            {paginated.map((book, i) => <SearchResultCard key={book.id} book={book} isTiny={isTiny} />)}
-                        </div>
-                        {filtered.length === 0 && (
-                            <div style={{ textAlign: 'center', padding: '50px 20px', background: 'white', borderRadius: '18px', border: '2px solid #e5e7eb', marginTop: '16px' }}>
-                                <div style={{ fontSize: '48px', marginBottom: '14px' }}>📚</div>
-                                <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#000', marginBottom: '6px' }}>لا توجد نتائج</h3>
-                                <p style={{ color: '#6b7280' }}>جرب تغيير معايير البحث</p>
-                            </div>
-                        )}
-                        {filtered.length > 0 && totalPages > 1 && (
-                            <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} isTiny={isTiny} isMobile={isMobile} />
-                        )}
-                    </>
-                )}
-            </div>
-        </section>
-    );
-}
-
-/* ─────────────────────────────────────────────────────────────── */
-function Pagination({ currentPage, totalPages, onPageChange, isTiny, isMobile }) {
-    const max = isTiny ? 3 : isMobile ? 4 : 5;
-    const pages = [];
-    if (totalPages <= max + 2) {
-        for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-        pages.push(1);
-        let s = Math.max(2, currentPage - Math.floor(max / 2));
-        let e = Math.min(totalPages - 1, s + max - 1);
-        if (e === totalPages - 1) s = Math.max(2, e - max + 1);
-        if (s > 2) pages.push('...');
-        for (let i = s; i <= e; i++) pages.push(i);
-        if (e < totalPages - 1) pages.push('...');
-        pages.push(totalPages);
-    }
-    const go = p => { onPageChange(p); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-    const btnBase = { background: 'white', border: '2px solid #e5e7eb', borderRadius: '10px', color: '#000', fontFamily: 'inherit', fontSize: isTiny ? '13px' : '15px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s', outline: 'none' };
-    const sz = isTiny ? '32px' : '38px';
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '32px', padding: '16px', background: 'white', borderRadius: '16px', border: '2px solid #e5e7eb', flexWrap: 'wrap' }}>
-            <button onClick={() => currentPage > 1 && go(currentPage - 1)} disabled={currentPage === 1} style={{ ...btnBase, width: sz, height: sz, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentPage === 1 ? 0.3 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}><ChevronRight size={16} /></button>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {pages.map((p, i) => p === '...'
-                    ? <span key={`e${i}`} style={{ color: '#9ca3af', fontSize: '15px', padding: '0 4px' }}>...</span>
-                    : <button key={p} onClick={() => p !== currentPage && go(p)} style={{ ...btnBase, minWidth: sz, height: sz, padding: '0 8px', ...(p === currentPage ? { background: 'linear-gradient(135deg,#0865a8,#f57c00)', border: '2px solid transparent', color: 'white' } : {}) }}>{p}</button>
-                )}
-            </div>
-            <button onClick={() => currentPage < totalPages && go(currentPage + 1)} disabled={currentPage === totalPages} style={{ ...btnBase, width: sz, height: sz, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: currentPage === totalPages ? 0.3 : 1, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}><ChevronLeft size={16} /></button>
-        </div>
-    );
-}
-
-/* ─────────────────────────────────────────────────────────────── */
-function SearchResultCard({ book, isTiny }) {
-    const [hovered, setHovered] = useState(false);
-    const colors = ['#0865a8', '#f57c00', '#000000'];
-    const color = colors[book.category.length % colors.length];
-    return (
-        <div style={{ background: 'white', borderRadius: '14px', border: `1.5px solid ${hovered ? color : '#e5e7eb'}`, padding: isTiny ? '14px' : '18px', cursor: 'pointer', transform: hovered ? 'translateY(-4px)' : 'none', transition: 'all 0.4s ease', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative', overflow: 'hidden', boxShadow: hovered ? `0 8px 20px ${color}18` : '0 1px 4px rgba(0,0,0,0.04)', boxSizing: 'border-box' }} onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-            <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '4px', background: color, borderRadius: '0 14px 14px 0', opacity: hovered ? 1 : 0.2, transition: 'opacity 0.3s' }} />
-            <div style={{ display: 'inline-flex', alignSelf: 'flex-end', padding: '2px 8px', borderRadius: '20px', background: `${color}14`, border: `1px solid ${color}28`, color, fontSize: isTiny ? '10px' : '11px', fontWeight: '700' }}>{book.category}</div>
-            <h4 style={{ fontSize: isTiny ? '12px' : '14px', fontWeight: '700', color: '#111', lineHeight: '1.5', margin: 0, textAlign: 'right', flex: 1 }}>{book.title}</h4>
-            <div style={{ height: '1px', background: '#f0f0f0' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '6px' }}>
-                <span style={{ fontSize: isTiny ? '11px' : '12px', color: '#9ca3af', flex: 1, textAlign: 'left', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{book.author}</span>
-                <span style={{ fontSize: isTiny ? '11px' : '12px', color, fontWeight: '700', background: `${color}10`, padding: '2px 7px', borderRadius: '6px', flexShrink: 0 }}>{book.year}</span>
             </div>
         </div>
     );
