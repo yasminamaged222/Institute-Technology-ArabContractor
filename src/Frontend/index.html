@@ -3,55 +3,46 @@
 
 <head>
     <meta charset="UTF-8" />
+    <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="icon" type="image/png" href="/images/white.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+    <!-- <title>icemt-lms-frontend</title> -->
     <title>المعهد التكنولوجي لهندسة التشييد والإدارة</title>
 
-    <!-- SEO -->
-    <meta name="description"
-          content="المعهد التكنولوجي لهندسة التشييد والإدارة - برامج تدريبية متخصصة في الهندسة والإدارة وتأهيل الطلاب لسوق العمل." />
-
-    <!-- Fonts optimization -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <!-- Keep only essential font -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet" />
-
-    <!-- Optional: keep if REALLY used in UI -->
-    <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap" rel="stylesheet" /> -->
-    <!-- ❌ Removed Roboto (unnecessary for RTL Arabic UI usually) -->
-
-    <link rel="icon" type="image/png" href="/images/white.png" />
 </head>
 
 <body style="background-color: #ffffff;">
     <div id="root"></div>
-
-    <!-- Payment callbacks (DO NOT TOUCH - SAFE VERSION) -->
-    <!--<script>
+    <script>
         function completeCallback(resultIndicator) {
-            window.completeCallbackReact?.(resultIndicator);
+            if (window.completeCallbackReact) {
+                window.completeCallbackReact(resultIndicator);
+            }
         }
 
         function errorCallback(error) {
-            window.errorCallbackReact?.(error);
+            if (window.errorCallbackReact) {
+                window.errorCallbackReact(error);
+            }
         }
 
         function cancelCallback() {
-            window.cancelCallbackReact?.();
+            if (window.cancelCallbackReact) {
+                window.cancelCallbackReact();
+            }
         }
-    </script>-->
+    </script>
 
-    <!-- Mastercard checkout (KEEP AS IS) -->
-    <!--<script src="https://banquemisr.gateway.mastercard.com/static/checkout/checkout.min.js"
+    <script src="https://banquemisr.gateway.mastercard.com/static/checkout/checkout.min.js"
             data-error="errorCallback"
             data-cancel="cancelCallback"
             data-complete="completeCallback">
-    </script>-->
+    </script>
 
-    <!-- React app -->
     <script type="module" src="/src/main.jsx"></script>
 </body>
 
 </html>
+```

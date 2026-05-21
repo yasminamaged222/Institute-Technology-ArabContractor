@@ -292,59 +292,59 @@ export default function CheckoutPage() {
         fetchCart();
     }, [isSignedIn, getToken]);
 
-    useEffect(() => {
+    // useEffect(() => {
 
-        // Prevent duplicate loading
-        if (document.getElementById("mastercard-script")) return;
+    //     Prevent duplicate loading
+    //     if (document.getElementById("mastercard-script")) return;
 
-        const script = document.createElement("script");
+    //     const script = document.createElement("script");
 
-        script.id = "mastercard-script";
+    //     script.id = "mastercard-script";
 
-        script.src =
-            "https://banquemisr.gateway.mastercard.com/static/checkout/checkout.min.js";
+    //     script.src =
+    //         "https:banquemisr.gateway.mastercard.com/static/checkout/checkout.min.js";
 
-        script.async = true;
+    //     script.async = true;
 
-        script.setAttribute("data-error", "errorCallback");
-        script.setAttribute("data-cancel", "cancelCallback");
-        script.setAttribute("data-complete", "completeCallback");
+    //     script.setAttribute("data-error", "errorCallback");
+    //     script.setAttribute("data-cancel", "cancelCallback");
+    //     script.setAttribute("data-complete", "completeCallback");
 
-        document.body.appendChild(script);
+    //     document.body.appendChild(script);
 
-        return () => {
-            document.getElementById("mastercard-script")?.remove();
-        };
+    //     return () => {
+    //         document.getElementById("mastercard-script")?.remove();
+    //     };
 
-    }, []);
+    // }, []);
     // Mastercard global callbacks
     useEffect(() => {
-        // ✅ لو المستخدم رجع بالـ Back من صفحة الدفع، وقف الـ loading فوراً
-        window.completeCallback = (resultIndicator) => {
-            window.completeCallbackReact?.(resultIndicator);
-        };
+        //✅ لو المستخدم رجع بالـ Back من صفحة الدفع، وقف الـ loading فوراً
+        // window.completeCallback = (resultIndicator) => {
+        //     window.completeCallbackReact?.(resultIndicator);
+        // };
 
-        window.errorCallback = (error) => {
-            window.errorCallbackReact?.(error);
-        };
+        // window.errorCallback = (error) => {
+        //     window.errorCallbackReact?.(error);
+        // };
 
-        window.cancelCallback = () => {
-            window.cancelCallbackReact?.();
-        };
-        const handlePageShow = (event) => {
-            if (event.persisted) {
-                setLoading(false);
-            }
-        };
+        // window.cancelCallback = () => {
+        //     window.cancelCallbackReact?.();
+        // };
+        // const handlePageShow = (event) => {
+        //     if (event.persisted) {
+        //         setLoading(false);
+        //     }
+        // };
 
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                setLoading(false);
-            }
-        };
+        // const handleVisibilityChange = () => {
+        //     if (document.visibilityState === 'visible') {
+        //         setLoading(false);
+        //     }
+        // };
 
-        window.addEventListener('pageshow', handlePageShow);
-        document.addEventListener('visibilitychange', handleVisibilityChange);
+        // window.addEventListener('pageshow', handlePageShow);
+        // document.addEventListener('visibilitychange', handleVisibilityChange);
 
         window.completeCallbackReact = async (resultIndicator) => {
             if (resultIndicator === successIndicatorRef.current) {
@@ -357,7 +357,7 @@ export default function CheckoutPage() {
                             headers: { Authorization: `Bearer ${token}` }
                         }
                     );
-                } catch (_) { }
+                } catch (_) { /* empty */ }
 
                 localStorage.removeItem("cartItems");
                 window.dispatchEvent(new Event("cartUpdated"));
@@ -383,8 +383,8 @@ export default function CheckoutPage() {
         };
 
         return () => {
-            window.removeEventListener('pageshow', handlePageShow);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            // window.removeEventListener('pageshow', handlePageShow);
+            // document.removeEventListener('visibilitychange', handleVisibilityChange);
             delete window.completeCallbackReact;
             delete window.errorCallbackReact;
             delete window.cancelCallbackReact;
