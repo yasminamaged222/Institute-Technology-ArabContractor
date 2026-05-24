@@ -85,7 +85,22 @@ namespace Institute.API.Controllers
 
             return Ok(dto);
         }
+        // ── GET YEARS ─────────────────────────────────────────────────
+        [HttpGet("years")]
+        public async Task<ActionResult<IEnumerable<int>>> GetNewsYears()
+        {
+            var spec = new NewsWithMainPicSpec(new NewsSpecParams { PageSize = int.MaxValue, PageIndex = 1 });
+            var news = await _repo.GetAllWithSpecAsync(spec);
 
+            var years = news
+                .Where(x => x.NewsDate.HasValue)
+                .Select(x => x.NewsDate!.Value.Year)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .ToList();
+
+            return Ok(years);
+        }
         // ── BUILD URL ─────────────────────────────────────────────────
         private string? BuildImageUrl(string? blobName)
         {
