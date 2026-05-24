@@ -259,7 +259,6 @@ const Navbar = () => {
                     background: #f57c00 !important;
                     color: #fff !important;
                     border-radius: 6px !important;
-                    font-family: "Droid Arabic Kufi", serif !important;
                     font-size: 0.7rem !important;
                     font-weight: 700 !important;
                     text-decoration: none !important;

@@ -36,13 +36,7 @@ export default function ICMETTests() {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
                 @import url('https://fonts.googleapis.com/earlyaccess/droidarabickufi.css');
-                
-                *,
-                *::before,
-                *::after {
-                    font-family: 'Droid Arabic Kufi', 'Noto Kufi Arabic', sans-serif !important;
-                }
-                
+
                 :root {
                     --primary: #0865a8;
                     --secondary: #f57c00;
@@ -61,17 +55,17 @@ export default function ICMETTests() {
                     color: var(--dark);
                     line-height: 1.6;
                     font-size: 16px;
+                    font-family: 'Droid Arabic Kufi', 'Noto Kufi Arabic', sans-serif;
                 }
 
                 .rtl-layout {
                     text-align: right;
                     direction: rtl;
                     min-height: 100vh;
-                    /* No extra padding-top - title will start right after fixed bar */
                     padding-top: 0;
+                    font-family: 'Droid Arabic Kufi', 'Noto Kufi Arabic', sans-serif;
                 }
 
-                /* Fixed bar at very top */
                 .fixed-nav {
                     position: fixed;
                     top: 0;
@@ -85,12 +79,10 @@ export default function ICMETTests() {
                     font-size: 0.9rem;
                 }
 
-                /* Main content wrapper to account for fixed bar height */
                 .main-content {
-                    padding-top: 45px; /* Height of fixed bar ~45px, so title sits directly below */
+                    padding-top: 45px;
                 }
 
-                /* Hero Section */
                 .hero-section {
                     max-width: 1200px;
                     margin: 0.5rem auto 1rem auto;
@@ -100,7 +92,7 @@ export default function ICMETTests() {
                 }
 
                 .hero-title {
-                    font-family: 'Droid Arabic Kufi', serif;
+                    font-family: 'Droid Arabic Kufi', 'Noto Kufi Arabic', sans-serif;
                     font-size: clamp(1.6rem, 5vw, 2.2rem);
                     font-weight: 800;
                     color: var(--primary);
@@ -134,7 +126,6 @@ export default function ICMETTests() {
                     box-shadow: 0 2px 8px rgba(0,0,0,0.03);
                 }
 
-                /* Stats Grid */
                 .stats-grid {
                     display: grid;
                     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -164,24 +155,10 @@ export default function ICMETTests() {
                     box-shadow: 0 15px 30px rgba(8,101,168,0.15);
                 }
 
-                .stat-icon {
-                    font-size: 2rem;
-                    color: var(--secondary);
-                }
+                .stat-icon { font-size: 2rem; color: var(--secondary); }
+                .stat-title { font-size: 1rem; font-weight: 700; color: var(--dark); }
+                .stat-number { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
 
-                .stat-title {
-                    font-size: 1rem;
-                    font-weight: 700;
-                    color: var(--dark);
-                }
-
-                .stat-number {
-                    font-size: 1.6rem;
-                    font-weight: 800;
-                    color: var(--primary);
-                }
-
-                /* Content Sections */
                 .content-section {
                     max-width: 1200px;
                     margin: 3rem auto;
@@ -197,9 +174,8 @@ export default function ICMETTests() {
                 }
 
                 @media (max-width: 768px) {
-                    .content-grid {
-                        grid-template-columns: 1fr;
-                    }
+                    .content-grid { grid-template-columns: 1fr; }
+                    .image-grid { grid-template-columns: 1fr; }
                 }
 
                 .content-image {
@@ -217,9 +193,7 @@ export default function ICMETTests() {
                     transition: transform 0.3s ease;
                 }
 
-                .content-image:hover img {
-                    transform: scale(1.02);
-                }
+                .content-image:hover img { transform: scale(1.02); }
 
                 .list-container {
                     background: white;
@@ -229,10 +203,7 @@ export default function ICMETTests() {
                     border: 1px solid #eee;
                 }
 
-                .custom-list {
-                    list-style: none;
-                    padding: 0;
-                }
+                .custom-list { list-style: none; padding: 0; }
 
                 .custom-list > li {
                     margin-bottom: 1.2rem;
@@ -258,11 +229,7 @@ export default function ICMETTests() {
                     font-size: 0.8rem;
                 }
 
-                .nested-list {
-                    list-style: none;
-                    margin-top: 0.8rem;
-                    padding-right: 1.2rem;
-                }
+                .nested-list { list-style: none; margin-top: 0.8rem; padding-right: 1.2rem; }
 
                 .nested-list li {
                     margin-bottom: 0.6rem;
@@ -287,13 +254,6 @@ export default function ICMETTests() {
                     margin: 2rem 0;
                 }
 
-                @media (max-width: 768px) {
-                    .image-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-
-                /* Large Stats Section */
                 .large-stats-section {
                     background: var(--primary);
                     padding: 2rem 1rem;
@@ -301,12 +261,7 @@ export default function ICMETTests() {
                     text-align: center;
                 }
 
-                .large-stats-title {
-                    font-size: 1.6rem;
-                    color: white;
-                    margin-bottom: 1rem;
-                    font-weight: 700;
-                }
+                .large-stats-title { font-size: 1.6rem; color: white; margin-bottom: 1rem; font-weight: 700; }
 
                 .large-stat-icon {
                     font-size: 2.5rem;
@@ -315,24 +270,13 @@ export default function ICMETTests() {
                 }
 
                 @keyframes bounce {
-                    0%,100%{transform:translateY(0)}
-                    50%{transform:translateY(-8px)}
+                    0%,100% { transform: translateY(0); }
+                    50% { transform: translateY(-8px); }
                 }
 
-                .large-stat-number {
-                    font-size: 3.2rem;
-                    font-weight: 900;
-                    color: white;
-                    line-height: 1.2;
-                }
+                .large-stat-number { font-size: 3.2rem; font-weight: 900; color: white; line-height: 1.2; }
+                .large-stat-label { font-size: 1.3rem; color: white; font-weight: 600; }
 
-                .large-stat-label {
-                    font-size: 1.3rem;
-                    color: white;
-                    font-weight: 600;
-                }
-
-                /* News Section */
                 .news-section {
                     background: white;
                     padding: 2rem;
@@ -341,12 +285,7 @@ export default function ICMETTests() {
                     margin-top: 2rem;
                 }
 
-                .section-title {
-                    color: var(--primary);
-                    font-size: 1.6rem;
-                    font-weight: bold;
-                    margin-bottom: 1.5rem;
-                }
+                .section-title { color: var(--primary); font-size: 1.6rem; font-weight: bold; margin-bottom: 1.5rem; }
 
                 .news-item {
                     padding: 1rem 2rem 1rem 1rem;
@@ -375,13 +314,10 @@ export default function ICMETTests() {
                     font-size: 0.7rem;
                 }
 
-                /* Modal */
                 .modal-overlay {
                     position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
+                    top: 0; left: 0;
+                    width: 100%; height: 100%;
                     background: rgba(0,0,0,0.85);
                     display: flex;
                     align-items: center;
@@ -390,26 +326,9 @@ export default function ICMETTests() {
                     cursor: pointer;
                 }
 
-                .modal-content {
-                    max-width: 90%;
-                    max-height: 90%;
-                    position: relative;
-                }
-
-                .modal-content img {
-                    width: 100%;
-                    height: auto;
-                    border-radius: 12px;
-                }
-
-                .close-modal {
-                    position: absolute;
-                    top: -35px;
-                    left: 0;
-                    color: white;
-                    font-size: 2rem;
-                    cursor: pointer;
-                }
+                .modal-content { max-width: 90%; max-height: 90%; position: relative; }
+                .modal-content img { width: 100%; height: auto; border-radius: 12px; }
+                .close-modal { position: absolute; top: -35px; left: 0; color: white; font-size: 2rem; cursor: pointer; }
             `}</style>
 
             {/* Fixed navigation bar */}
@@ -423,7 +342,6 @@ export default function ICMETTests() {
                 <span style={{ color: '#374151' }}>الاختبارات</span>
             </div>
 
-            {/* Main content – starts right after fixed bar */}
             <div className="main-content">
                 <section className="hero-section">
                     <h1 className="hero-title">الاختبارات</h1>
@@ -440,7 +358,6 @@ export default function ICMETTests() {
 
                 <h1 className="hero-title" style={{ fontSize: '1.7rem', marginTop: '0' }}>ولم يقتصر العمل في قسم الاختبارات على العاملين بالشركة فقط ، بل امتد عمل التقييمات ليشمل العملاء خارجيين ايضاً</h1>
 
-                {/* External clients stats */}
                 <div className="stats-grid">
                     {externalClients.map((client, idx) => (
                         <div key={idx} className="stat-card">
@@ -451,7 +368,6 @@ export default function ICMETTests() {
                     ))}
                 </div>
 
-                {/* Internal tests */}
                 <section className="content-section">
                     <div className="content-grid">
                         <div className="content-text">
@@ -483,7 +399,6 @@ export default function ICMETTests() {
                     </div>
                 </section>
 
-                {/* Large stat */}
                 <section className="large-stats-section">
                     <h2 className="large-stats-title">ما تم اختباره في عام 2020-2021</h2>
                     <div className="large-stat-display">
@@ -493,7 +408,6 @@ export default function ICMETTests() {
                     </div>
                 </section>
 
-                {/* News section */}
                 <section className="content-section">
                     <div className="news-section">
                         <h2 className="section-title">من اخبار قسم الاختبارات</h2>
@@ -506,10 +420,9 @@ export default function ICMETTests() {
                 </section>
             </div>
 
-            {/* Modal */}
             {selectedImg && (
                 <div className="modal-overlay" onClick={() => setSelectedImg(null)}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
                         <span className="close-modal">&times;</span>
                         <img src={selectedImg} alt="Enlarged view" />
                     </div>

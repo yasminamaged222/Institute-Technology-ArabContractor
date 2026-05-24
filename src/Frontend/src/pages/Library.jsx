@@ -287,8 +287,7 @@ export default function ModernLibrary() {
 
                     {/* ── NEW: Embassy definition image scroll strip ── */}
                     <div style={{ marginBottom: '24px' }}>
-                        <div style={{ display: 'flex', gap: isTiny ? '10px' : '14px', overflowX: 'auto', paddingBottom: '10px', WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}>
-                            {embassyDefImages.map((img, i) => (
+                        <div style={{ display: 'flex', gap: isTiny ? '10px' : '14px', overflowX: 'auto', paddingBottom: '10px', WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory', justifyContent: 'center' }}>                            {embassyDefImages.map((img, i) => (
                                 <EmbassyDefImage key={i} img={img} isTiny={isTiny} isMobile={isMobile} />
                             ))}
                         </div>
