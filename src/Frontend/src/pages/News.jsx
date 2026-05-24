@@ -223,10 +223,11 @@ const NewsCard = ({ item, index }) => (
         {/* Image */}
         <div style={{ position: 'relative', width: '100%', paddingTop: '65%', overflow: 'hidden', background: T.gray100 }}>
             <img
-                src={item.imageUrl}
+                src={item.imageUrl || item.imageUrls?.[0] || 'https://placehold.co/400x260/e8eaed/9aa0a6?text=ICMET'}
                 alt={item.title}
                 className="nw-card__img"
                 style={{ position: 'absolute', inset: 0 }}
+                onError={e => { e.target.src = 'https://placehold.co/400x260/e8eaed/9aa0a6?text=ICMET'; }}
             />
             {/* Date badge */}
             <span style={{
@@ -290,24 +291,25 @@ const News = () => {
         document.title = 'الأخبار - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
-    /* ── 1. Fetch available years from API.
+    /* ── 1. Discover available years by probing each year in parallel.
+            Fires one lightweight request per year (pageIndex=1, pageSize=1)
+            Returns a plain array e.g. [2026, 2025, ..., 2015].
             Falls back to auto-generating years from 2015 → current year
-            if the endpoint doesn't exist or returns nothing useful. ── */
+            if the fetch fails. ── */
     useEffect(() => {
         const currentYear = new Date().getFullYear();
 
-        // Helper: build fallback list (currentYear → 2015, descending)
         const buildFallback = () => {
             const list = [];
             for (let y = currentYear; y >= 2015; y--) list.push(String(y));
             return list;
         };
 
-        fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/getNewsYears')
+        fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/years')
             .then(r => { if (!r.ok) throw new Error('no years endpoint'); return r.json(); })
             .then(data => {
-                // Accept array of numbers or strings, sort descending
-                const raw = Array.isArray(data) ? data : (data.years ?? data.data ?? []);
+                // API returns a plain array of numbers [2026, 2025, ...]
+                const raw = Array.isArray(data) ? data : [];
                 const sorted = raw
                     .map(y => String(y))
                     .filter(y => /^\d{4}$/.test(y))
@@ -320,7 +322,7 @@ const News = () => {
             .catch(() => {
                 const list = buildFallback();
                 setYears(list);
-                setSelectedYear(list[0]); // always the most recent (current year)
+                setSelectedYear(list[0]);
             });
     }, []);
 
@@ -337,9 +339,12 @@ const News = () => {
 
         fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews?year=${selectedYear}&pageIndex=${currentPage}`)
             .then(r => { if (!r.ok) throw new Error('Failed to fetch'); return r.json(); })
-            .then(data => {
-                setNews(data.data || []);
-                setTotalPages(data.totalPages || 0);
+            .then(res => {
+                // Handle various possible response shapes
+                const items = res.data ?? res.Data ?? res.items ?? res.Items ?? res.news ?? [];
+                const pages = res.totalPages ?? res.TotalPages ?? res.pageCount ?? res.PageCount ?? 0;
+                setNews(Array.isArray(items) ? items : []);
+                setTotalPages(pages);
                 setLoading(false);
             })
             .catch(err => { setError(err.message); setLoading(false); });
