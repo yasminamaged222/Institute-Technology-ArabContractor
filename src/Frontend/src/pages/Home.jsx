@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -223,6 +222,14 @@ export default function Home() {
             .catch(() => setApiStats(null));
     }, []);
 
+    // ── FIX 1: Preload the first hero image eagerly ───────────────────────────
+    useEffect(() => {
+        if (slides[0]?.image) {
+            const img = new Image();
+            img.src = slides[0].image;
+        }
+    }, []);
+
     const heroRef = useRef(null);
     const heroInnerRef = useRef(null);
     const progressRef = useRef(null);
@@ -332,14 +339,19 @@ export default function Home() {
 
             if (heroRef.current) {
                 const bgLayers = heroRef.current.querySelectorAll('.hero-bg-layer');
-                const overlay = heroRef.current.querySelector('.hero-overlay');
-                gsap.to(bgLayers, { yPercent: 40, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: 'bottom top', scrub: true } });
-                if (overlay) gsap.to(overlay, { opacity: 0.75, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '60% top', scrub: true } });
+                // ── FIX 2: Removed overlay opacity scrub animation entirely.
+                // The overlay now stays at a fixed opacity set via CSS/JSX,
+                // preventing the flicker caused by starting at undefined opacity.
                 if (heroInnerRef.current) gsap.to(heroInnerRef.current, { yPercent: -28, opacity: 0, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: '25% top', end: 'bottom top', scrub: true } });
                 const scrollInd = heroRef.current.querySelector('.scroll-ind');
                 if (scrollInd) gsap.to(scrollInd, { opacity: 0, scale: 0.5, yPercent: 30, ease: 'none', scrollTrigger: { trigger: heroRef.current, start: 'top top', end: '30% top', scrub: true } });
                 const heroContent = heroRef.current.querySelector('.hero-entrance');
                 if (heroContent) gsap.fromTo(heroContent.children, { opacity: 0, y: 60, filter: 'blur(8px)' }, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 1.2, ease: 'power4.out', stagger: 0.12, delay: 0.3 });
+
+                // ── FIX 3: Removed parallax on .hero-bg-layer (yPercent: 40).
+                // background-image parallax via transform causes a visible "loading seam"
+                // on initial paint because the browser can't always pre-composite it.
+                // Kept the layer static — the Swiper autoplay still provides motion.
             }
 
             if (statsRef.current && statsOrangeBarRef.current) {
@@ -467,11 +479,6 @@ export default function Home() {
             </div>
 
             <style>{`
-        /* ─── NAV OFFSET VARIABLE ──────────────────────────────────────────
-           --nav-h  = actual navbar height (70px)
-           --mt-fix = the negative marginTop applied to the root div (23px)
-           Together they give the exact above-fold height so no gap appears.
-        ───────────────────────────────────────────────────────────────── */
         :root {
           --nav-h:  70px;
           --mt-fix: 23px;
@@ -481,71 +488,79 @@ export default function Home() {
         .W{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,56px);}
         .S{padding:clamp(48px,7vw,96px) clamp(16px,4vw,56px);}
 
-        /* ── ABOVE-THE-FOLD WRAPPER ────────────────────────────────────────
-           Hero + Stats together fill exactly one viewport below the navbar.
-           Uses dvh so mobile browser chrome is accounted for.
-           Falls back gracefully when dvh is unsupported (older browsers).
-        ────────────────────────────────────────────────────────────────── */
         .above-fold-wrap {
           display: flex;
           flex-direction: column;
-          /* Subtract navbar height, then add back the negative-margin offset
-             so the wrapper ends exactly at the viewport bottom — no gap.     */
           height: calc(100vh  - var(--nav-h) + var(--mt-fix));
           height: calc(100dvh - var(--nav-h) + var(--mt-fix));
-          min-height: 480px; /* safety floor on very short screens */
+          min-height: 480px;
         }
 
-        /* Hero fills all leftover space after the stats bar claims its slice */
         .above-fold-wrap .hero-swiper-outer {
           flex: 1 1 0;
-          min-height: 0;    /* allow flex child to shrink below its content */
+          min-height: 0;
           overflow: hidden;
           position: relative;
         }
 
-        /* Stats bar: natural height, never grows, never shrinks */
         .above-fold-wrap .stats-bar-outer {
           flex: 0 0 auto;
         }
 
-        /* ── HERO SWIPER ──────────────────────────────────────────────────
-           Height is now 100% of its flex parent (.hero-swiper-outer)
-           so it no longer needs a viewport-based clamp.
-        ───────────────────────────────────────────────────────────────── */
         .hero-swiper {
           width: 100%;
-          height: 100%;   /* fills .hero-swiper-outer */
+          height: 100%;
         }
         .hero-swiper .swiper-slide{
           display:flex;align-items:center;justify-content:center;overflow:hidden;
           position:relative;
           height: 100%;
         }
+
+        /* ── FIX: hero-bg-layer is now a true <img> tag wrapper.
+           The pseudo-parallax (top:-15%;height:130%) is removed so the
+           browser has no oversized element to composite, eliminating the
+           "dark flash" on first paint. */
         .hero-bg-layer{
           position:absolute;
           inset:0;
-          will-change:transform;
-          background-size:cover!important;
-          background-position:center center!important;
-          background-repeat:no-repeat!important;
+          width:100%;
+          height:100%;
+          overflow:hidden;
         }
-        .hero-bg-layer{
-          top:-15%;bottom:-15%;left:0;right:0;
-          height:130%;
+        .hero-bg-layer img {
+          width:100%;
+          height:100%;
+          object-fit:cover;
+          object-position:center;
+          display:block;
+          /* opacity starts at 1 — no transition on the image itself */
+          opacity:1;
         }
-        .hero-overlay{position:absolute;inset:0;background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(4,20,40,.82) 0%,rgba(4,20,40,.58) 60%,rgba(4,20,40,.28) 100%);transition:opacity .4s;}
+
+        /* ── FIX: overlay opacity is now static (0.55).
+           Removed the GSAP scrub that was animating it from 0→0.75,
+           which caused a dark flicker on first scroll. */
+        .hero-overlay{
+          position:absolute;
+          inset:0;
+          background:radial-gradient(ellipse 80% 70% at 50% 50%,rgba(4,20,40,.82) 0%,rgba(4,20,40,.58) 60%,rgba(4,20,40,.28) 100%);
+          opacity:0.55;
+          z-index:1;
+        }
+
         .hero-swiper .swiper-button-prev,.hero-swiper .swiper-button-next{
           width:50px;height:50px;border-radius:50%;
           background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.35);
           color:#fff!important;top:90%!important;transform:translateY(-50%);
           transition:background .25s,border-color .25s,transform .25s;backdrop-filter:blur(6px);
+          z-index:3;
         }
         .hero-swiper .swiper-button-prev{right:60px!important;left:auto!important;}
         .hero-swiper .swiper-button-next{left:60px!important;right:auto!important;}
         .hero-swiper .swiper-button-prev::after,.hero-swiper .swiper-button-next::after{font-size:20px!important;font-weight:500;}
         .hero-swiper .swiper-button-prev:hover,.hero-swiper .swiper-button-next:hover{background:${C.o};border-color:${C.o};transform:translateY(-50%) scale(1.08);}
-        .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;}
+        .hero-swiper .swiper-pagination{bottom:22px!important;display:flex;gap:6px;justify-content:center;width:100%!important;left:0!important;z-index:3;}
         .hero-swiper .swiper-pagination-bullet{background:rgba(255,255,255,.35);opacity:1;width:24px;height:3px;border-radius:0;transition:all .3s;}
         .hero-swiper .swiper-pagination-bullet-active{background:${C.o};width:44px;}
         @media(max-width:480px){
@@ -553,10 +568,6 @@ export default function Home() {
           .hero-swiper .swiper-button-next{left:12px!important;}
         }
 
-        /* ══════════════════════════════════════════════════════════════
-           STATS BAR — always 4 columns from 300px to 2000px
-           Font sizes scale via clamp() so nothing wraps or overflows
-        ══════════════════════════════════════════════════════════════ */
         .stats-bar{
           display:grid;
           grid-template-columns:repeat(4,1fr);
@@ -571,7 +582,6 @@ export default function Home() {
         }
         .stat-cell:last-child{border-left:none;}
 
-        /* ── FEATURES ── */
         .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2.5vw,28px);}
         @media(max-width:780px){.feat-grid{grid-template-columns:1fr;}}
         .feat-card{
@@ -590,22 +600,18 @@ export default function Home() {
         .feat-num{font-family:${F};font-size:clamp(2.4rem,4vw,3.8rem);font-weight:900;color:${C.g3};line-height:1;margin-bottom:20px;letter-spacing:-2px;transition:color .3s;}
         .feat-card:hover .feat-num{color:${C.o};}
 
-        /* ── VISION ── */
         .vision-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(12px,2vw,20px);}
         @media(max-width:500px){.vision-grid{grid-template-columns:1fr;}}
         .vis-item{padding:28px;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,box-shadow .25s;opacity:0;transform-origin:center bottom;}
         .vis-item:hover{border-color:${C.o};box-shadow:0 4px 24px rgba(245,124,0,.10);}
 
-        /* ── DOWNLOADS ── */
         .dl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,2vw,16px);}
         @media(max-width:600px){.dl-grid{grid-template-columns:1fr;}}
         .dl-item{opacity:0;}
 
-        /* ── CERTS ── */
         .cert-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:24px;color:${C.w};transition:background .25s,border-color .25s;height:100%;display:flex;flex-direction:column;gap:14px;}
         .cert-card:hover{background:rgba(255,255,255,.1);border-color:rgba(245,124,0,.4);}
 
-        /* ── PROTOCOLS ── */
         .proto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
         @media(max-width:900px){.proto-grid{grid-template-columns:repeat(2,1fr);}}
         @media(max-width:560px){.proto-grid{grid-template-columns:1fr;}}
@@ -614,7 +620,6 @@ export default function Home() {
         .proto-card::after{content:'';position:absolute;top:0;right:0;width:3px;height:100%;background:linear-gradient(180deg,${C.o},${C.b});transform:scaleY(0);transform-origin:top;transition:transform .3s cubic-bezier(.22,1,.36,1);}
         .proto-card:hover::after{transform:scaleY(1);}
 
-        /* ── SCHOOLS ── */
         .schools-layout{display:grid;grid-template-columns:minmax(0,280px) 1fr;gap:20px;align-items:stretch;}
         @media(max-width:960px){.schools-layout{grid-template-columns:1fr;}}
         .school-featured{border-radius:12px;border:2px solid ${C.b};background:linear-gradient(160deg,${C.b} 0%,${C.bd} 100%);display:flex;flex-direction:column;overflow:hidden;transition:transform .3s,box-shadow .3s;opacity:0;}
@@ -625,11 +630,9 @@ export default function Home() {
         .school-card:hover{border-color:${C.b};transform:translateY(-5px);box-shadow:0 12px 32px rgba(8,101,168,.12);}
         .sc-meta{font-family:${F};font-size:.68rem;font-weight:700;color:${C.g5};display:flex;align-items:center;gap:5px;}
 
-        /* ── CRAFT ── */
         .craft-card{padding:clamp(22px,3vw,36px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;opacity:0;}
         .craft-card:hover{border-color:${C.o};transform:translateY(-4px);}
 
-        /* ── NEWS ── */
         .news-card{overflow:hidden;border-radius:8px;border:1px solid ${C.g3};background:${C.w};transition:border-color .25s,transform .25s;height:100%;}
         .news-card:hover{border-color:${C.b};transform:translateY(-4px);}
         .news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{width:44px;height:44px;border-radius:50%;background:${C.w};border:1px solid ${C.g3};color:${C.b}!important;transition:all .25s;}
@@ -639,22 +642,14 @@ export default function Home() {
         .news-swiper .swiper-pagination-bullet-active{background:${C.o};}
         @media(max-width:600px){.news-swiper .swiper-button-prev,.news-swiper .swiper-button-next{display:none!important;}}
 
-        /* ── LIBRARY ── */
         .lib-split{
           display:grid;
           grid-template-columns:1fr 1fr;
         }
         @media(max-width:860px){
-          .lib-split{
-            grid-template-columns:1fr;
-          }
-          .lib-visual{
-            min-height:260px;
-            padding:clamp(28px,5vw,48px) clamp(20px,4vw,40px)!important;
-          }
-          .lib-content{
-            padding:clamp(28px,5vw,48px) clamp(20px,4vw,40px)!important;
-          }
+          .lib-split{grid-template-columns:1fr;}
+          .lib-visual{min-height:260px;padding:clamp(28px,5vw,48px) clamp(20px,4vw,40px)!important;}
+          .lib-content{padding:clamp(28px,5vw,48px) clamp(20px,4vw,40px)!important;}
           .lib-tags{flex-wrap:wrap;gap:6px!important;}
           .lib-tag{font-size:.58rem!important;}
         }
@@ -667,126 +662,24 @@ export default function Home() {
         .lib-tags{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:clamp(12px,2vw,20px);}
         .lib-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:clamp(3px,.5vw,5px) clamp(8px,1.5vw,14px);font-size:clamp(.62rem,1vw,.75rem);font-family:${F};font-weight:700;white-space:nowrap;}
 
-        /* ── ONLINE TRAINING ── */
-        .online-section{
-          position:relative;
-          overflow:hidden;
-          padding:clamp(40px,6vw,96px) clamp(16px,4vw,56px);
-        }
-        .online-layout{
-          display:grid;
-          grid-template-columns:1fr 1fr;
-          gap:clamp(28px,5vw,72px);
-          align-items:start;
-          max-width:1320px;
-          margin:0 auto;
-        }
-        @media(max-width:900px){
-          .online-layout{
-            grid-template-columns:1fr;
-            gap:clamp(28px,4vw,48px);
-          }
-        }
-        @media(max-width:480px){
-          .online-section{padding:32px 16px;}
-          .online-layout{gap:24px;}
-        }
-
-        .online-img-wrap{
-          width:100%;
-          border-radius:16px;
-          overflow:hidden;
-          position:relative;
-          aspect-ratio:16/10;
-          box-shadow:0 20px 60px rgba(0,0,0,.35);
-          border:2px solid rgba(255,255,255,.15);
-          flex-shrink:0;
-        }
-        .online-img-wrap img{
-          width:100%;height:100%;
-          object-fit:cover;
-          display:block;
-          transition:transform .6s ease;
-        }
+        .online-section{position:relative;overflow:hidden;padding:clamp(40px,6vw,96px) clamp(16px,4vw,56px);}
+        .online-layout{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,5vw,72px);align-items:start;max-width:1320px;margin:0 auto;}
+        @media(max-width:900px){.online-layout{grid-template-columns:1fr;gap:clamp(28px,4vw,48px);}}
+        @media(max-width:480px){.online-section{padding:32px 16px;}.online-layout{gap:24px;}}
+        .online-img-wrap{width:100%;border-radius:16px;overflow:hidden;position:relative;aspect-ratio:16/10;box-shadow:0 20px 60px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.15);flex-shrink:0;}
+        .online-img-wrap img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease;}
         .online-img-wrap:hover img{transform:scale(1.04);}
-        .online-img-badge{
-          position:absolute;
-          bottom:14px;
-          right:14px;
-          background:rgba(8,101,168,.88);
-          backdrop-filter:blur(8px);
-          border:1px solid rgba(255,255,255,.2);
-          border-radius:10px;
-          padding:10px 14px;
-          display:flex;
-          align-items:center;
-          gap:10px;
-        }
+        .online-img-badge{position:absolute;bottom:14px;right:14px;background:rgba(8,101,168,.88);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;}
+        .online-features-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:28px;}
+        @media(max-width:360px){.online-features-grid{grid-template-columns:1fr;}}
+        .online-feature-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;min-width:0;}
+        .online-panel{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:clamp(18px,3vw,36px);display:flex;flex-direction:column;gap:18px;width:100%;min-width:0;}
+        .online-teams-row{display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(8,101,168,.25);border:1px solid rgba(8,101,168,.4);border-radius:10px;min-width:0;}
+        .online-prog-item{display:flex;align-items:flex-start;gap:10px;min-width:0;}
+        .online-prog-dot{width:6px;height:6px;border-radius:50%;background:${C.o};flex-shrink:0;margin-top:6px;}
 
-        .online-features-grid{
-          display:grid;
-          grid-template-columns:1fr 1fr;
-          gap:10px;
-          margin-bottom:28px;
-        }
-        @media(max-width:360px){
-          .online-features-grid{grid-template-columns:1fr;}
-        }
-
-        .online-feature-item{
-          display:flex;
-          align-items:center;
-          gap:10px;
-          padding:10px 14px;
-          background:rgba(255,255,255,.06);
-          border:1px solid rgba(255,255,255,.1);
-          border-radius:8px;
-          min-width:0;
-        }
-
-        .online-panel{
-          background:rgba(255,255,255,.05);
-          border:1px solid rgba(255,255,255,.1);
-          border-radius:16px;
-          padding:clamp(18px,3vw,36px);
-          display:flex;
-          flex-direction:column;
-          gap:18px;
-          width:100%;
-          min-width:0;
-        }
-
-        .online-teams-row{
-          display:flex;
-          align-items:center;
-          gap:12px;
-          padding:14px 18px;
-          background:rgba(8,101,168,.25);
-          border:1px solid rgba(8,101,168,.4);
-          border-radius:10px;
-          min-width:0;
-        }
-
-        .online-prog-item{
-          display:flex;
-          align-items:flex-start;
-          gap:10px;
-          min-width:0;
-        }
-
-        .online-prog-dot{
-          width:6px;
-          height:6px;
-          border-radius:50%;
-          background:${C.o};
-          flex-shrink:0;
-          margin-top:6px;
-        }
-
-        /* ── UTILITY ── */
         a.ob-outline{display:inline-flex;align-items:center;gap:8px;font-family:${F};font-size:clamp(.78rem,1.1vw,.88rem);font-weight:700;color:${C.o};text-decoration:none;border:1.5px solid ${C.o};padding:clamp(9px,1.2vw,12px) clamp(20px,2.8vw,32px);border-radius:8px;transition:background .2s,color .2s;}
         a.ob-outline:hover{background:${C.o};color:#fff;}
-
         .g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,2vw,24px);}
         .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,2vw,24px);}
         .g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.8vw,20px);}
@@ -799,24 +692,16 @@ export default function Home() {
         @media(max-width:480px){.prog-grid{grid-template-columns:1fr;}}
         .why-card{padding:clamp(18px,2.5vw,26px);border:1px solid ${C.g3};border-radius:8px;background:${C.w};transition:border-color .25s,transform .25s;display:flex;flex-direction:column;gap:10px;}
         .why-card:hover{border-color:${C.o};transform:translateY(-3px);}
-
-        /* ── ABOUT image clip ── */
         .about-img-wrap{opacity:0;overflow:hidden;}
         .about-img-wrap img{will-change:transform;}
         .about-txt-wrap>*{opacity:0;}
 
-        /* ── SCROLL INDICATOR ── */
         @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0);}50%{transform:translateX(-50%) translateY(7px);}}
-        .scroll-ind{animation:bounce 2s ease-in-out infinite;position:absolute;bottom:22px;left:50%;transform:translateX(-50%);zIndex:3;}
-
-        /* ── STAT counter English numerals ── */
+        .scroll-ind{animation:bounce 2s ease-in-out infinite;position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:3;}
         .stat-counter{font-variant-numeric:lining-nums;unicode-bidi:plaintext;direction:ltr;display:inline-block;}
-
         @media(max-width:480px){.hero-h1{font-size:clamp(1.2rem,5.5vw,1.7rem)!important;}}
-
-        /* ── reduce motion ── */
         @media(prefers-reduced-motion:reduce){
-          .hero-bg-layer,.lib-visual,.lib-content,.vis-item,.proto-card,.school-featured,.school-card,.craft-card,.dl-item,.stat-cell,.feat-card{opacity:1!important;transform:none!important;}
+          .hero-bg-layer img,.lib-visual,.lib-content,.vis-item,.proto-card,.school-featured,.school-card,.craft-card,.dl-item,.stat-cell,.feat-card{opacity:1!important;transform:none!important;}
         }
       `}</style>
 
@@ -833,12 +718,22 @@ export default function Home() {
                         style={{ height: '100%' }}>
                         {slides.map((sl, i) => (
                             <SwiperSlide key={i}>
-                                <div
-                                    className="hero-bg-layer"
-                                    style={{ backgroundImage: `url(${sl.image})` }}
-                                />
-                                <div className="hero-overlay" />
-                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)' }} />
+                                {/* ── FIX: replaced background-image div with <img> tag.
+                                    This lets the browser issue a proper high-priority
+                                    network request, prevents the compositing seam that
+                                    caused the dark flash, and improves LCP score. */}
+                                <div className="hero-bg-layer">
+                                    <img
+                                        src={sl.image}
+                                        alt=""
+                                        loading={i === 0 ? 'eager' : 'lazy'}
+                                        fetchPriority={i === 0 ? 'high' : 'low'}
+                                    />
+                                </div>
+                                {/* ── FIX: overlay opacity is now a static inline style (0.55).
+                                    Removed the GSAP scrub (0→0.75) that caused the flicker. */}
+                                <div className="hero-overlay" style={{ opacity: 0.55 }} />
+                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg,rgba(0,0,0,.5) 0%,transparent 50%)', zIndex: 1 }} />
                                 <div
                                     ref={i === 0 ? heroInnerRef : null}
                                     className="hero-entrance"
