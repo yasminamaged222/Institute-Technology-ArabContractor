@@ -1,7 +1,7 @@
-import * as XLSX from 'xlsx';
 import { getLogoBase64, triggerDownload } from './helpers';
 import { REFUND_STATUS_META } from './constants';
 
+const XLSX = await import("xlsx");
 // ════════════════════════════════════════════════════════════════════════════
 // Canvas helper — renders Arabic text to a PNG data-URL for jsPDF cells
 // ════════════════════════════════════════════════════════════════════════════

@@ -23,7 +23,7 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: '"Cairo", "Roboto", sans-serif',
+      fontFamily: '"Droid Arabic Kufi", serif',
   },
   components: {
     MuiAppBar: {
