@@ -25,7 +25,6 @@ const STYLES = `
 
     .nw-root { direction: rtl; font-family: ${T.font}; background: ${T.white}; overflow-x: hidden; }
 
-    /* hero grid overlay */
     .nw-hero-grid::before {
         content: '';
         position: absolute;
@@ -38,15 +37,12 @@ const STYLES = `
         z-index: 1;
     }
 
-    /* diagonal cuts */
     .nw-hero-cut::after  { content:''; position:absolute; bottom:-2px; left:0; right:0; height:clamp(40px,8vw,110px); background:${T.white}; clip-path:polygon(0 100%,100% 0,100% 100%); z-index:3; }
     .nw-black-cut::after { content:''; position:absolute; bottom:-2px; left:0; right:0; height:clamp(40px,8vw,110px); background:${T.black}; clip-path:polygon(0 100%,100% 0,100% 100%); z-index:3; }
 
-    /* breadcrumb */
     .nw-bc-link { transition: color 0.25s; }
     .nw-bc-link:hover { color: ${T.orange} !important; }
 
-    /* year pill */
     .nw-year-pill {
         padding: clamp(7px,1.2vw,11px) clamp(16px,2.5vw,26px);
         border-radius: 2px;
@@ -60,19 +56,9 @@ const STYLES = `
         transition: background 0.28s, border-color 0.28s, color 0.28s, transform 0.28s;
         white-space: nowrap;
     }
-    .nw-year-pill:hover {
-        border-color: ${T.orangeLight};
-        color: ${T.orangeLight};
-        transform: translateY(-2px);
-    }
-    .nw-year-pill--active {
-        background: ${T.orange};
-        border-color: ${T.orange};
-        color: ${T.white} !important;
-        box-shadow: 0 4px 16px rgba(245,124,0,0.4);
-    }
+    .nw-year-pill:hover { border-color: ${T.orangeLight}; color: ${T.orangeLight}; transform: translateY(-2px); }
+    .nw-year-pill--active { background: ${T.orange}; border-color: ${T.orange}; color: ${T.white} !important; box-shadow: 0 4px 16px rgba(245,124,0,0.4); }
 
-    /* scroll arrow */
     .nw-arrow {
         background: rgba(255,255,255,0.1);
         border: 2px solid rgba(255,255,255,0.2);
@@ -89,7 +75,6 @@ const STYLES = `
     }
     .nw-arrow:hover { background: ${T.orange}; border-color: ${T.orange}; transform: scale(1.1); }
 
-    /* news card */
     .nw-card {
         position: relative;
         background: ${T.white};
@@ -113,22 +98,15 @@ const STYLES = `
     .nw-card:hover .nw-card__bar { transform: scaleX(1); }
     .nw-card:hover .nw-card__title { color: ${T.orange}; }
 
-    /* card image */
     .nw-card__img { width:100%; height:100%; object-fit:cover; display:block; transition: transform 0.5s cubic-bezier(.4,0,.2,1); }
-
-    /* gradient bar */
     .nw-card__bar { height:4px; background:linear-gradient(to left,${T.orange},${T.blue}); transform:scaleX(0); transform-origin:right; transition:transform 0.38s cubic-bezier(.4,0,.2,1); }
-
-    /* card title */
     .nw-card__title { transition: color 0.3s; }
 
-    /* grid */
     .nw-grid { display:grid; gap:clamp(16px,3vw,28px); grid-template-columns:1fr; }
     @media(min-width:480px){ .nw-grid { grid-template-columns:repeat(2,1fr); } }
     @media(min-width:900px){ .nw-grid { grid-template-columns:repeat(3,1fr); } }
     @media(min-width:1300px){ .nw-grid { grid-template-columns:repeat(4,1fr); } }
 
-    /* pagination */
     .nw-page-btn {
         min-width: clamp(32px,4vw,42px);
         height: clamp(32px,4vw,42px);
@@ -148,7 +126,6 @@ const STYLES = `
     .nw-page-btn--active { background: ${T.orange} !important; border-color: ${T.orange} !important; color: ${T.white} !important; box-shadow: 0 4px 14px rgba(245,124,0,0.4); }
     .nw-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-    /* spinner */
     @keyframes nw-spin { 0%{ transform:rotate(0deg); } 100%{ transform:rotate(360deg); } }
     .nw-spinner {
         width: 52px; height: 52px;
@@ -158,7 +135,6 @@ const STYLES = `
         animation: nw-spin 1s linear infinite;
     }
 
-    /* scroller hide scrollbar */
     .nw-scroller { display:flex; gap:clamp(8px,1.5vw,14px); overflow-x:auto; padding: 4px 0; scroll-behavior:smooth; }
     .nw-scroller::-webkit-scrollbar { display:none; }
     .nw-scroller { -ms-overflow-style:none; scrollbar-width:none; }
@@ -210,150 +186,114 @@ const HeadingBar = ({ light = false }) => (
 );
 
 /* ─── News Card ─────────────────────────────────────────────────── */
-const NewsCard = ({ item, index }) => (
-    <motion.a
-        href={`/news/${item.id}`}
-        className="nw-card"
-        initial={{ opacity: 0, y: 28 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: index * 0.06, ease: [0.4, 0, 0.2, 1] }}
-        style={{ textDecoration: 'none' }}
-    >
-        {/* Image */}
-        <div style={{ position: 'relative', width: '100%', paddingTop: '65%', overflow: 'hidden', background: T.gray100 }}>
-            <img
-                src={item.imageUrl || item.imageUrls?.[0] || 'https://placehold.co/400x260/e8eaed/9aa0a6?text=ICMET'}
-                alt={item.title}
-                className="nw-card__img"
-                style={{ position: 'absolute', inset: 0 }}
-                onError={e => { e.target.src = 'https://placehold.co/400x260/e8eaed/9aa0a6?text=ICMET'; }}
-            />
-            {/* Date badge */}
-            <span style={{
-                position: 'absolute', top: '10px', right: '10px', zIndex: 2,
-                background: T.orange,
-                color: T.white,
-                fontFamily: T.font,
-                fontSize: 'clamp(9px,1.1vw,12px)',
-                fontWeight: 700,
-                padding: '4px 12px',
-                borderRadius: '2px',
-            }}>
-                {new Date(item.publishedAt).toLocaleDateString('ar-EG', {
-                    day: '2-digit', month: 'long', year: 'numeric',
-                })}
-            </span>
-        </div>
-
-        {/* Gradient bar */}
-        <div className="nw-card__bar" />
-
-        {/* Body */}
-        <div style={{ padding: 'clamp(12px,2vw,18px) clamp(12px,2vw,18px) clamp(14px,2.5vw,22px)', flex: 1, display: 'flex', flexDirection: 'column' }}>
-            <h3
-                className="nw-card__title"
-                style={{
-                    fontSize: 'clamp(13px,1.5vw,16px)',
-                    fontWeight: 700,
-                    color: T.blue,
-                    fontFamily: T.font,
-                    lineHeight: 1.65,
-                    margin: 0,
-                    flex: 1,
-                }}
-            >
-                {item.title}
-            </h3>
-        </div>
-    </motion.a>
-);
+const NewsCard = ({ item, index }) => {
+    const imgSrc = item.imageUrl || (Array.isArray(item.imageUrls) && item.imageUrls[0]) || null;
+    return (
+        <motion.a
+            href={`/news/${item.id}`}
+            className="nw-card"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.06, ease: [0.4, 0, 0.2, 1] }}
+            style={{ textDecoration: 'none' }}
+        >
+            <div style={{ position: 'relative', width: '100%', paddingTop: '65%', overflow: 'hidden', background: T.gray100 }}>
+                {imgSrc && (
+                    <img
+                        src={imgSrc}
+                        alt={item.title}
+                        className="nw-card__img"
+                        style={{ position: 'absolute', inset: 0 }}
+                    />
+                )}
+                <span style={{
+                    position: 'absolute', top: '10px', right: '10px', zIndex: 2,
+                    background: T.orange, color: T.white, fontFamily: T.font,
+                    fontSize: 'clamp(9px,1.1vw,12px)', fontWeight: 700,
+                    padding: '4px 12px', borderRadius: '2px',
+                }}>
+                    {new Date(item.publishedAt).toLocaleDateString('ar-EG', {
+                        day: '2-digit', month: 'long', year: 'numeric',
+                    })}
+                </span>
+            </div>
+            <div className="nw-card__bar" />
+            <div style={{ padding: 'clamp(12px,2vw,18px) clamp(12px,2vw,18px) clamp(14px,2.5vw,22px)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <h3
+                    className="nw-card__title"
+                    style={{
+                        fontSize: 'clamp(13px,1.5vw,16px)', fontWeight: 700,
+                        color: T.blue, fontFamily: T.font,
+                        lineHeight: 1.65, margin: 0, flex: 1,
+                    }}
+                >
+                    {item.title}
+                </h3>
+            </div>
+        </motion.a>
+    );
+};
 
 /* ─── Main Component ─────────────────────────────────────────────── */
 const News = () => {
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    // ── years: null = still loading, [] = failed/empty → fallback used
-    const [years, setYears] = useState(null);
+    const [years, setYears] = useState(null);   // null = loading
     const [selectedYear, setSelectedYear] = useState(null);
-
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
 
     const scrollRef = useRef(null);
     const sectionInner = { maxWidth: 'min(1280px,94vw)', margin: '0 auto' };
+    const BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api/News';
 
-    /* ── Inject styles & set page title ── */
+    /* ── styles + title ── */
     useEffect(() => {
         injectStyles();
         document.title = 'الأخبار - المعهد التكنولوجي لهندسة التشييد والإدارة';
     }, []);
 
-    /* ── 1. Discover available years by probing each year in parallel.
-            Fires one lightweight request per year (pageIndex=1, pageSize=1)
-            Returns a plain array e.g. [2026, 2025, ..., 2015].
-            Falls back to auto-generating years from 2015 → current year
-            if the fetch fails. ── */
+    /* ── 1. GET /api/News/years → [2026, 2025, ...] ── */
     useEffect(() => {
-        const currentYear = new Date().getFullYear();
-
-        const buildFallback = () => {
-            const list = [];
-            for (let y = currentYear; y >= 2015; y--) list.push(String(y));
-            return list;
-        };
-
-        fetch('https://acwebsite-icmet-test.azurewebsites.net/api/News/years')
-            .then(r => { if (!r.ok) throw new Error('no years endpoint'); return r.json(); })
+        fetch(`${BASE}/years`)
+            .then(r => { if (!r.ok) throw new Error(); return r.json(); })
             .then(data => {
-                // API returns a plain array of numbers [2026, 2025, ...]
-                const raw = Array.isArray(data) ? data : [];
-                const sorted = raw
-                    .map(y => String(y))
-                    .filter(y => /^\d{4}$/.test(y))
-                    .sort((a, b) => Number(b) - Number(a));
-
-                const list = sorted.length > 0 ? sorted : buildFallback();
+                const list = Array.isArray(data)
+                    ? data.map(String).sort((a, b) => Number(b) - Number(a))
+                    : [];
                 setYears(list);
-                setSelectedYear(list[0]); // always the most recent
+                setSelectedYear(list[0] ?? null);
             })
             .catch(() => {
-                const list = buildFallback();
-                setYears(list);
-                setSelectedYear(list[0]);
+                setYears([]);
+                setSelectedYear(null);
             });
     }, []);
 
-    /* ── Reset to page 1 whenever year changes ── */
+    /* ── reset page when year changes ── */
     useEffect(() => { setCurrentPage(1); }, [selectedYear]);
 
-    /* ── 2. Fetch news for the selected year + page ── */
+    /* ── 2. GET /api/News/getAllNews?year=&pageIndex= ── */
     useEffect(() => {
-        // Don't fetch until we have a year
         if (!selectedYear) return;
-
         setLoading(true);
         setError(null);
 
-        fetch(`https://acwebsite-icmet-test.azurewebsites.net/api/News/getAllNews?year=${selectedYear}&pageIndex=${currentPage}`)
+        fetch(`${BASE}/getAllNews?year=${selectedYear}&pageIndex=${currentPage}`)
             .then(r => { if (!r.ok) throw new Error('Failed to fetch'); return r.json(); })
             .then(res => {
-                // Handle various possible response shapes
-                const items = res.data ?? res.Data ?? res.items ?? res.Items ?? res.news ?? [];
-                const pages = res.totalPages ?? res.TotalPages ?? res.pageCount ?? res.PageCount ?? 0;
-                setNews(Array.isArray(items) ? items : []);
-                setTotalPages(pages);
+                setNews(res.data ?? []);
+                setTotalPages(res.totalPages ?? 0);
                 setLoading(false);
             })
             .catch(err => { setError(err.message); setLoading(false); });
     }, [selectedYear, currentPage]);
 
     const handleScroll = (dir) => {
-        if (scrollRef.current) {
+        if (scrollRef.current)
             scrollRef.current.scrollBy({ left: dir === 'left' ? -200 : 200, behavior: 'smooth' });
-        }
     };
 
     const handlePageChange = (page) => {
@@ -361,13 +301,12 @@ const News = () => {
         window.scrollTo({ top: 300, behavior: 'smooth' });
     };
 
-    /* ── While years haven't loaded yet, show nothing (or a brief skeleton) ── */
     const yearsReady = years !== null && selectedYear !== null;
 
     return (
         <div className="nw-root">
 
-            {/* ══ FIXED BREADCRUMB ══════════════════════════ */}
+            {/* ══ BREADCRUMB ══ */}
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: `1px solid ${T.gray300}`, backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
                 <div style={{ textAlign: 'center', fontFamily: T.font, fontSize: '1rem' }}>
                     <a href="/" className="nw-bc-link" style={{ color: T.gray700, fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}>الصفحة الرئيسية</a>
@@ -376,69 +315,31 @@ const News = () => {
                 </div>
             </div>
 
-            {/* ══ HERO ════════════════════════════════════════ */}
+            {/* ══ HERO ══ */}
             <section
                 className="nw-hero-grid nw-hero-cut"
                 style={{
-                    position: 'relative',
-                    minHeight: 'clamp(300px,44vw,520px)',
-                    background: T.blueDark,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column',
-                    overflow: 'hidden',
+                    position: 'relative', minHeight: 'clamp(300px,44vw,520px)',
+                    background: T.blueDark, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', flexDirection: 'column', overflow: 'hidden',
                     padding: 'clamp(130px,16vw,180px) clamp(20px,6vw,80px) clamp(90px,12vw,140px)',
                 }}
             >
-                {/* Right orange accent bar */}
-                <div style={{
-                    position: 'absolute', top: 0, right: 0,
-                    width: 'clamp(6px,0.8vw,10px)', height: '100%',
-                    background: `linear-gradient(to bottom, ${T.orange}, ${T.orangeLight})`,
-                    zIndex: 4,
-                }} />
+                <div style={{ position: 'absolute', top: 0, right: 0, width: 'clamp(6px,0.8vw,10px)', height: '100%', background: `linear-gradient(to bottom, ${T.orange}, ${T.orangeLight})`, zIndex: 4 }} />
 
-                {/* Hero text */}
                 <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: '720px', width: '100%', marginBottom: 'clamp(32px,5vw,56px)' }}>
-                    <span style={{
-                        display: 'inline-block',
-                        background: T.orange,
-                        color: T.white,
-                        fontFamily: T.font,
-                        fontSize: 'clamp(10px,1.3vw,14px)',
-                        fontWeight: 700,
-                        padding: '6px 22px',
-                        borderRadius: '2px',
-                        marginBottom: 'clamp(12px,2.5vw,24px)',
-                        letterSpacing: '0.05em',
-                    }}>
+                    <span style={{ display: 'inline-block', background: T.orange, color: T.white, fontFamily: T.font, fontSize: 'clamp(10px,1.3vw,14px)', fontWeight: 700, padding: '6px 22px', borderRadius: '2px', marginBottom: 'clamp(12px,2.5vw,24px)', letterSpacing: '0.05em' }}>
                         المعهد التكنولوجي لهندسة التشييد والإدارة
                     </span>
-
-                    <h1 style={{
-                        fontSize: 'clamp(24px,4.5vw,58px)',
-                        fontWeight: 900,
-                        color: T.white,
-                        fontFamily: T.font,
-                        lineHeight: 1.3,
-                        marginBottom: 'clamp(12px,2vw,20px)',
-                    }}>
-                        آخر{' '}
-                        <span style={{ color: T.orangeLight }}>الأخبار</span>
+                    <h1 style={{ fontSize: 'clamp(24px,4.5vw,58px)', fontWeight: 900, color: T.white, fontFamily: T.font, lineHeight: 1.3, marginBottom: 'clamp(12px,2vw,20px)' }}>
+                        آخر{' '}<span style={{ color: T.orangeLight }}>الأخبار</span>
                     </h1>
-
-                    <p style={{
-                        fontSize: 'clamp(12px,1.6vw,17px)',
-                        color: 'rgba(255,255,255,0.65)',
-                        fontFamily: T.font,
-                        lineHeight: 1.9,
-                    }}>
+                    <p style={{ fontSize: 'clamp(12px,1.6vw,17px)', color: 'rgba(255,255,255,0.65)', fontFamily: T.font, lineHeight: 1.9 }}>
                         تابع أحدث أخبار وفعاليات المعهد
                     </p>
                 </div>
 
-                {/* ── Year Selector inside hero ── */}
+                {/* Year pills */}
                 <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 'min(900px,90vw)', display: 'flex', alignItems: 'center', gap: 'clamp(8px,1.5vw,14px)' }}>
                     <button className="nw-arrow" onClick={() => handleScroll('right')}>«</button>
                     <div ref={scrollRef} className="nw-scroller" style={{ flex: 1 }}>
@@ -452,15 +353,8 @@ const News = () => {
                                     {year}
                                 </button>
                             ))
-                            /* Skeleton pills while years load */
                             : Array.from({ length: 6 }).map((_, i) => (
-                                <div key={i} style={{
-                                    width: 'clamp(52px,7vw,72px)',
-                                    height: 'clamp(30px,4vw,42px)',
-                                    borderRadius: '2px',
-                                    background: 'rgba(255,255,255,0.08)',
-                                    flexShrink: 0,
-                                }} />
+                                <div key={i} style={{ width: 'clamp(52px,7vw,72px)', height: 'clamp(30px,4vw,42px)', borderRadius: '2px', background: 'rgba(255,255,255,0.08)', flexShrink: 0 }} />
                             ))
                         }
                     </div>
@@ -468,49 +362,37 @@ const News = () => {
                 </div>
             </section>
 
-            {/* ══ NEWS GRID SECTION — white bg → black cut ═══ */}
+            {/* ══ NEWS GRID ══ */}
             <section
                 className="nw-black-cut"
-                style={{
-                    position: 'relative',
-                    background: T.white,
-                    padding: 'clamp(56px,8vw,100px) clamp(16px,6vw,60px) clamp(100px,15vw,170px)',
-                }}
+                style={{ position: 'relative', background: T.white, padding: 'clamp(56px,8vw,100px) clamp(16px,6vw,60px) clamp(100px,15vw,170px)' }}
             >
                 <div style={sectionInner}>
                     <div style={{ textAlign: 'center', marginBottom: 'clamp(32px,5vw,52px)' }}>
                         <SectionLabel>أخبار {selectedYear}</SectionLabel><br />
-                        <SectionHeading>
-                            أبرز <span style={{ color: T.orange }}>الأخبار</span>
-                        </SectionHeading>
+                        <SectionHeading>أبرز <span style={{ color: T.orange }}>الأخبار</span></SectionHeading>
                         <HeadingBar />
                     </div>
 
-                    {/* Loading */}
                     {loading && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '260px', gap: '20px' }}>
                             <div className="nw-spinner" />
-                            <p style={{ color: T.blue, fontFamily: T.font, fontSize: 'clamp(13px,1.6vw,16px)' }}>
-                                جارٍ تحميل الأخبار...
-                            </p>
+                            <p style={{ color: T.blue, fontFamily: T.font, fontSize: 'clamp(13px,1.6vw,16px)' }}>جارٍ تحميل الأخبار...</p>
                         </div>
                     )}
 
-                    {/* Error */}
                     {!loading && error && (
                         <div style={{ textAlign: 'center', padding: '60px 20px', color: T.orange, fontFamily: T.font, fontSize: 'clamp(13px,1.6vw,16px)' }}>
                             حدث خطأ في تحميل الأخبار
                         </div>
                     )}
 
-                    {/* Empty */}
                     {!loading && !error && news.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '60px 20px', color: T.gray500, fontFamily: T.font, fontSize: 'clamp(13px,1.6vw,16px)' }}>
                             لا توجد أخبار لعام {selectedYear}
                         </div>
                     )}
 
-                    {/* Cards */}
                     {!loading && !error && news.length > 0 && (
                         <div className="nw-grid">
                             {news.map((item, index) => (
@@ -521,23 +403,11 @@ const News = () => {
                 </div>
             </section>
 
-            {/* ══ PAGINATION — black bg ═══════════════════════ */}
+            {/* ══ PAGINATION ══ */}
             {!loading && totalPages > 1 && (
-                <section style={{
-                    background: T.black,
-                    padding: 'clamp(40px,6vw,70px) clamp(16px,6vw,60px)',
-                }}>
+                <section style={{ background: T.black, padding: 'clamp(40px,6vw,70px) clamp(16px,6vw,60px)' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 'clamp(6px,1vw,10px)', flexWrap: 'wrap' }}>
-                        {/* Prev */}
-                        <button
-                            className="nw-page-btn"
-                            disabled={currentPage === 1}
-                            onClick={() => handlePageChange(currentPage - 1)}
-                        >
-                            ‹
-                        </button>
-
-                        {/* Page numbers */}
+                        <button className="nw-page-btn" disabled={currentPage === 1} onClick={() => handlePageChange(currentPage - 1)}>‹</button>
                         {[...Array(totalPages)].map((_, i) => (
                             <button
                                 key={i}
@@ -547,26 +417,13 @@ const News = () => {
                                 {i + 1}
                             </button>
                         ))}
-
-                        {/* Next */}
-                        <button
-                            className="nw-page-btn"
-                            disabled={currentPage === totalPages}
-                            onClick={() => handlePageChange(currentPage + 1)}
-                        >
-                            ›
-                        </button>
+                        <button className="nw-page-btn" disabled={currentPage === totalPages} onClick={() => handlePageChange(currentPage + 1)}>›</button>
                     </div>
                 </section>
             )}
 
-            {/* ══ BLACK CLOSING STRIP ══════════════════════════ */}
-            <div style={{
-                background: T.black,
-                borderTop: `1px solid rgba(255,255,255,0.06)`,
-                padding: 'clamp(36px,5vw,60px) clamp(16px,6vw,60px)',
-                textAlign: 'center',
-            }}>
+            {/* ══ FOOTER STRIP ══ */}
+            <div style={{ background: T.black, borderTop: `1px solid rgba(255,255,255,0.06)`, padding: 'clamp(36px,5vw,60px) clamp(16px,6vw,60px)', textAlign: 'center' }}>
                 <p style={{ color: 'rgba(255,255,255,0.3)', fontFamily: T.font, fontSize: 'clamp(11px,1.3vw,14px)' }}>
                     المعهد التكنولوجي لهندسة التشييد والإدارة © {new Date().getFullYear()}
                 </p>
