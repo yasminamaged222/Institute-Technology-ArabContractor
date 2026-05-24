@@ -260,7 +260,7 @@ const Navbar = () => {
                     color: #fff !important;
                     border-radius: 6px !important;
                     font-size: 0.7rem !important;
-                    font-weight: 700 !important;
+                    font-weight: 400 !important;
                     text-decoration: none !important;
                     border: 2px solid #f57c00 !important;
                     transition: all 0.2s !important;

@@ -23,17 +23,9 @@ const theme = createTheme({
         },
     },
     typography: {
-        fontFamily: '"Noto Kufi Arabic", serif',
+        fontFamily: '"Droid Arabic Kufi", serif',
     },
     components: {
-        MuiCssBaseline: {
-            styleOverrides: `
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;500;600;700;800&display=swap');
-        html, body, * {
-          font-family: 'Noto Kufi Arabic', serif !important;
-        }
-      `,
-        },
         MuiAppBar: {
             styleOverrides: {
                 root: {

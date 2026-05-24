@@ -1,7 +1,6 @@
 import { T, NAVBAR_H, OVERVIEW_H } from './constants';
 
 export const ADMIN_STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
 
     .adm-root {
     direction: rtl;

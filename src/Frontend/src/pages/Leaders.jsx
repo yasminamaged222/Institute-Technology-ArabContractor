@@ -16,14 +16,13 @@ const T = {
     gray300: '#d0d3d8',
     gray500: '#6b7280',
     gray700: '#374151',
-    font: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif',
+    font: '"Droid Arabic Kufi", serif',
 };
 
 /* ─── Injected styles ────────────────────── */
 const STYLES = `
     @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
-    * { font-family: 'Droid Arabic Kufi','Noto Kufi Arabic',serif !important; box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
+* { box-sizing:border-box; }    html { scroll-behavior:smooth; }
 
     ::-webkit-scrollbar { width:8px; }
     ::-webkit-scrollbar-track { background:#f1f1f1; }

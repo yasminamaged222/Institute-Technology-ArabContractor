@@ -20,7 +20,6 @@ export default function TechnicalEducationAlt() {
     return (
         <div className="tech-page-wrapper">
             <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap');
 
                 :root {
                     --primary-color: #0865a8;

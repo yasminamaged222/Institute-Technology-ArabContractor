@@ -15,7 +15,7 @@ export const T = {
     gray300: '#d0d3d8',
     gray500: '#6b7280',
     gray700: '#374151',
-    font: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif',
+    font: '"Droid Arabic Kufi",  serif',
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -62,6 +62,9 @@ export const TABS = [
     { id: 'refunds', label: 'المستردات', icon: '💳' },
     { id: 'financial', label: 'المالية', icon: '💰' },
     { id: 'lecturers', label: 'المحاضرون', icon: '🎓' },
+    { id: 'news', label: 'الأخبار', icon: '📰' },
+    { id: 'books', label: 'الكتب', icon: '📖' },
+    { id: 'planwork', label: 'خطة العمل', icon: '📋' },
     { id: 'settings', label: 'الإعدادات', icon: '⚙️' },
 ];
 
@@ -72,9 +75,12 @@ export const TAB_TITLES = {
     users: { tag: 'إدارة البيانات', title: ['المستخدمون', 'والدورات'] },
     courses: { tag: 'إدارة البيانات', title: ['الدورات', 'والمستخدمون'] },
     attendance: { tag: 'متابعة الحضور', title: ['سجل', 'الحضور'] },
-    certificates: { tag: 'إدارة الشهادات', title: ['', 'الشهادات', ' الإلكترونية'] },
+    certificates: { tag: 'إدارة الشهادات', title: [ 'الشهادات', 'الإلكترونية'] },
     refunds: { tag: 'المالية', title: ['طلبات', 'الاسترداد'] },
     financial: { tag: 'التقارير المالية', title: ['إيرادات', 'المعهد'] },
     lecturers: { tag: 'إدارة الكوادر', title: ['إدارة', 'المحاضرين'] },
+    news: { tag: 'إدارة المحتوى', title: ['الأخبار', 'والمستجدات'] },   // ← added
+    books: { tag: 'إدارة المحتوى', title: ['إدارة', 'الكتب'] },          // ← added
+    planwork: { tag: 'التخطيط', title: ['خطة', 'العمل'] },            // ← added
     settings: { tag: 'إعدادات النظام', title: ['إدارة', 'المديرين'] },
 };

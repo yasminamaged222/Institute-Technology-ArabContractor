@@ -39,7 +39,6 @@ function BannerImage({ src, alt, style = {} }) {
 }
 
 const css = `
-@import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi&display=swap');
 .ot-page-root {
     min-height: 100vh; background: #fff; margin: 0; padding: 0;
     font-family: "Droid Arabic Kufi", "Noto Kufi Arabic", serif;

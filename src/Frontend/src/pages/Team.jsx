@@ -16,12 +16,11 @@ const T = {
     gray300: '#d0d3d8',
     gray500: '#6b7280',
     gray700: '#374151',
-    font: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif',
+    font: '"Droid Arabic Kufi", serif',
 };
 
 /* ─── Keyframe injection (one-time) ─────── */
 const STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
 
     .team-root { direction: rtl; font-family: ${T.font}; background: ${T.white}; overflow-x: hidden; }
 

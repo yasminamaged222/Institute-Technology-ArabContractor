@@ -7,7 +7,10 @@
 
 
 @layer base {
-    html, body {
+    html {
+        font-size: 18px;
+    }
+    html, body , *{
         font-family: 'Droid Arabic Kufi', serif !important;
     }
 }
