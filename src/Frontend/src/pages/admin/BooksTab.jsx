@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { T } from "../../components/admin/constants";
 
@@ -7,9 +6,10 @@ import { T } from "../../components/admin/constants";
 // ─────────────────────────────────────────────────────────────────────────────
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api/admin';
 const BOOKS_API = `${API_BASE}/AdminBook`;
-const TYPES_API = `${API_BASE}/AdminBooksType`; // adjust if your endpoint differs
+const TYPES_API = `${API_BASE}/AdminBooksType`;
 
-const PAGE_SIZE = 12;
+// ✅ FIX: Large page size so all books load at once — list scrolls natively, no pagination needed
+const PAGE_SIZE = 999;
 
 const BLANK_BOOK = { bookId: 0, bookName: '', author: '', bookDate: '', typeId: '', typeName: '' };
 const BLANK_TYPE = { typeId: 0, typeName: '' };
@@ -30,11 +30,9 @@ async function apiFetch(url, options = {}) {
         const text = await res.text().catch(() => '');
         throw new Error(text || `HTTP ${res.status}`);
     }
-    // 204 No Content or empty body — nothing to parse
     if (res.status === 204) return null;
     const contentType = res.headers.get('content-type') || '';
     if (contentType.includes('application/json')) return res.json();
-    // Plain-text response (e.g. "Deleted successfully") — return as-is
     return res.text();
 }
 
@@ -113,38 +111,6 @@ function BkTextArea({ icon, label, sub, name, value, onChange, placeholder, rows
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Pagination controls
-// ─────────────────────────────────────────────────────────────────────────────
-function Pagination({ page, totalPages, onPage }) {
-    if (totalPages <= 1) return null;
-    const pages = [];
-    const delta = 2;
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= page - delta && i <= page + delta)) {
-            pages.push(i);
-        }
-    }
-    // insert ellipsis
-    const withEllipsis = [];
-    pages.forEach((p, idx) => {
-        if (idx > 0 && p - pages[idx - 1] > 1) withEllipsis.push('…');
-        withEllipsis.push(p);
-    });
-
-    return (
-        <div className="bk-pagination">
-            <button className="bk-pg-btn" disabled={page === 1} onClick={() => onPage(page - 1)}>‹</button>
-            {withEllipsis.map((p, i) =>
-                p === '…'
-                    ? <span key={`e${i}`} className="bk-pg-ellipsis">…</span>
-                    : <button key={p} className={`bk-pg-btn${p === page ? ' active' : ''}`} onClick={() => onPage(p)}>{p}</button>
-            )}
-            <button className="bk-pg-btn" disabled={page === totalPages} onClick={() => onPage(page + 1)}>›</button>
-        </div>
-    );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // BooksTab — main component
 // ─────────────────────────────────────────────────────────────────────────────
 const BooksTab = () => {
@@ -153,8 +119,6 @@ const BooksTab = () => {
     const [booksLoading, setBooksLoading] = useState(false);
     const [booksError, setBooksError] = useState(null);
     const [totalItems, setTotalItems] = useState(0);
-    const [totalPages, setTotalPages] = useState(1);
-    const [currentPage, setCurrentPage] = useState(1);
 
     // ── Book Types state ─────────────────────────────────────────────────────
     const [bookTypes, setBookTypes] = useState([]);
@@ -196,25 +160,22 @@ const BooksTab = () => {
     useEffect(() => {
         const t = setTimeout(() => {
             setDebouncedSearch(search);
-            setCurrentPage(1);
         }, 400);
         return () => clearTimeout(t);
     }, [search]);
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Fetch books (paginated)
+    // Fetch books (all at once — no pagination)
     // ─────────────────────────────────────────────────────────────────────────
-    const fetchBooks = useCallback(async (page = 1, searchTerm = '') => {
+    const fetchBooks = useCallback(async (searchTerm = '') => {
         setBooksLoading(true);
         setBooksError(null);
         try {
-            const params = new URLSearchParams({ pageIndex: page, pageSize: PAGE_SIZE });
+            const params = new URLSearchParams({ pageIndex: 1, pageSize: PAGE_SIZE });
             if (searchTerm.trim()) params.append('search', searchTerm.trim());
             const data = await apiFetch(`${BOOKS_API}?${params}`);
             setBooks(data.data ?? []);
             setTotalItems(data.totalItems ?? 0);
-            setTotalPages(data.totalPages ?? 1);
-            setCurrentPage(data.pageIndex ?? page);
         } catch (err) {
             setBooksError(err.message);
         } finally {
@@ -229,10 +190,7 @@ const BooksTab = () => {
         setTypesLoading(true);
         setTypesError(null);
         try {
-            // Adjust endpoint if needed — common patterns:
-            // GET /api/admin/BookTypes  or  GET /api/admin/BookAdmin/types
             const data = await apiFetch(TYPES_API);
-            // Support both array response and paged response
             const list = Array.isArray(data) ? data : (data.data ?? []);
             setBookTypes(list);
             if (list.length && !selectedType) pickType(list[0]);
@@ -260,14 +218,13 @@ const BooksTab = () => {
     // Effects
     // ─────────────────────────────────────────────────────────────────────────
     useEffect(() => {
-        if (subPage === 'books') fetchBooks(currentPage, debouncedSearch);
-    }, [subPage, currentPage, debouncedSearch, fetchBooks]);
+        if (subPage === 'books') fetchBooks(debouncedSearch);
+    }, [subPage, debouncedSearch, fetchBooks]);
 
     useEffect(() => {
         if (subPage === 'types') fetchTypes();
     }, [subPage, fetchTypes]);
 
-    // Also fetch types for the book form dropdown
     useEffect(() => {
         fetchTypes();
     }, []); // eslint-disable-line
@@ -279,14 +236,12 @@ const BooksTab = () => {
         setSubPage(page);
         setSearch('');
         setDebouncedSearch('');
-        setCurrentPage(1);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Books helpers
     // ─────────────────────────────────────────────────────────────────────────
     async function pickBook(b) {
-        // Fetch full detail
         const detail = await fetchBookById(b.bookId);
         const book = detail ?? b;
         setSelectedBook({ ...book });
@@ -315,8 +270,7 @@ const BooksTab = () => {
             if (isNewBook) {
                 const created = await apiFetch(BOOKS_API, { method: 'POST', body: JSON.stringify(payload) });
                 toast('تم إضافة الكتاب بنجاح');
-                await fetchBooks(currentPage, debouncedSearch);
-                // pick the newly created book if we got it back
+                await fetchBooks(debouncedSearch);
                 if (created?.bookId) {
                     const detail = await fetchBookById(created.bookId);
                     if (detail) { setSelectedBook({ ...detail }); setFormBook({ ...detail, cover: null }); setIsNewBook(false); }
@@ -329,7 +283,7 @@ const BooksTab = () => {
                 const updated = detail ?? { ...formBook };
                 setSelectedBook({ ...updated });
                 setFormBook({ ...updated, cover: formBook.cover });
-                await fetchBooks(currentPage, debouncedSearch);
+                await fetchBooks(debouncedSearch);
                 toast('تم حفظ التغييرات بنجاح');
             }
         } catch (err) {
@@ -349,17 +303,14 @@ const BooksTab = () => {
         if (!delConfBook) { setDelConfBook(true); return; }
         try {
             await apiFetch(`${BOOKS_API}/${selectedBook.bookId}`, { method: 'DELETE' });
-            // Reset all form state and switch back to books list
             setDelConfBook(false);
             setSelectedBook(null);
             setFormBook({ ...BLANK_BOOK, cover: null });
             setIsNewBook(false);
             setSubPage('books');
-            // Reload the list so deletion is reflected immediately
-            await fetchBooks(1, '');
+            await fetchBooks('');
             setSearch('');
             setDebouncedSearch('');
-            setCurrentPage(1);
             toast('✅ تم حذف الكتاب بنجاح');
         } catch (err) {
             toast(`خطأ في الحذف: ${err.message}`, 'error');
@@ -425,19 +376,28 @@ const BooksTab = () => {
         }
     }
 
-    const booksOfType = typeName => bookTypes.find(t => t.typeName === typeName)?.bookCount ?? '—';
     const filteredTypes = bookTypes.filter(t =>
         t.typeName?.toLowerCase().includes(search.toLowerCase())
     );
 
     // ─────────────────────────────────────────────────────────────────────────
+    // RENDER
+    // ─────────────────────────────────────────────────────────────────────────
     return (
+        /*
+         * ✅ FIX: flexWrap:'wrap' lets panels stack vertically on small screens.
+         *    On wide screens  → side-by-side (row).
+         *    On narrow screens → list on top, form below (column-like wrap).
+         *    Height is 'auto' so content drives the height on mobile.
+         */
         <div
             style={{
                 display: 'flex',
-                gap: 'clamp(10px,1.5vw,20px)',
+                gap: 'clamp(10px, 1.5vw, 20px)',
                 alignItems: 'stretch',
-                height: 'calc(100vh - 200px)'
+                flexWrap: 'wrap',                        // ✅ wrap on mobile
+                height: 'calc(100vh - 200px)',
+                minHeight: 0,
             }}
         >
             {/* ══ LEFT PANEL — list ══ */}
@@ -445,9 +405,14 @@ const BooksTab = () => {
                 className="bk-panel"
                 style={{
                     overflowY: 'auto',
-                    position: 'sticky',
-                    top: 0,
-                    height: '100%'
+                    /*
+                     * ✅ FIX: flex-basis clamps between 220 px and 300 px on desktop.
+                     *    On mobile (< ~580 px) flexWrap kicks in and this takes 100%.
+                     *    'position:sticky' removed — it fought against overflow:auto.
+                     */
+                    flex: '0 0 clamp(220px, 30%, 300px)',
+                    minWidth: 0,
+                    height: '100%',
                 }}
             >
                 {/* Sub-page tabs */}
@@ -481,8 +446,9 @@ const BooksTab = () => {
                     />
                 </div>
 
-                {/* List */}
-                <div className="bk-list">
+                {/* ✅ FIX: List is scrollable — no pagination needed */}
+                <div className="bk-list" style={{ overflowY: 'auto', flex: 1 }}>
+
                     {/* ── Books list ── */}
                     {subPage === 'books' && (
                         booksLoading
@@ -536,20 +502,22 @@ const BooksTab = () => {
                     )}
                 </div>
 
-                {/* Pagination (books only) */}
-                {subPage === 'books' && !booksLoading && !booksError && (
-                    <Pagination page={currentPage} totalPages={totalPages} onPage={p => setCurrentPage(p)} />
-                )}
+                {/* ✅ FIX: Pagination REMOVED — list scrolls naturally */}
             </aside>
 
             {/* ══ RIGHT PANEL — form ══ */}
+            {/*
+             * ✅ FIX: flex:'1 1 300px' means:
+             *   - On wide screens  → takes remaining space beside the aside.
+             *   - On narrow screens → wraps to its own row (100% width) below the list.
+             */}
             <div
                 className="bk-form-wrap"
                 style={{
+                    flex: '1 1 300px',
+                    minWidth: 0,
                     height: '100%',
                     overflow: 'hidden',
-                    flex: 1,
-                    minWidth: 0
                 }}
             >
                 {/* Notification */}
