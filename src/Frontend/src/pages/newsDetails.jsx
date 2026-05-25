@@ -8,7 +8,7 @@ const T = {
     black: '#0a0a0a', white: '#ffffff',
     gray50: '#f8f9fa', gray100: '#f0f1f2', gray300: '#d0d3d8',
     gray500: '#6b7280', gray700: '#374151',
-    font: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif',
+    font: '"Droid Arabic Kufi", serif',
 };
 
 const BASE = 'https://acwebsite-icmet-test.azurewebsites.net';
@@ -52,7 +52,6 @@ function buildImagesArray(item) {
 }
 
 const STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
 
     .nd-root { direction: rtl; font-family: ${T.font}; background: ${T.white}; overflow-x: hidden; }
 

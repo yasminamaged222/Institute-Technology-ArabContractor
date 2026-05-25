@@ -151,7 +151,7 @@ const trainingPrograms = [
     { Icon: HardwareIcon, label: 'التدريب فى موقع العمل' },
 ];
 
-const F = '"Droid Arabic Kufi","Noto Kufi Arabic",serif';
+const F = '"Droid Arabic Kufi",serif';
 const C = {
     o: '#f57c00', od: '#e65100',
     b: '#0865a8', bd: '#044474',

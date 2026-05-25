@@ -21,7 +21,6 @@ const T = {
 
 /* ─── Injected styles ────────────────────── */
 const STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
 * { box-sizing:border-box; }    html { scroll-behavior:smooth; }
 
     ::-webkit-scrollbar { width:8px; }

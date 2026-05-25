@@ -15,12 +15,11 @@ const T = {
     gray300: '#d0d3d8',
     gray500: '#6b7280',
     gray700: '#374151',
-    font: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif',
+    font: '"Droid Arabic Kufi", serif',
 };
 
 /* ─── Injected styles (pseudo-elements + hover + responsive) ── */
 const STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
 
     .voc-root { direction: rtl; font-family: ${T.font}; background: ${T.white}; overflow-x: hidden; }
 
@@ -236,7 +235,7 @@ export default function VocationalTraining() {
 
             {/* ══ FIXED OVERVIEW BAR ══════════════════ */}
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem' }}>
                     <a
                         href="/"
                         style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}

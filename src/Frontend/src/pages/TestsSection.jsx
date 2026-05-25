@@ -55,7 +55,7 @@ export default function ICMETTests() {
                     color: var(--dark);
                     line-height: 1.6;
                     font-size: 16px;
-                    font-family: 'Droid Arabic Kufi', 'Noto Kufi Arabic', sans-serif;
+                    font-family: 'Droid Arabic Kufi', sans-serif;
                 }
 
                 .rtl-layout {
@@ -63,7 +63,7 @@ export default function ICMETTests() {
                     direction: rtl;
                     min-height: 100vh;
                     padding-top: 0;
-                    font-family: 'Droid Arabic Kufi', 'Noto Kufi Arabic', sans-serif;
+                    font-family: 'Droid Arabic Kufi', sans-serif;
                 }
 
                 .fixed-nav {
@@ -92,7 +92,7 @@ export default function ICMETTests() {
                 }
 
                 .hero-title {
-                    font-family: 'Droid Arabic Kufi', 'Noto Kufi Arabic', sans-serif;
+                    font-family: 'Droid Arabic Kufi', sans-serif;
                     font-size: clamp(1.6rem, 5vw, 2.2rem);
                     font-weight: 800;
                     color: var(--primary);

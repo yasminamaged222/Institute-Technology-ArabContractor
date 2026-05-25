@@ -10,7 +10,8 @@
     html {
         font-size: 18px;
     }
-    html, body , *{
+    html, body, * {
         font-family: 'Droid Arabic Kufi', serif !important;
+        font-weight: 600 !important;
     }
 }
