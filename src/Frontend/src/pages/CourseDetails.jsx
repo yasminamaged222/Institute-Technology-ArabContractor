@@ -6,6 +6,7 @@ import { useAuth } from '@clerk/clerk-react';
 
 const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';
 
+const font = '"Noto Kufi Arabic",serif';
 
 function resolveCertUrl(url) {
     if (!url) return null;
@@ -1036,7 +1037,7 @@ const CourseDetails = () => {
                     </div>
                 </div>
 
-                <div style={{ ...S.heroSection, background: heroBg }}>
+                <div style={S.heroSection} className="hero-section">
                     <div style={S.heroContainer}>
                         <div style={S.heroContent}>
                             {isOwned && <div style={S.ownedBadge}>✅ مسجل في هذه الدورة</div>}
@@ -1155,7 +1156,7 @@ const CourseDetails = () => {
                                                         className="fileItemLink"
                                                     >
                                                         <svg width="20" height="20" viewBox="0 0 16 16" fill="#0865a8">
-                                                            <path d="M14 4.5V14a2 2 0 01-2 2H4a2 2 0 01-2-2V2a2 2 0 012-2h5.5L14 4.5zm-3 0A1.5 1.5 0 019.5 3V1H4a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V4.5h-2z" />
+                                                            <path d="M14 4.5V14a2 2 0 01-2 2H4a2 2 0 01-2-2V2a2 2 0 012-2h5.5L14 4.5zm-3 0A1.5 1.5 0 009.5 3V1H4a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V4.5h-2z" />
                                                         </svg>
                                                         <span style={{ flex: 1 }}>{file.title}</span>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0865a8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1165,7 +1166,7 @@ const CourseDetails = () => {
                                                 ) : (
                                                     <div key={file.id ?? i} style={{ ...S.fileLink, opacity: 0.6, cursor: 'default' }}>
                                                         <svg width="20" height="20" viewBox="0 0 16 16" fill="#0865a8">
-                                                            <path d="M14 4.5V14a2 2 0 01-2 2H4a2 2 0 01-2-2V2a2 2 0 012-2h5.5L14 4.5zm-3 0A1.5 1.5 0 019.5 3V1H4a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V4.5h-2z" />
+                                                            <path d="M14 4.5V14a2 2 0 01-2 2H4a2 2 0 01-2-2V2a2 2 0 012-2h5.5L14 4.5zm-3 0A1.5 1.5 0 009.5 3V1H4a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V4.5h-2z" />
                                                         </svg>
                                                         <span style={{ flex: 1 }}>{file.title}</span>
                                                     </div>
@@ -1207,7 +1208,7 @@ const CourseDetails = () => {
                                                 </svg>
                                             </div>
                                         ) : (
-                                            <div style={{ ...S.certPreviewRibbon, background: 'rgba(80,80,100,0.82)', animation: 'none', cursor: 'default' }}>
+                                            <div style={{ ...S.certPreviewRibbon, background: 'linear-gradient(135deg,#9e9e9e 0%,#bdbdbd 100%)', cursor: 'not-allowed', boxShadow: 'none', opacity: 0.75, justifyContent: 'center' }}>
                                                 <span>🕐</span>
                                                 <span>الشهادة لم تُضف بعد</span>
                                             </div>
@@ -1255,7 +1256,9 @@ const CourseDetails = () => {
                                             <>
                                                 {certLoading ? (
                                                     <div style={{ ...S.btnCertPreview, opacity: 0.6, cursor: 'default', justifyContent: 'center' }}>
-                                                        <svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                                        <svg style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                                                            <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                        </svg>
                                                         <span>جاري التحقق من الشهادة...</span>
                                                     </div>
                                                 ) : hasCert ? (
@@ -1285,20 +1288,20 @@ const CourseDetails = () => {
                                                         onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.5)'; }}
                                                         onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = '0 4px 14px rgba(124,58,237,0.35)'; }}>
                                                         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                                                            <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-                                                        </svg>
-                                                        🌐 انضم إلى الاجتماع الإلكتروني
-                                                    </a>
-                                                ) : onlineSetting && !onlineSetting.visible ? (
-                                                    <div style={{ padding: '12px 14px', borderRadius: '10px', background: '#f8f9fa', border: '1.5px solid #e2e8f0', fontSize: '13px', color: '#6b7280', fontFamily, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                                                        🕐 رابط الاجتماع سيُتاح قريبًا
-                                                    </div>
-                                                ) : null}
+                                                            <path d="M15 10l4.553-2.069A1 1 0 0121 8.845v6.31a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6v6l-4-4" />
+                                                    </svg>
+                                                    🌐 انضم إلى الاجتماع الإلكتروني
+                                                </a>
+                                            ) : onlineSetting && !onlineSetting.visible ? (
+                                                <div style={{ padding: '12px 14px', borderRadius: '10px', background: '#f8f9fa', border: '1.5px solid #e2e8f0', fontSize: '13px', color: '#6b7280', fontFamily, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                                                    🕐 رابط الاجتماع سيُتاح قريبًا
+                                                </div>
+                                            ) : null}
 
-                                                {!course.isFree && (
-                                                    <button className="btnRefund" style={S.btnRefund} onClick={openRefund}>💸 طلب استرداد المبلغ</button>
-                                                )}
-                                            </>
+                                            {!course.isFree && (
+                                                <button className="btnRefund" style={S.btnRefund} onClick={openRefund}>💸 طلب استرداد المبلغ</button>
+                                            )}
+                                        </>
                                         ) : course.isFree ? (
                                             <>
                                                 {enrollMsg && (
@@ -1323,7 +1326,7 @@ const CourseDetails = () => {
                                         <ul style={S.includesList}>
                                             <li style={S.includesItem}><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M0 4a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H2a2 2 0 01-2-2V4zm2-1a1 1 0 00-1 1v8a1 1 0 001 1h12a1 1 0 001-1V4a1 1 0 00-1-1H2z" /></svg> {course.videoDuration} ساعة محتوى تدريبي</li>
                                             <li style={S.includesItem}><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M14 1a1 1 0 011 1v12a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1h12z" /></svg> {planFiles.length || course.articlesCount} ملف تدريبي</li>
-                                            <li style={S.includesItem}><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 1a7 7 0 110 14A7 7 0 018 1z" /></svg> وصول كامل للمحتوى</li>
+                                            <li style={S.includesItem}><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0a8 8 0 100 16A8 8 0 008 0zm0 1a7 7 0 110 14A7 7 0 008 1z" /></svg> وصول كامل للمحتوى</li>
                                             {course.hasCertificate && <li style={S.includesItem}><svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor"><path d="M14 1a1 1 0 011 1v12a1 1 0 01-1 1H2a1 1 0 01-1-1V2a1 1 0 011-1h12z" /></svg> شهادة إتمام</li>}
                                         </ul>
                                     </div>

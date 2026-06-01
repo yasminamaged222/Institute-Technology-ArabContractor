@@ -38,10 +38,10 @@ const styles = {
     clampText: { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.4', flex: 1 },
     description: { fontSize: '14px', lineHeight: '1.6', color: '#000000', opacity: 0.7, marginBottom: '16px', fontFamily: '"Noto Kufi Arabic", serif' },
     priceSection: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderTop: '2px solid #f0f0f0', marginBottom: '12px' },
-    priceContainer: { display: 'flex', flexDirection：'column', gap': '4px' },
-    currentPrice: { fontSize: '24px', fontWeight：'bold', color：'#f57c00', fontFamily：'"Noto Kufi Arabic", serif' },
-    freePriceLabel: { fontSize：'24px', fontWeight：'bold', color：'#1a7a3c', fontFamily：'"Noto Kufi Arabic", serif' },
-    priceLabel: { fontSize：'12px', color：'#000000', fontFamily：'"Noto Kufi Arabic", serif', opacity： 0.6, marginTop：'2px' },
+    priceContainer: { display: 'flex', flexDirection: 'column', gap: '4px' },
+    currentPrice: { fontSize: '24px', fontWeight: 'bold', color: '#f57c00', fontFamily: '"Noto Kufi Arabic", serif' },
+    freePriceLabel: { fontSize: '24px', fontWeight: 'bold', color: '#1a7a3c', fontFamily: '"Noto Kufi Arabic", serif' },
+    priceLabel: { fontSize: '12px', color: '#000000', fontFamily: '"Noto Kufi Arabic", serif', opacity: 0.6, marginTop: '2px' },
     buttonsContainer: { display: 'flex', gap: '10px', flexDirection: 'column' },
     certSection: { borderRadius: '12px', border: '1.5px solid #e8d8ff', backgroundColor: '#faf5ff', padding: '14px 14px 12px', display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '4px' },
     certSectionHeader: { display: 'flex', alignItems: 'center', gap: '8px', color: '#7c3aed' },
@@ -70,9 +70,9 @@ const styles = {
     toastMessage: { fontSize: '14px', color: '#000000', flex: 1 },
     modalOverlay: { position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.55)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backdropFilter: 'blur(4px)' },
     modalCard: { backgroundColor: '#ffffff', borderRadius: '14px', boxShadow: '0 16px 48px rgba(0,0,0,0.22)', width: '100%', maxWidth: '420px', maxHeight: '90vh', overflowY: 'auto', fontFamily: '"Noto Kufi Arabic", serif' },
-    modalHeader: { background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', padding：'16px 20px', display：'flex', alignItems：'center', gap：'12px', color：'#ffffff' },
-    modalHeaderIcon: { backgroundColor：'rgba(255,255,255,0.2)', borderRadius：'50%', padding：'8px', display：'flex', alignItems：'center', justifyContent：'center', flexShrink：'false', fontSize：'18px' },
-    modalTitle: { fontSize：'17px', fontWeight：'bold', color：'#ffffff', margin：'false', fontFamily：'"Noto Kufi Arabic    ", serif' },
+    modalHeader: { background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '12px', color: '#ffffff' },
+    modalHeaderIcon: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: '50%', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '18px' },
+    modalTitle: { fontSize: '17px', fontWeight: 'bold', color: '#ffffff', margin: 0, fontFamily: '"Noto Kufi Arabic", serif' },
     modalSubtitle: { fontSize: '12px', color: 'rgba(255,255,255,0.85)', margin: '3px 0 0', fontFamily: '"Noto Kufi Arabic", serif', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden' },
     modalCloseBtn: { marginRight: 'auto', background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', flexShrink: 0 },
     modalBody: { padding: '20px' },
@@ -83,14 +83,14 @@ const styles = {
     refundTextarea: { width: '100%', padding: '10px 14px', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', fontFamily: '"Noto Kufi Arabic", serif', color: '#000000', resize: 'vertical', outline: 'none', boxSizing: 'border-box', lineHeight: '1.5', direction: 'rtl' },
     charCount: { textAlign: 'left', fontSize: '11px', color: '#999', marginTop: '4px', marginBottom: '12px', fontFamily: '"Noto Kufi Arabic", serif' },
     errorBox: { display: 'flex', gap: '8px', alignItems: 'center', backgroundColor: '#ffebee', border: '1px solid #ef9a9a', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', fontSize: '13px', color: '#c62828', fontFamily: '"Noto Kufi Arabic", serif' },
-    warningBox: { display: 'flex', gap: '8px', alignItems: 'flex-start', backgroundColor: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', fontSize: '13px', color：'#795548', fontFamily：'"Noto Kufi Arabic", serif' },
-    modalActions: { display: 'flex', gap：'10px', marginTop：'6px' },
-    btnCancelRefund: { flex：'1', padding：'11px 16px', backgroundColor：'#f5f5f5', color：'#555', border：'2px solid #e0e0e0', borderRadius：'8px', fontSize：'14px', fontWeight：'bold', cursor：'pointer', fontFamily：'"Noto Kufi Arabic", serif' },
-    btnSubmitRefund: { flex：'2', padding：'11px 16px', background：'linear-gradient(135deg, #c62828 0%, #e53935 100%)', color：'#ffffff', border：'none', borderRadius：'8px ', fontSize：'14px ', fontWeight：'bold ', cursor：'pointer ', fontFamily：'"Noto Kufi Arabic", serif ', boxShadow：'0 3px 10px rgba(229,57,53,0.3) ', display：'flex ', alignItems：'center ', justifyContent：'center ', gap：'8px '},
-    successState: { textAlign：'center ', padding：'16px 0 '},
-    successIcon: { fontSize：'48px ', marginBottom：'12px '},
-successTitle: { fontSize: '20px', fontWeight: 'bold', color: '#1a7a3c', marginBottom: '10px', fontFamily: '"Noto Kufi Arabic", serif' },
-successText: { fontSize: '14px', color: '#555', lineHeight: '1.6', fontFamily: '"Noto Kufi Arabic", serif', marginBottom: '20px' },
+    warningBox: { display: 'flex', gap: '8px', alignItems: 'flex-start', backgroundColor: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 12px', marginBottom: '12px', fontSize: '13px', color: '#795548', fontFamily: '"Noto Kufi Arabic", serif' },
+    modalActions: { display: 'flex', gap: '10px', marginTop: '6px' },
+    btnCancelRefund: { flex: 1, padding: '11px 16px', backgroundColor: '#f5f5f5', color: '#555', border: '2px solid #e0e0e0', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Noto Kufi Arabic", serif' },
+    btnSubmitRefund: { flex: 2, padding: '11px 16px', background: 'linear-gradient(135deg, #c62828 0%, #e53935 100%)', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Noto Kufi Arabic", serif', boxShadow: '0 3px 10px rgba(229,57,53,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' },
+    successState: { textAlign: 'center', padding: '16px 0' },
+    successIcon: { fontSize: '48px', marginBottom: '12px' },
+    successTitle: { fontSize: '20px', fontWeight: 'bold', color: '#1a7a3c', marginBottom: '10px', fontFamily: '"Noto Kufi Arabic", serif' },
+    successText: { fontSize: '14px', color: '#555', lineHeight: '1.6', fontFamily: '"Noto Kufi Arabic", serif', marginBottom: '20px' },
     btnCloseSuccess: { padding: '11px 36px', background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)', color: '#ffffff', border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer', fontFamily: '"Noto Kufi Arabic", serif' },
     statusBadge: { display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '5px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif' },
     policyBox: { display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '8px', padding: '12px 14px', marginBottom: '16px', fontSize: '13px', lineHeight: '1.6', fontFamily: '"Noto Kufi Arabic", serif' },
@@ -108,6 +108,8 @@ successText: { fontSize: '14px', color: '#555', lineHeight: '1.6', fontFamily: '
     certModalFooter: { display: 'flex', gap: '12px', padding: '16px 24px', borderTop: '1.5px solid #f0e6ff', justifyContent: 'center' },
     certModalDownloadBtn: { display: 'flex', alignItems: 'center', gap: '8px', padding: '11px 28px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', borderRadius: '10px', fontSize: '14px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif', textDecoration: 'none', boxShadow: '0 4px 12px rgba(124,58,237,0.35)' },
     certModalCancelBtn: { padding: '11px 28px', backgroundColor: '#f5f5f5', color: '#555', border: '1.5px solid #e0e0e0', borderRadius: '10px', fontSize: '14px', fontFamily: '"Noto Kufi Arabic", serif', cursor: 'pointer' },
+    cardBody: { padding: '20px', display: 'flex', flexDirection: 'column', flex: 1 },
+    courseTitle: { fontSize: '18px', fontWeight: 'bold', color: '#000000', marginBottom: '14px', fontFamily: '"Noto Kufi Arabic", serif', lineHeight: '1.4' },
 };
 
 const mediaQueryStyles = `
@@ -460,7 +462,6 @@ const CoursesPage = () => {
     const [certsLoading, setCertsLoading] = useState({});
     const [previewCert, setPreviewCert] = useState(null);
 
-    // ── per-card mode state: { [courseId]: 'onsite' | 'online' } ──
     const [courseModes, setCourseModes] = useState({});
     const getCourseMode = (id) => courseModes[id] || 'onsite';
     const handleModeChange = (id, mode) => setCourseModes(prev => ({ ...prev, [id]: mode }));
@@ -568,7 +569,6 @@ const CoursesPage = () => {
     const addToCart = async (course) => {
         if (!isSignedIn) { showToast('الرجاء تسجيل الدخول أولاً', 'warning'); return; }
         const isOnline = getCourseMode(course.id) === 'online';
-        // If online price is null → treat as free (0)
         const onlinePrice = course.onlineCost != null ? course.onlineCost : 0;
         const priceToUse = isOnline ? onlinePrice : (course.cost || 0);
         setAddingToCart(course.id);
@@ -666,12 +666,8 @@ const CoursesPage = () => {
                                 const cert = certificates[course.id] || null;
                                 const certLoading = certsLoading[course.id] || false;
 
-                                // ── mode & price logic ──
                                 const mode = getCourseMode(course.id);
-                                console.log(course);
-                                // onlineCost: use field from API if present, else null
                                 const onlineCost = course.onlineCost ?? course.online_cost ?? null;
-                                const onlinePriceFree = onlineCost === null || onlineCost === 0;
                                 const activePrice = mode === 'online'
                                     ? (onlineCost != null ? onlineCost : 0)
                                     : (course.cost || 0);
@@ -737,67 +733,24 @@ const CoursesPage = () => {
                                             {/* ── price section ── */}
                                             <div style={styles.priceSection}>
                                                 <div style={styles.priceContainer}>
-
                                                     {activePrice > 0 ? (
                                                         <>
-                                                            {/* Original Price */}
-                                                            {(mode === 'online'
-                                                                ? course.onlineOldCost
-                                                                : course.oldCost
-                                                            ) > activePrice && (
-                                                                    <span
-                                                                        style={{
-                                                                            textDecoration: 'line-through',
-                                                                            color: '#999',
-                                                                            fontSize: '14px',
-                                                                            fontFamily: '"Noto Kufi Arabic", serif'
-                                                                        }}
-                                                                    >
-                                                                        {mode === 'online'
-                                                                            ? course.onlineOldCost
-                                                                            : course.oldCost
-                                                                        } جنيه
-                                                                    </span>
-                                                                )}
-
-                                                            {/* Current Price */}
-                                                            <span style={styles.currentPrice}>
-                                                                {activePrice} جنيه
-                                                            </span>
-
-                                                            {/* Discount */}
-                                                            {(mode === 'online'
-                                                                ? course.onlineDiscountPercentage
-                                                                : course.discountPercentage
-                                                            ) > 0 && (
-                                                                    <span
-                                                                        style={{
-                                                                            background: '#ffeded',
-                                                                            color: '#e53935',
-                                                                            padding: '3px 8px',
-                                                                            borderRadius: '6px',
-                                                                            fontSize: '12px',
-                                                                            fontWeight: 'bold',
-                                                                            width: 'fit-content',
-                                                                            fontFamily: '"Noto Kufi Arabic", serif'
-                                                                        }}
-                                                                    >
-                                                                        خصم {mode === 'online'
-                                                                            ? course.onlineDiscountPercentage
-                                                                            : course.discountPercentage
-                                                                        }%
-                                                                    </span>
-                                                                )}
+                                                            {(mode === 'online' ? course.onlineOldCost : course.oldCost) > activePrice && (
+                                                                <span style={{ textDecoration: 'line-through', color: '#999', fontSize: '14px', fontFamily: '"Noto Kufi Arabic", serif' }}>
+                                                                    {mode === 'online' ? course.onlineOldCost : course.oldCost} جنيه
+                                                                </span>
+                                                            )}
+                                                            <span style={styles.currentPrice}>{activePrice} جنيه</span>
+                                                            {(mode === 'online' ? course.onlineDiscountPercentage : course.discountPercentage) > 0 && (
+                                                                <span style={{ background: '#ffeded', color: '#e53935', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold', width: 'fit-content', fontFamily: '"Noto Kufi Arabic", serif' }}>
+                                                                    خصم {mode === 'online' ? course.onlineDiscountPercentage : course.discountPercentage}%
+                                                                </span>
+                                                            )}
                                                         </>
                                                     ) : (
-                                                        <span style={styles.freePriceLabel}>
-                                                            مجاناً
-                                                        </span>
+                                                        <span style={styles.freePriceLabel}>مجاناً</span>
                                                     )}
-
-                                                    <span style={styles.priceLabel}>
-                                                        {mode === 'online' ? 'السعر الأونلاين' : 'السعر الحضوري'}
-                                                    </span>
+                                                    <span style={styles.priceLabel}>{mode === 'online' ? 'السعر الأونلاين' : 'السعر الحضوري'}</span>
                                                 </div>
                                             </div>
 
