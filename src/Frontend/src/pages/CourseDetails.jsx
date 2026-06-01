@@ -138,7 +138,10 @@ const S = {
     previewImg: { width: '100%', height: '100%', objectFit: 'cover' },
     certPreviewRibbon: {
         position: 'absolute', bottom: '12px', left: '12px',
-        backgroundColor: 'rgba(124,58,237,0.92)',
+        backgroundColor: 'rgba(124,58,237,0.92)',  // fallback
+        backgroundImage: 'linear-gradient(100deg, rgba(124,58,237,0.95) 0%, rgba(159,103,245,0.95) 50%, rgba(124,58,237,0.95) 100%)',
+        backgroundSize: '200% auto',               // no longer conflicts
+        backgroundRepeat: 'no-repeat',
         backdropFilter: 'blur(6px)',
         borderRadius: '8px', padding: '6px 14px',
         fontSize: '13px', fontWeight: 'bold', color: '#fff',
@@ -148,8 +151,6 @@ const S = {
         cursor: 'pointer',
         display: 'flex', alignItems: 'center', gap: '6px',
         transition: 'all 0.2s',
-        background: 'linear-gradient(100deg, rgba(124,58,237,0.95) 0%, rgba(159,103,245,0.95) 50%, rgba(124,58,237,0.95) 100%)',
-        backgroundSize: '200% auto',
         animation: 'certShine 3s linear infinite',
     },
     priceContent: { padding: '24px' },
