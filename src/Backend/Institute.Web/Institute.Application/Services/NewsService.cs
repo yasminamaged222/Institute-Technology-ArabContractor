@@ -38,7 +38,7 @@ namespace Institute.Application.Services
                 ADetails = dto.Details,
                 NewsDate = dto.Date,
                 Approved = true,
-                ShowFlag = true
+                ShowFlag = dto.ShowFlag
             };
 
             await _newsRepo.AddAsync(entity);

@@ -13,8 +13,7 @@ namespace Institute.Domain.specifications.NewsSpec
         {
             public int PageIndex { get; set; } = 1;
             public int PageSize { get; set; } = 12;
-        public bool? ShowFlag { get; set; }
-        public int? Year { get; set; }
+            public int? Year { get; set; }
         }
 
    

@@ -38,7 +38,7 @@ namespace Institute.API.Controllers
         public async Task<ActionResult<Pagination<NewsListDto>>> GetAllNews(
             [FromQuery] NewsSpecParams newsParams)
         {
-            var spec = new NewsWithMainPicSpec(newsParams);
+            var spec = new AdminNewsWithMainPicSpec(newsParams);
             var news = await _repo.GetAllWithSpecAsync(spec);
 
             var data = news.Select(x => new NewsListDto
