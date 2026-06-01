@@ -28,6 +28,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                     <div dir="rtl">
                         <ErrorBoundary>
                             <App />
+                            <div>HELLO VITE IS WORKING</div>
+                            )
                         </ErrorBoundary>
                     </div>
                 </BrowserRouter>

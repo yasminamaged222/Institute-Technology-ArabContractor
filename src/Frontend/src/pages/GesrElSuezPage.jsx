@@ -92,7 +92,7 @@ const GesrElSuezPage = () => {
                 @import url('https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap');
 
                 .gesr-container * {
-                    font-family: 'Droid Arabic Kufi', serif;
+                    font-family: 'Noto Kufi Arabic', serif;
                 }
 
                 .gesr-workshop-card {
@@ -392,7 +392,7 @@ const GesrElSuezPage = () => {
             }}>
                 {/* Fixed Overview Bar */}
                 <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                    <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem' }}>
+                    <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic", serif', fontSize: '1rem' }}>
                         <a
                             href="/"
                             style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}

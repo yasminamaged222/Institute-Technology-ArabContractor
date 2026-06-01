@@ -8,7 +8,7 @@ const T = {
     black: '#0a0a0a', white: '#ffffff',
     gray50: '#f8f9fa', gray100: '#f0f1f2', gray300: '#d0d3d8',
     gray500: '#6b7280', gray700: '#374151',
-    font: '"Droid Arabic Kufi", serif',
+    font: '"Noto Kufi Arabic", serif',
 };
 
 const BASE = 'https://acwebsite-icmet-test.azurewebsites.net';

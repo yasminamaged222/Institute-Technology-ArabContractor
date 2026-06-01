@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/earlyaccess/droidarabickufi.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@300;400;700;900&display=swap');
 
 
 @tailwind base;
@@ -7,11 +7,7 @@
 
 
 @layer base {
-    html {
-        font-size: 18px;
-    }
-    html, body, * {
-        font-family: 'Droid Arabic Kufi', serif !important;
-        font-weight: 600 !important;
+    body {
+        font-family: 'Noto Kufi Arabic', serif;
     }
 }

@@ -64,7 +64,7 @@ const Footer = () => {
                                 fontWeight: 'bold',
                                 mb: 2,
                                 color: '#f57c00',
-                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontFamily: '"Noto Kufi Arabic", serif',
                                 fontSize: { xs: '1rem', md: '1.1rem' },
                                 lineHeight: 1.4
                             }}
@@ -91,7 +91,7 @@ const Footer = () => {
                                 variant="body2"
                                 sx={{
                                     lineHeight: 1.7,
-                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                    fontFamily: '"Noto Kufi Arabic", serif',
                                     color: 'rgba(255,255,255,0.85)',
                                     fontSize: '0.9rem'
                                 }}
@@ -125,7 +125,7 @@ const Footer = () => {
                                 color="inherit"
                                 underline="hover"
                                 sx={{
-                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                    fontFamily: '"Noto Kufi Arabic", serif',
                                     fontSize: '0.85rem',
                                     color: 'white',
                                     '&:hover': {
@@ -146,7 +146,7 @@ const Footer = () => {
                             sx={{
                                 fontWeight: 'bold',
                                 mb: 2.5,
-                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontFamily: '"Noto Kufi Arabic", serif',
                                 color: 'white',
                                 fontSize: { xs: '0.95rem', md: '1rem' },
                                 position: 'relative',
@@ -189,7 +189,7 @@ const Footer = () => {
                                         variant="body2"
                                         sx={{
                                             fontWeight: 'bold',
-                                            fontFamily: '"Droid Arabic Kufi", serif',
+                                            fontFamily: '"Noto Kufi Arabic", serif',
                                             color: 'rgba(255,255,255,0.7)',
                                             fontSize: '0.75rem',
                                             mb: 0.2
@@ -200,7 +200,7 @@ const Footer = () => {
                                     <Typography
                                         variant="body2"
                                         sx={{
-                                            fontFamily: '"Droid Arabic Kufi", serif',
+                                            fontFamily: '"Noto Kufi Arabic", serif',
                                             fontSize: '0.85rem'
                                         }}
                                     >
@@ -233,7 +233,7 @@ const Footer = () => {
                                         variant="body2"
                                         sx={{
                                             fontWeight: 'bold',
-                                            fontFamily: '"Droid Arabic Kufi", serif',
+                                            fontFamily: '"Noto Kufi Arabic", serif',
                                             color: 'rgba(255,255,255,0.7)',
                                             fontSize: '0.75rem',
                                             mb: 0.2
@@ -244,7 +244,7 @@ const Footer = () => {
                                     <Typography
                                         variant="body2"
                                         sx={{
-                                            fontFamily: '"Droid Arabic Kufi", serif',
+                                            fontFamily: '"Noto Kufi Arabic", serif',
                                             fontSize: '0.85rem'
                                         }}
                                     >
@@ -264,7 +264,7 @@ const Footer = () => {
                             sx={{
                                 fontWeight: 'bold',
                                 mb: 2.5,
-                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontFamily: '"Noto Kufi Arabic", serif',
                                 color: 'white',
                                 fontSize: { xs: '0.95rem', md: '1rem' },
                                 position: 'relative',
@@ -303,7 +303,7 @@ const Footer = () => {
                                     variant="body2"
                                     sx={{
                                         mb: 1,
-                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        fontFamily: '"Noto Kufi Arabic", serif',
                                         color: 'white',
                                         fontWeight: 'bold',
                                         fontSize: '0.85rem'
@@ -314,7 +314,7 @@ const Footer = () => {
                                 <Typography
                                     variant="body2"
                                     sx={{
-                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        fontFamily: '"Noto Kufi Arabic", serif',
                                         color: 'rgba(255,255,255,0.8)',
                                         fontSize: '0.8rem'
                                     }}
@@ -333,7 +333,7 @@ const Footer = () => {
                             sx={{
                                 fontWeight: 'bold',
                                 mb: 2.5,
-                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontFamily: '"Noto Kufi Arabic", serif',
                                 color: 'white',
                                 fontSize: { xs: '0.95rem', md: '1rem' },
                                 position: 'relative',
@@ -365,7 +365,7 @@ const Footer = () => {
                                     sx={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        fontFamily: '"Noto Kufi Arabic", serif',
                                         fontSize: '0.85rem',
                                         color: 'rgba(255,255,255,0.85)',
                                         transition: 'all 0.2s ease',
@@ -415,7 +415,7 @@ const Footer = () => {
                             variant="body2"
                             sx={{
                                 color: 'rgba(255,255,255,0.7)',
-                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontFamily: '"Noto Kufi Arabic", serif',
                                 fontSize: { xs: '0.75rem', md: '0.8rem' },
                                 lineHeight: 1.6,
                                 mb: 1
@@ -427,7 +427,7 @@ const Footer = () => {
                             variant="body2"
                             sx={{
                                 color: 'rgba(255,255,255,0.6)',
-                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontFamily: '"Noto Kufi Arabic", serif',
                                 fontSize: { xs: '0.7rem', md: '0.75rem' },
                                 mb: 0.5
                             }}
@@ -439,7 +439,7 @@ const Footer = () => {
                             sx={{
                                 color: '#f57c00',
                                 display: 'block',
-                                fontFamily: '"Droid Arabic Kufi", serif',
+                                fontFamily: '"Noto Kufi Arabic", serif',
                                 fontSize: '0.9rem'
                             }}
                         >

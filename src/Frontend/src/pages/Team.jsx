@@ -16,7 +16,7 @@ const T = {
     gray300: '#d0d3d8',
     gray500: '#6b7280',
     gray700: '#374151',
-    font: '"Droid Arabic Kufi", serif',
+    font: '"Noto Kufi Arabic", serif',
 };
 
 /* ─── Keyframe injection (one-time) ─────── */

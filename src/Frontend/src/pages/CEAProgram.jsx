@@ -91,13 +91,13 @@ const CEAProgram = () => {
 
     return (
         <Box
-            sx={{ minHeight: '100vh', bgcolor: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif' }}
+            sx={{ minHeight: '100vh', bgcolor: '#ffffff', fontFamily: '"Noto Kufi Arabic", serif' }}
             dir="rtl"
             lang="ar"
         >
             {/* Breadcrumb */}
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic", serif', fontSize: '1rem' }}>
                     <a
                         href="/"
                         style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
@@ -120,7 +120,7 @@ const CEAProgram = () => {
                     <Typography
                         variant="h3"
                         sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             fontWeight: 'bold',
                             mb: 2,
                             color: '#000000',
@@ -133,7 +133,7 @@ const CEAProgram = () => {
                         variant="h6"
                         sx={{
                             color: '#f57c00',
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             mb: 4,
                             fontSize: { xs: "1rem", md: "1.25rem" }
                         }}
@@ -143,7 +143,7 @@ const CEAProgram = () => {
                     <Typography
                         variant="body1"
                         sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             lineHeight: 1.9, mb: 3, color: '#000000',
                             fontSize: { xs: "0.95rem", md: "1.05rem" },
                             textAlign: 'left'
@@ -154,7 +154,7 @@ const CEAProgram = () => {
                     <Typography
                         variant="body1"
                         sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             lineHeight: 1.9, mb: 3, color: '#000000',
                             fontSize: { xs: "0.95rem", md: "1.05rem" },
                             textAlign: 'left'
@@ -181,7 +181,7 @@ const CEAProgram = () => {
                             <Typography
                                 variant="body1"
                                 sx={{
-                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                    fontFamily: '"Noto Kufi Arabic", serif',
                                     flex: 1, color: '#000000', lineHeight: 1.9,
                                     fontSize: { xs: "0.95rem", md: "1.05rem" }
                                 }}
@@ -197,7 +197,7 @@ const CEAProgram = () => {
                     <Typography
                         variant="h4"
                         sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             fontWeight: 'bold', mb: 4, textAlign: 'center',
                             color: '#0865a8', fontSize: { xs: "1.5rem", md: "2rem" }
                         }}
@@ -221,7 +221,7 @@ const CEAProgram = () => {
                                 <Typography
                                     variant="h6"
                                     sx={{
-                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        fontFamily: '"Noto Kufi Arabic", serif',
                                         fontWeight: 'bold', color: '#0865a8',
                                         fontSize: { xs: "1.1rem", md: "1.25rem" }
                                     }}
@@ -232,7 +232,7 @@ const CEAProgram = () => {
                             <AccordionDetails sx={{ bgcolor: 'white', p: { xs: 2, md: 3 } }}>
                                 <Typography
                                     sx={{
-                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        fontFamily: '"Noto Kufi Arabic", serif',
                                         textAlign: 'left', lineHeight: 1.9,
                                         color: '#000000', fontSize: { xs: "0.95rem", md: "1.05rem" }
                                     }}
@@ -249,7 +249,7 @@ const CEAProgram = () => {
                     <Typography
                         variant="h4"
                         sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             fontWeight: 'bold', mb: 4, textAlign: 'center',
                             color: '#0865a8', fontSize: { xs: "1.5rem", md: "2rem" }
                         }}
@@ -366,7 +366,7 @@ const CEAProgram = () => {
                     <Typography
                         variant="h4"
                         sx={{
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             fontWeight: 'bold', mb: 4, textAlign: 'center',
                             color: '#0865a8', fontSize: { xs: "1.5rem", md: "2rem" }
                         }}
@@ -435,7 +435,7 @@ const CEAProgram = () => {
                                                 <Typography
                                                     variant="body1"
                                                     sx={{
-                                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                                        fontFamily: '"Noto Kufi Arabic", serif',
                                                         textAlign: 'left',
                                                         direction: 'ltr',
                                                         fontSize: { xs: "0.875rem", md: "1rem" }
@@ -522,7 +522,7 @@ const CEAProgram = () => {
                             px: 2, py: 1, borderRadius: 1,
                         }}
                     >
-                        <Typography sx={{ fontFamily: '"Droid Arabic Kufi", serif', fontSize: '0.9rem' }}>
+                        <Typography sx={{ fontFamily: '"Noto Kufi Arabic", serif', fontSize: '0.9rem' }}>
                             {selectedImageIndex + 1} / {galleryImages.length}
                         </Typography>
                     </Box>
