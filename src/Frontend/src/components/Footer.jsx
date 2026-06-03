@@ -424,17 +424,6 @@ const Footer = () => {
                         جميع الحقوق محفوظة 2026 © المعهد التكنولوجي لهندسة التشييد والإدارة
                     </Typography>
                     <Typography
-                        variant="body2"
-                        sx={{
-                            color: 'rgba(255,255,255,0.6)',
-                            fontFamily: '"Noto Kufi Arabic", serif',
-                            fontSize: { xs: '0.7rem', md: '0.75rem' },
-                            mb: 0.5
-                        }}
-                    >
-                        تصميم مركز معلومات الإدارة العليا
-                    </Typography>
-                    <Typography
                         variant="caption"
                         sx={{
                             color: '#f57c00',
@@ -443,7 +432,7 @@ const Footer = () => {
                             fontSize: '0.9rem'
                         }}
                     >
-                        Designed by Eng.Yasmina Maged, Samir Yousri & Ahmed Taha
+                            تصميم مركز معلومات الإدارة العليا
                     </Typography>
                 </Box>
 
