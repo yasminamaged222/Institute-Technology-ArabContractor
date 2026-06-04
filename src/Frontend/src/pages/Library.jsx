@@ -97,7 +97,7 @@ export default function ModernLibrary() {
     const cols = (tiny, mob, tab, desk) => isTiny ? tiny : isMobile ? mob : isTablet ? tab : desk;
 
     return (
-        <div style={{ minHeight: '100vh', background: 'white', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl', overflowX: 'hidden' }}>
+        <div style={{ minHeight: '100vh', background: 'white', fontFamily: '"Noto Kufi Arabic", serif', direction: 'rtl', overflowX: 'hidden' }}>
 
             {/* Progress bar */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: '#e5e7eb', zIndex: 9999 }}>
@@ -106,7 +106,7 @@ export default function ModernLibrary() {
 
             {/* Nav */}
             <div style={{ position: 'fixed', top: 4, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: isMobile ? '8px 12px' : '8px 20px', boxSizing: 'border-box' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: isTiny ? '13px' : '1rem' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic", serif', fontSize: isTiny ? '13px' : '1rem' }}>
                     <a href="/" style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}>الصفحة الرئيسية</a>
                     <span style={{ color: '#6b7280', margin: '0 6px' }}>•</span>
                     <span style={{ color: '#374151' }}>المكتبة</span>

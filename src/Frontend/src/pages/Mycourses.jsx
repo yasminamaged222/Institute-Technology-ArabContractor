@@ -200,7 +200,7 @@ const MyCourses = () => {
 
                 {/* Breadcrumb */}
                 <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                    <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem' }}>
+                    <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic", serif', fontSize: '1rem' }}>
                         <a href="/" style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
                             onMouseEnter={e => e.target.style.color = '#f57c00'}
                             onMouseLeave={e => e.target.style.color = '#0865a8'}>
@@ -218,7 +218,7 @@ const MyCourses = () => {
                             <h2 style={styles.authGateTitle}>تسجيل الدخول مطلوب</h2>
                             <p style={styles.authGateSub}>يجب تسجيل الدخول أولاً لعرض دوراتك التدريبية</p>
                             <SignInButton mode="modal">
-                                <Button variant="contained" sx={{ fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem', bgcolor: '#0865a8', color: '#ffffff', px: 4, py: 1.5, borderRadius: 5, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#f57c00' } }}>
+                                <Button variant="contained" sx={{ fontFamily: '"Noto Kufi Arabic", serif', fontSize: '1rem', bgcolor: '#0865a8', color: '#ffffff', px: 4, py: 1.5, borderRadius: 5, textTransform: 'none', fontWeight: 600, '&:hover': { bgcolor: '#f57c00' } }}>
                                     تسجيل دخول
                                 </Button>
                             </SignInButton>
@@ -466,7 +466,7 @@ const EmptyState = ({ search, navigate }) => (
 );
 
 const styles = {
-    page: { minHeight: '100vh', backgroundColor: '#f7f8fc', fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl' },
+    page: { minHeight: '100vh', backgroundColor: '#f7f8fc', fontFamily: '"Noto Kufi Arabic", serif', direction: 'rtl' },
     hero: { position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #05416d 0%, #0865a8 45%, #c96000 100%)', paddingTop: '116px', paddingBottom: '52px', paddingLeft: '24px', paddingRight: '24px' },
     heroDeco1: { position: 'absolute', top: '-60px', left: '-60px', width: '260px', height: '260px', borderRadius: '50%', background: 'rgba(255,255,255,0.07)', pointerEvents: 'none' },
     heroDeco2: { position: 'absolute', bottom: '-80px', right: '-40px', width: '320px', height: '320px', borderRadius: '50%', background: 'rgba(245,124,0,0.18)', pointerEvents: 'none' },
@@ -474,24 +474,24 @@ const styles = {
     heroInner: { maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 },
     heroTopRow: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '16px' },
     heroAvatar: { width: '64px', height: '64px', borderRadius: '50%', flexShrink: 0, background: 'rgba(255,255,255,0.2)', border: '2.5px solid rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px' },
-    heroGreeting: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff', fontFamily: '"Droid Arabic Kufi", serif' },
-    heroTitle: { margin: '4px 0 0', fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Droid Arabic Kufi", serif' },
-    heroSub: { fontSize: '16px', color: 'rgba(255,255,255,0.8)', margin: '0 0 24px', fontFamily: '"Droid Arabic Kufi", serif' },
+    heroGreeting: { margin: 0, fontSize: '20px', fontWeight: 'bold', color: '#ffffff', fontFamily: '"Noto Kufi Arabic", serif' },
+    heroTitle: { margin: '4px 0 0', fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Noto Kufi Arabic", serif' },
+    heroSub: { fontSize: '16px', color: 'rgba(255,255,255,0.8)', margin: '0 0 24px', fontFamily: '"Noto Kufi Arabic", serif' },
     heroDivider: { width: '100%', height: '1px', background: 'linear-gradient(90deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%)', marginBottom: '28px' },
     statsRow: { display: 'flex', gap: '16px', flexWrap: 'wrap' },
     statCard: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', backgroundColor: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(12px)', border: '1.5px solid rgba(255,255,255,0.25)', borderRadius: '16px', padding: '18px 32px', minWidth: '130px' },
     statIcon: { fontSize: '26px' },
-    statValue: { fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: 1 },
-    statLabel: { fontSize: '13px', color: 'rgba(255,255,255,0.82)', fontFamily: '"Droid Arabic Kufi", serif' },
+    statValue: { fontSize: '32px', fontWeight: 'bold', color: '#fff', fontFamily: '"Noto Kufi Arabic", serif', lineHeight: 1 },
+    statLabel: { fontSize: '13px', color: 'rgba(255,255,255,0.82)', fontFamily: '"Noto Kufi Arabic", serif' },
     main: { maxWidth: '1200px', margin: '0 auto', padding: '36px 24px 60px' },
     toolbar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '28px', backgroundColor: '#fff', borderRadius: '14px', padding: '16px 20px', boxShadow: '0 2px 10px rgba(0,0,0,0.06)', border: '1.5px solid #ebebeb' },
     searchWrap: { display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: '200px', backgroundColor: '#f7f8fc', borderRadius: '10px', padding: '8px 14px', border: '1.5px solid #e0e0e0' },
     searchIcon: { width: '18px', height: '18px', color: '#aaa', flexShrink: 0 },
-    searchInput: { border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', color: '#333', flex: 1, direction: 'rtl' },
-    refreshBtn: { padding: '8px 20px', borderRadius: '10px', border: '1.5px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer' },
+    searchInput: { border: 'none', background: 'transparent', outline: 'none', fontSize: '14px', fontFamily: '"Noto Kufi Arabic", serif', color: '#333', flex: 1, direction: 'rtl' },
+    refreshBtn: { padding: '8px 20px', borderRadius: '10px', border: '1.5px solid #e0e0e0', backgroundColor: '#fff', color: '#555', fontSize: '14px', fontFamily: '"Noto Kufi Arabic", serif', cursor: 'pointer' },
     loadingWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', gap: '20px' },
     spinner: { width: '48px', height: '48px', border: '4px solid #e0e0e0', borderTopColor: '#0865a8', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
-    loadingText: { fontSize: '16px', color: '#666', fontFamily: '"Droid Arabic Kufi", serif' },
+    loadingText: { fontSize: '16px', color: '#666', fontFamily: '"Noto Kufi Arabic", serif' },
     errorWrap: { textAlign: 'center', padding: '80px 20px' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' },
     card: { backgroundColor: '#fff', borderRadius: '16px', border: '2px solid #f0f0f0', boxShadow: '0 4px 14px rgba(0,0,0,0.06)', overflow: 'hidden', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)', display: 'flex', flexDirection: 'column' },
@@ -499,37 +499,37 @@ const styles = {
     cardHeader: { position: 'relative', height: '160px', overflow: 'hidden' },
     cardImgPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     iconWrapper: { borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.15)', padding: '24px', backdropFilter: 'blur(10px)', border: '2px solid rgba(255,255,255,0.3)' },
-    badge: { position: 'absolute', top: '12px', right: '12px', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
+    badge: { position: 'absolute', top: '12px', right: '12px', borderRadius: '8px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif' },
     badgePaid: { backgroundColor: '#0865a8', color: '#fff', boxShadow: '0 2px 8px rgba(8,101,168,0.35)' },
     badgeFree: { backgroundColor: '#1a7a4a', color: '#fff', boxShadow: '0 2px 8px rgba(26,122,74,0.35)' },
-    certRibbon: { position: 'absolute', bottom: '12px', left: '12px', background: 'linear-gradient(135deg, #7c3aed, #9f67f5)', color: '#fff', borderRadius: '8px', padding: '4px 12px', fontSize: '11px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' },
+    certRibbon: { position: 'absolute', bottom: '12px', left: '12px', background: 'linear-gradient(135deg, #7c3aed, #9f67f5)', color: '#fff', borderRadius: '8px', padding: '4px 12px', fontSize: '11px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' },
     cardBody: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 },
-    cardTitle: { fontSize: '16px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 },
-    metaRow: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#555', fontFamily: '"Droid Arabic Kufi", serif' },
+    cardTitle: { fontSize: '16px', fontWeight: 'bold', color: '#111', fontFamily: '"Noto Kufi Arabic", serif', lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', margin: 0 },
+    metaRow: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#555', fontFamily: '"Noto Kufi Arabic", serif' },
     metaIcon: { width: '15px', height: '15px', flexShrink: 0, color: '#0865a8' },
     metaText: { overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' },
     certSection: { borderRadius: '12px', border: '1.5px solid', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: '10px' },
     certSectionHeader: { display: 'flex', alignItems: 'center', gap: '8px' },
-    certSectionTitle: { fontSize: '13px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif' },
-    certDownloadBtnFull: { flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', textDecoration: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(124,58,237,0.3)', transition: 'all 0.2s ease' },
-    certDownloadBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s ease' },
-    ctaBtn: { marginTop: 'auto', width: '100%', padding: '12px 20px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' },
+    certSectionTitle: { fontSize: '13px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif' },
+    certDownloadBtnFull: { flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '9px 14px', background: 'linear-gradient(135deg, #7c3aed 0%, #9f67f5 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif', textDecoration: 'none', cursor: 'pointer', boxShadow: '0 3px 10px rgba(124,58,237,0.3)', transition: 'all 0.2s ease' },
+    certDownloadBtn: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', padding: '8px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif', textDecoration: 'none', cursor: 'pointer', transition: 'all 0.2s ease' },
+    ctaBtn: { marginTop: 'auto', width: '100%', padding: '12px 20px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' },
     ctaBtnHover: { transform: 'translateY(-2px)', boxShadow: '0 6px 18px rgba(8,101,168,0.32)' },
     emptyWrap: { textAlign: 'center', padding: '80px 20px', backgroundColor: '#fff', borderRadius: '16px', border: '2px dashed #d0dce8' },
     emptyIcon: { fontSize: '64px', marginBottom: '16px' },
-    emptyTitle: { fontSize: '22px', fontWeight: 'bold', color: '#222', fontFamily: '"Droid Arabic Kufi", serif', margin: '0 0 10px' },
-    emptySub: { fontSize: '15px', color: '#777', fontFamily: '"Droid Arabic Kufi", serif', margin: '0 0 28px' },
-    emptyBtn: { padding: '13px 36px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer' },
+    emptyTitle: { fontSize: '22px', fontWeight: 'bold', color: '#222', fontFamily: '"Noto Kufi Arabic", serif', margin: '0 0 10px' },
+    emptySub: { fontSize: '15px', color: '#777', fontFamily: '"Noto Kufi Arabic", serif', margin: '0 0 28px' },
+    emptyBtn: { padding: '13px 36px', background: 'linear-gradient(135deg, #0865a8 0%, #f57c00 100%)', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', fontFamily: '"Noto Kufi Arabic", serif', cursor: 'pointer' },
     authGate: { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '120px 20px 60px' },
     authGateCard: { backgroundColor: '#fff', borderRadius: '20px', padding: '52px 44px', boxShadow: '0 8px 40px rgba(0,0,0,0.1)', textAlign: 'center', maxWidth: '420px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' },
     authGateIcon: { fontSize: '64px' },
-    authGateTitle: { fontSize: '26px', fontWeight: 'bold', color: '#111', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
-    authGateSub: { fontSize: '15px', color: '#666', fontFamily: '"Droid Arabic Kufi", serif', margin: 0 },
-    btnBrowse: { marginTop: '4px', width: '100%', padding: '10px 24px', backgroundColor: 'transparent', color: '#888', border: '1.5px solid #ddd', borderRadius: '10px', fontSize: '14px', fontFamily: '"Droid Arabic Kufi", serif', cursor: 'pointer' },
+    authGateTitle: { fontSize: '26px', fontWeight: 'bold', color: '#111', fontFamily: '"Noto Kufi Arabic", serif', margin: 0 },
+    authGateSub: { fontSize: '15px', color: '#666', fontFamily: '"Noto Kufi Arabic", serif', margin: 0 },
+    btnBrowse: { marginTop: '4px', width: '100%', padding: '10px 24px', backgroundColor: 'transparent', color: '#888', border: '1.5px solid #ddd', borderRadius: '10px', fontSize: '14px', fontFamily: '"Noto Kufi Arabic", serif', cursor: 'pointer' },
 };
 
 const css = `
-  * { font-family: "Droid Arabic Kufi", serif !important; box-sizing: border-box; }
+  * { font-family: "Noto Kufi Arabic", serif !important; box-sizing: border-box; }
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   .mc-cert-download-btn:hover { opacity: 0.9; transform: translateY(-1px); }
   @media (max-width: 640px) {

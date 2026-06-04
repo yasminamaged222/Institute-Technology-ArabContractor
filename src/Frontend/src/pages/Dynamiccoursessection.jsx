@@ -39,7 +39,7 @@ const ToastNotification = ({ message, type, onClose }) => {
                 boxShadow: '0 4px 20px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center',
                 gap: '10px', maxWidth: '360px', animation: 'toastSlideIn 0.3s ease-out',
                 borderRight: `4px solid ${borderColors[type]}`,
-                fontFamily: '"Droid Arabic Kufi", serif', direction: 'rtl'
+                fontFamily: '"Noto Kufi Arabic", serif', direction: 'rtl'
             }}>
                 <span style={{ fontSize: '20px' }}>
                     {type === 'success' ? '✅' : type === 'error' ? '❌' : '⚠️'}
@@ -56,7 +56,7 @@ const ModeToggle = ({ mode, onChange }) => {
     const base = {
         flex: 1, padding: '5px 6px', border: 'none', borderRadius: '6px',
         fontSize: '11px', fontWeight: 'bold', cursor: 'pointer',
-        fontFamily: '"Droid Arabic Kufi", serif', transition: 'all .2s',
+        fontFamily: '"Noto Kufi Arabic", serif', transition: 'all .2s',
     };
     const active = {
         ...base,
@@ -334,7 +334,7 @@ const DynamicCoursesSection = () => {
     // ── Loading / Error states ────────────────────────────────────────────────
     if (loading) return (
         <Container maxWidth="xl" sx={{ py: 10, textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: '#0865a8' }}>
+            <Typography variant="h6" sx={{ fontFamily: '"Noto Kufi Arabic", serif', color: '#0865a8' }}>
                 جاري تحميل الدورات...
             </Typography>
         </Container>
@@ -342,7 +342,7 @@ const DynamicCoursesSection = () => {
 
     if (error || courses.length === 0) return (
         <Container maxWidth="xl" sx={{ py: 10, textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ fontFamily: '"Droid Arabic Kufi", serif', color: 'error.main' }}>
+            <Typography variant="h6" sx={{ fontFamily: '"Noto Kufi Arabic", serif', color: 'error.main' }}>
                 {error || 'لا توجد دورات متاحة حالياً'}
             </Typography>
         </Container>
@@ -468,7 +468,7 @@ const DynamicCoursesSection = () => {
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         }}>
                                             <Typography sx={{
-                                                color: '#fff', fontFamily: '"Droid Arabic Kufi", serif',
+                                                color: '#fff', fontFamily: '"Noto Kufi Arabic", serif',
                                                 fontWeight: 700, fontSize: '0.9rem',
                                             }}>
                                                 عرض التفاصيل ←
@@ -486,7 +486,7 @@ const DynamicCoursesSection = () => {
                                                         ? '#1a7a3c'
                                                         : '#f57c00',
                                                 fontSize: '11px', fontWeight: 700,
-                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                fontFamily: '"Noto Kufi Arabic", serif',
                                                 padding: '4px 10px', borderRadius: '8px',
                                                 boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                                             }}>
@@ -504,7 +504,7 @@ const DynamicCoursesSection = () => {
                                                 padding: '3px 8px',
                                                 fontSize: '12px',
                                                 fontWeight: 700,
-                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                fontFamily: '"Noto Kufi Arabic", serif',
                                                 color: '#fff',
                                                 boxShadow: '0 2px 6px rgba(124,58,237,0.4)',
                                                 border: '1px solid rgba(255,255,255,0.3)',
@@ -523,7 +523,7 @@ const DynamicCoursesSection = () => {
 
                                         <Tooltip title={course.title} arrow placement="top">
                                             <Typography sx={{
-                                                fontWeight: 700, fontFamily: '"Droid Arabic Kufi", serif',
+                                                fontWeight: 700, fontFamily: '"Noto Kufi Arabic", serif',
                                                 fontSize: '0.875rem', lineHeight: 1.5, color: '#111',
                                                 display: '-webkit-box', WebkitLineClamp: 2,
                                                 WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -535,7 +535,7 @@ const DynamicCoursesSection = () => {
 
                                         {course.description && (
                                             <Typography sx={{
-                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                fontFamily: '"Noto Kufi Arabic", serif',
                                                 fontSize: '0.7rem', color: '#666', lineHeight: 1.45,
                                                 display: '-webkit-box', WebkitLineClamp: 2,
                                                 WebkitBoxOrient: 'vertical', overflow: 'hidden',
@@ -561,7 +561,7 @@ const DynamicCoursesSection = () => {
                                         <Box sx={{ borderTop: '1px solid #f0f0f0', pt: '8px' }}>
                                             {isOwned ? (
                                                 <Typography sx={{
-                                                    fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif',
+                                                    fontWeight: 800, fontFamily: '"Noto Kufi Arabic", serif',
                                                     fontSize: '0.95rem', color: '#4a4a8a',
                                                 }}>
                                                     مسجل ✓
@@ -571,7 +571,7 @@ const DynamicCoursesSection = () => {
                                                     {/* Strikethrough old price */}
                                                     {activeOldCost > activePrice && (
                                                         <Typography sx={{
-                                                            fontFamily: '"Droid Arabic Kufi", serif',
+                                                            fontFamily: '"Noto Kufi Arabic", serif',
                                                             fontSize: '0.72rem', color: '#999',
                                                             textDecoration: 'line-through',
                                                         }}>
@@ -581,7 +581,7 @@ const DynamicCoursesSection = () => {
                                                     {/* Current price */}
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <Typography sx={{
-                                                            fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif',
+                                                            fontWeight: 800, fontFamily: '"Noto Kufi Arabic", serif',
                                                             fontSize: '1rem', color: '#f57c00',
                                                         }}>
                                                             {activePrice} جنيه
@@ -592,7 +592,7 @@ const DynamicCoursesSection = () => {
                                                                 background: '#ffeded', color: '#e53935',
                                                                 px: '6px', py: '2px', borderRadius: '5px',
                                                                 fontSize: '11px', fontWeight: 700,
-                                                                fontFamily: '"Droid Arabic Kufi", serif',
+                                                                    fontFamily: '"Noto Kufi Arabic", serif',
                                                             }}>
                                                                 خصم {activeDiscount}%
                                                             </Box>
@@ -600,7 +600,7 @@ const DynamicCoursesSection = () => {
                                                     </Box>
                                                     {/* Mode label */}
                                                     <Typography sx={{
-                                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                                            fontFamily: '"Noto Kufi Arabic", serif',
                                                         fontSize: '0.65rem', color: '#888',
                                                     }}>
                                                         {mode === 'online' ? 'السعر الأونلاين' : 'السعر الحضوري'}
@@ -608,7 +608,7 @@ const DynamicCoursesSection = () => {
                                                 </Box>
                                             ) : (
                                                 <Typography sx={{
-                                                    fontWeight: 800, fontFamily: '"Droid Arabic Kufi", serif',
+                                                    fontWeight: 800, fontFamily: '"Noto Kufi Arabic", serif',
                                                     fontSize: '0.95rem',
                                                     color: course.isFree ? '#1a7a3c' : '#1a7a3c',
                                                 }}>
@@ -621,7 +621,7 @@ const DynamicCoursesSection = () => {
                                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: '4px', direction: 'ltr' }}>
                                                 <LocationOnIcon sx={{ fontSize: '0.8rem', color: '#0865a8', mt: '2px', flexShrink: 0 }} />
                                                 <Typography variant="caption" sx={{
-                                                    color: '#555', fontSize: '0.65rem', fontFamily: '"Droid Arabic Kufi", serif',
+                                                    color: '#555', fontSize: '0.65rem', fontFamily: '"Noto Kufi Arabic", serif',
                                                     lineHeight: 1.3, display: '-webkit-box', WebkitLineClamp: 1,
                                                     WebkitBoxOrient: 'vertical', overflow: 'hidden',
                                                 }}>
@@ -634,7 +634,7 @@ const DynamicCoursesSection = () => {
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: '4px', direction: 'ltr' }}>
                                                 <AccessTimeIcon sx={{ fontSize: '0.8rem', color: '#0865a8', flexShrink: 0 }} />
                                                 <Typography variant="caption" sx={{
-                                                    color: '#555', fontSize: '0.65rem', fontFamily: '"Droid Arabic Kufi", serif',
+                                                    color: '#555', fontSize: '0.65rem', fontFamily: '"Noto Kufi Arabic", serif',
                                                     display: '-webkit-box', WebkitLineClamp: 1,
                                                     WebkitBoxOrient: 'vertical', overflow: 'hidden',
                                                 }}>
@@ -669,7 +669,7 @@ const DynamicCoursesSection = () => {
                                                     borderRadius: '8px',
                                                     fontSize: '0.75rem',
                                                     fontWeight: 700,
-                                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                                    fontFamily: '"Noto Kufi Arabic", serif',
                                                     textDecoration: 'none',
                                                     boxShadow: '0 2px 8px rgba(124,58,237,0.35)',
                                                     transition: 'all 0.25s ease',
@@ -696,7 +696,7 @@ const DynamicCoursesSection = () => {
                                                     background: 'linear-gradient(135deg, #4a4a8a 0%, #7b5ea7 100%)',
                                                     color: '#fff', fontWeight: 700,
                                                     borderRadius: '8px', fontSize: '0.78rem',
-                                                    py: '7px', fontFamily: '"Droid Arabic Kufi", serif',
+                                                    py: '7px', fontFamily: '"Noto Kufi Arabic", serif',
                                                     border: 'none', boxShadow: 'none',
                                                     '&:hover': { background: 'linear-gradient(135deg, #3a3a7a 0%, #6b4e97 100%)', boxShadow: 'none' },
                                                 }}
@@ -712,7 +712,7 @@ const DynamicCoursesSection = () => {
                                                     background: 'linear-gradient(135deg, #1a7a3c 0%, #27ae60 100%)',
                                                     color: '#fff', fontWeight: 700,
                                                     borderRadius: '8px', fontSize: '0.78rem',
-                                                    py: '7px', fontFamily: '"Droid Arabic Kufi", serif',
+                                                    py: '7px', fontFamily: '"Noto Kufi Arabic", serif',
                                                     border: 'none', boxShadow: 'none',
                                                     '&:hover': { background: 'linear-gradient(135deg, #155f30 0%, #1e8449 100%)', boxShadow: 'none' },
                                                 }}
@@ -729,7 +729,7 @@ const DynamicCoursesSection = () => {
                                                     borderColor: '#0865a8', color: '#0865a8',
                                                     fontWeight: 700, borderRadius: '8px',
                                                     fontSize: '0.78rem', py: '7px',
-                                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                                    fontFamily: '"Noto Kufi Arabic", serif',
                                                     borderWidth: '2px',
                                                     '&:hover': { bgcolor: '#0865a8', color: '#fff', borderColor: '#0865a8' },
                                                     '&:disabled': { opacity: 0.6, borderColor: '#0865a8', color: '#0865a8' },

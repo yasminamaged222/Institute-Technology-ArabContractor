@@ -13,7 +13,7 @@ const T = {
     gray500: '#6b7280', gray700: '#374151',
     green: '#16a34a', greenBg: '#f0fdf4', greenBorder: '#86efac',
     red: '#dc2626', redBg: '#fef2f2', redBorder: 'rgba(220,38,38,.2)',
-    font: '"Droid Arabic Kufi", serif',
+    font: '"Noto Kufi Arabic", serif',
 };
 
 // ── All admin tabs in the system ──────────────────────────────────────────
@@ -409,7 +409,7 @@ function StatPill({ color, icon, label, value }) {
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 3, background: `${color}10`, border: `1px solid ${color}30` }}>
             <span style={{ fontSize: '.8rem' }}>{icon}</span>
-            <span style={{ fontSize: '.68rem', color, fontWeight: 700, fontFamily: '"Droid Arabic Kufi",serif' }}>{label}</span>
+            <span style={{ fontSize: '.68rem', color, fontWeight: 700, fontFamily: '"Noto Kufi Arabic",serif' }}>{label}</span>
             <span style={{ fontFamily: 'Courier New', fontWeight: 900, fontSize: '.9rem', color }}>{value}</span>
         </div>
     );
@@ -426,7 +426,7 @@ const infoBannerStyle = {
     display: 'flex',
     alignItems: 'flex-start',
     gap: 10,
-    fontFamily: '"Droid Arabic Kufi",serif',
+    fontFamily: '"Noto Kufi Arabic",serif',
 };
 
 const toastBase = {
@@ -437,7 +437,7 @@ const toastBase = {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-    fontFamily: '"Droid Arabic Kufi",serif',
+    fontFamily: '"Noto Kufi Arabic",serif',
 };
 
 const checkLabelStyle = {
@@ -454,7 +454,7 @@ const quickBtnStyle = (color) => ({
     border: `1.5px solid ${color}40`,
     borderRadius: 2,
     color,
-    fontFamily: '"Droid Arabic Kufi",serif',
+    fontFamily: '"Noto Kufi Arabic",serif',
     fontSize: '.7rem',
     fontWeight: 700,
     cursor: 'pointer',

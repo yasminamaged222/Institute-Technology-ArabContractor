@@ -34,12 +34,12 @@ export default function TechnicalEducationAlt() {
                     direction: rtl;
                     background: #ffffff;
                     min-height: 100vh;
-                    font-family: 'Droid Arabic Kufi', serif;
+                    font-family: 'Noto Kufi Arabic', serif;
                     color: var(--text-dark);
                 }
 
                 .tech-page-wrapper * {
-                    font-family: 'Droid Arabic Kufi', serif;
+                    font-family: 'Noto Kufi Arabic', serif;
                     box-sizing: border-box;
                 }
 
@@ -330,7 +330,7 @@ export default function TechnicalEducationAlt() {
 
             
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic", serif', fontSize: '1rem' }}>
                     <a
                         href="/"
                         style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}

@@ -1,8 +1,12 @@
 /**
- * NewsTab.jsx — Layout matches PlanworkTab exactly:
- * - Left panel (sidebar): fixed height, independent scroll
- * - Right panel (form): fixed height, independent scroll
- * - Both panels are the same height (calc(100vh - 120px))
+ * NewsTab.jsx — Fixed version
+ *
+ * Key fixes:
+ * 1. Detail GET returns images[] array with { picId, imageUrl, isMain } — parse that
+ * 2. Detail GET uses publishedAt not date
+ * 3. showFlag not in detail response — keep from list or default true
+ * 4. Delete image uses correct picId from images[]
+ * 5. buildFormData updated to match actual API fields
  *
  * API:
  * GET    /api/admin/AdminNews/getAllNews?PageIndex=1&PageSize=100
@@ -10,6 +14,7 @@
  * POST   /api/admin/AdminNews  (FormData)
  * PUT    /api/admin/AdminNews/{id}  (FormData)
  * DELETE /api/admin/AdminNews/{id}
+ * DELETE /api/admin/AdminNews/{newsId}/images/{picId}
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -24,7 +29,7 @@ const T = {
     gray500: '#6b7280', gray700: '#374151',
 };
 
-const BLANK = { id: 0, date: '', title: '', details: '', isActive: true };
+const BLANK = { id: 0, date: '', title: '', details: '', showFlag: true };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDateAr(dateStr) {
@@ -65,6 +70,7 @@ const FONT_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32
 
 function textToHtml(text = '') {
     if (!text) return '';
+    // Already HTML — don't double-wrap
     if (/<[a-z][\s\S]*>/i.test(text)) return text;
     return text.split('\n').map(line =>
         line ? `<div>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : '<div><br></div>'
@@ -192,16 +198,37 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
 }
 
 // ── MultiImageUploader ────────────────────────────────────────────────────────
-function MultiImageUploader({ images, onChange }) {
+function MultiImageUploader({ images, onChange, newsId, onServerImageDeleted }) {
     const fileRef = useRef();
     const [dragOver, setDragOver] = useState(false);
+    const [deletingPicId, setDeletingPicId] = useState(null);
 
     const addFiles = (files) => {
         const valid = Array.from(files).filter(f => f.type.startsWith('image/'));
         if (!valid.length) return;
-        onChange([...images, ...valid.map(file => ({ file, previewSrc: URL.createObjectURL(file), serverUrl: null }))]);
+        onChange([...images, ...valid.map(file => ({ file, previewSrc: URL.createObjectURL(file), serverUrl: null, picId: null }))]);
     };
-    const remove = (idx) => onChange(images.filter((_, i) => i !== idx));
+
+    const removeImage = async (idx) => {
+        const img = images[idx];
+        // New unsaved file — remove locally only
+        if (img.file || !img.picId || !newsId) {
+            onChange(images.filter((_, i) => i !== idx));
+            return;
+        }
+        // Persisted image — DELETE /api/admin/AdminNews/{newsId}/images/{picId}
+        setDeletingPicId(img.picId);
+        try {
+            await apiFetch(`/api/admin/AdminNews/${newsId}/images/${img.picId}`, { method: 'DELETE' });
+            onChange(images.filter((_, i) => i !== idx));
+            if (onServerImageDeleted) onServerImageDeleted('تم حذف الصورة بنجاح');
+        } catch (e) {
+            if (onServerImageDeleted) onServerImageDeleted('فشل حذف الصورة: ' + e.message, 'error');
+        } finally {
+            setDeletingPicId(null);
+        }
+    };
+
     const setMain = (idx) => {
         if (idx === 0) return;
         const next = [...images];
@@ -212,7 +239,7 @@ function MultiImageUploader({ images, onChange }) {
     const replaceFile = (idx, file) => {
         if (!file || !file.type.startsWith('image/')) return;
         const next = [...images];
-        next[idx] = { file, previewSrc: URL.createObjectURL(file), serverUrl: null };
+        next[idx] = { file, previewSrc: URL.createObjectURL(file), serverUrl: null, picId: null };
         onChange(next);
     };
 
@@ -228,7 +255,9 @@ function MultiImageUploader({ images, onChange }) {
                 <div className="nt-imgs-grid">
                     {images.map((img, idx) => (
                         <MultiImageSlot key={idx} img={img} idx={idx} isMain={idx === 0}
-                            onRemove={() => remove(idx)} onSetMain={() => setMain(idx)}
+                            isDeleting={deletingPicId === img.picId && img.picId != null}
+                            onRemove={() => removeImage(idx)}
+                            onSetMain={() => setMain(idx)}
                             onReplace={(file) => replaceFile(idx, file)} />
                     ))}
                 </div>
@@ -251,18 +280,19 @@ function MultiImageUploader({ images, onChange }) {
     );
 }
 
-function MultiImageSlot({ img, idx, isMain, onRemove, onSetMain, onReplace }) {
+function MultiImageSlot({ img, idx, isMain, isDeleting, onRemove, onSetMain, onReplace }) {
     const fileRef = useRef();
     return (
-        <div className={`nt-img-slot${isMain ? ' main' : ''}`}>
+        <div className={`nt-img-slot${isMain ? ' main' : ''}${isDeleting ? ' deleting' : ''}`}>
+            {isDeleting && <div className="nt-slot-deleting-overlay">⏳</div>}
             <img src={img.previewSrc} alt={`صورة ${idx + 1}`} className="nt-slot-img" />
             {isMain && <div className="nt-main-badge">⭐ رئيسية</div>}
             {img.file && <div className="nt-new-badge-slot">جديدة</div>}
             {!img.file && img.serverUrl && <div className="nt-server-badge-slot">{isMain ? '⭐ محفوظة' : 'محفوظة'}</div>}
             <div className="nt-slot-actions">
-                {!isMain && <button className="nt-slot-btn promote" onClick={onSetMain}>⭐</button>}
-                <button className="nt-slot-btn replace" onClick={() => fileRef.current.click()}>🔄</button>
-                <button className="nt-slot-btn remove" onClick={onRemove}>✕</button>
+                {!isMain && <button className="nt-slot-btn promote" onClick={onSetMain} disabled={isDeleting}>⭐</button>}
+                <button className="nt-slot-btn replace" onClick={() => fileRef.current.click()} disabled={isDeleting}>🔄</button>
+                <button className="nt-slot-btn remove" onClick={onRemove} disabled={isDeleting}>✕</button>
             </div>
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
                 onChange={e => { onReplace(e.target.files[0]); e.target.value = ''; }} />
@@ -278,7 +308,6 @@ const CSS = `
     gap: 16px;
     align-items: stretch;
 }
-/* ── LEFT PANEL (sidebar list) — mirrors lec-panel pw-left-panel ── */
 .nt-left-panel {
     width: clamp(230px, 26vw, 290px);
     flex-shrink: 0;
@@ -290,20 +319,17 @@ const CSS = `
     height: calc(100vh - 120px);
     overflow-y: auto;
 }
-/* ── RIGHT PANEL (form) — mirrors lec-form-wrap ── */
 .nt-form-wrap {
     flex: 1;
     min-width: 0;
     height: calc(100vh - 120px);
     overflow-y: auto;
 }
-/* scrollbar styling */
 .nt-left-panel::-webkit-scrollbar,
 .nt-form-wrap::-webkit-scrollbar { width: 4px; }
 .nt-left-panel::-webkit-scrollbar-thumb,
 .nt-form-wrap::-webkit-scrollbar-thumb { background: rgba(245,124,0,.35); border-radius: 2px; }
 
-/* ── Panel header (brand / title bar) ── */
 .nt-panel-hdr {
     display: flex;
     align-items: center;
@@ -319,7 +345,7 @@ const CSS = `
 }
 .nt-brand-icon {
     width: 36px; height: 36px; border-radius: 3px;
-    background: linear-gradient(135deg, ${T.blue}, ${T.blueLight});
+    background: linear-gradient(135deg, #0865a8, #1a84d4);
     display: flex; align-items: center; justify-content: center;
     font-size: .9rem; color: #bfdbfe;
     border: 1.5px solid rgba(8,101,168,.25); flex-shrink: 0;
@@ -327,7 +353,6 @@ const CSS = `
 .nt-brand-name { font-size: .78rem; font-weight: 800; color: #0a0a0a; }
 .nt-brand-sub { font-size: .64rem; color: #6b7280; margin-top: 2px; }
 
-/* ── Search ── */
 .nt-search-wrap { padding: 10px 12px 6px; flex-shrink: 0; position: relative; }
 .nt-search-wrap input {
     width: 100%; padding: 8px 32px 8px 12px;
@@ -337,31 +362,29 @@ const CSS = `
     direction: rtl; outline: none; box-sizing: border-box;
 }
 .nt-search-wrap input::placeholder { color: #6b7280; }
-.nt-search-wrap input:focus { border-color: ${T.orange}; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
+.nt-search-wrap input:focus { border-color: #f57c00; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
 .nt-search-icon { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); font-size: .75rem; opacity: .4; pointer-events: none; }
 .nt-search-clear { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; font-size: 1rem; padding: 2px; }
 
-/* ── List header ── */
 .nt-list-hdr {
     padding: 4px 14px 8px;
     display: flex; align-items: center; justify-content: space-between;
     flex-shrink: 0;
 }
 .nt-count-badge {
-    background: rgba(8,101,168,.1); color: ${T.blue};
+    background: rgba(8,101,168,.1); color: #0865a8;
     border: 1.5px solid rgba(8,101,168,.25); border-radius: 2px;
     padding: 1px 9px; font-size: .66rem; font-weight: 900;
     font-family: 'Courier New', monospace;
 }
 .nt-new-btn {
-    background: rgba(245,124,0,.1); color: ${T.orange};
+    background: rgba(245,124,0,.1); color: #f57c00;
     border: 1.5px solid rgba(245,124,0,.35); border-radius: 2px;
     padding: 4px 12px; font-size: .72rem; font-weight: 800;
     cursor: pointer; font-family: inherit; transition: all .16s;
 }
 .nt-new-btn:hover { background: rgba(245,124,0,.18); }
 
-/* ── List rows ── */
 .nt-list { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
 .nt-list::-webkit-scrollbar { width: 4px; }
 .nt-list::-webkit-scrollbar-thumb { background: rgba(245,124,0,.35); border-radius: 2px; }
@@ -372,10 +395,10 @@ const CSS = `
     transition: background .13s, border-color .13s;
 }
 .nt-row:hover { background: rgba(8,101,168,.05); border-color: rgba(8,101,168,.12); }
-.nt-row.active { background: rgba(245,124,0,.09); border-color: rgba(245,124,0,.35); border-right: 3px solid ${T.orange}; }
+.nt-row.active { background: rgba(245,124,0,.09); border-color: rgba(245,124,0,.35); border-right: 3px solid #f57c00; }
 .nt-row-icon {
     width: 38px; height: 38px; border-radius: 3px;
-    background: linear-gradient(135deg, ${T.blue}, ${T.blueLight});
+    background: linear-gradient(135deg, #0865a8, #1a84d4);
     display: flex; align-items: center; justify-content: center;
     font-size: 1.1rem; flex-shrink: 0;
     border: 1.5px solid rgba(8,101,168,.3); overflow: hidden;
@@ -390,14 +413,13 @@ const CSS = `
 }
 .nt-row-status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
 .nt-row-status.on { background: #16a34a; }
-.nt-row-status.off { background: ${T.gray300}; }
+.nt-row-status.off { background: #d0d3d8; }
 .nt-sidebar-footer {
     padding: 10px 14px; border-top: 1.5px solid #f0f1f2;
     text-align: center; font-size: .6rem; color: #6b7280;
     background: #fff; flex-shrink: 0;
 }
 
-/* ── Form card (mirrors adm-card lec-form-card) ── */
 .nt-form-card {
     background: #fff;
     border: 1.5px solid #d0d3d8;
@@ -405,7 +427,7 @@ const CSS = `
     margin-bottom: 0;
 }
 .nt-form-hdr {
-    background: ${T.blueDark}; padding: 20px 26px;
+    background: #044478; padding: 20px 26px;
     display: flex; align-items: flex-start;
     justify-content: space-between; gap: 12px;
     flex-wrap: wrap; position: relative; overflow: hidden;
@@ -417,7 +439,7 @@ const CSS = `
     background-size: 36px 36px; pointer-events: none;
 }
 .nt-form-tag {
-    display: inline-block; background: ${T.orange}; color: #fff;
+    display: inline-block; background: #f57c00; color: #fff;
     font-size: .7rem; font-weight: 700; padding: 4px 14px;
     border-radius: 2px; margin-bottom: 6px; position: relative; z-index: 1;
 }
@@ -433,24 +455,23 @@ const CSS = `
 .nt-form-body { padding: 26px; }
 .nt-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin-bottom: 22px; }
 .nt-field { display: flex; flex-direction: column; gap: 5px; }
-.nt-label { font-size: .72rem; font-weight: 700; color: ${T.gray700}; }
+.nt-label { font-size: .72rem; font-weight: 700; color: #374151; }
 .nt-inp {
-    border: 1.5px solid ${T.gray300}; border-radius: 3px;
-    padding: 9px 12px; font-size: .8rem; color: ${T.black};
+    border: 1.5px solid #d0d3d8; border-radius: 3px;
+    padding: 9px 12px; font-size: .8rem; color: #0a0a0a;
     width: 100%; background: #fff; direction: rtl;
     font-family: inherit; transition: border .18s, box-shadow .18s;
     outline: none; box-sizing: border-box;
 }
-.nt-inp:focus { border-color: ${T.orange}; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
-.nt-inp::placeholder { color: ${T.gray500}; }
-.nt-inp:disabled { background: ${T.gray100}; color: ${T.gray500}; cursor: not-allowed; }
-.nt-divider { height: 1px; background: ${T.gray100}; margin: 4px 0 20px; }
+.nt-inp:focus { border-color: #f57c00; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
+.nt-inp::placeholder { color: #6b7280; }
+.nt-inp:disabled { background: #f0f1f2; color: #6b7280; cursor: not-allowed; }
+.nt-divider { height: 1px; background: #f0f1f2; margin: 4px 0 20px; }
 
-/* ── Active Toggle ── */
 .nt-toggle-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 6px 0; }
 .nt-toggle-track {
     width: 46px; height: 26px; border-radius: 13px;
-    background: ${T.gray300}; border: 1.5px solid ${T.gray300};
+    background: #d0d3d8; border: 1.5px solid #d0d3d8;
     position: relative; transition: background .22s, border-color .22s; flex-shrink: 0;
 }
 .nt-toggle-track.on { background: #16a34a; border-color: #16a34a; }
@@ -463,76 +484,81 @@ const CSS = `
 .nt-toggle-track.on .nt-toggle-thumb { transform: translateX(-20px); }
 .nt-toggle-label { font-size: .76rem; font-weight: 800; }
 .nt-toggle-label.on { color: #16a34a; }
-.nt-toggle-label.off { color: ${T.gray500}; }
+.nt-toggle-label.off { color: #6b7280; }
 
-/* ── Multi Image ── */
 .nt-img-zone {
-    width: 100%; border-radius: 6px; border: 2px dashed ${T.gray300};
-    background: ${T.gray50}; display: flex; flex-direction: column;
+    width: 100%; border-radius: 6px; border: 2px dashed #d0d3d8;
+    background: #f8f9fa; display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     cursor: pointer; position: relative;
     transition: border-color .18s, background .18s;
     box-sizing: border-box;
 }
-.nt-img-zone:hover, .nt-img-zone.over { border-color: ${T.orange}; background: rgba(245,124,0,.03); }
+.nt-img-zone:hover, .nt-img-zone.over { border-color: #f57c00; background: rgba(245,124,0,.03); }
 .nt-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 12px; }
-.nt-img-hint { color: ${T.gray500}; font-size: .68rem; font-weight: 600; text-align: center; }
-.nt-img-types { color: ${T.gray300}; font-size: .62rem; background: ${T.gray100}; padding: 2px 10px; border-radius: 2px; }
+.nt-img-hint { color: #6b7280; font-size: .68rem; font-weight: 600; text-align: center; }
+.nt-img-types { color: #d0d3d8; font-size: .62rem; background: #f0f1f2; padding: 2px 10px; border-radius: 2px; }
 .nt-multi-img-wrap { margin-bottom: 4px; }
 .nt-imgs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px; margin-bottom: 4px; }
 .nt-img-slot {
     position: relative; border-radius: 6px; overflow: hidden;
-    border: 2px solid ${T.gray300}; background: #000;
+    border: 2px solid #d0d3d8; background: #000;
     aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;
     transition: border-color .2s, box-shadow .2s;
 }
-.nt-img-slot.main { border-color: ${T.orange}; box-shadow: 0 0 0 3px rgba(245,124,0,.2); }
+.nt-img-slot.main { border-color: #f57c00; box-shadow: 0 0 0 3px rgba(245,124,0,.2); }
+.nt-img-slot.deleting { opacity: .5; pointer-events: none; }
+.nt-slot-deleting-overlay {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(0,0,0,.5); display: flex;
+    align-items: center; justify-content: center; font-size: 1.4rem;
+}
 .nt-slot-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.nt-main-badge { position: absolute; top: 5px; right: 5px; background: ${T.orange}; color: #fff; font-size: .55rem; font-weight: 800; padding: 2px 8px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-main-badge { position: absolute; top: 5px; right: 5px; background: #f57c00; color: #fff; font-size: .55rem; font-weight: 800; padding: 2px 8px; border-radius: 3px; pointer-events: none; z-index: 2; }
 .nt-new-badge-slot { position: absolute; top: 5px; left: 5px; background: #f59e0b; color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 6px; border-radius: 3px; pointer-events: none; z-index: 2; }
-.nt-server-badge-slot { position: absolute; top: 5px; left: 5px; background: ${T.blue}; color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 6px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-server-badge-slot { position: absolute; top: 5px; left: 5px; background: #0865a8; color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 6px; border-radius: 3px; pointer-events: none; z-index: 2; }
 .nt-slot-actions { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px; opacity: 0; transition: opacity .18s; }
 .nt-img-slot:hover .nt-slot-actions { opacity: 1; }
 .nt-slot-btn { border: none; border-radius: 3px; padding: 4px 7px; font-size: .7rem; cursor: pointer; font-family: inherit; font-weight: 700; line-height: 1; }
-.nt-slot-btn.promote { background: ${T.orange}; color: #fff; }
-.nt-slot-btn.replace { background: ${T.blue}; color: #fff; }
+.nt-slot-btn.promote { background: #f57c00; color: #fff; }
+.nt-slot-btn.replace { background: #0865a8; color: #fff; }
 .nt-slot-btn.remove { background: #dc2626; color: #fff; }
+.nt-slot-btn:disabled { opacity: .4; cursor: not-allowed; }
 
-/* ── RichTextEditor ── */
-.nt-rte-block { border-radius: 3px; border: 1.5px solid ${T.gray300}; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
-.nt-rte-hdr { background: ${T.gray50}; padding: 10px 16px; border-bottom: 1.5px solid ${T.gray100}; display: flex; align-items: center; gap: 9px; }
+.nt-rte-block { border-radius: 3px; border: 1.5px solid #d0d3d8; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.nt-rte-hdr { background: #f8f9fa; padding: 10px 16px; border-bottom: 1.5px solid #f0f1f2; display: flex; align-items: center; gap: 9px; }
 .nt-rte-icon { font-size: 1.1rem; }
-.nt-rte-label { font-weight: 800; font-size: .8rem; color: ${T.black}; }
-.nt-rte-sub { font-size: .65rem; color: ${T.gray500}; margin-top: 2px; }
-.nt-rte-toolbar { display: flex; align-items: center; gap: 4px; padding: 7px 12px; background: #fff; border-bottom: 1.5px solid ${T.gray100}; flex-wrap: wrap; }
+.nt-rte-label { font-weight: 800; font-size: .8rem; color: #0a0a0a; }
+.nt-rte-sub { font-size: .65rem; color: #6b7280; margin-top: 2px; }
+.nt-rte-toolbar { display: flex; align-items: center; gap: 4px; padding: 7px 12px; background: #fff; border-bottom: 1.5px solid #f0f1f2; flex-wrap: wrap; }
 .nt-rte-sep { width: 1px; height: 20px; background: #e5e7eb; margin: 0 2px; flex-shrink: 0; }
-.nt-tb-btn { min-width: 30px; height: 28px; padding: 0 7px; border-radius: 4px; border: 1.5px solid ${T.gray300}; background: ${T.gray50}; color: ${T.gray700}; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .14s; font-family: inherit; }
-.nt-tb-btn:hover, .nt-tb-btn.active { background: ${T.orange}; color: #fff; border-color: ${T.orange}; }
+.nt-tb-btn { min-width: 30px; height: 28px; padding: 0 7px; border-radius: 4px; border: 1.5px solid #d0d3d8; background: #f8f9fa; color: #374151; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .14s; font-family: inherit; }
+.nt-tb-btn:hover, .nt-tb-btn.active { background: #f57c00; color: #fff; border-color: #f57c00; }
 .nt-tb-btn.bold { font-weight: 900; }
 .nt-tb-btn.italic { font-style: italic; }
 .nt-tb-btn.under { text-decoration: underline; }
 .nt-tb-size-wrap { display: flex; align-items: center; gap: 3px; }
-.nt-tb-select { padding: 4px 6px; border-radius: 4px; border: 1.5px solid ${T.gray300}; background: ${T.gray50}; color: ${T.gray700}; font-family: inherit; font-size: .74rem; cursor: pointer; outline: none; }
-.nt-tb-select:focus { border-color: ${T.orange}; }
-.nt-tb-size-unit { font-size: .65rem; color: ${T.gray500}; font-weight: 700; }
+.nt-tb-select { padding: 4px 6px; border-radius: 4px; border: 1.5px solid #d0d3d8; background: #f8f9fa; color: #374151; font-family: inherit; font-size: .74rem; cursor: pointer; outline: none; }
+.nt-tb-select:focus { border-color: #f57c00; }
+.nt-tb-size-unit { font-size: .65rem; color: #6b7280; font-weight: 700; }
 .nt-tb-color-wrap { position: relative; }
-.nt-tb-color-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 6px; border-radius: 4px; border: 1.5px solid ${T.gray300}; background: ${T.gray50}; cursor: pointer; position: relative; }
+.nt-tb-color-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 6px; border-radius: 4px; border: 1.5px solid #d0d3d8; background: #f8f9fa; cursor: pointer; position: relative; }
 .nt-color-letter { font-size: .9rem; font-weight: 900; line-height: 1; }
 .nt-color-bar { width: 14px; height: 3px; border-radius: 2px; }
 .nt-tb-color-input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
 .nt-rte-url-wrap { position: relative; }
 .nt-url-popover {
     position: absolute; top: calc(100% + 6px); right: 0;
-    background: #fff; border: 1.5px solid ${T.gray300};
+    background: #fff; border: 1.5px solid #d0d3d8;
     border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
     padding: 10px; z-index: 500;
     display: flex; gap: 6px; min-width: 320px;
-    border-top: 3px solid ${T.orange};
+    border-top: 3px solid #f57c00;
 }
-.nt-url-popover input { flex: 1; padding: 7px 10px; border: 1.5px solid ${T.gray300}; border-radius: 4px; font-family: inherit; font-size: .76rem; direction: ltr; outline: none; }
-.nt-url-popover input:focus { border-color: ${T.orange}; }
-.nt-url-ok { padding: 7px 14px; background: ${T.orange}; color: #fff; border: none; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
-.nt-url-cancel { padding: 7px 10px; background: ${T.gray100}; color: ${T.gray700}; border: 1.5px solid ${T.gray300}; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.nt-url-popover input { flex: 1; padding: 7px 10px; border: 1.5px solid #d0d3d8; border-radius: 4px; font-family: inherit; font-size: .76rem; direction: ltr; outline: none; }
+.nt-url-popover input:focus { border-color: #f57c00; }
+.nt-url-ok { padding: 7px 14px; background: #f57c00; color: #fff; border: none; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.nt-url-cancel { padding: 7px 10px; background: #f0f1f2; color: #374151; border: 1.5px solid #d0d3d8; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
 .nt-rte-editor {
     padding: 12px 16px; outline: none;
     font-family: inherit; font-size: .82rem; color: #0a0a0a;
@@ -542,10 +568,9 @@ const CSS = `
 .nt-rte-editor:empty::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
 .nt-rte-editor a { color: #0865a8; text-decoration: underline; }
 
-/* ── Actions ── */
 .nt-actions {
     display: flex; gap: 9px; margin-top: 24px;
-    padding-top: 18px; border-top: 2px solid ${T.gray100};
+    padding-top: 18px; border-top: 2px solid #f0f1f2;
     flex-wrap: wrap; align-items: center;
 }
 .nt-act-btn {
@@ -560,14 +585,14 @@ const CSS = `
 .nt-act-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 .nt-act-btn.save { background: #16a34a; color: #fff; box-shadow: 0 3px 12px rgba(22,163,74,.3); }
 .nt-act-btn.save:hover { background: #15803d; }
-.nt-act-btn.new { background: ${T.blue}; color: #fff; box-shadow: 0 3px 12px rgba(8,101,168,.3); }
-.nt-act-btn.new:hover { background: ${T.blueDark}; }
-.nt-act-btn.reset { background: ${T.orange}; color: #fff; box-shadow: 0 3px 12px rgba(245,124,0,.3); }
-.nt-act-btn.reset:hover { background: ${T.orangeDark}; }
+.nt-act-btn.new { background: #0865a8; color: #fff; box-shadow: 0 3px 12px rgba(8,101,168,.3); }
+.nt-act-btn.new:hover { background: #044478; }
+.nt-act-btn.reset { background: #f57c00; color: #fff; box-shadow: 0 3px 12px rgba(245,124,0,.3); }
+.nt-act-btn.reset:hover { background: #bf5200; }
 .nt-act-btn.delete { background: #dc2626; color: #fff; box-shadow: 0 3px 12px rgba(220,38,38,.3); }
 .nt-act-btn.delete:hover { background: #b91c1c; }
-.nt-act-btn.cancel { background: ${T.gray100}; color: ${T.gray500}; border: 1.5px solid ${T.gray300}; box-shadow: none; }
-.nt-act-btn.cancel:hover { border-color: ${T.black}; color: ${T.black}; }
+.nt-act-btn.cancel { background: #f0f1f2; color: #6b7280; border: 1.5px solid #d0d3d8; box-shadow: none; }
+.nt-act-btn.cancel:hover { border-color: #0a0a0a; color: #0a0a0a; }
 .nt-delete-confirm {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
     background: #fef2f2; border: 1.5px solid rgba(220,38,38,.3);
@@ -575,7 +600,6 @@ const CSS = `
 }
 .nt-delete-warn { font-size: .78rem; color: #dc2626; font-weight: 700; }
 
-/* ── Notification ── */
 .nt-notif {
     display: flex; align-items: center; gap: 10px;
     padding: 11px 16px; border-radius: 3px;
@@ -586,15 +610,14 @@ const CSS = `
 }
 .nt-notif-success { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
 .nt-notif-error { background: #fef2f2; border-color: #dc2626; color: #dc2626; }
-.nt-notif-info { background: rgba(8,101,168,.06); border-color: ${T.blue}; color: ${T.blue}; }
+.nt-notif-info { background: rgba(8,101,168,.06); border-color: #0865a8; color: #0865a8; }
 @keyframes nt-notif-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ── Skeleton ── */
 .nt-skeleton { background: linear-gradient(90deg, #f0f1f2 25%, #e0e2e5 50%, #f0f1f2 75%); background-size: 200% 100%; animation: nt-shimmer 1.4s infinite; border-radius: 3px; }
 @keyframes nt-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .nt-loading-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-bottom: 3px; }
 
-.nt-empty { text-align: center; padding: 40px 12px; color: ${T.gray500}; }
+.nt-empty { text-align: center; padding: 40px 12px; color: #6b7280; }
 .nt-empty-icon { font-size: 2rem; margin-bottom: 10px; opacity: .35; }
 
 @media (max-width: 900px) {
@@ -614,8 +637,15 @@ function injectStyles() {
 }
 
 // ── API helpers ───────────────────────────────────────────────────────────────
+function getToken() {
+    return window.__clerkToken || null;
+}
+
 async function apiFetch(path, opts = {}) {
-    const res = await fetch(`${BASE}${path}`, opts);
+    const token = getToken();
+    const headers = { ...(opts.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${BASE}${path}`, { ...opts, headers });
     if (!res.ok) {
         let errMsg = `HTTP ${res.status}`;
         try {
@@ -637,28 +667,30 @@ async function apiFetch(path, opts = {}) {
     return null;
 }
 
+// ── FormData builder ──────────────────────────────────────────────────────────
+// API fields: Id, Title, Details, Date, ShowFlag, Images (files), ImageUrl, ImageUrls
 function buildFormData(form, images, isNew) {
     const fd = new FormData();
     fd.append('Id', isNew ? '0' : String(form.id));
     fd.append('Title', form.title || '');
     fd.append('Details', form.details || '');
     fd.append('Date', form.date ? `${form.date}T00:00:00.000Z` : '');
-    fd.append('IsActive', String(form.isActive));
+    fd.append('ShowFlag', String(form.showFlag));
 
-    const main = images[0];
-    const rest = images.slice(1);
+    // Separate new file uploads from existing server URLs
+    const newFiles = images.filter(img => img.file);
+    const serverImgs = images.filter(img => !img.file && img.serverUrl);
 
-    if (main?.file) {
-        fd.append('Images', main.file);
-        fd.append('ImageUrl', 'pending');
-    } else {
-        fd.append('ImageUrl', main?.serverUrl || 'pending');
-    }
+    // All new file uploads go as Images[]
+    newFiles.forEach(img => fd.append('Images', img.file));
 
-    rest.forEach(img => {
-        if (img.file) fd.append('Images', img.file);
-        else if (img.serverUrl) fd.append('ImageUrls', img.serverUrl);
-    });
+    // Main image URL (first server image that is marked main, or first server image)
+    const mainServer = serverImgs.find(img => img.isMain) || serverImgs[0];
+    fd.append('ImageUrl', mainServer?.serverUrl || 'pending');
+
+    // Extra server image URLs
+    const extraServerImgs = serverImgs.filter(img => img !== mainServer);
+    extraServerImgs.forEach(img => fd.append('ImageUrls', img.serverUrl));
 
     return fd;
 }
@@ -682,20 +714,46 @@ export default function NewsTab() {
     const [detailLoading, setDetailL] = useState(false);
     const [saving, setSaving] = useState(false);
 
+    // Track selected id separately so we can re-select after list reload
+    const selectedIdRef = useRef(null);
+
+    // showFlag is NOT returned by getAllNews — persist it in localStorage so it survives page refresh.
+    // Shape stored: { "164": false, "163": true, ... }
+    const STORAGE_KEY = 'nt_showflag_map';
+    const showFlagMapRef = useRef(null);
+    if (!showFlagMapRef.current) {
+        try { showFlagMapRef.current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+        catch { showFlagMapRef.current = {}; }
+    }
+    const setFlag = (id, val) => {
+        showFlagMapRef.current[id] = val;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(showFlagMapRef.current)); } catch { }
+    };
+
     const toast = (msg, type = 'success') => {
         setNotif({ msg, type });
         setTimeout(() => setNotif(null), 3500);
     };
 
     // ── Load list ─────────────────────────────────────────────────────────────
-    const loadList = useCallback(async () => {
+    const loadList = useCallback(async (keepSelectionId = null) => {
         setLoading(true);
         try {
-            const data = await apiFetch(`/api/admin/AdminNews/getAllNews?PageIndex=1&PageSize=100`);
+            const data = await apiFetch(`/api/admin/AdminNews/getAllNews?PageIndex=1&PageSize=200`);
             const items = data?.data ?? [];
             setNews(items);
             setTotal(data?.totalItems ?? items.length);
-            if (items.length && !selected) pickById(items[0].id, items[0]);
+
+            // After reload, re-select the same item if we had one
+            const targetId = keepSelectionId ?? selectedIdRef.current;
+            if (targetId) {
+                const found = items.find(i => i.id === targetId);
+                if (found) { pickById(found.id, found); return; }
+            }
+            // Otherwise select first item
+            if (items.length && !selectedIdRef.current) {
+                pickById(items[0].id, items[0]);
+            }
         } catch (e) {
             toast('فشل تحميل الأخبار: ' + e.message, 'error');
         } finally {
@@ -706,49 +764,97 @@ export default function NewsTab() {
     useEffect(() => { loadList(); }, [loadList]);
 
     // ── Fetch single ──────────────────────────────────────────────────────────
+    // Detail GET response shape:
+    // {
+    //   id, title, details, publishedAt, imageUrl, imageUrls,
+    //   images: [ { picId, imageUrl, isMain }, ... ]
+    // }
+    // Note: showFlag is NOT in detail response — keep from list or form state
     const pickById = async (id, listItem) => {
         setDetailL(true);
         setDelConf(false);
         setIsNew(false);
+        selectedIdRef.current = id;
 
+        // Optimistic update from list data while detail loads
         if (listItem) {
-            setSelected(listItem);
-            const mainUrl = resolveImg(listItem.imageUrl);
-            setImages(mainUrl ? [{ file: null, previewSrc: mainUrl, serverUrl: listItem.imageUrl }] : []);
-            setForm({
+            setSelected(prev => ({ ...(prev || {}), id: listItem.id, title: listItem.title || '' }));
+            // Prefer value already known from map (set by previous detail load or save)
+            const knownFlag = showFlagMapRef.current[listItem.id];
+            const resolvedFlag = knownFlag !== undefined ? knownFlag
+                : (listItem.showFlag ?? listItem.isActive ?? true);
+            setForm(f => ({
+                ...f,
                 id: listItem.id,
                 title: listItem.title || '',
-                details: '',
                 date: toInputDate(listItem.publishedAt),
-                isActive: listItem.isActive ?? true,
-            });
+                showFlag: resolvedFlag,
+            }));
+
+            // Show main image immediately from list
+            const mainUrl = resolveImg(listItem.imageUrl);
+            if (mainUrl) {
+                setImages([{ file: null, previewSrc: mainUrl, serverUrl: listItem.imageUrl, picId: null, isMain: true }]);
+            } else {
+                setImages([]);
+            }
         }
 
         try {
             const item = await apiFetch(`/api/admin/AdminNews/${id}`);
-            if (item) {
-                const mapped = {
-                    id: item.id,
-                    title: item.title || '',
-                    details: item.details || '',
-                    date: toInputDate(item.date || item.publishedAt),
-                    isActive: item.isActive ?? true,
-                };
-                setSelected(mapped);
-                setForm(mapped);
+            if (!item) return;
 
-                const slots = [];
+            const mapped = {
+                id: item.id,
+                title: item.title || '',
+                details: item.details || '',
+                // publishedAt is the date field in detail response
+                date: toInputDate(item.publishedAt || item.date),
+                // showFlag not returned by GET detail — use our local map (set on save) or default true
+                showFlag: showFlagMapRef.current[item.id] ?? item.showFlag ?? item.isActive ?? true,
+            };
+            // Persist so sidebar dot survives page refresh
+            setFlag(mapped.id, mapped.showFlag);
+            setSelected(mapped);
+            setForm(mapped);
+
+            // ── Parse images[] array — this is the correct structure ──
+            // images: [ { picId, imageUrl, isMain }, ... ]
+            const imagesArr = item.images ?? [];
+
+            let slots = [];
+            if (imagesArr.length > 0) {
+                // Sort: main first, then others in order
+                const sorted = [...imagesArr].sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0));
+                slots = sorted
+                    .map(img => {
+                        const resolved = resolveImg(img.imageUrl);
+                        if (!resolved) return null;
+                        return {
+                            file: null,
+                            previewSrc: resolved,
+                            serverUrl: img.imageUrl,
+                            picId: img.picId ?? null,
+                            isMain: img.isMain ?? false,
+                        };
+                    })
+                    .filter(Boolean);
+            } else {
+                // Fallback: use imageUrl + imageUrls if images[] is empty
                 const mainResolved = resolveImg(item.imageUrl);
-                if (mainResolved) slots.push({ file: null, previewSrc: mainResolved, serverUrl: item.imageUrl });
-                const extras = item.imageUrls ?? item.ImageUrls ?? [];
+                if (mainResolved) {
+                    slots.push({ file: null, previewSrc: mainResolved, serverUrl: item.imageUrl, picId: null, isMain: true });
+                }
+                const extras = Array.isArray(item.imageUrls) ? item.imageUrls : [];
                 extras.forEach(u => {
                     const r = resolveImg(u);
-                    if (r) slots.push({ file: null, previewSrc: r, serverUrl: u });
+                    if (r) slots.push({ file: null, previewSrc: r, serverUrl: u, picId: null, isMain: false });
                 });
-                setImages(slots);
             }
+
+            setImages(slots);
         } catch (e) {
-            toast('فشل تحميل تفاصيل الخبر', 'error');
+            toast('فشل تحميل تفاصيل الخبر: ' + e.message, 'error');
         } finally {
             setDetailL(false);
         }
@@ -770,12 +876,16 @@ export default function NewsTab() {
             if (isNew) {
                 await apiFetch('/api/admin/AdminNews', { method: 'POST', body: fd });
                 toast('تم إضافة الخبر بنجاح');
+                setIsNew(false);
+                await loadList();
             } else {
                 await apiFetch(`/api/admin/AdminNews/${form.id}`, { method: 'PUT', body: fd });
+                // Persist saved showFlag immediately so sidebar dot reflects the change on refresh too
+                setFlag(form.id, form.showFlag);
                 toast('تم حفظ التغييرات بنجاح');
+                // Re-fetch detail to get updated images list
+                await loadList(form.id);
             }
-            setIsNew(false);
-            await loadList();
         } catch (e) {
             toast('فشل الحفظ: ' + e.message, 'error');
         } finally {
@@ -789,18 +899,22 @@ export default function NewsTab() {
         setIsNew(true);
         setDelConf(false);
         setImages([]);
+        selectedIdRef.current = null;
     };
 
     const handleDelete = async () => {
         if (!deleteConfirm) { setDelConf(true); return; }
         setSaving(true);
         try {
-            await apiFetch(`/api/admin/AdminNews/${selected.id}`, { method: 'DELETE' });
+            await apiFetch(`/api/admin/AdminNews/${form.id}`, { method: 'DELETE' });
             toast('تم حذف الخبر', 'error');
             setDelConf(false);
             setSelected(null);
+            selectedIdRef.current = null;
+            setForm({ ...BLANK });
+            setImages([]);
+            setIsNew(false);
             await loadList();
-            handleNew();
         } catch (e) {
             toast('فشل الحذف: ' + e.message, 'error');
         } finally {
@@ -809,8 +923,12 @@ export default function NewsTab() {
     };
 
     const handleReset = () => {
-        if (isNew) { setForm({ ...BLANK }); setImages([]); }
-        else if (selected) { setForm({ ...selected }); pickById(selected.id, null); }
+        if (isNew) {
+            setForm({ ...BLANK });
+            setImages([]);
+        } else if (selectedIdRef.current) {
+            pickById(selectedIdRef.current, null);
+        }
         setDelConf(false);
         toast('تم إلغاء التغييرات', 'info');
     };
@@ -836,7 +954,6 @@ export default function NewsTab() {
                 {/* ════ LEFT PANEL ════ */}
                 <div className="nt-left-panel">
 
-                    {/* Brand header */}
                     <div className="nt-panel-hdr">
                         <div className="nt-brand-icon">📰</div>
                         <div style={{ flex: 1 }}>
@@ -846,7 +963,6 @@ export default function NewsTab() {
                         <span className="nt-count-badge">{filtered.length}</span>
                     </div>
 
-                    {/* Search */}
                     <div className="nt-search-wrap" style={{ position: 'relative' }}>
                         <input type="text" placeholder="بحث بالعنوان أو التاريخ..."
                             value={search} onChange={e => setSearch(e.target.value)} />
@@ -854,13 +970,11 @@ export default function NewsTab() {
                         {search && <button className="nt-search-clear" onClick={() => setSearch('')}>✕</button>}
                     </div>
 
-                    {/* List header */}
                     <div className="nt-list-hdr">
                         <span style={{ color: '#374151', fontSize: '.68rem', fontWeight: 700 }}>الأخبار</span>
                         <button className="nt-new-btn" onClick={handleNew}>+ جديد</button>
                     </div>
 
-                    {/* List */}
                     <div className="nt-list">
                         {loading && [1, 2, 3].map(i => (
                             <div className="nt-loading-row" key={i}>
@@ -879,9 +993,13 @@ export default function NewsTab() {
                         )}
                         {!loading && filtered.map(item => {
                             const imgSrc = resolveImg(item.imageUrl);
+                            // Use our local map if available (updated on save/detail-load), else item field, else true
+                            const isVisible = showFlagMapRef.current[item.id] !== undefined
+                                ? showFlagMapRef.current[item.id]
+                                : (item.showFlag ?? item.isActive ?? true);
                             return (
                                 <div key={item.id}
-                                    className={`nt-row${selected?.id === item.id ? ' active' : ''}`}
+                                    className={`nt-row${selectedIdRef.current === item.id ? ' active' : ''}`}
                                     onClick={() => pickById(item.id, item)}>
                                     <div className="nt-row-icon">
                                         {imgSrc
@@ -892,8 +1010,8 @@ export default function NewsTab() {
                                         <div className="nt-row-title">{item.title || 'بدون عنوان'}</div>
                                         <div className="nt-row-date">{formatDateAr(item.publishedAt)}</div>
                                     </div>
-                                    <div className={`nt-row-status ${(item.isActive ?? true) ? 'on' : 'off'}`}
-                                        title={(item.isActive ?? true) ? 'مرئي' : 'مخفي'} />
+                                    <div className={`nt-row-status ${isVisible ? 'on' : 'off'}`}
+                                        title={isVisible ? 'مرئي' : 'مخفي'} />
                                     <div className="nt-row-id">#{item.id}</div>
                                 </div>
                             );
@@ -907,19 +1025,17 @@ export default function NewsTab() {
                 <div className="nt-form-wrap">
                     <div className="nt-form-card">
 
-                        {/* Header */}
                         <div className="nt-form-hdr">
                             <div>
-                                <div className="nt-form-tag">{isNew ? 'خبر جديد' : `ID: #${selected?.id}`}</div>
+                                <div className="nt-form-tag">{isNew ? 'خبر جديد' : `ID: #${form.id}`}</div>
                                 <h2 className="nt-form-title">
                                     {detailLoading ? '⏳ جاري التحميل...' : isNew ? '➕ إضافة خبر جديد' : '✏️ تعديل بيانات الخبر'}
                                 </h2>
-                                {!isNew && selected && <p className="nt-form-sub">{previewSnippet(selected.title, 60)}</p>}
+                                {!isNew && form.title && <p className="nt-form-sub">{previewSnippet(form.title, 60)}</p>}
                             </div>
                             <div className="nt-stat-pill">📰 {total} خبر</div>
                         </div>
 
-                        {/* Body */}
                         {detailLoading ? (
                             <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ جاري تحميل البيانات...</div>
                         ) : (
@@ -929,7 +1045,7 @@ export default function NewsTab() {
                                     <div className="nt-field">
                                         <label className="nt-label">الرقم</label>
                                         <input className="nt-inp" value={isNew ? 'تلقائي' : form.id} disabled
-                                            style={{ background: T.gray100, color: T.gray500, cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
+                                            style={{ background: '#f0f1f2', color: '#6b7280', cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
                                     </div>
                                     <div className="nt-field">
                                         <label className="nt-label">التاريخ <span style={{ color: '#dc2626' }}>*</span></label>
@@ -937,10 +1053,10 @@ export default function NewsTab() {
                                             onChange={handleChange} style={{ direction: 'ltr', textAlign: 'right' }} />
                                     </div>
 
-                                    {/* IsActive toggle — full width */}
+                                    {/* ShowFlag toggle — full width */}
                                     <div className="nt-field" style={{ gridColumn: '1/-1' }}>
                                         <label className="nt-label">حالة الظهور</label>
-                                        <ActiveToggle value={form.isActive} onChange={val => setForm(f => ({ ...f, isActive: val }))} />
+                                        <ActiveToggle value={!!form.showFlag} onChange={val => setForm(f => ({ ...f, showFlag: val }))} />
                                     </div>
 
                                     {/* Title — full width */}
@@ -953,12 +1069,16 @@ export default function NewsTab() {
 
                                 {/* Multi-image uploader */}
                                 <div style={{ marginBottom: 20 }}>
-                                    <MultiImageUploader images={images} onChange={setImages} />
+                                    <MultiImageUploader
+                                        images={images}
+                                        onChange={setImages}
+                                        newsId={!isNew ? form.id : null}
+                                        onServerImageDeleted={(msg, type = 'success') => toast(msg, type)}
+                                    />
                                 </div>
 
                                 <div className="nt-divider" />
 
-                                {/* Rich text editor */}
                                 <RichTextEditor
                                     icon="📝"
                                     label="تفاصيل الخبر *"
@@ -970,7 +1090,6 @@ export default function NewsTab() {
                                     minHeight={200}
                                 />
 
-                                {/* Actions */}
                                 <div className="nt-actions">
                                     <button className="nt-act-btn save" onClick={handleSave} disabled={saving}>
                                         {saving ? '⏳ جاري الحفظ...' : '💾 حفظ'}

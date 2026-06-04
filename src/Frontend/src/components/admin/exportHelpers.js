@@ -16,7 +16,7 @@ export function renderTextToImage(text, {
     const ctx = canvas.getContext('2d');
     ctx.scale(scale, scale);
     if (bgColor) { ctx.fillStyle = bgColor; ctx.fillRect(0, 0, width, height); }
-    const fontStack = `${bold ? 'bold ' : ''}${fontSize}px "Cairo","Amiri","Noto Naskh Arabic","Noto Sans Arabic","Droid Arabic Kufi","Tahoma","Arial Unicode MS","Arial",sans-serif`;
+    const fontStack = `${bold ? 'bold ' : ''}${fontSize}px "Cairo","Amiri","Noto Naskh Arabic","Noto Sans Arabic","Noto Kufi Arabic","Tahoma","Arial Unicode MS","Arial",sans-serif`;
     ctx.font = fontStack;
     ctx.direction = 'rtl';
     ctx.textAlign = align === 'center' ? 'center' : align === 'left' ? 'left' : 'right';

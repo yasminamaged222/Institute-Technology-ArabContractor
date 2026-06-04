@@ -16,7 +16,7 @@
     --gray-300: #d0d3d8;
     --gray-500: #6b7280;
     --gray-700: #374151;
-    --font: 'Droid Arabic Kufi',  serif;
+    --font: 'Noto Kufi Arabic',  serif;
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
     --transition: 0.38s cubic-bezier(0.4, 0, 0.2, 1);
     --shadow-sm: 0 2px 12px rgba(0,0,0,0.07);

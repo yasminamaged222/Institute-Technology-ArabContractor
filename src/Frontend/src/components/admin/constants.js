@@ -15,7 +15,7 @@ export const T = {
     gray300: '#d0d3d8',
     gray500: '#6b7280',
     gray700: '#374151',
-    font: '"Droid Arabic Kufi",  serif',
+    font: '"Noto Kufi Arabic",  serif',
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -27,6 +27,7 @@ export const ADMIN_EMAILS = [
     'amrshamy91@gmail.com',
     'abdelmawla1642@gmail.com',
     'mostafa.awaad@gmail.com',
+    'mahmoud_salah@arabcont.com',
 ];
 
 export const API_BASE = 'https://acwebsite-icmet-test.azurewebsites.net/api';

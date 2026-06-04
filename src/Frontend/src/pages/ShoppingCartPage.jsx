@@ -35,7 +35,7 @@ const CartItemFull = ({ item, onRemove }) => {
                             backgroundColor: item.isOnline ? '#ede9fe' : '#e0f2fe',
                             color: item.isOnline ? '#7c3aed' : '#0865a8',
                             marginBottom: '10px', alignSelf: 'flex-start',
-                            fontFamily: '"Droid Arabic Kufi",serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                         }}>
                             {item.isOnline ? '🌐 أونلاين' : '🏢 حضوري'}
                         </span>
@@ -208,8 +208,8 @@ export default function ShoppingCartPage() {
     if (loading) {
         return (
             <>
-                <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
-                <style>{`* { font-family: "Droid Arabic Kufi", serif !important; } @media (max-width: 640px) { .cart-main { padding-top: 100px !important; } } @media (min-width: 641px) and (max-width: 1024px) { .cart-main { padding-top: 120px !important; } } @media (min-width: 1025px) { .cart-main { padding-top: 130px !important; } }`}</style>
+                <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" rel="stylesheet" />
+                <style>{`* { font-family: "Noto Kufi Arabic", serif !important; } @media (max-width: 640px) { .cart-main { padding-top: 100px !important; } } @media (min-width: 641px) and (max-width: 1024px) { .cart-main { padding-top: 120px !important; } } @media (min-width: 1025px) { .cart-main { padding-top: 130px !important; } }`}</style>
                 <div className="fixed left-0 z-40 w-full border-b border-gray-300 bg-[#F5F7E1] px-5 py-2" style={{ top: 70 }}>
                     <div className="text-center">
                         <span className="text-sm">
@@ -232,16 +232,16 @@ export default function ShoppingCartPage() {
 
     return (
         <>
-            <link href="https://fonts.googleapis.com/css2?family=Droid+Arabic+Kufi:wght@400;700&display=swap" rel="stylesheet" />
+            <link href="https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700&display=swap" rel="stylesheet" />
             <style>{`
-                * { font-family: "Droid Arabic Kufi", serif !important; }
+                * { font-family: "Noto Kufi Arabic", serif !important; }
                 @media (max-width: 640px) { .cart-main { padding-top: 100px !important; } }
                 @media (min-width: 641px) and (max-width: 1024px) { .cart-main { padding-top: 120px !important; } }
                 @media (min-width: 1025px) { .cart-main { padding-top: 130px !important; } }
             `}</style>
 
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", serif', fontSize: '1rem' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic  ", serif', fontSize: '1rem' }}>
                     <a
                         href="/"
                         style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
