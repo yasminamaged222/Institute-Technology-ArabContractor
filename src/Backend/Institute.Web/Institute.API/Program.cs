@@ -113,6 +113,12 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("Courses", policy =>
         policy.Requirements.Add(new PermissionRequirement("Courses")));
+
+    options.AddPolicy("ManagerOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.Requirements.Add(new ManagerRequirement());
+    });
 });
 
 
@@ -134,6 +140,9 @@ builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<BankPaymentService>();
 builder.Services.AddScoped<IRefundService, RefundService>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+
+builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
 builder.Services.AddHttpClient("BankClient", client =>
 {
@@ -203,7 +212,15 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ManagerOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.Requirements.Add(new ManagerRequirement());
+    });
+});
 #endregion
 
 // ======= AutoMapper =======
