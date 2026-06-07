@@ -34,7 +34,7 @@ namespace Institute.Application.Services
             _enrollmentRepository = enrollmentRepository;
         }
 
-        // ── GET USER ─────────────────────────────────────────────────
+        // ── GET USER ──────────────────────────────────────────────────
         public async Task<AppUser> GetUserByClerkIdAsync(string clerkUserId)
         {
             var spec = new BaseSpecification<AppUser>(u => u.ClerkUserId == clerkUserId);
@@ -50,16 +50,14 @@ namespace Institute.Application.Services
             return (await _orderRepository.GetAllWithSpecAsync(spec)).FirstOrDefault();
         }
 
-        // ── CREATE ORDER ──────────────────────────────────────────────
+        // ── CREATE ORDER  [W1 FIX: single DB transaction] ─────────────
         public async Task<Order> CreateOrderAsync(int userId)
         {
-            // 1️⃣ جيب الـ Cart — سواء checked out أو لا
-            // لأن لو الكارت اتعملت checked out قبل كده، محتاج تشوفها
+            // Read cart BEFORE the transaction (read-only, no lock needed)
             var cartSpec = new BaseSpecification<Cart>(c => c.UserId == userId);
             cartSpec.AddInclude(c => c.Items);
             var allCarts = await _cartRepository.GetAllWithSpecAsync(cartSpec);
 
-            // جيب الكارت الأحدث اللي فيها items
             var cart = allCarts
                 .Where(c => c.Items.Any())
                 .OrderByDescending(c => c.Id)
@@ -70,58 +68,64 @@ namespace Institute.Application.Services
 
             var total = cart.Items.Sum(i => i.Price);
 
-            // 2️⃣ Cancel كل الـ Pending orders القديمة
-            var pendingSpec = new BaseSpecification<Order>(
-                o => o.UserId == userId && o.Status == OrderStatus.Pending);
-            var pendingOrders = await _orderRepository.GetAllWithSpecAsync(pendingSpec);
-
-            foreach (var old in pendingOrders)
+            // ── Open a single transaction covering ALL writes ──────────
+            await using var tx = await _orderRepository.BeginTransactionAsync();
+            try
             {
-                old.Status = OrderStatus.Cancelled;
-                _orderRepository.Update(old);
-            }
-            if (pendingOrders.Any())
-                await _orderRepository.SaveChangesAsync();
+                // 1️⃣ Cancel old pending orders
+                var pendingSpec = new BaseSpecification<Order>(
+                    o => o.UserId == userId && o.Status == OrderStatus.Pending);
+                var pendingOrders = await _orderRepository.GetAllWithSpecAsync(pendingSpec);
 
-            // 3️⃣ اعمل Order جديد — الـ OrderNumber هيتعمل تلقائياً GUID
-            var order = new Order
-            {
-                UserId = userId,
-                TotalAmount = total,
-                Status = OrderStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            };
+                foreach (var old in pendingOrders)
+                {
+                    old.Status = OrderStatus.Cancelled;
+                    _orderRepository.Update(old);
+                }
 
-            await _orderRepository.AddAsync(order);
-            await _orderRepository.SaveChangesAsync();
+                // 2️⃣ Create new Order
+                var order = new Order
+                {
+                    UserId = userId,
+                    TotalAmount = total,
+                    Status = OrderStatus.Pending,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _orderRepository.AddAsync(order);
+                await _orderRepository.SaveChangesAsync(); // flush to get order.Id
 
-            // 4️⃣ أضف الـ OrderItems
-            foreach (var item in cart.Items)
-            {
-                await _orderItemRepository.AddAsync(new OrderItem
+                // 3️⃣ Add OrderItems
+                foreach (var item in cart.Items)
+                {
+                    await _orderItemRepository.AddAsync(new OrderItem
+                    {
+                        OrderId = order.Id,
+                        PlanworkId = item.PlanworkId,
+                        Price = item.Price,
+                        IsOnline = item.IsOnline
+                    });
+                }
+
+                // 4️⃣ Create Payment record
+                await _paymentRepository.AddAsync(new Payment
                 {
                     OrderId = order.Id,
-                    PlanworkId = item.PlanworkId,
-                    Price = item.Price,
-                    IsOnline = item.IsOnline
+                    Amount = total,
+                    Method = PaymentMethod.Visa,
+                    Status = PaymentStatus.Pending,
+                    CreatedAt = DateTime.UtcNow
                 });
+
+                await _orderRepository.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                return order;
             }
-
-            // 5️⃣ اعمل Payment record
-            await _paymentRepository.AddAsync(new Payment
+            catch
             {
-                OrderId = order.Id,
-                Amount = total,
-                Method = PaymentMethod.Visa,
-                Status = PaymentStatus.Pending,
-                CreatedAt = DateTime.UtcNow
-            });
-
-            // ✅ مش بنعمل cart.IsCheckedOut = true هنا
-            // الكارت تفضل مفتوحة لحد ما الدفع يتأكد فعلاً
-
-            await _orderRepository.SaveChangesAsync();
-            return order;
+                await tx.RollbackAsync();
+                throw;
+            }
         }
 
         // ── UPDATE ORDER ──────────────────────────────────────────────
@@ -138,63 +142,73 @@ namespace Institute.Application.Services
             await _orderRepository.SaveChangesAsync();
         }
 
-        // ── MARK AS PAID ──────────────────────────────────────────────
+        // ── MARK AS PAID  [W5 FIX: single DB transaction] ─────────────
         public async Task<Payment> MarkOrderAsPaidAsync(
             Order order, string transactionRef, string gatewayResponse)
         {
             if (order == null) throw new ArgumentNullException(nameof(order));
 
-            // جيب الـ Payment
             var paymentSpec = new BaseSpecification<Payment>(p => p.OrderId == order.Id);
-            var payment = (await _paymentRepository.GetAllWithSpecAsync(paymentSpec)).FirstOrDefault();
+            var payment = (await _paymentRepository.GetAllWithSpecAsync(paymentSpec))
+                .FirstOrDefault()
+                ?? throw new Exception("Payment record not found for this order.");
 
-            if (payment == null)
-                throw new Exception("Payment record not found for this order.");
-
-            // حدّث الـ Payment
-            payment.Status = PaymentStatus.Success;
-            payment.TransactionRef = transactionRef;
-            payment.GatewayResponse = gatewayResponse;
-            payment.PaymentDate = DateTime.UtcNow;
-            payment.Method = PaymentMethod.Visa;
-            _paymentRepository.Update(payment);
-
-            // حدّث الـ Order
-            order.Status = OrderStatus.Paid;
-            _orderRepository.Update(order);
-
-            // ✅ هنا بس نعمل الكارت IsCheckedOut = true بعد تأكيد الدفع
-            var cartSpec = new BaseSpecification<Cart>(
-                c => c.UserId == order.UserId && c.Items.Any());
-            var carts = await _cartRepository.GetAllWithSpecAsync(cartSpec);
-            var cart = carts.OrderByDescending(c => c.Id).FirstOrDefault();
-            if (cart != null)
+            // ── Open a single transaction: Payment + Order + Cart + Enrollments ──
+            await using var tx = await _orderRepository.BeginTransactionAsync();
+            try
             {
-                cart.IsCheckedOut = true;
-                _cartRepository.Update(cart);
-            }
+                // Update Payment
+                payment.Status = PaymentStatus.Success;
+                payment.TransactionRef = transactionRef;
+                payment.GatewayResponse = gatewayResponse;
+                payment.PaymentDate = DateTime.UtcNow;
+                payment.Method = PaymentMethod.Visa;
+                _paymentRepository.Update(payment);
 
-            // أضف الـ Enrollments
-            foreach (var item in order.Items)
-            {
-                var exists = await _enrollmentRepository.AnyAsync(
-                    e => e.UserId == order.UserId && e.PlanworkId == item.PlanworkId);
+                // Update Order
+                order.Status = OrderStatus.Paid;
+                _orderRepository.Update(order);
 
-                if (!exists)
+                // Mark Cart as checked-out
+                var cartSpec = new BaseSpecification<Cart>(
+                    c => c.UserId == order.UserId && c.Items.Any());
+                var carts = await _cartRepository.GetAllWithSpecAsync(cartSpec);
+                var cart = carts.OrderByDescending(c => c.Id).FirstOrDefault();
+                if (cart != null)
                 {
-                    await _enrollmentRepository.AddAsync(new Enrollment
-                    {
-                        UserId = order.UserId,
-                        PlanworkId = item.PlanworkId,
-                        OrderId = order.Id,
-                        EnrolledAt = DateTime.UtcNow,
-                        IsOnline = item.IsOnline
-                    });
+                    cart.IsCheckedOut = true;
+                    _cartRepository.Update(cart);
                 }
-            }
 
-            await _orderRepository.SaveChangesAsync();
-            return payment;
+                // Add Enrollments (idempotent — skip if already exists)
+                foreach (var item in order.Items)
+                {
+                    var exists = await _enrollmentRepository.AnyAsync(
+                        e => e.UserId == order.UserId && e.PlanworkId == item.PlanworkId);
+
+                    if (!exists)
+                    {
+                        await _enrollmentRepository.AddAsync(new Enrollment
+                        {
+                            UserId = order.UserId,
+                            PlanworkId = item.PlanworkId,
+                            OrderId = order.Id,
+                            EnrolledAt = DateTime.UtcNow,
+                            IsOnline = item.IsOnline
+                        });
+                    }
+                }
+
+                await _orderRepository.SaveChangesAsync();
+                await tx.CommitAsync();
+
+                return payment;
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
         }
     }
 }
