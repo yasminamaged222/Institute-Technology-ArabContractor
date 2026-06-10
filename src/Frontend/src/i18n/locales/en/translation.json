@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "Home",
+    "courses": "Training Courses",
+    "about": "About Us",
+    "news": "News",
+    "library": "Library",
+    "services": "Services",
+    "login": "Sign In",
+    "myCourses": "My Courses",
+    "cart": "Cart",
+    "admin": "Admin",
+    "adminPanel": "Admin Panel",
+    "menu": "Menu"
+  },
+  "courses": {
+    "title": "Training Courses",
+    "enroll": "Enroll Now",
+    "details": "View Details",
+    "clickToView": "Click the category to navigate to the page",
+    "price": "Price",
+    "duration": "Duration",
+    "level": "Level",
+    "search": "Search for courses..."
+  },
+  "search": {
+    "recentSearches": "Recent Searches",
+    "loadingCourses": "Loading courses...",
+    "matchingCourses": "Matching Courses ({{count}})",
+    "noResults": "No results for \"{{query}}\"",
+    "showAllResults": "Show all results for \"{{query}}\"",
+    "courseTag": "Course"
+  },
+  "news": {
+    "title": "Latest News",
+    "readMore": "Read More"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "send": "Send"
+  },
+  "footer": {
+    "rights": "All Rights Reserved",
+    "followUs": "Follow Us"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Failed to load",
+    "noResults": "No results found",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit"
+  }
+}

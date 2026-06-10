@@ -1,0 +1,60 @@
+{
+  "nav": {
+    "home": "الرئيسية",
+    "courses": "الدورات التدريبية",
+    "about": "عن المعهد",
+    "news": "الأخبار",
+    "library": "المكتبة",
+    "services": "الخدمات",
+    "login": "تسجيل دخول",
+    "myCourses": "دوراتي",
+    "cart": "السلة",
+    "admin": "الإدارة",
+    "adminPanel": "لوحة الإدارة",
+    "menu": "القائمة"
+  },
+  "courses": {
+    "title": "الدورات التدريبية",
+    "enroll": "سجّل الآن",
+    "details": "عرض التفاصيل",
+    "clickToView": "انقر على الفئة للانتقال إلى الصفحة",
+    "price": "السعر",
+    "duration": "المدة",
+    "level": "المستوى",
+    "search": "بحث عن الدورات..."
+  },
+  "search": {
+    "recentSearches": "عمليات البحث الأخيرة",
+    "loadingCourses": "جاري تحميل الدورات...",
+    "matchingCourses": "الدورات المطابقة ({{count}})",
+    "noResults": "لا توجد نتائج لـ \"{{query}}\"",
+    "showAllResults": "عرض جميع النتائج لـ \"{{query}}\"",
+    "courseTag": "دورة"
+  },
+  "news": {
+    "title": "آخر الأخبار",
+    "readMore": "اقرأ المزيد"
+  },
+  "contact": {
+    "title": "تواصل معنا",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "message": "الرسالة",
+    "send": "إرسال"
+  },
+  "footer": {
+    "rights": "جميع الحقوق محفوظة",
+    "followUs": "تابعنا"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ في التحميل",
+    "noResults": "لا توجد نتائج",
+    "back": "رجوع",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "delete": "حذف",
+    "edit": "تعديل"
+  }
+}
