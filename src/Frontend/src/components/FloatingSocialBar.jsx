@@ -3,6 +3,7 @@ import { Box, IconButton, Tooltip } from '@mui/material';
 import FacebookIcon from '@mui/icons-material/Facebook';
 import YouTubeIcon from '@mui/icons-material/YouTube';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import { useTranslation } from 'react-i18next';
 
 const FloatingSocialBar = () => {
@@ -28,12 +29,17 @@ const FloatingSocialBar = () => {
             icon: <WhatsAppIcon fontSize="large" />,
             color: '#25D366',
         },
+        {
+            titleKey: 'social.linkedin',
+            href: 'https://www.linkedin.com/company/arabcont-icemt/posts/?feedView=all',
+            icon: <LinkedInIcon fontSize="large" />,
+            color: '#0A66C2',
+        },
     ];
 
     return (
         <Box sx={{
             position: 'fixed',
-            // Flip side based on language direction
             right: isRTL ? 16 : 'auto',
             left: isRTL ? 'auto' : 16,
             top: '50%',

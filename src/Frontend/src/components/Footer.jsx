@@ -12,6 +12,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import { Link } from 'react-router-dom';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import YouTubeIcon from '@mui/icons-material/YouTube';
+import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
@@ -24,7 +25,6 @@ const Footer = () => {
         { key: 'footer.links.contact', path: '/contact' },
     ];
 
-    /* Underline bar anchors to the reading-start edge */
     const headingAfter = {
         content: '""',
         position: 'absolute',
@@ -228,6 +228,7 @@ const Footer = () => {
                             { href: 'https://www.facebook.com/arabcont.icemt', icon: <FacebookIcon fontSize="small" />, hoverBg: '#1877F2', shadow: 'rgba(24,119,242,0.4)' },
                             { href: 'https://youtube.com/@ac-icemt?si=dS7CixRAX08votqw', icon: <YouTubeIcon fontSize="small" />, hoverBg: '#FF0000', shadow: 'rgba(255,0,0,0.4)' },
                             { href: 'https://wa.me/201109754459', icon: <WhatsAppIcon fontSize="small" />, hoverBg: '#25D366', shadow: 'rgba(37,211,102,0.4)' },
+                            { href: 'https://www.linkedin.com/company/arabcont-icemt/posts/?feedView=all', icon: <LinkedInIcon fontSize="small" />, hoverBg: '#0A66C2', shadow: 'rgba(10,102,194,0.4)' },
                         ].map(({ href, icon, hoverBg, shadow }) => (
                             <IconButton key={href} size="small" component="a" href={href} target="_blank" rel="noopener noreferrer"
                                 sx={{
