@@ -35,12 +35,15 @@ import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
 import PrecisionManufacturingIcon from '@mui/icons-material/PrecisionManufacturing';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-
-import CustomersSection from './CustomersSection';
-import DynamicCoursesSection from './Dynamiccoursessection';
 import logo from '../assets/The-Role-of-Technology-in-Modern-Society-1024x570.jpg';
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
+const CustomersSection = React.lazy(() =>
+    import('./CustomersSection')
+);
+const DynamicCoursesSection = React.lazy(() =>
+    import('./Dynamiccoursessection')
+);
 const slides = [
     { title: 'خدمات تدريبية مميزة', subtitle: 'التشييد والإدارة', tag: 'برامج تدريبية', link: '/training-methods', image: '/images/banner6.jpg' },
     { title: 'ورش الميكانيكا والكهرباء', subtitle: 'تأهيل الكوادر الهندسية', tag: 'تدريب تقني', link: '/shobra', image: '/images/banner3.jpg' },

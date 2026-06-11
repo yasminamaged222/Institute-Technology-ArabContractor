@@ -1,7 +1,7 @@
 // tabs/RefundsTab.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useRef, useState } from 'react';
-import logoSrc from '../../../assets/white.png';
+import logoSrc from '../../../assets/white.webp';
 import { T, ITEMS_PER_PAGE, REFUND_STATUS_META } from '../constants';
 import { rtlExport } from '../helpers';
 import { exportExcel, exportPDF, exportWord, buildRefundRows, withExport } from '../exportHelpers';

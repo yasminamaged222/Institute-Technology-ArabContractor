@@ -1,7 +1,7 @@
 // tabs/CertificatesTab.jsx
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useRef, useState } from 'react';
-import logoSrc from '../../../assets/white.png';
+import logoSrc from '../../../assets/white.webp';
 import { T, ITEMS_PER_PAGE } from '../constants';
 import { rtlExport, normaliseCert } from '../helpers';
 import { exportExcel, exportPDF, exportWord, buildCertRows, withExport } from '../exportHelpers';

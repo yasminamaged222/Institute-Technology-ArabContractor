@@ -1,6 +1,6 @@
 // Sidebar.jsx
 // ─────────────────────────────────────────────────────────────────────────────
-import logoSrc from '../../assets/white.png';
+import logoSrc from '../../assets/white.webp';
 
 export function Sidebar({ user, activeTab, tabs, totalCerts, pendingRefunds, onTabChange }) {
     return (

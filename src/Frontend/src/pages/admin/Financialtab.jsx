@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 
 const BASE = 'https://acwebsite-icmet-test.azurewebsites.net';
-const LOGO_SRC = new URL('../../assets/black.png', import.meta.url).href;
+const LOGO_SRC = new URL('../../assets/black.webp', import.meta.url).href;
 
 const T = {
     orange: '#f57c00', orangeLight: '#ff9a3c', orangeDark: '#bf5200',

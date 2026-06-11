@@ -1,7 +1,6 @@
 import { getLogoBase64, triggerDownload } from './helpers';
 import { REFUND_STATUS_META } from './constants';
 
-const XLSX = await import("xlsx");
 // ════════════════════════════════════════════════════════════════════════════
 // Canvas helper — renders Arabic text to a PNG data-URL for jsPDF cells
 // ════════════════════════════════════════════════════════════════════════════
@@ -95,7 +94,8 @@ export async function exportExcel(filename, reportTitle, headers, rows, logoSrc)
         return;
     } catch (_) { /* fallback to SheetJS */ }
 
-    // SheetJS fallback
+    // SheetJS fallback — loaded dynamically too
+    const XLSX = await import('xlsx');
     const wsData = [
         [reportTitle, ...Array(headers.length - 1).fill('')],
         [`تاريخ التقرير: ${reportDate}`, ...Array(headers.length - 1).fill('')],
