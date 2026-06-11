@@ -43,8 +43,28 @@
     "send": "Send"
   },
   "footer": {
-    "rights": "All Rights Reserved",
+    "instituteName": "Institute of Construction Engineering & Management Technology",
+    "address": "6 Mahmoud El-Meliegy St. - District 6 - Nasr City - Cairo",
+    "contactUs": "Contact Us",
+    "phone": "Phone",
+    "fax": "Fax",
+    "workingHours": "Working Hours",
+    "workDays": "Sunday – Thursday",
+    "workTime": "8:30 AM – 5:00 PM",
+    "quickLinks": "Quick Links",
+    "links": {
+      "about": "About Us",
+      "news": "News",
+      "contact": "Contact Us"
+    },
+    "rights": "Copyright © 2026 – Institute of Construction Engineering & Management Technology",
+    "designedBy": "Designed by Top Management Information Center",
     "followUs": "Follow Us"
+  },
+  "social": {
+    "facebook": "Follow us on Facebook",
+    "youtube": "Follow us on YouTube",
+    "whatsapp": "Contact us on WhatsApp"
   },
   "common": {
     "loading": "Loading...",
@@ -55,6 +75,7 @@
     "cancel": "Cancel",
     "confirm": "Confirm",
     "delete": "Delete",
-    "edit": "Edit"
+    "edit": "Edit",
+    "backToTop": "Back to top"
   }
 }

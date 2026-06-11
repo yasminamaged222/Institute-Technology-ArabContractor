@@ -15,7 +15,7 @@ export const T = {
     gray300: '#d0d3d8',
     gray500: '#6b7280',
     gray700: '#374151',
-    font: '"Noto Kufi Arabic",  serif',
+    font: '"Noto Kufi Arabic", serif',
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -37,7 +37,7 @@ export const OVERVIEW_H = 38;
 export const ITEMS_PER_PAGE = 10;
 
 // ════════════════════════════════════════════════════════════════════════════
-// REFUND STATUS META
+// REFUND STATUS META  — Arabic UI labels stay as-is (admin panel is AR-only)
 // ════════════════════════════════════════════════════════════════════════════
 export const REFUND_STATUS_META = {
     Pending: { label: 'قيد المراجعة', icon: '⏳', color: '#b45309', bg: '#fff8f0', border: 'rgba(245,124,0,0.35)' },
@@ -53,7 +53,7 @@ export const REFUND_STATUS_META = {
 };
 
 // ════════════════════════════════════════════════════════════════════════════
-// SIDEBAR TABS
+// SIDEBAR TABS  — admin panel stays in Arabic
 // ════════════════════════════════════════════════════════════════════════════
 export const TABS = [
     { id: 'users', label: 'المستخدمون', icon: '👤' },
@@ -70,18 +70,55 @@ export const TABS = [
 ];
 
 // ════════════════════════════════════════════════════════════════════════════
-// PAGE HERO META (tag + title per tab)
+// PAGE HERO META
 // ════════════════════════════════════════════════════════════════════════════
 export const TAB_TITLES = {
     users: { tag: 'إدارة البيانات', title: ['المستخدمون', 'والدورات'] },
     courses: { tag: 'إدارة البيانات', title: ['الدورات', 'والمستخدمون'] },
     attendance: { tag: 'متابعة الحضور', title: ['سجل', 'الحضور'] },
-    certificates: { tag: 'إدارة الشهادات', title: [ 'الشهادات', 'الإلكترونية'] },
+    certificates: { tag: 'إدارة الشهادات', title: ['الشهادات', 'الإلكترونية'] },
     refunds: { tag: 'المالية', title: ['طلبات', 'الاسترداد'] },
     financial: { tag: 'التقارير المالية', title: ['إيرادات', 'المعهد'] },
     lecturers: { tag: 'إدارة الكوادر', title: ['إدارة', 'المحاضرين'] },
-    news: { tag: 'إدارة المحتوى', title: ['الأخبار', 'والمستجدات'] },   // ← added
-    books: { tag: 'إدارة المحتوى', title: ['إدارة', 'الكتب'] },          // ← added
-    planwork: { tag: 'التخطيط', title: ['خطة', 'العمل'] },            // ← added
+    news: { tag: 'إدارة المحتوى', title: ['الأخبار', 'والمستجدات'] },
+    books: { tag: 'إدارة المحتوى', title: ['إدارة', 'الكتب'] },
+    planwork: { tag: 'التخطيط', title: ['خطة', 'العمل'] },
     settings: { tag: 'إعدادات النظام', title: ['إدارة', 'المديرين'] },
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// EXPORT HEADERS — bilingual so Excel/PDF/Word exports match site language
+// Usage: import { EXPORT_HEADERS } from './constants';
+//        const lang = i18n.language;  // 'ar' | 'en'
+//        const h = EXPORT_HEADERS.users[lang];
+// ════════════════════════════════════════════════════════════════════════════
+export const EXPORT_HEADERS = {
+    users: {
+        ar: ['#', 'الاسم الكامل', 'البريد الإلكتروني', 'اسم الدورة', 'تاريخ التسجيل'],
+        en: ['#', 'Full Name', 'Email', 'Course Name', 'Enrollment Date'],
+    },
+    courses: {
+        ar: ['#', 'اسم الدورة', 'الفئة', 'اسم المستخدم', 'البريد الإلكتروني', 'تاريخ التسجيل'],
+        en: ['#', 'Course Name', 'Category', 'User Name', 'Email', 'Enrollment Date'],
+    },
+    attendance: {
+        ar: ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور'],
+        en: ['#', 'User Name', 'Email', 'Course', 'Attendance'],
+    },
+    certificates: {
+        ar: ['#', 'اسم المستخدم', 'البريد الإلكتروني', 'الدورة', 'الحضور', 'الشهادة'],
+        en: ['#', 'User Name', 'Email', 'Course', 'Attendance', 'Certificate'],
+    },
+    refunds: {
+        ar: ['#', 'رقم الطلب', 'المستخدم', 'البريد الإلكتروني', 'الدورة', 'المبلغ', 'العملة', 'الحالة', 'السبب', 'تاريخ الطلب'],
+        en: ['#', 'Ref No.', 'User', 'Email', 'Course', 'Amount', 'Currency', 'Status', 'Reason', 'Request Date'],
+    },
+};
+
+// Attendance / certificate cell values — bilingual
+export const EXPORT_LABELS = {
+    attended: { ar: 'حضر', en: 'Attended' },
+    absent: { ar: 'غائب', en: 'Absent' },
+    uploaded: { ar: 'مرفوعة', en: 'Uploaded' },
+    notUploaded: { ar: 'لم تُرفع', en: 'Not Uploaded' },
 };
