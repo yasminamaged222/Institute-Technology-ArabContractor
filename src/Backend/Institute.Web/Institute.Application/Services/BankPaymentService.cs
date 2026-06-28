@@ -1,5 +1,5 @@
 ﻿using Institute.API.DTOs;
-using Institute.Application.DTOs;   // ← استخدم الـ DTOs الجديدة
+using Institute.Application.DTOs;
 using Institute.Domain.Entities;
 using Microsoft.Extensions.Options;
 using System;
@@ -11,22 +11,44 @@ using System.Threading.Tasks;
 
 namespace Institute.Application.Services
 {
+    /// <summary>
+    /// Wraps all Mastercard Hosted Checkout gateway calls.
+    ///
+    /// W4 FIX — URL consistency:
+    ///   All three methods now build paths the SAME way:
+    ///   they use ONLY the relative path (/api/rest/version/.../merchant/...)
+    ///   and rely on HttpClient.BaseAddress (configured in Program.cs via
+    ///   "BankClient") for the host.
+    ///
+    ///   Previously InitiateCheckoutAsync used a relative path while
+    ///   VerifyPaymentAsync prepended BaseUrl itself, so the two calls
+    ///   could silently point to different hosts if the settings drifted.
+    /// </summary>
     public class BankPaymentService
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly PaymentSettings _settings;
 
-        public BankPaymentService(IHttpClientFactory httpClientFactory, IOptions<PaymentSettings> options)
+        // Base path fragment shared by all gateway calls
+        private string GatewayBase =>
+            $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}";
+
+        public BankPaymentService(
+            IHttpClientFactory httpClientFactory,
+            IOptions<PaymentSettings> options)
         {
             _httpClientFactory = httpClientFactory;
             _settings = options.Value;
         }
 
+        // ── Initiate checkout session ──────────────────────────────────
         public async Task<CheckoutResponseDto> InitiateCheckoutAsync(Order order)
         {
             try
             {
                 var client = _httpClientFactory.CreateClient("BankClient");
+                SetBasicAuth(client); // W4: auth was missing on initiate call
+
                 var payload = new
                 {
                     apiOperation = "INITIATE_CHECKOUT",
@@ -34,7 +56,7 @@ namespace Institute.Application.Services
                     {
                         operation = "PURCHASE",
                         returnUrl = $"{_settings.ReturnUrl}?orderId={order.Id}",
-                        cancelUrl = _settings.CancelUrl,  // ✅ من الـ settings
+                        cancelUrl = _settings.CancelUrl,
                         merchant = new { name = _settings.MerchantName },
                         displayControl = new
                         {
@@ -51,13 +73,11 @@ namespace Institute.Application.Services
                     }
                 };
 
+                // ── W4: relative path only — HttpClient.BaseAddress supplies host ──
+                var url = $"{GatewayBase}/session";
                 var json = JsonSerializer.Serialize(payload);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-
-                var response = await client.PostAsync(
-                    $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}/session",
-                    content
-                );
+                var response = await client.PostAsync(url, content);
 
                 if (!response.IsSuccessStatusCode)
                     throw new Exception(await response.Content.ReadAsStringAsync());
@@ -91,6 +111,39 @@ namespace Institute.Application.Services
             }
         }
 
+        // ── Verify payment with bank ───────────────────────────────────
+        public async Task<(bool IsSuccess, string? SuccessIndicator, string? GatewayResponse)>
+            VerifyPaymentAsync(string orderNumber)
+        {
+            try
+            {
+                var client = _httpClientFactory.CreateClient("BankClient");
+                SetBasicAuth(client);
+
+                // ── W4 FIX: relative path only (was absolute before) ──
+                var url = $"{GatewayBase}/order/{orderNumber}";
+                var response = await client.GetAsync(url);
+
+                if (!response.IsSuccessStatusCode)
+                    return (false, null, await response.Content.ReadAsStringAsync());
+
+                var body = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(body);
+                var root = doc.RootElement;
+
+                var result = root.GetProperty("result").GetString();
+                string? successInd = root.TryGetProperty("successIndicator", out var p)
+                                         ? p.GetString() : null;
+
+                return (result == "SUCCESS", successInd, body);
+            }
+            catch (Exception ex)
+            {
+                return (false, null, ex.Message);
+            }
+        }
+
+        // ── Issue refund ───────────────────────────────────────────────
         public async Task<(bool IsSuccess, string? GatewayResponse)>
             RefundPaymentAsync(string orderNumber, string transactionId, decimal amount)
         {
@@ -109,18 +162,23 @@ namespace Institute.Application.Services
                     }
                 };
 
-                var url = $"/api/rest/version/{_settings.ApiVersion}/merchant/{_settings.MerchantId}" +
-                          $"/order/{orderNumber}/transaction/refund-{Guid.NewGuid():N}";
-
+                // ── W4: relative path only ──
+                var url = $"{GatewayBase}/order/{orderNumber}" +
+                               $"/transaction/refund-{Guid.NewGuid():N}";
                 var response = await client.PutAsync(url,
-                    new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json"));
+                    new StringContent(
+                        JsonSerializer.Serialize(payload),
+                        Encoding.UTF8,
+                        "application/json"));
+
                 var body = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                     return (false, body);
 
                 using var doc = JsonDocument.Parse(body);
-                var result = doc.RootElement.TryGetProperty("result", out var r) ? r.GetString() : null;
+                var result = doc.RootElement.TryGetProperty("result", out var r)
+                                    ? r.GetString() : null;
                 return (result == "SUCCESS", body);
             }
             catch (Exception ex)
@@ -129,39 +187,7 @@ namespace Institute.Application.Services
             }
         }
 
-        public async Task<(bool IsSuccess, string? SuccessIndicator, string? GatewayResponse)>
-            VerifyPaymentAsync(string orderNumber)
-        {
-            try
-            {
-                var client = _httpClientFactory.CreateClient("BankClient");
-                SetBasicAuth(client);
-
-                var url = $"{_settings.BaseUrl}/api/rest/version/{_settings.ApiVersion}" +
-                          $"/merchant/{_settings.MerchantId}/order/{orderNumber}";
-
-                var response = await client.GetAsync(url);
-
-                if (!response.IsSuccessStatusCode)
-                    return (false, null, await response.Content.ReadAsStringAsync());
-
-                var body = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(body);
-                var root = doc.RootElement;
-
-                var result = root.GetProperty("result").GetString();
-                string? successIndicator = root.TryGetProperty("successIndicator", out var p)
-                    ? p.GetString() : null;
-
-                return (result == "SUCCESS", successIndicator, body);
-            }
-            catch (Exception ex)
-            {
-                return (false, null, ex.Message);
-            }
-        }
-
-        // ─── Helper ───────────────────────────────────────────────────
+        // ── Helper ─────────────────────────────────────────────────────
         private void SetBasicAuth(HttpClient client)
         {
             var authBytes = Encoding.ASCII.GetBytes(

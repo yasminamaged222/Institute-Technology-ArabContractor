@@ -1,169 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import './galary.css';
 
-// ─── Photo Albums with updated categories ────────────────────────────────────
-// Categories:
-//   'activities'  → الأنشطة والفعاليات
-//   'training'    → الدورات التدريبية
-//   'library'     → مكتبة المعهد وسفارة المعرفة
-//   'labs'        → المعامل والقاعات
-//   'visits'      → زيارات وبروتوكولات التعاون
-
 const albums = [
-    // ── الدورات التدريبية — داخل مصر ──
-    {
-        id: 'album11',
-        title: 'مركز جسر السويس',
-        imageUrl: '/images/pic11a1.jpg',
-        photosCount: 24,
-        photoPrefix: 'pic11a',
-        category: 'training',
-    },
-    {
-        id: 'album12',
-        title: 'مركز شبرا',
-        imageUrl: '/images/pic12a1.jpg',
-        photosCount: 11,
-        photoPrefix: 'pic12a',
-        category: 'training',
-    },
-    {
-        id: 'albumZ',
-        title: 'CEA المجموعة الرابعة',
-        imageUrl: '/images/PicCEA1.jpg',
-        photosCount: 11,
-        photoPrefix: 'PicCEA',
-        category: 'training',
-    },
-    {
-        id: 'album15',
-        title: 'معهد تدريب المهندسين العسكريين',
-        imageUrl: '/images/Askry1.jpg',
-        photosCount: 17,
-        photoPrefix: 'Askry',
-        category: 'training',
-    },
-    {
-        id: 'album17',
-        title: 'فرع الاسكندرية_17_3_2019_PMPبرنامج',
-        imageUrl: '/images/pic17a1.jpg',
-        photosCount: 14,
-        photoPrefix: 'pic17a',
-        category: 'training',
-    },
-    {
-        id: 'album4',
-        title: 'دورة اعداد السلامة_فرع شرق ووسط 24 - 3 - 2019',
-        imageUrl: '/images/pic04a1.jpg',
-        photosCount: 3,
-        photoPrefix: 'pic04a',
-        category: 'training',
-    },
-    // ── الدورات التدريبية — خارج مصر ──
-    {
-        id: 'album2',
-        title: 'التدريب فى المانيا',
-        imageUrl: '/images/pic02a1.jpg',
-        photosCount: 4,
-        photoPrefix: 'pic02a',
-        category: 'training',
-    },
-    {
-        id: 'album6',
-        title: 'زيارة المانيا مركز جسر السويس',
-        imageUrl: '/images/pic06a1.jpg',
-        photosCount: 23,
-        photoPrefix: 'pic06a',
-        category: 'training',
-    },
-    {
-        id: 'album3',
-        title: 'دورة زامبيا',
-        imageUrl: '/images/pic03a1.jpg',
-        photosCount: 3,
-        photoPrefix: 'pic03a',
-        category: 'training',
-    },
-    {
-        id: 'album5',
-        title: 'دورة طلبة كليات الهندسة جامعة جازان السعودية_اغسطس 2018',
-        imageUrl: '/images/gazan0.jpg',
-        photosCount: 17,
-        photoPrefix: 'gazan',
-        category: 'training',
-    },
-    {
-        id: 'album13',
-        title: 'طلبة السودان 2016',
-        imageUrl: '/images/pic13a1.jpg',
-        photosCount: 27,
-        photoPrefix: 'pic13a',
-        category: 'training',
-    },
-    // ── الدورات التدريبية — تدريب الطلبة ──
-    {
-        id: 'album7',
-        title: 'زيارة طلاب التدريب الصيفى إلى العاصمة الإدارية الجديدة 2017-07-1',
-        imageUrl: '/images/pic07a1.jpg',
-        photosCount: 16,
-        photoPrefix: 'pic07a',
-        category: 'training',
-    },
-    {
-        id: 'album8',
-        title: 'زيارة طلاب التدريب الصيفى إلى محور روض الفرج 2017-07-20',
-        imageUrl: '/images/pic08a1.jpg',
-        photosCount: 4,
-        photoPrefix: 'pic08a',
-        category: 'training',
-    },
-    {
-        id: 'album9',
-        title: 'زيارة طلبة المدرسة الفنية مشروع ميناء شرق بورسعيد 2017-07',
-        imageUrl: '/images/pic09a1.jpg',
-        photosCount: 8,
-        photoPrefix: 'pic09a',
-        category: 'training',
-    },
-
-    // ── الأنشطة والفعاليات ──
-    {
-        id: 'album14',
-        title: 'ندوة عقود الفيديك - د شريف الهجان',
-        imageUrl: '/images/pic14a1.jpg',
-        photosCount: 5,
-        photoPrefix: 'pic14a',
-        category: 'activities',
-    },
-    {
-        id: 'album16',
-        title: 'السلامة فى اعمال الرفع والتصبين_مشروع معالجة مياه بحر البقر',
-        imageUrl: '/images/pic16a1.jpg',
-        photosCount: 6,
-        photoPrefix: 'pic16a',
-        category: 'activities',
-    },
-
-    // ── زيارات وبروتوكولات التعاون ──
-    {
-        id: 'album1',
-        title: 'بروتوكول تعاون مع جمعية المحاسبين المصريين',
-        imageUrl: '/images/pic01a1.jpg',
-        photosCount: 1,
-        photoPrefix: 'pic01a',
-        category: 'visits',
-    },
-    {
-        id: 'album10',
-        title: 'زيارة وفد دولة موريتانيا إلى مدرسة المقاولون العرب الثانوية النموذجية 2017-12-17',
-        imageUrl: '/images/pic10a1.jpg',
-        photosCount: 5,
-        photoPrefix: 'pic10a',
-        category: 'visits',
-    },
+    { id: 'album11', title: 'مركز جسر السويس', imageUrl: '/images/pic11a1.jpg', photosCount: 24, photoPrefix: 'pic11a', category: 'training' },
+    { id: 'album12', title: 'مركز شبرا', imageUrl: '/images/pic12a1.jpg', photosCount: 11, photoPrefix: 'pic12a', category: 'training' },
+    { id: 'albumZ', title: 'CEA المجموعة الرابعة', imageUrl: '/images/PicCEA1.jpg', photosCount: 11, photoPrefix: 'PicCEA', category: 'training' },
+    { id: 'album15', title: 'معهد تدريب المهندسين العسكريين', imageUrl: '/images/Askry1.jpg', photosCount: 17, photoPrefix: 'Askry', category: 'training' },
+    { id: 'album17', title: 'فرع الاسكندرية_17_3_2019_PMPبرنامج', imageUrl: '/images/pic17a1.jpg', photosCount: 14, photoPrefix: 'pic17a', category: 'training' },
+    { id: 'album4', title: 'دورة اعداد السلامة_فرع شرق ووسط 24 - 3 - 2019', imageUrl: '/images/pic04a1.jpg', photosCount: 3, photoPrefix: 'pic04a', category: 'training' },
+    { id: 'album2', title: 'التدريب فى المانيا', imageUrl: '/images/pic02a1.jpg', photosCount: 4, photoPrefix: 'pic02a', category: 'training' },
+    { id: 'album6', title: 'زيارة المانيا مركز جسر السويس', imageUrl: '/images/pic06a1.jpg', photosCount: 23, photoPrefix: 'pic06a', category: 'training' },
+    { id: 'album3', title: 'دورة زامبيا', imageUrl: '/images/pic03a1.jpg', photosCount: 3, photoPrefix: 'pic03a', category: 'training' },
+    { id: 'album5', title: 'دورة طلبة كليات الهندسة جامعة جازان السعودية_اغسطس 2018', imageUrl: '/images/gazan0.jpg', photosCount: 17, photoPrefix: 'gazan', category: 'training' },
+    { id: 'album13', title: 'طلبة السودان 2016', imageUrl: '/images/pic13a1.jpg', photosCount: 27, photoPrefix: 'pic13a', category: 'training' },
+    { id: 'album7', title: 'زيارة طلاب التدريب الصيفى إلى العاصمة الإدارية الجديدة 2017-07-1', imageUrl: '/images/pic07a1.jpg', photosCount: 16, photoPrefix: 'pic07a', category: 'training' },
+    { id: 'album8', title: 'زيارة طلاب التدريب الصيفى إلى محور روض الفرج 2017-07-20', imageUrl: '/images/pic08a1.jpg', photosCount: 4, photoPrefix: 'pic08a', category: 'training' },
+    { id: 'album9', title: 'زيارة طلبة المدرسة الفنية مشروع ميناء شرق بورسعيد 2017-07', imageUrl: '/images/pic09a1.jpg', photosCount: 8, photoPrefix: 'pic09a', category: 'training' },
+    { id: 'album14', title: 'ندوة عقود الفيديك - د شريف الهجان', imageUrl: '/images/pic14a1.jpg', photosCount: 5, photoPrefix: 'pic14a', category: 'activities' },
+    { id: 'album16', title: 'السلامة فى اعمال الرفع والتصبين_مشروع معالجة مياه بحر البقر', imageUrl: '/images/pic16a1.jpg', photosCount: 6, photoPrefix: 'pic16a', category: 'activities' },
+    { id: 'album1', title: 'بروتوكول تعاون مع جمعية المحاسبين المصريين', imageUrl: '/images/pic01a1.jpg', photosCount: 1, photoPrefix: 'pic01a', category: 'visits' },
+    { id: 'album10', title: 'زيارة وفد دولة موريتانيا إلى مدرسة المقاولون العرب الثانوية النموذجية 2017-12-17', imageUrl: '/images/pic10a1.jpg', photosCount: 5, photoPrefix: 'pic10a', category: 'visits' },
 ];
 
-// ─── Photo category definitions ──────────────────────────────────────────────
 const photoCategories = [
     { key: 'all', label: 'الكل' },
     { key: 'activities', label: 'الأنشطة والفعاليات' },
@@ -173,16 +31,6 @@ const photoCategories = [
     { key: 'visits', label: 'زيارات وبروتوكولات التعاون' },
 ];
 
-// ─── Photo sub-category labels (shown as badge on album card) ─────────────────
-const photoCategoryLabels = {
-    activities: 'الأنشطة والفعاليات',
-    training: 'الدورات التدريبية',
-    library: 'مكتبة المعهد',
-    labs: 'المعامل والقاعات',
-    visits: 'زيارات وبروتوكولات',
-};
-
-// ─── Video category definitions ──────────────────────────────────────────────
 const videoCategories = [
     { key: 'all', label: 'الكل' },
     { key: 'aboutAC', label: 'عن المقاولون العرب' },
@@ -190,7 +38,6 @@ const videoCategories = [
     { key: 'media', label: 'فيديوهات تعريفية وإعلامية' },
 ];
 
-// ─── Video data ───────────────────────────────────────────────────────────────
 const videoSections = [
     {
         key: 'aboutAC',
@@ -255,15 +102,12 @@ const videoSections = [
             { id: '0gN8RTYHafk', title: 'مهندس 7' },
         ],
     },
-    // ── فيديوهات تعريفية وإعلامية ── (placeholder — add real video IDs when ready)
     {
         key: 'media_intro',
         category: 'media',
         title: 'فيديوهات تعريفية وإعلامية عن المعهد',
         color: '#1a6b3c',
-        videos: [
-            // Add real YouTube IDs here — e.g. { id: 'YOUTUBE_ID', title: 'فيديو تعريفي عن المعهد' }
-        ],
+        videos: [],
     },
 ];
 
@@ -332,8 +176,9 @@ const VideoCard = ({ videoId, title, color }) => {
                         <path d="M8 5v14l11-7z" />
                     </svg>
                 </div>
+                {/* ── LTR title at bottom of video card ── */}
                 <div className="training-video-title">
-                    <span>{title}</span>
+                    <span style={{ direction: 'ltr', textAlign: 'left' }}>{title}</span>
                 </div>
             </div>
         </div>
@@ -348,7 +193,8 @@ const VideoSection = ({ section }) => {
                     className="training-section-header"
                     style={{ background: `linear-gradient(135deg, ${section.color} 0%, ${section.color}cc 100%)` }}
                 >
-                    <h2>{section.title}</h2>
+                    {/* ── LTR section title ── */}
+                    <h2 style={{ direction: 'ltr', textAlign: 'center' }}>{section.title}</h2>
                 </div>
                 <div style={{ padding: '24px', textAlign: 'center', color: '#9ca3af', fontSize: 15 }}>
                     لا توجد فيديوهات متاحة حالياً في هذا القسم
@@ -362,7 +208,8 @@ const VideoSection = ({ section }) => {
                 className="training-section-header"
                 style={{ background: `linear-gradient(135deg, ${section.color} 0%, ${section.color}cc 100%)` }}
             >
-                <h2>{section.title}</h2>
+                {/* ── LTR section title ── */}
+                <h2 style={{ direction: 'ltr', textAlign: 'center' }}>{section.title}</h2>
             </div>
             <div className="training-videos-grid">
                 {section.videos.map((video, i) => (
@@ -403,8 +250,8 @@ const VideoGalleryPage = () => {
                 .training-video-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 100%); }
                 .training-play-button { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: rgba(255,0,0,0.9); width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: transform 0.2s; }
                 .training-video-card:hover .training-play-button { transform: translate(-50%, -50%) scale(1.1); }
-                .training-video-title { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; text-align: center; }
-                .training-video-title span { color: white; font-size: 14px; font-weight: bold; text-shadow: 0 0 4px rgba(0,0,0,0.8); }
+                .training-video-title { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px; text-align: left; }
+                .training-video-title span { color: white; font-size: 14px; font-weight: bold; text-shadow: 0 0 4px rgba(0,0,0,0.8); direction: ltr; display: block; text-align: left; }
             `}</style>
 
             <CategoryBar
@@ -486,9 +333,7 @@ const AlbumDetailPage = ({ album, onBack }) => {
                                     onLoadStart={() => setImageLoading(prev => ({ ...prev, [currentPhotoIndex]: true }))}
                                 />
                             )}
-                        </div>
-                        <div className="photo-badge">
-                            {currentPhotoIndex + 1} / {photos.length}
+                            {/* ── photo badge REMOVED ── */}
                         </div>
                     </div>
                 </div>
@@ -581,7 +426,7 @@ const PhotoGallery = () => {
         <div dir="rtl" className="photo-gallery">
             {/* Breadcrumb */}
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic", serif', fontSize: '1rem' }}>
                     <a
                         href="/"
                         style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}

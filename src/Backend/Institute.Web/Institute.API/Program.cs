@@ -1,10 +1,12 @@
 using AutoMapper;
 using Institute.API.DTOs;
 using Institute.API.Helpers;
+using Institute.Application.Configurations;
 using Institute.Application.Interfaces;
 using Institute.Application.Interfaces.IService;
 using Institute.Application.Security;
 using Institute.Application.Services;
+using Institute.Domain.Entities;
 using Institute.Infrastructure;
 using Institute.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -19,12 +21,13 @@ using System.Text;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Configuration.AddEnvironmentVariables();
+Console.WriteLine("AzureStorage Conn = " + builder.Configuration["AzureStorage:ConnectionString"]);
 
 // ======= DbContext =======
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// ======= Controllers & Swagger =======
 builder.Services.AddControllers();
 // rate limiting
 builder.Services.AddRateLimiter(options =>
@@ -82,6 +85,9 @@ builder.Services.AddCors(options =>
 #endregion
 
 #region (Dependency Injection)
+
+builder.Services.Configure<AzureStorageSettings>(
+    builder.Configuration.GetSection("AzureStorage"));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(BaseRepository<>));
 builder.Services.AddScoped(typeof(IReadOnlyService<>), typeof(ReadOnlyService<>));
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -107,6 +113,12 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("Courses", policy =>
         policy.Requirements.Add(new PermissionRequirement("Courses")));
+
+    options.AddPolicy("ManagerOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.Requirements.Add(new ManagerRequirement());
+    });
 });
 
 
@@ -122,12 +134,15 @@ builder.Services.AddScoped<IBooksTypeService, BooksTypeService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IPlanworkService, PlanworkService>();
 builder.Services.AddScoped<IPlanFileService, PlanFileService>();
-//builder.Services.AddSingleton<IBlobStorageService, BlobStorageService>();
+builder.Services.AddSingleton<IBlobStorage, BlobStorage>();
 builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IUserPermissionService, UserPermissionService>();
 builder.Services.AddScoped<BankPaymentService>();
 builder.Services.AddScoped<IRefundService, RefundService>();
+builder.Services.AddScoped<IAuthorizationHandler, PermissionHandler>();
+
+builder.Services.AddScoped<IAuthorizationHandler, ManagerAuthorizationHandler>();
 builder.Services.Configure<PaymentSettings>(builder.Configuration.GetSection("PaymentSettings"));
 builder.Services.AddHttpClient("BankClient", client =>
 {
@@ -197,7 +212,15 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ManagerOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.Requirements.Add(new ManagerRequirement());
+    });
+});
 #endregion
 
 // ======= AutoMapper =======

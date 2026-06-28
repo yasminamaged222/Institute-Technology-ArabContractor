@@ -1,3 +1,22 @@
+/**
+ * NewsTab.jsx — Fixed version
+ *
+ * Key fixes:
+ * 1. Detail GET returns images[] array with { picId, imageUrl, isMain } — parse that
+ * 2. Detail GET uses publishedAt not date
+ * 3. showFlag not in detail response — keep from list or default true
+ * 4. Delete image uses correct picId from images[]
+ * 5. buildFormData updated to match actual API fields
+ *
+ * API:
+ * GET    /api/admin/AdminNews/getAllNews?PageIndex=1&PageSize=100
+ * GET    /api/admin/AdminNews/{id}
+ * POST   /api/admin/AdminNews  (FormData)
+ * PUT    /api/admin/AdminNews/{id}  (FormData)
+ * DELETE /api/admin/AdminNews/{id}
+ * DELETE /api/admin/AdminNews/{newsId}/images/{picId}
+ */
+
 import { useState, useRef, useEffect, useCallback } from "react";
 
 const BASE = "https://acwebsite-icmet-test.azurewebsites.net";
@@ -10,13 +29,13 @@ const T = {
     gray500: '#6b7280', gray700: '#374151',
 };
 
-const BLANK = { id: 0, date: '', title: '', details: '', image: null, imageUrl: null };
+const BLANK = { id: 0, date: '', title: '', details: '', showFlag: true };
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDateAr(dateStr) {
     if (!dateStr) return '—';
-    try {
-        return new Date(dateStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-    } catch { return dateStr; }
+    try { return new Date(dateStr).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }); }
+    catch { return dateStr; }
 }
 function toInputDate(dateStr) {
     if (!dateStr) return '';
@@ -32,21 +51,31 @@ function previewSnippet(text, len = 55) {
     return text.length > len ? text.slice(0, len) + '…' : text;
 }
 
-// ── Rich Text Helpers ──────────────────────────────────────────────────────────
+// ── ActiveToggle ──────────────────────────────────────────────────────────────
+function ActiveToggle({ value, onChange }) {
+    return (
+        <label className="nt-toggle-wrap" title={value ? 'مرئي — اضغط للإخفاء' : 'مخفي — اضغط للإظهار'}>
+            <div className={`nt-toggle-track${value ? ' on' : ''}`} onClick={() => onChange(!value)}>
+                <div className="nt-toggle-thumb" />
+            </div>
+            <span className={`nt-toggle-label${value ? ' on' : ' off'}`}>
+                {value ? '👁 مرئي' : '🙈 مخفي'}
+            </span>
+        </label>
+    );
+}
+
+// ── RichTextEditor ─────────────────────────────────────────────────────────────
 const FONT_SIZES = [8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64, 72];
 
 function textToHtml(text = '') {
     if (!text) return '';
+    // Already HTML — don't double-wrap
     if (/<[a-z][\s\S]*>/i.test(text)) return text;
-    return text
-        .split('\n')
-        .map(line => line
-            ? `<div>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>`
-            : '<div><br></div>'
-        )
-        .join('');
+    return text.split('\n').map(line =>
+        line ? `<div>${line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>` : '<div><br></div>'
+    ).join('');
 }
-
 function wrapSelectionWithStyle(property, value) {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
@@ -60,7 +89,6 @@ function wrapSelectionWithStyle(property, value) {
     nr.selectNodeContents(span);
     sel.addRange(nr);
 }
-
 function getComputedAtCursor(editorEl, cssProp) {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return null;
@@ -75,13 +103,11 @@ function getComputedAtCursor(editorEl, cssProp) {
     return null;
 }
 
-// ── RichTextEditor ─────────────────────────────────────────────────────────────
 function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, minHeight = 180 }) {
     const editorRef = useRef(null);
     const savedSelRef = useRef(null);
     const lastValueRef = useRef(null);
     const urlInputRef = useRef(null);
-
     const [fontColor, setFontColor] = useState('#0a0a0a');
     const [fontSize, setFontSize] = useState(14);
     const [urlOpen, setUrlOpen] = useState(false);
@@ -92,291 +118,534 @@ function RichTextEditor({ icon, label, sub, name, value, onChange, placeholder, 
         editorRef.current.innerHTML = textToHtml(value);
         lastValueRef.current = value;
     }, [value]);
-
-    useEffect(() => {
-        if (urlOpen && urlInputRef.current) urlInputRef.current.focus();
-    }, [urlOpen]);
-
+    useEffect(() => { if (urlOpen && urlInputRef.current) urlInputRef.current.focus(); }, [urlOpen]);
     useEffect(() => {
         if (!urlOpen) return;
-        const h = e => { if (!e.target.closest('.news-rte-url-wrap')) setUrlOpen(false); };
+        const h = e => { if (!e.target.closest('.nt-rte-url-wrap')) setUrlOpen(false); };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
     }, [urlOpen]);
 
-    const saveSelection = () => {
-        const s = window.getSelection();
-        if (s?.rangeCount > 0) savedSelRef.current = s.getRangeAt(0).cloneRange();
-    };
-    const restoreSelection = () => {
-        const s = window.getSelection();
-        if (s && savedSelRef.current) { s.removeAllRanges(); s.addRange(savedSelRef.current); }
-    };
-    const emitChange = () => {
-        if (!editorRef.current) return;
-        const h = editorRef.current.innerHTML;
-        lastValueRef.current = h;
-        onChange({ target: { name, value: h } });
-    };
-    const exec = (cmd, val = null) => {
-        editorRef.current?.focus();
-        document.execCommand(cmd, false, val);
-        emitChange();
-    };
-
+    const saveSelection = () => { const s = window.getSelection(); if (s?.rangeCount > 0) savedSelRef.current = s.getRangeAt(0).cloneRange(); };
+    const restoreSelection = () => { const s = window.getSelection(); if (s && savedSelRef.current) { s.removeAllRanges(); s.addRange(savedSelRef.current); } };
+    const emitChange = () => { if (!editorRef.current) return; const h = editorRef.current.innerHTML; lastValueRef.current = h; onChange({ target: { name, value: h } }); };
+    const exec = (cmd, val = null) => { editorRef.current?.focus(); document.execCommand(cmd, false, val); emitChange(); };
     const detectFontSize = () => {
         const fsVal = getComputedAtCursor(editorRef.current, 'fontSize');
-        if (fsVal) {
-            const px = Math.round(parseFloat(fsVal));
-            const closest = FONT_SIZES.reduce((p, c) => Math.abs(c - px) < Math.abs(p - px) ? c : p);
-            setFontSize(closest);
-        }
+        if (fsVal) { const px = Math.round(parseFloat(fsVal)); setFontSize(FONT_SIZES.reduce((p, c) => Math.abs(c - px) < Math.abs(p - px) ? c : p)); }
     };
-
-    const handleFontSize = e => {
-        const px = Number(e.target.value);
-        setFontSize(px);
-        restoreSelection();
-        editorRef.current?.focus();
-        wrapSelectionWithStyle('fontSize', `${px}px`);
-        emitChange();
-    };
-
+    const handleFontSize = e => { const px = Number(e.target.value); setFontSize(px); restoreSelection(); editorRef.current?.focus(); wrapSelectionWithStyle('fontSize', `${px}px`); emitChange(); };
     const confirmUrl = () => {
         restoreSelection();
         const url = urlValue.trim();
         if (url && url !== 'https://') {
             exec('createLink', url);
             const sel = window.getSelection();
-            if (sel?.anchorNode) {
-                let node = sel.anchorNode;
-                while (node && node !== editorRef.current) {
-                    if (node.nodeName === 'A') { node.target = '_blank'; node.rel = 'noopener noreferrer'; break; }
-                    node = node.parentNode;
-                }
-            }
+            if (sel?.anchorNode) { let node = sel.anchorNode; while (node && node !== editorRef.current) { if (node.nodeName === 'A') { node.target = '_blank'; node.rel = 'noopener noreferrer'; break; } node = node.parentNode; } }
         }
-        setUrlOpen(false);
-        emitChange();
+        setUrlOpen(false); emitChange();
     };
 
     return (
-        <div className="news-rte-block">
-            <div className="news-rte-hdr">
-                <span className="news-rte-icon">{icon}</span>
-                <div style={{ flex: 1 }}>
-                    <div className="news-rte-label">{label}</div>
-                    {sub && <div className="news-rte-sub">{sub}</div>}
-                </div>
+        <div className="nt-rte-block">
+            <div className="nt-rte-hdr">
+                <span className="nt-rte-icon">{icon}</span>
+                <div style={{ flex: 1 }}><div className="nt-rte-label">{label}</div>{sub && <div className="nt-rte-sub">{sub}</div>}</div>
             </div>
-
-            <div className="news-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
-                <button className="news-tb-btn bold" title="عريض (Ctrl+B)" onClick={() => exec('bold')}>B</button>
-                <button className="news-tb-btn italic" title="مائل (Ctrl+I)" onClick={() => exec('italic')}>I</button>
-                <button className="news-tb-btn under" title="تحته خط (Ctrl+U)" onClick={() => exec('underline')}>U</button>
-                <div className="news-rte-sep" />
-                <div className="news-tb-size-wrap" title="حجم الخط (بالبكسل)">
-                    <select className="news-tb-select news-tb-size-select" value={fontSize} onChange={handleFontSize} onMouseDown={saveSelection}>
+            <div className="nt-rte-toolbar" onMouseDown={e => { if (e.target.tagName === 'SELECT') return; e.preventDefault(); }}>
+                <button className="nt-tb-btn bold" onClick={() => exec('bold')}>B</button>
+                <button className="nt-tb-btn italic" onClick={() => exec('italic')}>I</button>
+                <button className="nt-tb-btn under" onClick={() => exec('underline')}>U</button>
+                <div className="nt-rte-sep" />
+                <div className="nt-tb-size-wrap">
+                    <select className="nt-tb-select" value={fontSize} onChange={handleFontSize} onMouseDown={saveSelection}>
                         {FONT_SIZES.map(px => <option key={px} value={px}>{px}</option>)}
                     </select>
-                    <span className="news-tb-size-unit">px</span>
+                    <span className="nt-tb-size-unit">px</span>
                 </div>
-                <div className="news-rte-sep" />
-                <div className="news-tb-color-wrap" title="لون الخط">
-                    <button className="news-tb-color-btn" onMouseDown={saveSelection}>
-                        <span className="news-color-letter" style={{ color: fontColor }}>A</span>
-                        <span className="news-color-bar" style={{ background: fontColor }} />
-                        <input type="color" className="news-tb-color-input" value={fontColor}
+                <div className="nt-rte-sep" />
+                <div className="nt-tb-color-wrap">
+                    <button className="nt-tb-color-btn" onMouseDown={saveSelection}>
+                        <span className="nt-color-letter" style={{ color: fontColor }}>A</span>
+                        <span className="nt-color-bar" style={{ background: fontColor }} />
+                        <input type="color" className="nt-tb-color-input" value={fontColor}
                             onChange={e => { const c = e.target.value; setFontColor(c); restoreSelection(); exec('foreColor', c); }} />
                     </button>
                 </div>
-                <div className="news-rte-sep" />
-                <div className="news-rte-url-wrap">
-                    <button className={`news-tb-btn${urlOpen ? ' active' : ''}`} title="إضافة رابط"
+                <div className="nt-rte-sep" />
+                <div className="nt-rte-url-wrap">
+                    <button className={`nt-tb-btn${urlOpen ? ' active' : ''}`}
                         onClick={() => { saveSelection(); setUrlValue('https://'); setUrlOpen(true); }}
                         onMouseDown={saveSelection}>🔗</button>
                     {urlOpen && (
-                        <div className="news-url-popover">
+                        <div className="nt-url-popover">
                             <input ref={urlInputRef} type="url" placeholder="https://example.com" value={urlValue}
                                 onChange={e => setUrlValue(e.target.value)}
                                 onKeyDown={e => { if (e.key === 'Enter') confirmUrl(); if (e.key === 'Escape') { setUrlOpen(false); restoreSelection(); } }} />
-                            <button className="news-url-ok" onClick={confirmUrl}>إدراج</button>
-                            <button className="news-url-cancel" onClick={() => { setUrlOpen(false); restoreSelection(); }}>إلغاء</button>
+                            <button className="nt-url-ok" onClick={confirmUrl}>إدراج</button>
+                            <button className="nt-url-cancel" onClick={() => { setUrlOpen(false); restoreSelection(); }}>إلغاء</button>
                         </div>
                     )}
                 </div>
-                <button className="news-tb-btn" title="إزالة الرابط" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
+                <button className="nt-tb-btn" onClick={() => exec('unlink')} onMouseDown={saveSelection} style={{ fontSize: '.7rem' }}>✂️</button>
             </div>
+            <div ref={editorRef} contentEditable suppressContentEditableWarning className="nt-rte-editor"
+                data-placeholder={placeholder} style={{ minHeight }} onInput={emitChange}
+                onKeyDown={e => { if (e.ctrlKey || e.metaKey) { if (e.key === 'b') { e.preventDefault(); exec('bold'); } if (e.key === 'i') { e.preventDefault(); exec('italic'); } if (e.key === 'u') { e.preventDefault(); exec('underline'); } } }}
+                onMouseUp={() => { saveSelection(); detectFontSize(); }} onKeyUp={() => { saveSelection(); detectFontSize(); }} />
+        </div>
+    );
+}
 
-            <div
-                ref={editorRef}
-                contentEditable
-                suppressContentEditableWarning
-                className="news-rte-editor"
-                data-placeholder={placeholder}
-                style={{ minHeight }}
-                onInput={emitChange}
-                onKeyDown={e => {
-                    if (e.ctrlKey || e.metaKey) {
-                        if (e.key === 'b') { e.preventDefault(); exec('bold'); }
-                        if (e.key === 'i') { e.preventDefault(); exec('italic'); }
-                        if (e.key === 'u') { e.preventDefault(); exec('underline'); }
-                    }
-                }}
-                onMouseUp={() => { saveSelection(); detectFontSize(); }}
-                onKeyUp={() => { saveSelection(); detectFontSize(); }}
-            />
+// ── MultiImageUploader ────────────────────────────────────────────────────────
+function MultiImageUploader({ images, onChange, newsId, onServerImageDeleted }) {
+    const fileRef = useRef();
+    const [dragOver, setDragOver] = useState(false);
+    const [deletingPicId, setDeletingPicId] = useState(null);
+
+    const addFiles = (files) => {
+        const valid = Array.from(files).filter(f => f.type.startsWith('image/'));
+        if (!valid.length) return;
+        onChange([...images, ...valid.map(file => ({ file, previewSrc: URL.createObjectURL(file), serverUrl: null, picId: null }))]);
+    };
+
+    const removeImage = async (idx) => {
+        const img = images[idx];
+        // New unsaved file — remove locally only
+        if (img.file || !img.picId || !newsId) {
+            onChange(images.filter((_, i) => i !== idx));
+            return;
+        }
+        // Persisted image — DELETE /api/admin/AdminNews/{newsId}/images/{picId}
+        setDeletingPicId(img.picId);
+        try {
+            await apiFetch(`/api/admin/AdminNews/${newsId}/images/${img.picId}`, { method: 'DELETE' });
+            onChange(images.filter((_, i) => i !== idx));
+            if (onServerImageDeleted) onServerImageDeleted('تم حذف الصورة بنجاح');
+        } catch (e) {
+            if (onServerImageDeleted) onServerImageDeleted('فشل حذف الصورة: ' + e.message, 'error');
+        } finally {
+            setDeletingPicId(null);
+        }
+    };
+
+    const setMain = (idx) => {
+        if (idx === 0) return;
+        const next = [...images];
+        const [picked] = next.splice(idx, 1);
+        next.unshift(picked);
+        onChange(next);
+    };
+    const replaceFile = (idx, file) => {
+        if (!file || !file.type.startsWith('image/')) return;
+        const next = [...images];
+        next[idx] = { file, previewSrc: URL.createObjectURL(file), serverUrl: null, picId: null };
+        onChange(next);
+    };
+
+    return (
+        <div className="nt-multi-img-wrap">
+            <div className="nt-label" style={{ marginBottom: 8 }}>
+                صور الخبر
+                <span style={{ marginRight: 8, fontSize: '.65rem', color: T.gray500, fontWeight: 400 }}>
+                    الصورة الأولى هي الصورة الرئيسية
+                </span>
+            </div>
+            {images.length > 0 && (
+                <div className="nt-imgs-grid">
+                    {images.map((img, idx) => (
+                        <MultiImageSlot key={idx} img={img} idx={idx} isMain={idx === 0}
+                            isDeleting={deletingPicId === img.picId && img.picId != null}
+                            onRemove={() => removeImage(idx)}
+                            onSetMain={() => setMain(idx)}
+                            onReplace={(file) => replaceFile(idx, file)} />
+                    ))}
+                </div>
+            )}
+            <div className={`nt-img-zone${dragOver ? ' over' : ''}`}
+                style={{ minHeight: 72, marginTop: images.length ? 12 : 0 }}
+                onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+                onDragLeave={() => setDragOver(false)}
+                onDrop={e => { e.preventDefault(); setDragOver(false); addFiles(e.dataTransfer.files); }}
+                onClick={() => fileRef.current.click()}>
+                <div className="nt-img-placeholder" style={{ padding: '14px 12px' }}>
+                    <div style={{ fontSize: '1.6rem' }}>🖼️</div>
+                    <span className="nt-img-hint">{images.length === 0 ? 'اسحب الصور هنا أو اضغط للاختيار' : '+ إضافة صور أخرى'}</span>
+                    <span className="nt-img-types">JPG · PNG · WEBP</span>
+                </div>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" multiple style={{ display: 'none' }}
+                onChange={e => { addFiles(e.target.files); e.target.value = ''; }} />
+        </div>
+    );
+}
+
+function MultiImageSlot({ img, idx, isMain, isDeleting, onRemove, onSetMain, onReplace }) {
+    const fileRef = useRef();
+    return (
+        <div className={`nt-img-slot${isMain ? ' main' : ''}${isDeleting ? ' deleting' : ''}`}>
+            {isDeleting && <div className="nt-slot-deleting-overlay">⏳</div>}
+            <img src={img.previewSrc} alt={`صورة ${idx + 1}`} className="nt-slot-img" />
+            {isMain && <div className="nt-main-badge">⭐ رئيسية</div>}
+            {img.file && <div className="nt-new-badge-slot">جديدة</div>}
+            {!img.file && img.serverUrl && <div className="nt-server-badge-slot">{isMain ? '⭐ محفوظة' : 'محفوظة'}</div>}
+            <div className="nt-slot-actions">
+                {!isMain && <button className="nt-slot-btn promote" onClick={onSetMain} disabled={isDeleting}>⭐</button>}
+                <button className="nt-slot-btn replace" onClick={() => fileRef.current.click()} disabled={isDeleting}>🔄</button>
+                <button className="nt-slot-btn remove" onClick={onRemove} disabled={isDeleting}>✕</button>
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+                onChange={e => { onReplace(e.target.files[0]); e.target.value = ''; }} />
         </div>
     );
 }
 
 // ── CSS ────────────────────────────────────────────────────────────────────────
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Noto+Kufi+Arabic:wght@400;700;900&display=swap');
-.news-root{display:flex;height:100vh;direction:rtl;font-family:"Noto Kufi Arabic",sans-serif;background:${T.gray100};overflow:hidden;}
-.news-sidebar{width:clamp(230px,26vw,290px);min-width:230px;background:#fff;display:flex;flex-direction:column;height:100vh;overflow:hidden;flex-shrink:0;border-radius:3px;border:1.5px solid #d0d3d8;box-shadow:0 2px 10px rgba(0,0,0,.06);}
-.news-brand{display:flex;align-items:center;justify-content:space-between;padding:14px 14px 10px;border-bottom:1.5px solid #f0f1f2;gap:8px;}
-.news-brand-icon{width:36px;height:36px;border-radius:3px;background:linear-gradient(135deg,#0865a8,#1a84d4);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#bfdbfe;border:1.5px solid rgba(8,101,168,.25);flex-shrink:0;}
-.news-brand-name{font-size:.78rem;font-weight:800;color:#0a0a0a;}
-.news-brand-sub{font-size:.64rem;color:#6b7280;margin-top:2px;}
-.news-search-wrap{padding:12px 12px 6px;flex-shrink:0;position:relative;z-index:1;}
-.news-search-wrap input{width:100%;padding:9px 34px 9px 12px;background:#fff;border:1.5px solid #d0d3d8;border-radius:3px;color:#0a0a0a;font-family:inherit;font-size:.76rem;direction:rtl;outline:none;box-sizing:border-box;}
-.news-search-wrap input::placeholder{color:#6b7280;}
-.news-search-wrap input:focus{border-color:#f57c00;box-shadow:0 0 0 3px rgba(245,124,0,.1);}
-.news-search-icon{position:absolute;right:22px;top:50%;transform:translateY(-50%);font-size:.75rem;opacity:.4;pointer-events:none;}
-.news-search-clear{position:absolute;left:20px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6b7280;font-size:1rem;padding:2px;}
-.news-list-hdr{padding:4px 14px 8px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.news-count-badge{background:rgba(8,101,168,.1);color:#0865a8;border:1.5px solid rgba(8,101,168,.25);border-radius:2px;padding:1px 9px;font-size:.66rem;font-weight:900;font-family:'Courier New',monospace;}
-.news-new-btn{background:rgba(245,124,0,.1);color:#f57c00;border:1.5px solid rgba(245,124,0,.35);border-radius:2px;padding:4px 12px;font-size:.72rem;font-weight:800;cursor:pointer;font-family:inherit;transition:all .16s;}
-.news-new-btn:hover{background:rgba(245,124,0,.18);}
-.news-list{flex:1;overflow-y:auto;padding:4px 8px 12px;}
-.news-list::-webkit-scrollbar{width:4px;}
-.news-list::-webkit-scrollbar-thumb{background:rgba(245,124,0,.35);border-radius:2px;}
-.news-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:3px;margin-bottom:3px;cursor:pointer;border:1.5px solid transparent;transition:background .13s,border-color .13s;}
-.news-row:hover{background:rgba(8,101,168,.05);border-color:rgba(8,101,168,.12);}
-.news-row.active{background:rgba(245,124,0,.09);border-color:rgba(245,124,0,.35);border-right:3px solid #f57c00;}
-.news-row-icon{width:38px;height:38px;border-radius:3px;background:linear-gradient(135deg,${T.blue},${T.blueLight});display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;border:1.5px solid rgba(8,101,168,.3);overflow:hidden;}
-.news-row-info{overflow:hidden;flex:1;}
-.news-row-title{color:#0a0a0a;font-size:.75rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.news-row-date{color:#6b7280;font-size:.63rem;margin-top:2px;}
-.news-row-id{background:#f0f1f2;color:#6b7280;font-size:.6rem;padding:2px 7px;border-radius:2px;flex-shrink:0;font-weight:700;font-family:'Courier New',monospace;}
-.news-sidebar-footer{padding:10px 14px;border-top:1.5px solid #f0f1f2;text-align:center;font-size:.6rem;color:#6b7280;background:#fff;}
-.news-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
-.news-topbar{background:#fff;border-bottom:3px solid ${T.orange};padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.06);}
-.news-notif{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:3px;font-size:.8rem;font-weight:700;animation:news-notif-in .3s cubic-bezier(.34,1.56,.64,1);border-right:4px solid;margin:14px 24px 0;}
-.news-notif-success{background:#f0fdf4;border-color:#16a34a;color:#15803d;}
-.news-notif-error{background:#fef2f2;border-color:#dc2626;color:#dc2626;}
-.news-notif-info{background:rgba(8,101,168,.06);border-color:${T.blue};color:${T.blue};}
-@keyframes news-notif-in{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
-.news-body{flex:1;overflow-y:auto;padding:20px 24px 48px;}
-.news-body::-webkit-scrollbar{width:5px;}
-.news-body::-webkit-scrollbar-thumb{background:${T.gray300};border-radius:3px;}
-.news-card{background:#fff;border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);position:relative;animation:news-card-up .22s ease;}
-.news-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(to left,${T.orange},${T.blue});z-index:2;}
-@keyframes news-card-up{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
-.news-form-hdr{background:${T.blueDark};padding:20px 26px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;overflow:hidden;}
-.news-form-hdr::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(245,124,0,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(245,124,0,.07) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;}
-.news-form-tag{display:inline-block;background:${T.orange};color:#fff;font-size:.7rem;font-weight:700;padding:4px 14px;border-radius:2px;margin-bottom:6px;position:relative;z-index:1;}
-.news-form-title{font-size:1.1rem;font-weight:900;color:#fff;margin:0;position:relative;z-index:1;}
-.news-form-sub{font-size:.72rem;color:rgba(255,255,255,.4);margin:4px 0 0;position:relative;z-index:1;}
-.news-stat-pill{display:inline-flex;align-items:center;padding:5px 14px;border-radius:2px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:rgba(255,255,255,.72);font-size:.72rem;font-weight:700;position:relative;z-index:1;}
-.news-form-body{padding:26px;}
-.news-fields-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:22px;}
-.news-field{display:flex;flex-direction:column;gap:5px;}
-.news-label{font-size:.72rem;font-weight:700;color:${T.gray700};}
-.news-inp{border:1.5px solid ${T.gray300};border-radius:3px;padding:9px 12px;font-size:.8rem;color:${T.black};width:100%;background:#fff;direction:rtl;font-family:inherit;transition:border .18s,box-shadow .18s;outline:none;box-sizing:border-box;}
-.news-inp:focus{border-color:${T.orange};box-shadow:0 0 0 3px rgba(245,124,0,.1);}
-.news-inp::placeholder{color:${T.gray500};}
-.news-inp:disabled{background:${T.gray100};color:${T.gray500};cursor:not-allowed;}
-.news-divider{height:1px;background:${T.gray100};margin:4px 0 20px;}
+.nt-layout {
+    display: flex;
+    direction: rtl;
+    gap: 16px;
+    align-items: stretch;
+}
+.nt-left-panel {
+    width: clamp(230px, 26vw, 290px);
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 3px;
+    border: 1.5px solid #d0d3d8;
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+.nt-form-wrap {
+    flex: 1;
+    min-width: 0;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+.nt-left-panel::-webkit-scrollbar,
+.nt-form-wrap::-webkit-scrollbar { width: 4px; }
+.nt-left-panel::-webkit-scrollbar-thumb,
+.nt-form-wrap::-webkit-scrollbar-thumb { background: rgba(245,124,0,.35); border-radius: 2px; }
 
-/* ── IMAGE ZONE ── */
-.news-img-zone{width:100%;border-radius:6px;border:2px dashed ${T.gray300};background:${T.gray50};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .18s,background .18s;min-height:60px;overflow:visible;}
-.news-img-zone:hover,.news-img-zone.over{border-color:${T.orange};background:rgba(245,124,0,.03);}
-.news-img-zone.has-image{border-style:solid;border-color:${T.gray300};border-radius:8px;overflow:hidden;background:#000;}
-.news-img-zone.has-image:hover{border-color:${T.orange};}
-.news-img-preview{width:100%;height:auto;display:block;object-fit:fill;}
-.news-img-overlay{position:absolute;inset:0;background:rgba(0,0,0,.42);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
-.news-img-zone.has-image:hover .news-img-overlay{opacity:1;}
-.news-img-overlay-txt{color:#fff;font-size:.78rem;font-weight:700;margin-top:6px;}
-.news-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;padding:24px 12px;}
-.news-img-icon{font-size:2rem;}
-.news-img-hint{color:${T.gray500};font-size:.68rem;font-weight:600;text-align:center;line-height:1.6;}
-.news-img-types{color:${T.gray300};font-size:.62rem;background:${T.gray100};padding:2px 10px;border-radius:2px;}
-.news-img-meta{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:rgba(0,0,0,.6);width:100%;box-sizing:border-box;pointer-events:none;position:absolute;bottom:0;left:0;right:0;}
-.news-img-meta-txt{color:rgba(255,255,255,.75);font-size:.62rem;font-family:'Courier New',monospace;}
-.news-remove-img{background:#fef2f2;color:#dc2626;border:1.5px solid rgba(220,38,38,.3);border-radius:3px;padding:7px;font-size:.72rem;font-weight:700;cursor:pointer;width:100%;font-family:inherit;margin-top:8px;transition:background .14s;}
-.news-remove-img:hover{background:#fee2e2;}
+.nt-panel-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 10px;
+    border-bottom: 1.5px solid #f0f1f2;
+    flex-shrink: 0;
+    gap: 8px;
+    background: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+.nt-brand-icon {
+    width: 36px; height: 36px; border-radius: 3px;
+    background: linear-gradient(135deg, #0865a8, #1a84d4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .9rem; color: #bfdbfe;
+    border: 1.5px solid rgba(8,101,168,.25); flex-shrink: 0;
+}
+.nt-brand-name { font-size: .78rem; font-weight: 800; color: #0a0a0a; }
+.nt-brand-sub { font-size: .64rem; color: #6b7280; margin-top: 2px; }
 
-/* ── RichTextEditor ── */
-.news-rte-block{border-radius:3px;border:1.5px solid ${T.gray300};overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.04);}
-.news-rte-hdr{background:${T.gray50};padding:10px 16px;border-bottom:1.5px solid ${T.gray100};display:flex;align-items:center;gap:9px;}
-.news-rte-icon{font-size:1.1rem;}
-.news-rte-label{font-weight:800;font-size:.8rem;color:${T.black};}
-.news-rte-sub{font-size:.65rem;color:${T.gray500};margin-top:2px;}
-.news-rte-toolbar{display:flex;align-items:center;gap:4px;padding:7px 12px;background:#fff;border-bottom:1.5px solid ${T.gray100};flex-wrap:wrap;}
-.news-rte-sep{width:1px;height:20px;background:#e5e7eb;margin:0 2px;flex-shrink:0;}
-.news-tb-btn{min-width:30px;height:28px;padding:0 7px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};color:${T.gray700};font-size:.78rem;font-weight:700;cursor:pointer;transition:all .14s;font-family:inherit;}
-.news-tb-btn:hover,.news-tb-btn.active{background:${T.orange};color:#fff;border-color:${T.orange};}
-.news-tb-btn.bold{font-weight:900;}
-.news-tb-btn.italic{font-style:italic;}
-.news-tb-btn.under{text-decoration:underline;}
-.news-tb-size-wrap{display:flex;align-items:center;gap:3px;}
-.news-tb-select{padding:4px 6px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};color:${T.gray700};font-family:inherit;font-size:.74rem;cursor:pointer;outline:none;}
-.news-tb-select:focus{border-color:${T.orange};}
-.news-tb-size-unit{font-size:.65rem;color:${T.gray500};font-weight:700;}
-.news-tb-color-wrap{position:relative;}
-.news-tb-color-btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 6px;border-radius:4px;border:1.5px solid ${T.gray300};background:${T.gray50};cursor:pointer;position:relative;}
-.news-color-letter{font-size:.9rem;font-weight:900;line-height:1;}
-.news-color-bar{width:14px;height:3px;border-radius:2px;}
-.news-tb-color-input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:none;padding:0;}
-.news-rte-url-wrap{position:relative;}
-.news-url-popover{position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1.5px solid ${T.gray300};border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:10px;z-index:500;display:flex;gap:6px;min-width:320px;border-top:3px solid ${T.orange};}
-.news-url-popover input{flex:1;padding:7px 10px;border:1.5px solid ${T.gray300};border-radius:4px;font-family:inherit;font-size:.76rem;direction:ltr;outline:none;}
-.news-url-popover input:focus{border-color:${T.orange};}
-.news-url-ok{padding:7px 14px;background:${T.orange};color:#fff;border:none;border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
-.news-url-cancel{padding:7px 10px;background:${T.gray100};color:${T.gray700};border:1.5px solid ${T.gray300};border-radius:4px;font-family:inherit;font-size:.74rem;font-weight:700;cursor:pointer;}
-.news-rte-editor{padding:12px 16px;outline:none;font-family:"Noto Kufi Arabic",sans-serif;font-size:.82rem;color:#0a0a0a;line-height:1.9;direction:rtl;background:#fff;}
-.news-rte-editor:empty::before{content:attr(data-placeholder);color:#9ca3af;pointer-events:none;}
-.news-rte-editor a{color:#0865a8;text-decoration:underline;}
+.nt-search-wrap { padding: 10px 12px 6px; flex-shrink: 0; position: relative; }
+.nt-search-wrap input {
+    width: 100%; padding: 8px 32px 8px 12px;
+    background: #fff; border: 1.5px solid #d0d3d8;
+    border-radius: 3px; color: #0a0a0a;
+    font-family: inherit; font-size: .76rem;
+    direction: rtl; outline: none; box-sizing: border-box;
+}
+.nt-search-wrap input::placeholder { color: #6b7280; }
+.nt-search-wrap input:focus { border-color: #f57c00; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
+.nt-search-icon { position: absolute; right: 22px; top: 50%; transform: translateY(-50%); font-size: .75rem; opacity: .4; pointer-events: none; }
+.nt-search-clear { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #6b7280; font-size: 1rem; padding: 2px; }
 
-/* ── Actions ── */
-.news-actions{display:flex;gap:9px;margin-top:24px;padding-top:18px;border-top:2px solid ${T.gray100};flex-wrap:wrap;align-items:center;}
-.news-act-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:3px;font-family:inherit;font-size:.8rem;font-weight:800;cursor:pointer;border:none;transition:all .2s cubic-bezier(.4,0,.2,1);white-space:nowrap;}
-.news-act-btn:hover{transform:translateY(-2px);}
-.news-act-btn:active{transform:translateY(0);}
-.news-act-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
-.news-act-btn.save{background:#16a34a;color:#fff;box-shadow:0 3px 12px rgba(22,163,74,.3);}
-.news-act-btn.save:hover{background:#15803d;}
-.news-act-btn.new{background:${T.blue};color:#fff;box-shadow:0 3px 12px rgba(8,101,168,.3);}
-.news-act-btn.new:hover{background:${T.blueDark};}
-.news-act-btn.reset{background:${T.orange};color:#fff;box-shadow:0 3px 12px rgba(245,124,0,.3);}
-.news-act-btn.reset:hover{background:${T.orangeDark};}
-.news-act-btn.delete{background:#dc2626;color:#fff;box-shadow:0 3px 12px rgba(220,38,38,.3);}
-.news-act-btn.delete:hover{background:#b91c1c;}
-.news-delete-confirm{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fef2f2;border:1.5px solid rgba(220,38,38,.3);border-radius:3px;padding:9px 14px;border-right:4px solid #dc2626;}
-.news-delete-warn{font-size:.78rem;color:#dc2626;font-weight:700;}
-.news-act-btn.cancel{background:${T.gray100};color:${T.gray500};border:1.5px solid ${T.gray300};box-shadow:none;}
-.news-act-btn.cancel:hover{border-color:${T.black};color:${T.black};}
-.news-empty{text-align:center;padding:60px 20px;color:${T.gray500};}
-.news-empty-icon{font-size:2.4rem;margin-bottom:12px;opacity:.35;}
-.news-skeleton{background:linear-gradient(90deg,#f0f1f2 25%,#e0e2e5 50%,#f0f1f2 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:3px;}
-@keyframes shimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}
-.news-loading-row{display:flex;align-items:center;gap:10px;padding:9px 10px;margin-bottom:3px;}
-@media(max-width:900px){.news-root{flex-direction:column;}.news-sidebar{width:100%;height:auto;max-height:280px;}.news-fields-grid{grid-template-columns:1fr;}}
+.nt-list-hdr {
+    padding: 4px 14px 8px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.nt-count-badge {
+    background: rgba(8,101,168,.1); color: #0865a8;
+    border: 1.5px solid rgba(8,101,168,.25); border-radius: 2px;
+    padding: 1px 9px; font-size: .66rem; font-weight: 900;
+    font-family: 'Courier New', monospace;
+}
+.nt-new-btn {
+    background: rgba(245,124,0,.1); color: #f57c00;
+    border: 1.5px solid rgba(245,124,0,.35); border-radius: 2px;
+    padding: 4px 12px; font-size: .72rem; font-weight: 800;
+    cursor: pointer; font-family: inherit; transition: all .16s;
+}
+.nt-new-btn:hover { background: rgba(245,124,0,.18); }
+
+.nt-list { flex: 1; overflow-y: auto; padding: 4px 8px 12px; }
+.nt-list::-webkit-scrollbar { width: 4px; }
+.nt-list::-webkit-scrollbar-thumb { background: rgba(245,124,0,.35); border-radius: 2px; }
+.nt-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 3px; margin-bottom: 3px;
+    cursor: pointer; border: 1.5px solid transparent;
+    transition: background .13s, border-color .13s;
+}
+.nt-row:hover { background: rgba(8,101,168,.05); border-color: rgba(8,101,168,.12); }
+.nt-row.active { background: rgba(245,124,0,.09); border-color: rgba(245,124,0,.35); border-right: 3px solid #f57c00; }
+.nt-row-icon {
+    width: 38px; height: 38px; border-radius: 3px;
+    background: linear-gradient(135deg, #0865a8, #1a84d4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+    border: 1.5px solid rgba(8,101,168,.3); overflow: hidden;
+}
+.nt-row-info { overflow: hidden; flex: 1; }
+.nt-row-title { color: #0a0a0a; font-size: .75rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nt-row-date { color: #6b7280; font-size: .63rem; margin-top: 2px; }
+.nt-row-id {
+    background: #f0f1f2; color: #6b7280; font-size: .6rem;
+    padding: 2px 7px; border-radius: 2px; flex-shrink: 0;
+    font-weight: 700; font-family: 'Courier New', monospace;
+}
+.nt-row-status { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; }
+.nt-row-status.on { background: #16a34a; }
+.nt-row-status.off { background: #d0d3d8; }
+.nt-sidebar-footer {
+    padding: 10px 14px; border-top: 1.5px solid #f0f1f2;
+    text-align: center; font-size: .6rem; color: #6b7280;
+    background: #fff; flex-shrink: 0;
+}
+
+.nt-form-card {
+    background: #fff;
+    border: 1.5px solid #d0d3d8;
+    border-radius: 3px;
+    margin-bottom: 0;
+}
+.nt-form-hdr {
+    background: #044478; padding: 20px 26px;
+    display: flex; align-items: flex-start;
+    justify-content: space-between; gap: 12px;
+    flex-wrap: wrap; position: relative; overflow: hidden;
+}
+.nt-form-hdr::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(245,124,0,.07) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(245,124,0,.07) 1px, transparent 1px);
+    background-size: 36px 36px; pointer-events: none;
+}
+.nt-form-tag {
+    display: inline-block; background: #f57c00; color: #fff;
+    font-size: .7rem; font-weight: 700; padding: 4px 14px;
+    border-radius: 2px; margin-bottom: 6px; position: relative; z-index: 1;
+}
+.nt-form-title { font-size: 1.1rem; font-weight: 900; color: #fff; margin: 0; position: relative; z-index: 1; }
+.nt-form-sub { font-size: .72rem; color: rgba(255,255,255,.4); margin: 4px 0 0; position: relative; z-index: 1; }
+.nt-stat-pill {
+    display: inline-flex; align-items: center;
+    padding: 5px 14px; border-radius: 2px;
+    background: rgba(255,255,255,.08); border: 1.5px solid rgba(255,255,255,.15);
+    color: rgba(255,255,255,.72); font-size: .72rem; font-weight: 700;
+    position: relative; z-index: 1;
+}
+.nt-form-body { padding: 26px; }
+.nt-fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 20px; margin-bottom: 22px; }
+.nt-field { display: flex; flex-direction: column; gap: 5px; }
+.nt-label { font-size: .72rem; font-weight: 700; color: #374151; }
+.nt-inp {
+    border: 1.5px solid #d0d3d8; border-radius: 3px;
+    padding: 9px 12px; font-size: .8rem; color: #0a0a0a;
+    width: 100%; background: #fff; direction: rtl;
+    font-family: inherit; transition: border .18s, box-shadow .18s;
+    outline: none; box-sizing: border-box;
+}
+.nt-inp:focus { border-color: #f57c00; box-shadow: 0 0 0 3px rgba(245,124,0,.1); }
+.nt-inp::placeholder { color: #6b7280; }
+.nt-inp:disabled { background: #f0f1f2; color: #6b7280; cursor: not-allowed; }
+.nt-divider { height: 1px; background: #f0f1f2; margin: 4px 0 20px; }
+
+.nt-toggle-wrap { display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; padding: 6px 0; }
+.nt-toggle-track {
+    width: 46px; height: 26px; border-radius: 13px;
+    background: #d0d3d8; border: 1.5px solid #d0d3d8;
+    position: relative; transition: background .22s, border-color .22s; flex-shrink: 0;
+}
+.nt-toggle-track.on { background: #16a34a; border-color: #16a34a; }
+.nt-toggle-thumb {
+    position: absolute; top: 2px; right: 2px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    transition: transform .22s cubic-bezier(.4,0,.2,1);
+}
+.nt-toggle-track.on .nt-toggle-thumb { transform: translateX(-20px); }
+.nt-toggle-label { font-size: .76rem; font-weight: 800; }
+.nt-toggle-label.on { color: #16a34a; }
+.nt-toggle-label.off { color: #6b7280; }
+
+.nt-img-zone {
+    width: 100%; border-radius: 6px; border: 2px dashed #d0d3d8;
+    background: #f8f9fa; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+    transition: border-color .18s, background .18s;
+    box-sizing: border-box;
+}
+.nt-img-zone:hover, .nt-img-zone.over { border-color: #f57c00; background: rgba(245,124,0,.03); }
+.nt-img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 12px; }
+.nt-img-hint { color: #6b7280; font-size: .68rem; font-weight: 600; text-align: center; }
+.nt-img-types { color: #d0d3d8; font-size: .62rem; background: #f0f1f2; padding: 2px 10px; border-radius: 2px; }
+.nt-multi-img-wrap { margin-bottom: 4px; }
+.nt-imgs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px,1fr)); gap: 10px; margin-bottom: 4px; }
+.nt-img-slot {
+    position: relative; border-radius: 6px; overflow: hidden;
+    border: 2px solid #d0d3d8; background: #000;
+    aspect-ratio: 4/3; display: flex; align-items: center; justify-content: center;
+    transition: border-color .2s, box-shadow .2s;
+}
+.nt-img-slot.main { border-color: #f57c00; box-shadow: 0 0 0 3px rgba(245,124,0,.2); }
+.nt-img-slot.deleting { opacity: .5; pointer-events: none; }
+.nt-slot-deleting-overlay {
+    position: absolute; inset: 0; z-index: 10;
+    background: rgba(0,0,0,.5); display: flex;
+    align-items: center; justify-content: center; font-size: 1.4rem;
+}
+.nt-slot-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nt-main-badge { position: absolute; top: 5px; right: 5px; background: #f57c00; color: #fff; font-size: .55rem; font-weight: 800; padding: 2px 8px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-new-badge-slot { position: absolute; top: 5px; left: 5px; background: #f59e0b; color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 6px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-server-badge-slot { position: absolute; top: 5px; left: 5px; background: #0865a8; color: #fff; font-size: .52rem; font-weight: 800; padding: 2px 6px; border-radius: 3px; pointer-events: none; z-index: 2; }
+.nt-slot-actions { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; gap: 4px; padding: 5px; opacity: 0; transition: opacity .18s; }
+.nt-img-slot:hover .nt-slot-actions { opacity: 1; }
+.nt-slot-btn { border: none; border-radius: 3px; padding: 4px 7px; font-size: .7rem; cursor: pointer; font-family: inherit; font-weight: 700; line-height: 1; }
+.nt-slot-btn.promote { background: #f57c00; color: #fff; }
+.nt-slot-btn.replace { background: #0865a8; color: #fff; }
+.nt-slot-btn.remove { background: #dc2626; color: #fff; }
+.nt-slot-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.nt-rte-block { border-radius: 3px; border: 1.5px solid #d0d3d8; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+.nt-rte-hdr { background: #f8f9fa; padding: 10px 16px; border-bottom: 1.5px solid #f0f1f2; display: flex; align-items: center; gap: 9px; }
+.nt-rte-icon { font-size: 1.1rem; }
+.nt-rte-label { font-weight: 800; font-size: .8rem; color: #0a0a0a; }
+.nt-rte-sub { font-size: .65rem; color: #6b7280; margin-top: 2px; }
+.nt-rte-toolbar { display: flex; align-items: center; gap: 4px; padding: 7px 12px; background: #fff; border-bottom: 1.5px solid #f0f1f2; flex-wrap: wrap; }
+.nt-rte-sep { width: 1px; height: 20px; background: #e5e7eb; margin: 0 2px; flex-shrink: 0; }
+.nt-tb-btn { min-width: 30px; height: 28px; padding: 0 7px; border-radius: 4px; border: 1.5px solid #d0d3d8; background: #f8f9fa; color: #374151; font-size: .78rem; font-weight: 700; cursor: pointer; transition: all .14s; font-family: inherit; }
+.nt-tb-btn:hover, .nt-tb-btn.active { background: #f57c00; color: #fff; border-color: #f57c00; }
+.nt-tb-btn.bold { font-weight: 900; }
+.nt-tb-btn.italic { font-style: italic; }
+.nt-tb-btn.under { text-decoration: underline; }
+.nt-tb-size-wrap { display: flex; align-items: center; gap: 3px; }
+.nt-tb-select { padding: 4px 6px; border-radius: 4px; border: 1.5px solid #d0d3d8; background: #f8f9fa; color: #374151; font-family: inherit; font-size: .74rem; cursor: pointer; outline: none; }
+.nt-tb-select:focus { border-color: #f57c00; }
+.nt-tb-size-unit { font-size: .65rem; color: #6b7280; font-weight: 700; }
+.nt-tb-color-wrap { position: relative; }
+.nt-tb-color-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 3px 6px; border-radius: 4px; border: 1.5px solid #d0d3d8; background: #f8f9fa; cursor: pointer; position: relative; }
+.nt-color-letter { font-size: .9rem; font-weight: 900; line-height: 1; }
+.nt-color-bar { width: 14px; height: 3px; border-radius: 2px; }
+.nt-tb-color-input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
+.nt-rte-url-wrap { position: relative; }
+.nt-url-popover {
+    position: absolute; top: calc(100% + 6px); right: 0;
+    background: #fff; border: 1.5px solid #d0d3d8;
+    border-radius: 6px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    padding: 10px; z-index: 500;
+    display: flex; gap: 6px; min-width: 320px;
+    border-top: 3px solid #f57c00;
+}
+.nt-url-popover input { flex: 1; padding: 7px 10px; border: 1.5px solid #d0d3d8; border-radius: 4px; font-family: inherit; font-size: .76rem; direction: ltr; outline: none; }
+.nt-url-popover input:focus { border-color: #f57c00; }
+.nt-url-ok { padding: 7px 14px; background: #f57c00; color: #fff; border: none; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.nt-url-cancel { padding: 7px 10px; background: #f0f1f2; color: #374151; border: 1.5px solid #d0d3d8; border-radius: 4px; font-family: inherit; font-size: .74rem; font-weight: 700; cursor: pointer; }
+.nt-rte-editor {
+    padding: 12px 16px; outline: none;
+    font-family: inherit; font-size: .82rem; color: #0a0a0a;
+    line-height: 1.9; direction: rtl; background: #fff;
+    overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap;
+}
+.nt-rte-editor:empty::before { content: attr(data-placeholder); color: #9ca3af; pointer-events: none; }
+.nt-rte-editor a { color: #0865a8; text-decoration: underline; }
+
+.nt-actions {
+    display: flex; gap: 9px; margin-top: 24px;
+    padding-top: 18px; border-top: 2px solid #f0f1f2;
+    flex-wrap: wrap; align-items: center;
+}
+.nt-act-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 9px 20px; border-radius: 3px;
+    font-family: inherit; font-size: .8rem; font-weight: 800;
+    cursor: pointer; border: none;
+    transition: all .2s cubic-bezier(.4,0,.2,1); white-space: nowrap;
+}
+.nt-act-btn:hover { transform: translateY(-2px); }
+.nt-act-btn:active { transform: translateY(0); }
+.nt-act-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.nt-act-btn.save { background: #16a34a; color: #fff; box-shadow: 0 3px 12px rgba(22,163,74,.3); }
+.nt-act-btn.save:hover { background: #15803d; }
+.nt-act-btn.new { background: #0865a8; color: #fff; box-shadow: 0 3px 12px rgba(8,101,168,.3); }
+.nt-act-btn.new:hover { background: #044478; }
+.nt-act-btn.reset { background: #f57c00; color: #fff; box-shadow: 0 3px 12px rgba(245,124,0,.3); }
+.nt-act-btn.reset:hover { background: #bf5200; }
+.nt-act-btn.delete { background: #dc2626; color: #fff; box-shadow: 0 3px 12px rgba(220,38,38,.3); }
+.nt-act-btn.delete:hover { background: #b91c1c; }
+.nt-act-btn.cancel { background: #f0f1f2; color: #6b7280; border: 1.5px solid #d0d3d8; box-shadow: none; }
+.nt-act-btn.cancel:hover { border-color: #0a0a0a; color: #0a0a0a; }
+.nt-delete-confirm {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    background: #fef2f2; border: 1.5px solid rgba(220,38,38,.3);
+    border-radius: 3px; padding: 9px 14px; border-right: 4px solid #dc2626;
+}
+.nt-delete-warn { font-size: .78rem; color: #dc2626; font-weight: 700; }
+
+.nt-notif {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 16px; border-radius: 3px;
+    font-size: .8rem; font-weight: 700;
+    border-right: 4px solid;
+    margin-bottom: 12px;
+    animation: nt-notif-in .3s cubic-bezier(.34,1.56,.64,1);
+}
+.nt-notif-success { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+.nt-notif-error { background: #fef2f2; border-color: #dc2626; color: #dc2626; }
+.nt-notif-info { background: rgba(8,101,168,.06); border-color: #0865a8; color: #0865a8; }
+@keyframes nt-notif-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+.nt-skeleton { background: linear-gradient(90deg, #f0f1f2 25%, #e0e2e5 50%, #f0f1f2 75%); background-size: 200% 100%; animation: nt-shimmer 1.4s infinite; border-radius: 3px; }
+@keyframes nt-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.nt-loading-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; margin-bottom: 3px; }
+
+.nt-empty { text-align: center; padding: 40px 12px; color: #6b7280; }
+.nt-empty-icon { font-size: 2rem; margin-bottom: 10px; opacity: .35; }
+
+@media (max-width: 900px) {
+    .nt-layout { flex-direction: column; }
+    .nt-left-panel { width: 100%; height: 260px; }
+    .nt-form-wrap { height: auto; }
+    .nt-fields-grid { grid-template-columns: 1fr; }
+}
 `;
 
 function injectStyles() {
-    if (document.getElementById('news-tab-styles')) return;
+    if (document.getElementById('nt-styles')) return;
     const el = document.createElement('style');
-    el.id = 'news-tab-styles';
+    el.id = 'nt-styles';
     el.textContent = CSS;
     document.head.appendChild(el);
 }
 
-// ── API helpers ──────────────────────────────────────────────────────────────
+// ── API helpers ───────────────────────────────────────────────────────────────
+function getToken() {
+    return window.__clerkToken || null;
+}
+
 async function apiFetch(path, opts = {}) {
-    const res = await fetch(`${BASE}${path}`, opts);
+    const token = getToken();
+    const headers = { ...(opts.headers || {}) };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${BASE}${path}`, { ...opts, headers });
     if (!res.ok) {
         let errMsg = `HTTP ${res.status}`;
         try {
@@ -398,20 +667,37 @@ async function apiFetch(path, opts = {}) {
     return null;
 }
 
-function buildFormData(form, imageFile, isNew) {
+// ── FormData builder ──────────────────────────────────────────────────────────
+// API fields: Id, Title, Details, Date, ShowFlag, Images (files), ImageUrl, ImageUrls
+function buildFormData(form, images, isNew) {
     const fd = new FormData();
     fd.append('Id', isNew ? '0' : String(form.id));
     fd.append('Title', form.title || '');
     fd.append('Details', form.details || '');
     fd.append('Date', form.date ? `${form.date}T00:00:00.000Z` : '');
-    fd.append('ImageUrl', form.imageUrl && form.imageUrl !== 'N/A' ? form.imageUrl : (imageFile ? 'pending' : 'N/A'));
-    if (imageFile) fd.append('Image', imageFile);
+    fd.append('ShowFlag', String(form.showFlag));
+
+    // Separate new file uploads from existing server URLs
+    const newFiles = images.filter(img => img.file);
+    const serverImgs = images.filter(img => !img.file && img.serverUrl);
+
+    // All new file uploads go as Images[]
+    newFiles.forEach(img => fd.append('Images', img.file));
+
+    // Main image URL (first server image that is marked main, or first server image)
+    const mainServer = serverImgs.find(img => img.isMain) || serverImgs[0];
+    fd.append('ImageUrl', mainServer?.serverUrl || 'pending');
+
+    // Extra server image URLs
+    const extraServerImgs = serverImgs.filter(img => img !== mainServer);
+    extraServerImgs.forEach(img => fd.append('ImageUrls', img.serverUrl));
+
     return fd;
 }
 
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════════
 // NewsTab
-// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════════
 export default function NewsTab() {
     injectStyles();
 
@@ -419,33 +705,55 @@ export default function NewsTab() {
     const [total, setTotal] = useState(0);
     const [selected, setSelected] = useState(null);
     const [form, setForm] = useState({ ...BLANK });
+    const [images, setImages] = useState([]);
     const [isNew, setIsNew] = useState(false);
     const [search, setSearch] = useState('');
     const [notification, setNotif] = useState(null);
-    const [dragOver, setDragOver] = useState(false);
     const [deleteConfirm, setDelConf] = useState(false);
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailL] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [imageFile, setImageFile] = useState(null);
-    const [previewSrc, setPreviewSrc] = useState(null);
-    const [imgNaturalSize, setImgNaturalSize] = useState(null);
-    const fileRef = useRef();
+
+    // Track selected id separately so we can re-select after list reload
+    const selectedIdRef = useRef(null);
+
+    // showFlag is NOT returned by getAllNews — persist it in localStorage so it survives page refresh.
+    // Shape stored: { "164": false, "163": true, ... }
+    const STORAGE_KEY = 'nt_showflag_map';
+    const showFlagMapRef = useRef(null);
+    if (!showFlagMapRef.current) {
+        try { showFlagMapRef.current = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+        catch { showFlagMapRef.current = {}; }
+    }
+    const setFlag = (id, val) => {
+        showFlagMapRef.current[id] = val;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(showFlagMapRef.current)); } catch { }
+    };
 
     const toast = (msg, type = 'success') => {
         setNotif({ msg, type });
         setTimeout(() => setNotif(null), 3500);
     };
 
-    // ── Load list ──
-    const loadList = useCallback(async () => {
+    // ── Load list ─────────────────────────────────────────────────────────────
+    const loadList = useCallback(async (keepSelectionId = null) => {
         setLoading(true);
         try {
-            const data = await apiFetch(`/api/admin/AdminNews/getAllNews?PageIndex=1&PageSize=100`);
+            const data = await apiFetch(`/api/admin/AdminNews/getAllNews?PageIndex=1&PageSize=200`);
             const items = data?.data ?? [];
             setNews(items);
             setTotal(data?.totalItems ?? items.length);
-            if (items.length && !selected) pickById(items[0].id, items[0]);
+
+            // After reload, re-select the same item if we had one
+            const targetId = keepSelectionId ?? selectedIdRef.current;
+            if (targetId) {
+                const found = items.find(i => i.id === targetId);
+                if (found) { pickById(found.id, found); return; }
+            }
+            // Otherwise select first item
+            if (items.length && !selectedIdRef.current) {
+                pickById(items[0].id, items[0]);
+            }
         } catch (e) {
             toast('فشل تحميل الأخبار: ' + e.message, 'error');
         } finally {
@@ -455,34 +763,98 @@ export default function NewsTab() {
 
     useEffect(() => { loadList(); }, [loadList]);
 
-    // ── Fetch single ──
+    // ── Fetch single ──────────────────────────────────────────────────────────
+    // Detail GET response shape:
+    // {
+    //   id, title, details, publishedAt, imageUrl, imageUrls,
+    //   images: [ { picId, imageUrl, isMain }, ... ]
+    // }
+    // Note: showFlag is NOT in detail response — keep from list or form state
     const pickById = async (id, listItem) => {
         setDetailL(true);
         setDelConf(false);
         setIsNew(false);
-        setImageFile(null);
-        setImgNaturalSize(null);
+        selectedIdRef.current = id;
+
+        // Optimistic update from list data while detail loads
         if (listItem) {
-            setSelected(listItem);
-            setForm({ id: listItem.id, title: listItem.title, details: '', date: toInputDate(listItem.publishedAt), imageUrl: listItem.imageUrl, image: null });
-            setPreviewSrc(resolveImg(listItem.imageUrl));
+            setSelected(prev => ({ ...(prev || {}), id: listItem.id, title: listItem.title || '' }));
+            // Prefer value already known from map (set by previous detail load or save)
+            const knownFlag = showFlagMapRef.current[listItem.id];
+            const resolvedFlag = knownFlag !== undefined ? knownFlag
+                : (listItem.showFlag ?? listItem.isActive ?? true);
+            setForm(f => ({
+                ...f,
+                id: listItem.id,
+                title: listItem.title || '',
+                date: toInputDate(listItem.publishedAt),
+                showFlag: resolvedFlag,
+            }));
+
+            // Show main image immediately from list
+            const mainUrl = resolveImg(listItem.imageUrl);
+            if (mainUrl) {
+                setImages([{ file: null, previewSrc: mainUrl, serverUrl: listItem.imageUrl, picId: null, isMain: true }]);
+            } else {
+                setImages([]);
+            }
         }
+
         try {
             const item = await apiFetch(`/api/admin/AdminNews/${id}`);
-            if (item) {
-                const mapped = {
-                    id: item.id,
-                    title: item.title || '',
-                    details: item.details || '',
-                    date: toInputDate(item.date || item.publishedAt),
-                    imageUrl: item.imageUrl || null,
-                };
-                setSelected(mapped);
-                setForm(mapped);
-                setPreviewSrc(resolveImg(item.imageUrl));
+            if (!item) return;
+
+            const mapped = {
+                id: item.id,
+                title: item.title || '',
+                details: item.details || '',
+                // publishedAt is the date field in detail response
+                date: toInputDate(item.publishedAt || item.date),
+                // showFlag not returned by GET detail — use our local map (set on save) or default true
+                showFlag: showFlagMapRef.current[item.id] ?? item.showFlag ?? item.isActive ?? true,
+            };
+            // Persist so sidebar dot survives page refresh
+            setFlag(mapped.id, mapped.showFlag);
+            setSelected(mapped);
+            setForm(mapped);
+
+            // ── Parse images[] array — this is the correct structure ──
+            // images: [ { picId, imageUrl, isMain }, ... ]
+            const imagesArr = item.images ?? [];
+
+            let slots = [];
+            if (imagesArr.length > 0) {
+                // Sort: main first, then others in order
+                const sorted = [...imagesArr].sort((a, b) => (b.isMain ? 1 : 0) - (a.isMain ? 1 : 0));
+                slots = sorted
+                    .map(img => {
+                        const resolved = resolveImg(img.imageUrl);
+                        if (!resolved) return null;
+                        return {
+                            file: null,
+                            previewSrc: resolved,
+                            serverUrl: img.imageUrl,
+                            picId: img.picId ?? null,
+                            isMain: img.isMain ?? false,
+                        };
+                    })
+                    .filter(Boolean);
+            } else {
+                // Fallback: use imageUrl + imageUrls if images[] is empty
+                const mainResolved = resolveImg(item.imageUrl);
+                if (mainResolved) {
+                    slots.push({ file: null, previewSrc: mainResolved, serverUrl: item.imageUrl, picId: null, isMain: true });
+                }
+                const extras = Array.isArray(item.imageUrls) ? item.imageUrls : [];
+                extras.forEach(u => {
+                    const r = resolveImg(u);
+                    if (r) slots.push({ file: null, previewSrc: r, serverUrl: u, picId: null, isMain: false });
+                });
             }
+
+            setImages(slots);
         } catch (e) {
-            toast('فشل تحميل تفاصيل الخبر', 'error');
+            toast('فشل تحميل تفاصيل الخبر: ' + e.message, 'error');
         } finally {
             setDetailL(false);
         }
@@ -490,39 +862,30 @@ export default function NewsTab() {
 
     const handleChange = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-    const applyImage = (file) => {
-        if (!file || !file.type.startsWith('image/')) return;
-        setImageFile(file);
-        setImgNaturalSize(null);
-        const blobUrl = URL.createObjectURL(file);
-        setPreviewSrc(blobUrl);
-        setForm(f => ({ ...f, imageUrl: null }));
-    };
-
-    const handleImgLoad = (e) => {
-        setImgNaturalSize({ w: e.target.naturalWidth, h: e.target.naturalHeight });
-    };
-
-    // ── Save ──
+    // ── Save ──────────────────────────────────────────────────────────────────
     const handleSave = async () => {
         if (!form.title.trim()) { toast('عنوان الخبر مطلوب', 'error'); return; }
         if (!form.date) { toast('التاريخ مطلوب', 'error'); return; }
+        if (images.length === 0) { toast('صورة الخبر مطلوبة', 'error'); return; }
         if (!form.details || !form.details.trim() || form.details === '<div><br></div>') {
             toast('تفاصيل الخبر مطلوبة', 'error'); return;
         }
         setSaving(true);
         try {
-            const fd = buildFormData(form, imageFile, isNew);
+            const fd = buildFormData(form, images, isNew);
             if (isNew) {
                 await apiFetch('/api/admin/AdminNews', { method: 'POST', body: fd });
                 toast('تم إضافة الخبر بنجاح');
+                setIsNew(false);
+                await loadList();
             } else {
                 await apiFetch(`/api/admin/AdminNews/${form.id}`, { method: 'PUT', body: fd });
+                // Persist saved showFlag immediately so sidebar dot reflects the change on refresh too
+                setFlag(form.id, form.showFlag);
                 toast('تم حفظ التغييرات بنجاح');
+                // Re-fetch detail to get updated images list
+                await loadList(form.id);
             }
-            setImageFile(null);
-            setIsNew(false);
-            await loadList();
         } catch (e) {
             toast('فشل الحفظ: ' + e.message, 'error');
         } finally {
@@ -535,21 +898,23 @@ export default function NewsTab() {
         setSelected(null);
         setIsNew(true);
         setDelConf(false);
-        setImageFile(null);
-        setPreviewSrc(null);
-        setImgNaturalSize(null);
+        setImages([]);
+        selectedIdRef.current = null;
     };
 
     const handleDelete = async () => {
         if (!deleteConfirm) { setDelConf(true); return; }
         setSaving(true);
         try {
-            await apiFetch(`/api/admin/AdminNews/${selected.id}`, { method: 'DELETE' });
+            await apiFetch(`/api/admin/AdminNews/${form.id}`, { method: 'DELETE' });
             toast('تم حذف الخبر', 'error');
             setDelConf(false);
             setSelected(null);
+            selectedIdRef.current = null;
+            setForm({ ...BLANK });
+            setImages([]);
+            setIsNew(false);
             await loadList();
-            handleNew();
         } catch (e) {
             toast('فشل الحذف: ' + e.message, 'error');
         } finally {
@@ -558,12 +923,11 @@ export default function NewsTab() {
     };
 
     const handleReset = () => {
-        if (isNew) { setForm({ ...BLANK }); setPreviewSrc(null); setImageFile(null); setImgNaturalSize(null); }
-        else if (selected) {
-            setForm({ ...selected });
-            setPreviewSrc(resolveImg(selected.imageUrl));
-            setImageFile(null);
-            setImgNaturalSize(null);
+        if (isNew) {
+            setForm({ ...BLANK });
+            setImages([]);
+        } else if (selectedIdRef.current) {
+            pickById(selectedIdRef.current, null);
         }
         setDelConf(false);
         toast('تم إلغاء التغييرات', 'info');
@@ -574,204 +938,184 @@ export default function NewsTab() {
         formatDateAr(n.publishedAt).includes(search)
     );
 
-    const hasImage = !!previewSrc;
-
     return (
-        <div className="news-root">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-            {/* ════ SIDEBAR ════ */}
-            <aside className="news-sidebar">
-                <div className="news-brand">
-                    <div className="news-brand-icon">📰</div>
-                    <div>
-                        <div className="news-brand-name">ICEMT</div>
-                        <div className="news-brand-sub">إدارة الأخبار</div>
+            {/* Notification */}
+            {notification && (
+                <div className={`nt-notif nt-notif-${notification.type}`} style={{ marginBottom: 12 }}>
+                    <span>{notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}</span>
+                    {notification.msg}
+                </div>
+            )}
+
+            <div className="nt-layout">
+
+                {/* ════ LEFT PANEL ════ */}
+                <div className="nt-left-panel">
+
+                    <div className="nt-panel-hdr">
+                        <div className="nt-brand-icon">📰</div>
+                        <div style={{ flex: 1 }}>
+                            <div className="nt-brand-name">ICEMT</div>
+                            <div className="nt-brand-sub">إدارة الأخبار</div>
+                        </div>
+                        <span className="nt-count-badge">{filtered.length}</span>
                     </div>
-                </div>
 
-                <div className="news-search-wrap" style={{ position: 'relative' }}>
-                    <input type="text" placeholder="بحث بالعنوان أو التاريخ..." value={search} onChange={e => setSearch(e.target.value)} />
-                    <span className="news-search-icon">🔍</span>
-                    {search && <button className="news-search-clear" onClick={() => setSearch('')}>✕</button>}
-                </div>
-
-                <div className="news-list-hdr">
-                    <span style={{ color: '#374151', fontSize: '.68rem', fontWeight: 700 }}>
-                        الأخبار &nbsp;<span className="news-count-badge">{filtered.length}</span>
-                    </span>
-                    <button className="news-new-btn" onClick={handleNew}>+ جديد</button>
-                </div>
-
-                <div className="news-list">
-                    {loading && [1, 2, 3].map(i => (
-                        <div className="news-loading-row" key={i}>
-                            <div className="news-skeleton" style={{ width: 38, height: 38, flexShrink: 0 }} />
-                            <div style={{ flex: 1 }}>
-                                <div className="news-skeleton" style={{ height: 12, marginBottom: 6 }} />
-                                <div className="news-skeleton" style={{ height: 10, width: '60%' }} />
-                            </div>
-                        </div>
-                    ))}
-                    {!loading && filtered.length === 0 && (
-                        <div className="news-empty" style={{ padding: '32px 12px' }}>
-                            <div className="news-empty-icon">🔍</div>
-                            <p style={{ fontSize: '.74rem' }}>لا توجد نتائج</p>
-                        </div>
-                    )}
-                    {!loading && filtered.map(item => (
-                        <div
-                            key={item.id}
-                            className={`news-row${selected?.id === item.id ? ' active' : ''}`}
-                            onClick={() => pickById(item.id, item)}
-                        >
-                            <div className="news-row-icon">
-                                {resolveImg(item.imageUrl)
-                                    ? <img src={resolveImg(item.imageUrl)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : '📰'}
-                            </div>
-                            <div className="news-row-info">
-                                <div className="news-row-title">{item.title || 'بدون عنوان'}</div>
-                                <div className="news-row-date">{formatDateAr(item.publishedAt)}</div>
-                            </div>
-                            <div className="news-row-id">#{item.id}</div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="news-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
-            </aside>
-
-            {/* ════ MAIN ════ */}
-            <main className="news-main">
-                {notification && (
-                    <div className={`news-notif news-notif-${notification.type}`}>
-                        <span>{notification.type === 'success' ? '✅' : notification.type === 'error' ? '❌' : 'ℹ️'}</span>
-                        {notification.msg}
+                    <div className="nt-search-wrap" style={{ position: 'relative' }}>
+                        <input type="text" placeholder="بحث بالعنوان أو التاريخ..."
+                            value={search} onChange={e => setSearch(e.target.value)} />
+                        <span className="nt-search-icon">🔍</span>
+                        {search && <button className="nt-search-clear" onClick={() => setSearch('')}>✕</button>}
                     </div>
-                )}
 
-                <div className="news-body">
-                    <div className="news-card">
+                    <div className="nt-list-hdr">
+                        <span style={{ color: '#374151', fontSize: '.68rem', fontWeight: 700 }}>الأخبار</span>
+                        <button className="nt-new-btn" onClick={handleNew}>+ جديد</button>
+                    </div>
 
-                        <div className="news-form-hdr">
+                    <div className="nt-list">
+                        {loading && [1, 2, 3].map(i => (
+                            <div className="nt-loading-row" key={i}>
+                                <div className="nt-skeleton" style={{ width: 38, height: 38, flexShrink: 0 }} />
+                                <div style={{ flex: 1 }}>
+                                    <div className="nt-skeleton" style={{ height: 12, marginBottom: 6 }} />
+                                    <div className="nt-skeleton" style={{ height: 10, width: '60%' }} />
+                                </div>
+                            </div>
+                        ))}
+                        {!loading && filtered.length === 0 && (
+                            <div className="nt-empty">
+                                <div className="nt-empty-icon">🔍</div>
+                                <p style={{ fontSize: '.74rem' }}>لا توجد نتائج</p>
+                            </div>
+                        )}
+                        {!loading && filtered.map(item => {
+                            const imgSrc = resolveImg(item.imageUrl);
+                            // Use our local map if available (updated on save/detail-load), else item field, else true
+                            const isVisible = showFlagMapRef.current[item.id] !== undefined
+                                ? showFlagMapRef.current[item.id]
+                                : (item.showFlag ?? item.isActive ?? true);
+                            return (
+                                <div key={item.id}
+                                    className={`nt-row${selectedIdRef.current === item.id ? ' active' : ''}`}
+                                    onClick={() => pickById(item.id, item)}>
+                                    <div className="nt-row-icon">
+                                        {imgSrc
+                                            ? <img src={imgSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            : '📰'}
+                                    </div>
+                                    <div className="nt-row-info">
+                                        <div className="nt-row-title">{item.title || 'بدون عنوان'}</div>
+                                        <div className="nt-row-date">{formatDateAr(item.publishedAt)}</div>
+                                    </div>
+                                    <div className={`nt-row-status ${isVisible ? 'on' : 'off'}`}
+                                        title={isVisible ? 'مرئي' : 'مخفي'} />
+                                    <div className="nt-row-id">#{item.id}</div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="nt-sidebar-footer">ICEMT © {new Date().getFullYear()}</div>
+                </div>
+
+                {/* ════ FORM AREA ════ */}
+                <div className="nt-form-wrap">
+                    <div className="nt-form-card">
+
+                        <div className="nt-form-hdr">
                             <div>
-                                <div className="news-form-tag">{isNew ? 'خبر جديد' : `ID: #${selected?.id}`}</div>
-                                <h2 className="news-form-title">
+                                <div className="nt-form-tag">{isNew ? 'خبر جديد' : `ID: #${form.id}`}</div>
+                                <h2 className="nt-form-title">
                                     {detailLoading ? '⏳ جاري التحميل...' : isNew ? '➕ إضافة خبر جديد' : '✏️ تعديل بيانات الخبر'}
                                 </h2>
-                                {!isNew && selected && <p className="news-form-sub">{previewSnippet(selected.title, 60)}</p>}
+                                {!isNew && form.title && <p className="nt-form-sub">{previewSnippet(form.title, 60)}</p>}
                             </div>
-                            <div className="news-stat-pill">📰 {total} خبر</div>
+                            <div className="nt-stat-pill">📰 {total} خبر</div>
                         </div>
 
-                        <div className="news-form-body">
+                        {detailLoading ? (
+                            <div style={{ padding: 40, textAlign: 'center', color: '#6b7280' }}>⏳ جاري تحميل البيانات...</div>
+                        ) : (
+                            <div className="nt-form-body">
 
-                            <div className="news-fields-grid">
-                                <div className="news-field">
-                                    <label className="news-label">الرقم</label>
-                                    <input className="news-inp" value={isNew ? 'تلقائي' : form.id} disabled />
-                                </div>
-                                <div className="news-field">
-                                    <label className="news-label">التاريخ *</label>
-                                    <input className="news-inp" type="date" name="date" value={form.date} onChange={handleChange} style={{ direction: 'ltr', textAlign: 'right' }} />
-                                </div>
-                                <div className="news-field" style={{ gridColumn: '1/-1' }}>
-                                    <label className="news-label">عنوان الخبر *</label>
-                                    <input className="news-inp" name="title" value={form.title} onChange={handleChange} placeholder="أدخل عنوان الخبر هنا..." />
-                                </div>
-                            </div>
+                                <div className="nt-fields-grid">
+                                    <div className="nt-field">
+                                        <label className="nt-label">الرقم</label>
+                                        <input className="nt-inp" value={isNew ? 'تلقائي' : form.id} disabled
+                                            style={{ background: '#f0f1f2', color: '#6b7280', cursor: 'not-allowed', fontFamily: "'Courier New',monospace", fontSize: '.74rem' }} />
+                                    </div>
+                                    <div className="nt-field">
+                                        <label className="nt-label">التاريخ <span style={{ color: '#dc2626' }}>*</span></label>
+                                        <input className="nt-inp" type="date" name="date" value={form.date}
+                                            onChange={handleChange} style={{ direction: 'ltr', textAlign: 'right' }} />
+                                    </div>
 
-                            {/* ── Image upload ── */}
-                            <div className="news-field" style={{ marginBottom: 20 }}>
-                                <label className="news-label" style={{ marginBottom: 6 }}>
-                                    صورة الخبر (اختياري)
-                                    {imgNaturalSize && (
-                                        <span style={{ marginRight: 8, background: T.gray100, color: T.gray500, fontSize: '.6rem', fontWeight: 700, padding: '1px 8px', borderRadius: 2, fontFamily: "'Courier New', monospace" }}>
-                                            {imgNaturalSize.w} × {imgNaturalSize.h}
-                                        </span>
-                                    )}
-                                </label>
+                                    {/* ShowFlag toggle — full width */}
+                                    <div className="nt-field" style={{ gridColumn: '1/-1' }}>
+                                        <label className="nt-label">حالة الظهور</label>
+                                        <ActiveToggle value={!!form.showFlag} onChange={val => setForm(f => ({ ...f, showFlag: val }))} />
+                                    </div>
 
-                                <div
-                                    className={`news-img-zone${hasImage ? ' has-image' : ''}${dragOver ? ' over' : ''}`}
-                                    onDragOver={e => { e.preventDefault(); setDragOver(true); }}
-                                    onDragLeave={() => setDragOver(false)}
-                                    onDrop={e => { e.preventDefault(); setDragOver(false); applyImage(e.dataTransfer.files[0]); }}
-                                    onClick={() => fileRef.current.click()}
-                                >
-                                    {hasImage ? (
-                                        <>
-                                            <img src={previewSrc} alt="معاينة الخبر" className="news-img-preview" onLoad={handleImgLoad} />
-                                            <div className="news-img-overlay">
-                                                <span style={{ fontSize: '1.8rem' }}>🖼️</span>
-                                                <span className="news-img-overlay-txt">اضغط لتغيير الصورة</span>
-                                            </div>
-                                            {imgNaturalSize && (
-                                                <div className="news-img-meta">
-                                                    <span className="news-img-meta-txt">{imgNaturalSize.w} × {imgNaturalSize.h} px</span>
-                                                    <span className="news-img-meta-txt">{imageFile ? `${(imageFile.size / 1024).toFixed(0)} KB` : 'مُحمَّلة من الخادم'}</span>
-                                                </div>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <div className="news-img-placeholder">
-                                            <div className="news-img-icon">🖼️</div>
-                                            <span className="news-img-hint">اسحب صورة هنا<br />أو اضغط للاختيار</span>
-                                            <span className="news-img-types">JPG · PNG · WEBP</span>
-                                        </div>
-                                    )}
+                                    {/* Title — full width */}
+                                    <div className="nt-field" style={{ gridColumn: '1/-1' }}>
+                                        <label className="nt-label">عنوان الخبر <span style={{ color: '#dc2626' }}>*</span></label>
+                                        <input className="nt-inp" name="title" value={form.title}
+                                            onChange={handleChange} placeholder="أدخل عنوان الخبر هنا..." />
+                                    </div>
                                 </div>
 
-                                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => applyImage(e.target.files[0])} />
+                                {/* Multi-image uploader */}
+                                <div style={{ marginBottom: 20 }}>
+                                    <MultiImageUploader
+                                        images={images}
+                                        onChange={setImages}
+                                        newsId={!isNew ? form.id : null}
+                                        onServerImageDeleted={(msg, type = 'success') => toast(msg, type)}
+                                    />
+                                </div>
 
-                                {hasImage && (
-                                    <button className="news-remove-img" onClick={() => {
-                                        setPreviewSrc(null); setImageFile(null); setImgNaturalSize(null);
-                                        setForm(f => ({ ...f, imageUrl: null }));
-                                    }}>
-                                        ✕ حذف الصورة
+                                <div className="nt-divider" />
+
+                                <RichTextEditor
+                                    icon="📝"
+                                    label="تفاصيل الخبر *"
+                                    sub="حدد النص أولاً ثم اختر التنسيق من شريط الأدوات"
+                                    name="details"
+                                    value={form.details}
+                                    onChange={handleChange}
+                                    placeholder="أدخل تفاصيل الخبر هنا..."
+                                    minHeight={200}
+                                />
+
+                                <div className="nt-actions">
+                                    <button className="nt-act-btn save" onClick={handleSave} disabled={saving}>
+                                        {saving ? '⏳ جاري الحفظ...' : '💾 حفظ'}
                                     </button>
-                                )}
+                                    <button className="nt-act-btn new" onClick={handleNew} disabled={saving}>➕ خبر جديد</button>
+                                    <button className="nt-act-btn reset" onClick={handleReset} disabled={saving}>↩ إلغاء</button>
+                                    <div style={{ flex: 1 }} />
+                                    {!isNew && (
+                                        deleteConfirm ? (
+                                            <div className="nt-delete-confirm">
+                                                <span className="nt-delete-warn">⚠️ هل أنت متأكد من حذف هذا الخبر؟</span>
+                                                <button className="nt-act-btn delete" onClick={handleDelete} disabled={saving}>تأكيد الحذف</button>
+                                                <button className="nt-act-btn cancel" onClick={() => setDelConf(false)}>إلغاء</button>
+                                            </div>
+                                        ) : (
+                                            <button className="nt-act-btn delete" onClick={handleDelete} disabled={saving}>🗑 حذف الخبر</button>
+                                        )
+                                    )}
+                                </div>
+
                             </div>
-
-                            <div className="news-divider" />
-
-                            {/* ── RichTextEditor replaces textarea ── */}
-                            <RichTextEditor
-                                icon="📝"
-                                label="تفاصيل الخبر *"
-                                sub="حدد النص أولاً ثم اختر التنسيق من شريط الأدوات — يمكن إضافة روابط للمقالات"
-                                name="details"
-                                value={form.details}
-                                onChange={handleChange}
-                                placeholder="أدخل تفاصيل الخبر هنا...&#10;&#10;يمكنك كتابة الخبر بشكل كامل بما يشمل المقدمة، والتفاصيل، والخاتمة."
-                                minHeight={200}
-                            />
-
-                            <div className="news-actions">
-                                <button className="news-act-btn save" onClick={handleSave} disabled={saving}>
-                                    {saving ? '⏳ جاري الحفظ...' : '💾 حفظ'}
-                                </button>
-                                <button className="news-act-btn new" onClick={handleNew} disabled={saving}>➕ خبر جديد</button>
-                                <button className="news-act-btn reset" onClick={handleReset} disabled={saving}>↩ إلغاء</button>
-                                <div style={{ flex: 1 }} />
-                                {!isNew && (
-                                    deleteConfirm ? (
-                                        <div className="news-delete-confirm">
-                                            <span className="news-delete-warn">⚠️ هل أنت متأكد من حذف هذا الخبر؟</span>
-                                            <button className="news-act-btn delete" onClick={handleDelete} disabled={saving}>تأكيد الحذف</button>
-                                            <button className="news-act-btn cancel" onClick={() => setDelConf(false)}>إلغاء</button>
-                                        </div>
-                                    ) : (
-                                        <button className="news-act-btn delete" onClick={handleDelete} disabled={saving}>🗑 حذف الخبر</button>
-                                    )
-                                )}
-                            </div>
-
-                        </div>
+                        )}
                     </div>
                 </div>
-            </main>
+
+            </div>
         </div>
     );
 }

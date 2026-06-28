@@ -1,10 +1,12 @@
 ﻿using Institute.API.DTOs;
 using Institute.Application.Interfaces.IService;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Institute.API.Controllers
 {
+    [Authorize(Policy = "ManagerOnly")]
     [Route("api/[controller]")]
     [ApiController]
     public class UserPermissionsController : ControllerBase

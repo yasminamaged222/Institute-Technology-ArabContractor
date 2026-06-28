@@ -2,7 +2,7 @@ name: Build and deploy ASP+React to Azure Web App - acwebsite
 
 on:
   push:
-    branches:
+   branches:
       - main
   workflow_dispatch:
   

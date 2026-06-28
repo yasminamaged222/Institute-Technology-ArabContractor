@@ -7,7 +7,7 @@ import {
 } from 'recharts';
 
 const BASE = 'https://acwebsite-icmet-test.azurewebsites.net';
-const LOGO_SRC = new URL('../../assets/black.png', import.meta.url).href;
+const LOGO_SRC = new URL('../../assets/black.webp', import.meta.url).href;
 
 const T = {
     orange: '#f57c00', orangeLight: '#ff9a3c', orangeDark: '#bf5200',
@@ -46,11 +46,11 @@ async function apiFetch(path) {
 // ── Helpers ──
 function fmtMoney(n) {
     if (n == null || isNaN(Number(n))) return '0';
-    return Number(n).toLocaleString('ar-EG');
+    return Number(n).toLocaleString('en-US');
 }
 function formatDateAr(raw) {
     if (!raw) return null;
-    try { return new Date(raw).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }); }
+    try { return new Date(raw).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
     catch { return raw; }
 }
 function buildExportRows(rows, grandTotal) {
@@ -290,7 +290,7 @@ export default function FinancialTab() {
     const totalRefunds = refunds.filter(r => r.status === 'Approved' || r.status === 'Sent').reduce((s, r) => s + (Number(r.amount) || 0), 0);
     const netRevenue = grandTotal - totalRefunds;
     const totalEnrollments = stats?.enrollmentsCount ?? allRows.reduce((s, r) => s + r.courses.length, 0);
-    const avgPerUser = allRows.length > 0 ? Math.round(grandTotal / allRows.length) : 0;
+    const avgPerUser = allRows.length > 0 ? Math.round(netRevenue / allRows.length) : 0;
     const maxPayer = allRows.length > 0 ? allRows.reduce((a, b) => a.totalPaid > b.totalPaid ? a : b) : null;
 
     // ── Course revenue ──
@@ -340,7 +340,7 @@ export default function FinancialTab() {
         catch (e) { setExportError('فشل التصدير: ' + (e?.message || 'خطأ')); }
         finally { setExporting(false); }
     };
-    const rows4export = () => buildExportRows(sorted, grandTotal);
+    const rows4export = () => buildExportRows(sorted, netRevenue);
     const handleExcel = () => exportExcel('التقرير-المالي.xlsx', REPORT_TITLE, FIN_HEADERS, rows4export(), LOGO_SRC);
     const handlePDF = () => {
         const { headers, rows } = rtlExport(FIN_HEADERS, rows4export());
@@ -370,11 +370,11 @@ export default function FinancialTab() {
 
             {errors.map((e, i) => <div className="fin-err" key={i}>⚠️ {e}</div>)}
 
-            {/* Hero */}
+            {/* ── Hero: shows NET revenue after refunds ── */}
             <div className="fin-income-hero">
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div className="fin-total-label">💰 إجمالي الإيرادات الكلية</div>
-                    <div className="fin-total-amount"><span className="fin-currency">EGP</span>{fmtMoney(grandTotal)}</div>
+                    <div className="fin-total-label">✅ صافي الإيرادات الكلية (بعد المرتجعات)</div>
+                    <div className="fin-total-amount"><span className="fin-currency">EGP</span>{fmtMoney(netRevenue)}</div>
                     <div className="fin-total-sub">من {allRows.length} مستخدم · {totalEnrollments} تسجيل</div>
                 </div>
                 <div className="fin-income-pills">
@@ -382,7 +382,8 @@ export default function FinancialTab() {
                         { label: 'المستخدمون الدافعون', val: allRows.length, icon: '👤' },
                         { label: 'إجمالي التسجيلات', val: totalEnrollments, icon: '📚' },
                         { label: 'متوسط لكل مستخدم', val: `${fmtMoney(avgPerUser)} EGP`, icon: '📊' },
-                        { label: 'صافي الإيرادات', val: `${fmtMoney(netRevenue)} EGP`, icon: '✅' },
+                        { label: 'إجمالي قبل المرتجعات', val: `${fmtMoney(grandTotal)} EGP`, icon: '📋' },
+                        { label: 'إجمالي المرتجعات', val: `${fmtMoney(totalRefunds)} EGP`, icon: '🔻' },
                         ...(maxPayer ? [{ label: 'أعلى دافع', val: maxPayer.username, icon: '🏆' }] : []),
                     ].map(p => (
                         <div className="fin-ip" key={p.label}>
@@ -619,10 +620,10 @@ export default function FinancialTab() {
                                 <tfoot>
                                     <tr style={{ background: '#044478' }}>
                                         <td colSpan={4} style={{ padding: '12px 16px', fontWeight: 900, color: '#fff', fontSize: '.82rem', fontFamily: '"Noto Kufi Arabic",sans-serif' }}>
-                                            💰 الإجمالي الكلي لإيرادات المعهد
+                                            ✅ صافي الإيرادات الكلية (بعد المرتجعات)
                                         </td>
                                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                            <span style={{ fontWeight: 900, fontSize: '1rem', color: '#ff9a3c' }}>{fmtMoney(grandTotal)} EGP</span>
+                                            <span style={{ fontWeight: 900, fontSize: '1rem', color: '#ff9a3c' }}>{fmtMoney(netRevenue)} EGP</span>
                                         </td>
                                         <td />
                                     </tr>

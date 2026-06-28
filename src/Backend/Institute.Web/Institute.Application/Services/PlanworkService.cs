@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Institute.Application.Services
 {
@@ -41,6 +40,10 @@ namespace Institute.Application.Services
                 CourseDays = x.CourseDays,
                 CourseContent = x.CourseContent,
                 PlanCost = x.PlanCost,
+                // ✅ Online fields
+                IsOnline = x.IsOnline,
+                OnlineLink = x.OnlineLink,
+                OnlineCost = x.OnlineCost,
                 Slug = x.Slug,
                 SKU = x.SKU
             }).ToList();
@@ -51,7 +54,6 @@ namespace Institute.Application.Services
         {
             var all = await _repo.GetAllAsync();
 
-            // ❗ مفيش فلترة هنا
             var ordered = all
                 .OrderBy(x => x.Priority ?? int.MaxValue)
                 .ToList();
@@ -95,6 +97,10 @@ namespace Institute.Application.Services
                 CourseDays = x.CourseDays,
                 CourseContent = x.CourseContent,
                 PlanCost = x.PlanCost,
+                // ✅ Online fields
+                IsOnline = x.IsOnline,
+                OnlineLink = x.OnlineLink,
+                OnlineCost = x.OnlineCost,
                 Slug = x.Slug,
                 SKU = x.SKU
             };
@@ -117,6 +123,10 @@ namespace Institute.Application.Services
                 CourseDays = dto.CourseDays,
                 CourseContent = dto.CourseContent,
                 PlanCost = dto.PlanCost,
+                // ✅ Online fields
+                IsOnline = dto.IsOnline,
+                OnlineLink = dto.OnlineLink,
+                OnlineCost = dto.OnlineCost,
                 Slug = dto.Slug,
                 SKU = dto.SKU
             };
@@ -144,6 +154,10 @@ namespace Institute.Application.Services
             entity.CourseDays = dto.CourseDays;
             entity.CourseContent = dto.CourseContent;
             entity.PlanCost = dto.PlanCost;
+            // ✅ Online fields
+            entity.IsOnline = dto.IsOnline;
+            entity.OnlineLink = dto.OnlineLink;
+            entity.OnlineCost = dto.OnlineCost;
             entity.Slug = dto.Slug;
             entity.SKU = dto.SKU;
 

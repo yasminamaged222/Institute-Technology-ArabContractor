@@ -4,24 +4,35 @@ using Institute.Application.Interfaces.IService;
 using Institute.Domain.Entities;
 using Institute.Infrastructure.DTOs;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace Institute.Application.Services
 {
     public class LecturerService : ILecturerService
     {
         private readonly IRepository<Lecturer> _repo;
+        private readonly IBlobStorage _blobStorage;
+        private readonly IConfiguration _config;
 
-        public LecturerService(IRepository<Lecturer> repo)
+        private const string Container = "icemt";
+        private const string Folder = "lecturers";
+
+        public LecturerService(
+            IRepository<Lecturer> repo,
+            IBlobStorage blobStorage,
+            IConfiguration config)
         {
             _repo = repo;
+            _blobStorage = blobStorage;
+            _config = config;
         }
 
         // ── Mapping helper ────────────────────────────────────────────────────
-        private static LecturerResponseDto ToDto(Lecturer l) => new()
+        private LecturerResponseDto ToDto(Lecturer l) => new()
         {
             Id = l.LecturerId,
             Name = l.LecturerName,
-            Pic = l.LecturerPic,
+            Pic = GetImageUrl(l.LecturerPic),
             Course = l.LecturerCourse,
             MainEdu = l.LecturerMainEdu,
             Edu = l.LecturerEdu,
@@ -40,8 +51,12 @@ namespace Institute.Application.Services
         // ── GET BY ID ─────────────────────────────────────────────────────────
         public async Task<LecturerResponseDto?> GetByIdAsync(int id)
         {
-            var l = await _repo.GetByIdAsync(id);
-            return l == null ? null : ToDto(l);
+            var lecturer = await _repo.GetByIdAsync(id);
+
+            if (lecturer == null)
+                return null;
+
+            return ToDto(lecturer);
         }
 
         // ── CREATE ────────────────────────────────────────────────────────────
@@ -60,6 +75,7 @@ namespace Institute.Application.Services
 
             await _repo.AddAsync(entity);
             await _repo.SaveChangesAsync();
+
             return ToDto(entity);
         }
 
@@ -67,7 +83,9 @@ namespace Institute.Application.Services
         public async Task<LecturerResponseDto?> UpdateAsync(int id, LecturerCreateUpdateDto dto)
         {
             var entity = await _repo.GetByIdAsync(id);
-            if (entity == null) return null;
+
+            if (entity == null)
+                return null;
 
             entity.LecturerName = dto.Name;
             entity.LecturerMainEdu = dto.Specialty;
@@ -79,6 +97,7 @@ namespace Institute.Application.Services
 
             _repo.Update(entity);
             await _repo.SaveChangesAsync();
+
             return ToDto(entity);
         }
 
@@ -86,20 +105,13 @@ namespace Institute.Application.Services
         public async Task<bool> DeleteAsync(int id)
         {
             var entity = await _repo.GetByIdAsync(id);
-            if (entity == null) return false;
 
-            // امسح الصورة من الديسك لو موجودة
-            if (!string.IsNullOrEmpty(entity.LecturerPic))
-            {
-                var filePath = Path.Combine(
-                    "D:\\home\\site\\userfiles\\icemt\\assets\\images",
-                    Path.GetFileName(entity.LecturerPic)
-                );
-                if (File.Exists(filePath)) File.Delete(filePath);
-            }
+            if (entity == null)
+                return false;
 
             _repo.Delete(entity);
             await _repo.SaveChangesAsync();
+
             return true;
         }
 
@@ -107,31 +119,36 @@ namespace Institute.Application.Services
         public async Task<string?> UploadPhotoAsync(int id, IFormFile photo, string uploadsFolder)
         {
             var entity = await _repo.GetByIdAsync(id);
-            if (entity == null) return null;
 
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
+            if (entity == null)
+                return null;
 
-            // امسح الصورة القديمة لو موجودة
-            if (!string.IsNullOrEmpty(entity.LecturerPic))
-            {
-                var oldPath = Path.Combine(uploadsFolder, Path.GetFileName(entity.LecturerPic));
-                if (File.Exists(oldPath)) File.Delete(oldPath);
-            }
+            // Upload to Azure Blob
+            var fullBlobPath = await _blobStorage.UploadFileAsync(
+                photo,
+                Container,
+                Folder);
 
-            // احفظ اسم الملف بس (بدون path) زي باقي الصور في الـ DB
-            var fileName = Guid.NewGuid() + Path.GetExtension(photo.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
+            // Save file name only
+            var fileNameOnly = Path.GetFileName(fullBlobPath);
 
-            using var stream = new FileStream(filePath, FileMode.Create);
-            await photo.CopyToAsync(stream);
+            entity.LecturerPic = fileNameOnly;
 
-            // ✅ اسم الملف بس — مش /images/lecturers/...
-            entity.LecturerPic = fileName;
             _repo.Update(entity);
             await _repo.SaveChangesAsync();
 
-            return fileName;
+            return GetImageUrl(fileNameOnly);
+        }
+
+        // ── BUILD IMAGE URL ───────────────────────────────────────────────────
+        private string? GetImageUrl(string? fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                return null;
+
+            var baseUrl = _config["AzureStorage:BaseUrl"];
+
+            return $"{baseUrl?.TrimEnd('/')}/lecturers/{fileName}";
         }
     }
 }

@@ -9,6 +9,7 @@ const IMAGE_BASE_URL = 'https://www.arabcont.com/icemt/assets/images/';
 
 // ── Map API response → internal form shape ────────────────────────────────────
 function apiToForm(apiLec) {
+    console.log("API PIC:", apiLec.pic);
     return {
         id:           apiLec.id,
         name:         apiLec.name        || '',
@@ -20,12 +21,10 @@ function apiToForm(apiLec) {
         certificates: apiLec.edu         || '',
         details:      apiLec.details     || '',
         photo:        apiLec.pic
-            ? (apiLec.pic.startsWith('data:') || apiLec.pic.startsWith('http')
-                ? apiLec.pic
-                : `${IMAGE_BASE_URL}${apiLec.pic}`)
-            : null,
+    
     };
 }
+console.log();
 
 // ── Map internal form → API POST/PUT body ─────────────────────────────────────
 function formToApi(form) {
@@ -508,7 +507,7 @@ const LecturersTab = () => {
             <div className="lec-layout">
 
                 {/* ══ LEFT PANEL ══ */}
-                <div className="lec-panel">
+                <div className="lec-panel" style={{ height: 'calc(100vh - 120px)', overflowY: 'auto', position: 'sticky', top: 0 }}>
                     <div className="lec-panel-hdr">
                         <span className="lec-count-badge">{filtered.length}</span>
                         <span style={{ fontWeight: 800, fontSize: '.8rem', color: '#0a0a0a', flex: 1, textAlign: 'center' }}>
@@ -568,7 +567,7 @@ const LecturersTab = () => {
                 </div>
 
                 {/* ══ FORM AREA ══ */}
-                <div className="lec-form-wrap">
+                <div className="lec-form-wrap" style={{ height: 'calc(100vh - 120px)', overflowY: 'auto' }}>
                     <div className="adm-card lec-form-card">
 
                         <div className="lec-form-hdr">

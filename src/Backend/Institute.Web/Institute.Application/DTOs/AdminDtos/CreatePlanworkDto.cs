@@ -25,6 +25,11 @@ namespace Institute.Application.DTOs.AdminDtos
 
         public decimal? PlanCost { get; set; }
 
+        // ✅ Online fields
+        public bool IsOnline { get; set; }
+        public string? OnlineLink { get; set; }
+        public decimal? OnlineCost { get; set; }
+
         public string? Slug { get; set; }
         public string? SKU { get; set; }
     }

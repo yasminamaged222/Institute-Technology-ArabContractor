@@ -24,6 +24,9 @@ namespace Institute.Application.Services
         private readonly IRepository<Certificate> _certificateRepository;
         private readonly IRepository<RefundRequest> _refundRepository;
         private readonly IRepository<Order> _orderRepository; // ← جديد
+        private readonly IBlobStorage _blobStorage;
+        private const string Container = "icemt";
+        private const string Folder = "certificates";
 
         public AdminService(
             IRepository<AppUser> userRepository,
@@ -31,7 +34,8 @@ namespace Institute.Application.Services
             IRepository<Planwork> planworkRepository,
             IRepository<Certificate> certificateRepository,
             IRepository<RefundRequest> refundRepository,
-            IRepository<Order> orderRepository) // ← جديد
+            IRepository<Order> orderRepository,
+            IBlobStorage blobStorage) // ← جديد
         {
             _userRepository = userRepository;
             _enrollmentRepository = enrollmentRepository;
@@ -39,6 +43,7 @@ namespace Institute.Application.Services
             _certificateRepository = certificateRepository;
             _refundRepository = refundRepository;
             _orderRepository = orderRepository; // ← جديد
+            _blobStorage = blobStorage;
         }
 
         public async Task<IReadOnlyList<UserWithCoursesDto>> GetAllUsersAsync(UserSpecParams param)
@@ -162,43 +167,45 @@ namespace Institute.Application.Services
         }
 
         // ── باقي الميثودز كما هي ─────────────────────────────────────────────
-        public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto, string uploadsFolder)
+        public async Task<bool> UploadCertificateAsync(UploadCertificateDto dto,string uploadsFolder)
         {
             if (dto.File == null || dto.File.Length == 0)
                 return false;
 
             var exists = await _certificateRepository
-                .AnyAsync(x => x.UserId == dto.UserId && x.PlanworkId == dto.PlanworkId);
+                .AnyAsync(x =>
+                    x.UserId == dto.UserId &&
+                    x.PlanworkId == dto.PlanworkId);
 
             if (exists)
                 return false;
 
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await dto.File.CopyToAsync(stream);
-            }
+            // ✅ upload to blob
+            var blobName = await _blobStorage.UploadFileAsync(
+                dto.File,
+                Container,
+                Folder);
 
             var certificate = new Certificate
             {
                 UserId = dto.UserId,
                 PlanworkId = dto.PlanworkId,
-                FileUrl = "/api/Admin/certificates/download/" + fileName,
+
+                // save blob url
+                FileUrl =
+                    $"https://acwebappbackup.blob.core.windows.net/icemt/certificates/{blobName}",
+
                 FileName = dto.File.FileName,
                 FileSizeBytes = dto.File.Length,
                 UploadedAt = DateTime.UtcNow
             };
 
             await _certificateRepository.AddAsync(certificate);
+
             await _certificateRepository.SaveChangesAsync();
+
             return true;
         }
-
         public async Task<CertificateDto?> GetCertificateAsync(int userId, int planworkId)
         {
             var spec = new CertificateWithUserAndPlanworkSpec(userId, planworkId);
@@ -247,37 +254,34 @@ namespace Institute.Application.Services
             };
         }
 
-        public async Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto, string uploadsFolder)
+        public async Task<bool> UpdateCertificateAsync(UpdateCertificateDto dto,string uploadsFolder)
         {
-            var certificate = await _certificateRepository.GetByIdAsync(dto.CertificateId);
-            if (certificate == null) return false;
+            var certificate =
+                await _certificateRepository
+                    .GetByIdAsync(dto.CertificateId);
 
-            if (!string.IsNullOrEmpty(certificate.FileUrl))
-            {
-                var oldFileName = Path.GetFileName(certificate.FileUrl);
-                var oldPath = Path.Combine(uploadsFolder, oldFileName);
-                if (File.Exists(oldPath))
-                    File.Delete(oldPath);
-            }
+            if (certificate == null)
+                return false;
 
-            var fileName = Guid.NewGuid() + Path.GetExtension(dto.File.FileName);
-            var filePath = Path.Combine(uploadsFolder, fileName);
+            // ✅ upload new file to blob
+            var blobName = await _blobStorage.UploadFileAsync(
+                dto.File,
+                Container,
+                Folder);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await dto.File.CopyToAsync(stream);
-            }
+            certificate.FileUrl =
+                $"https://acwebappbackup.blob.core.windows.net/icemt/certificates/{blobName}";
 
-            certificate.FileUrl = "/api/Admin/certificates/download/" + fileName;
             certificate.FileName = dto.File.FileName;
             certificate.FileSizeBytes = dto.File.Length;
             certificate.UploadedAt = DateTime.UtcNow;
 
             _certificateRepository.Update(certificate);
+
             await _certificateRepository.SaveChangesAsync();
+
             return true;
         }
-
         public async Task<bool> DeleteCertificateAsync(int certificateId, string uploadsFolder)
         {
             var certificate = await _certificateRepository.GetByIdAsync(certificateId);

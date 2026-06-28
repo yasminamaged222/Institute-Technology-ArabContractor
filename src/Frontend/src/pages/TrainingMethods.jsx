@@ -62,13 +62,13 @@ const TrainingMethods = () => {
             sx={{
                 minHeight: "100vh",
                 bgcolor: "#ffffff",
-                fontFamily: '"Droid Arabic Kufi", serif',
+                fontFamily: '"Noto Kufi Arabic", serif',
             }}
         >
             {/* Fixed Overview Bar - positioned under navbar */}
            
             <div style={{ position: 'fixed', top: 70, left: 0, zIndex: 50, width: '100%', borderBottom: '1px solid #d1d5db', backgroundColor: '#f5f5f5', padding: '8px 20px' }}>
-                <div style={{ textAlign: 'center', fontFamily: '"Droid Arabic Kufi", "Noto Kufi Arabic", serif', fontSize: '1rem' }}>
+                <div style={{ textAlign: 'center', fontFamily: '"Noto Kufi Arabic", serif', fontSize: '1rem' }}>
                     <a
                         href="/"
                         style={{ color: '#0865a8', fontWeight: 700, textDecoration: 'none', marginLeft: '8px' }}
@@ -98,7 +98,7 @@ const TrainingMethods = () => {
                             fontWeight: "bold",
                             mb: 2,
                             color: "#000000",
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             fontSize: { xs: "1.5rem", sm: "1.75rem", md: "2.125rem" }
                         }}
                     >
@@ -109,7 +109,7 @@ const TrainingMethods = () => {
                         variant="body1"
                         sx={{
                             color: "#000000",
-                            fontFamily: '"Droid Arabic Kufi", serif',
+                            fontFamily: '"Noto Kufi Arabic", serif',
                             fontSize: { xs: "0.875rem", sm: "1rem" },
                             px: { xs: 2, md: 0 }
                         }}
@@ -136,7 +136,7 @@ const TrainingMethods = () => {
                                     borderRadius: "20px",
                                     border: "2px solid #f0f0f0",
                                     transition: "all 0.4s ease",
-                                    fontFamily: '"Droid Arabic Kufi", serif',
+                                    fontFamily: '"Noto Kufi Arabic", serif',
                                     position: "relative",
                                     overflow: "hidden",
                                     "&::before": {
@@ -184,7 +184,7 @@ const TrainingMethods = () => {
                                         fontWeight: "bold",
                                         mb: 2,
                                         color: "#0865a8",
-                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        fontFamily: '"Noto Kufi Arabic", serif',
                                         fontSize: { xs: "1.1rem", md: "1.2rem" },
                                         textAlign: "center",
                                     }}
@@ -199,7 +199,7 @@ const TrainingMethods = () => {
                                         color: "#000000",
                                         textAlign: "left",
                                         lineHeight: 1.8,
-                                        fontFamily: '"Droid Arabic Kufi", serif',
+                                        fontFamily: '"Noto Kufi Arabic", serif',
                                         fontSize: { xs: "0.85rem", md: "0.9rem" },
                                         flex: 1,
                                         display: "flex",
